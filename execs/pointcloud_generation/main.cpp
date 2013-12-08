@@ -92,7 +92,7 @@ void init_args(cmd_args_t& args)
 	               "data file>.  The laser name should be the same as "
 	               "in the hardware configuration file.  The laser data"
 	               " file should be what was originally exported during"
-	               " the data acquisition.", false, 2);
+	               " the data acquisition.", true, 2);
 	args.add(D_IMAGER_FILE_FLAG, /* specifies d-imager name/file */
 	               "Specifies two arguments:  <d-imager name> and "
                        "<d-imager data file>.  The name should be the same "
@@ -176,53 +176,44 @@ int process_all_files(pointcloud_writer_t& writer, cmd_args_t& args)
 	int ret;
 
 	/* get laser files */
-	if(!(args.tag_seen(LASER_FILE_FLAG, laser_files)))
+	if(args.tag_seen(LASER_FILE_FLAG, laser_files))
 	{
-		/* must have laser files */
-		cerr << "Error!  Laser files not specified" << endl;
-		return -1;
-	}
-	
-	/* check number of arguments */
-	n = laser_files.size();
-	if(n == 0)
-	{
-		/* no laser files?! */
-		cerr << "Error!  No laser files provided" << endl;
-		return -2;
-	}
-
-	/* iterate over laser files */
-	for(i = 0; i < n; i += 2)
-	{
-		/* parse the next laser and its file */
-		ret = writer.export_urg(laser_files[i], laser_files[i+1]);
-		if(ret)
+		/* iterate over laser files */
+		n = laser_files.size();
+		for(i = 0; i < n; i += 2)
 		{
-			/* report error */
-			cerr << "Error " << ret << ": Unable to export "
-			     << laser_files[i] << endl;
-			return PROPEGATE_ERROR(-3, ret);
+			/* parse the next laser and its file */
+			ret = writer.export_urg(laser_files[i],
+			                        laser_files[i+1]);
+			if(ret)
+			{
+				/* report error */
+				cerr << "Error " << ret 
+				     << ": Unable to export "
+				     << laser_files[i] << endl;
+				return PROPEGATE_ERROR(-3, ret);
+			}
 		}
 	}
 
 	/* get d_imager data files, if provided */
-	if(!(args.tag_seen(D_IMAGER_FILE_FLAG, d_imager_files)))
-		return 0; /* no more processing needed */
-
-	/* iterate over d-imager files */
-	n = d_imager_files.size();
-	for(i = 0; i < n; i += 2)
+	if(args.tag_seen(D_IMAGER_FILE_FLAG, d_imager_files))
 	{
-		/* parse next d-imager file */
-		ret = writer.export_tof(d_imager_files[i],
-		                        d_imager_files[i+1]);
-		if(ret)
+		/* iterate over d-imager files */
+		n = d_imager_files.size();
+		for(i = 0; i < n; i += 2)
 		{
-			/* report error */
-			cerr << "Error " << ret << ": Unable to export "
-			     << d_imager_files[i] << endl;
-			return PROPEGATE_ERROR(-4, ret);
+			/* parse next d-imager file */
+			ret = writer.export_tof(d_imager_files[i],
+			                        d_imager_files[i+1]);
+			if(ret)
+			{
+				/* report error */
+				cerr << "Error " << ret 
+				     << ": Unable to export "
+				     << d_imager_files[i] << endl;
+				return PROPEGATE_ERROR(-4, ret);
+			}
 		}
 	}
 
