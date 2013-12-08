@@ -31,6 +31,9 @@ using namespace Eigen;
 /* the following macros are used for unit conversion */
 #define MM2METERS(x) ( (x) * 0.001 )
 
+/* the following definitions are settings for output */
+#define HEIGHT_COLORING_PERIOD 2.0  /* period of height coloring, meters */
+
 /* function implementations */
 
 pointcloud_writer_t::pointcloud_writer_t()
@@ -38,6 +41,7 @@ pointcloud_writer_t::pointcloud_writer_t()
 	/* set default values */
 	this->units = 1;
 	this->outfile_format = XYZ_FILE;
+	this->coloring = NO_COLOR;
 }
 
 pointcloud_writer_t::~pointcloud_writer_t()
@@ -50,7 +54,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
                               const  string& pathfile,
                               const  string& timefile,
                               const  string& conffile,
-                              double u)
+                              double u,
+                              COLOR_METHOD c)
 {
 	int ret;
 
@@ -89,11 +94,10 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		return -4;
 	}
 
-	/* record file format of output */
+	/* record additional parameters */
 	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
-
-	/* record desired units */
-	this->units = u;
+	this->units = u; /* record desired units */
+	this->coloring = c; /* coloring method to use */
 
 	/* success */
 	return 0;
@@ -340,13 +344,42 @@ void pointcloud_writer_t::close()
 int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts)
 {
 	size_t i, n;
+	int red, green, blue;
 
 	/* iterate over points */
 	n = pts.cols();
+	red = green = blue = 255;
 	for(i = 0; i < n; i++)
+	{
+		/* write geometry */
 		this->outfile << pts(0,i) << " " 
 		              << pts(1,i) << " " 
-		              << pts(2,i) << endl; 
+		              << pts(2,i); 
+
+		/* optionally color points */
+		switch(this->coloring)
+		{
+			case NEAREST_IMAGE:
+				/* TODO implement coloring by imagery */
+				break;
+			case NO_COLOR:
+			default:
+				/* make all points white */
+				red = green = blue = 255;
+				break;
+			case COLOR_BY_HEIGHT:
+				/* color points by height pattern */
+				this->height_to_color(red, green, blue,
+				                      pts(2,i));
+				break;
+		}
+		this->outfile << " " << ((unsigned int) red)
+		              << " " << ((unsigned int) green)
+		              << " " << ((unsigned int) blue);
+
+		/* new line at end of point information */
+		this->outfile << endl;
+	}
 
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
@@ -357,9 +390,11 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts)
 int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts)
 {
 	size_t i, n;
+	int red, green, blue;
 
 	/* iterate over points */
 	n = pts.cols();
+	red = green = blue = 255;
 	for(i = 0; i < n; i++)
 	{
 		/* write geometry */
@@ -367,14 +402,56 @@ int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts)
 		              << " "  << pts(1,i) 
 		              << " "  << pts(2,i);
 		
+		/* optionally color points */
+		switch(this->coloring)
+		{
+			case NEAREST_IMAGE:
+				/* TODO implement coloring by imagery */
+				break;
+			case NO_COLOR:
+			default:
+				/* make all points white */
+				red = green = blue = 255;
+				break;
+			case COLOR_BY_HEIGHT:
+				/* color points by height pattern */
+				this->height_to_color(red, green, blue,
+				                      pts(2,i));
+				break;
+		}
+		this->outfile << " " << red
+		              << " " << green
+		              << " " << blue;
+
 		/* write new line */
 		this->outfile << endl;
 	}
-
+	
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
 		return -1;
 	return 0;
+}
+
+void pointcloud_writer_t::height_to_color(int& red, int& green, int& blue,
+                                          double h) const
+{
+	char r, g, b; /* signed values [-128, 127] implicitely mod output */
+	
+	/* generate cycling pattern based on height */
+	r = (char) (256.0 * h / (HEIGHT_COLORING_PERIOD * this->units));
+	g = r + 80;
+	b = r + 160;
+
+	/* store in output */
+	red = abs(2 * r);
+	green = abs(2 * g);
+	blue = abs(2 * b);
+
+	/* sanitize output */
+	if(red >= 256) red = 255;
+	if(green >= 256) green = 255;
+	if(blue >= 256) blue = 255;
 }
 
 int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,

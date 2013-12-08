@@ -26,13 +26,28 @@
 /* the pointcloud writer class */
 class pointcloud_writer_t
 {
-	/* valid filetypes for export */
-	enum FILE_TYPE
-	{
-		XYZ_FILE,   /* ascii-formatted xyz file */
-		OBJ_FILE,   /* wavefront OBJ file */
-		UNKNOWN_FILE /* unknown filetype */
-	};
+	/* states */
+	public:
+
+		/**
+		 * valid filetypes for export
+		 */
+		enum FILE_TYPE
+		{
+			XYZ_FILE,   /* ascii-formatted xyz file */
+			OBJ_FILE,   /* wavefront OBJ file */
+			UNKNOWN_FILE /* unknown filetype */
+		};
+
+		/**
+		 * valid coloring options
+		 */
+		enum COLOR_METHOD
+		{
+			NO_COLOR, /* add no color information to output */
+			COLOR_BY_HEIGHT, /* color output by height */
+			NEAREST_IMAGE /* color points based on imagery */
+		};
 
 	/* parameters */
 	private:
@@ -66,6 +81,11 @@ class pointcloud_writer_t
 		 * The format of the output file
 		 */
 		FILE_TYPE outfile_format;
+
+		/**
+		 * Specifies what coloring technique is used.
+		 */
+		COLOR_METHOD coloring;
 
 		/**
 		 * Specifies the units to use in output file.
@@ -104,6 +124,7 @@ class pointcloud_writer_t
 		 * @param timefile  The input time sync file to use
 		 * @param conffile  The input hardware xml config file
 		 * @param u         The units to use for output
+		 * @param c         The coloring method to use
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
@@ -111,7 +132,8 @@ class pointcloud_writer_t
 		         const std::string& pathfile,
 		         const std::string& timefile,
 		         const std::string& conffile,
-			 double u);
+			 double u,
+		         COLOR_METHOD c);
 
 		/**
 		 * Exports all points from this laser scanner to file
@@ -179,6 +201,22 @@ class pointcloud_writer_t
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int write_to_obj_file(const Eigen::MatrixXd& pts);
+		
+		/**
+		 * Generates a color based on the given height
+		 *
+		 * Will generated a color as an (r,g,b) triplet
+		 * based on the provided elevation value.
+		 *
+		 * Color components will be in [0,255]
+		 *
+		 * @param red   The output red component
+		 * @param green The output green component
+		 * @param blue  The output blue component
+		 * @param h     THe input height component
+		 */
+		void height_to_color(int& red, int& green, int& blue,
+		                     double h) const;
 		
 		/**
 		 * Rectifies the input 2D laser scan and converts to matrix

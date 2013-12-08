@@ -28,6 +28,7 @@ using namespace std;
 #define D_IMAGER_FILE_FLAG        "-d"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
+#define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 
 /* the following are helper functions for this program */
 void init_args(cmd_args_t& args);
@@ -110,6 +111,10 @@ void init_args(cmd_args_t& args)
 	               "Specifies the file location of where to export the "
                        "generated pointcloud file.  Valid file formats are "
                        "any of:  *.xyz, *.obj", false, 1);
+	args.add(COLOR_BY_HEIGHT_FLAG, /* colors pointcloud by height */
+	               "If seen, will explicitly color the output points "
+	               "based on their height, allowing for the geometry "
+	               "to be easily observed.");
 }
 
 /**
@@ -127,6 +132,7 @@ void init_args(cmd_args_t& args)
 int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 {
 	string pathfile, conffile, timefile, outfile;
+	pointcloud_writer_t::COLOR_METHOD c;
 	double units;
 	int ret;
 
@@ -137,13 +143,21 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	outfile  = args.get_val(OUTPUT_FILE_FLAG);
 
 	/* get optional parameters */
+
+	/* units */
 	if(args.tag_seen(UNITS_FLAG))
 		units = args.get_val_as<double>(UNITS_FLAG);
 	else
 		units = 1.0; /* default units of meters */
 
+	/* get coloring method */
+	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
+		c = pointcloud_writer_t::COLOR_BY_HEIGHT;
+	else
+		c = pointcloud_writer_t::NO_COLOR;
+
 	/* attempt to open file */
-	ret = writer.open(outfile, pathfile, timefile, conffile, units);
+	ret = writer.open(outfile, pathfile, timefile, conffile, units, c);
 	if(ret)
 	{
 		/* unable to initialize writer */
