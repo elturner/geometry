@@ -228,8 +228,11 @@ void cmd_args_t::print_usage(char* prog_name) const
 	{
 		/* prepare tag string */
 		line.str("");
-		line << tab << it->second.tag 
-		     << tab.substr(it->second.tag.size());
+		line << tab << it->second.tag; 
+		if(it->second.tag.size() < tab.size())
+			line << tab.substr(it->second.tag.size());
+		else
+			line << tab;
 		indent = line.str().size();
 
 		/* print description with indents */
