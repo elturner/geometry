@@ -184,10 +184,13 @@ class pointcloud_writer_t
 		 * file in the format of an *.xyz file.
 		 *
 		 * @param pts   The matrix specifying the points to write
+		 * @param ind   The index of this scan
+		 * @param ts    The timestamp for these points
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int write_to_xyz_file(const Eigen::MatrixXd& pts);
+		int write_to_xyz_file(const Eigen::MatrixXd& pts,
+		                      int ind, double ts);
 
 		/**
 		 * Writes a set of points to an *.obj formatted outfile

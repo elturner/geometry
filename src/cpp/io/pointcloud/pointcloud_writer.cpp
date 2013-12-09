@@ -205,7 +205,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		if(this->outfile_format == OBJ_FILE)
 			ret = this->write_to_obj_file(scan_points);
 		else /* write to xyz file by default */
-			ret = this->write_to_xyz_file(scan_points);
+			ret = this->write_to_xyz_file(scan_points, i, ts);
 
 		if(ret)
 		{
@@ -313,7 +313,7 @@ int pointcloud_writer_t::export_tof(const string& name,
 		if(this->outfile_format == OBJ_FILE)
 			ret = this->write_to_obj_file(scan_points);
 		else /* write to xyz file by default */
-			ret = this->write_to_xyz_file(scan_points);
+			ret = this->write_to_xyz_file(scan_points, i, ts);
 
 		if(ret)
 		{
@@ -341,7 +341,8 @@ void pointcloud_writer_t::close()
 	this->path.clear();
 }
 		
-int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts)
+int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
+                                           int ind, double ts)
 {
 	size_t i, n;
 	int red, green, blue;
@@ -375,8 +376,10 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts)
 		}
 		this->outfile << " " << ((unsigned int) red)
 		              << " " << ((unsigned int) green)
-		              << " " << ((unsigned int) blue);
-
+		              << " " << ((unsigned int) blue)
+		              << " " << ind 
+		              << " " << ts
+		              << " 0"; // TODO
 		/* new line at end of point information */
 		this->outfile << endl;
 	}
