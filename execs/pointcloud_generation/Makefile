@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -ansi
-LFLAGS = -lm #-lpthread
+LFLAGS = -lm -lopencv_core -lopencv_imgproc -lopencv_highgui
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
@@ -30,6 +30,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
+		$(SOURCEDIR)image/fisheye/ocam_functions.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		main.cpp
@@ -54,6 +55,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
+		$(SOURCEDIR)image/fisheye/ocam_functions.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h
 
