@@ -377,9 +377,9 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 		this->outfile << " " << ((unsigned int) red)
 		              << " " << ((unsigned int) green)
 		              << " " << ((unsigned int) blue)
-		              << " " << ind 
-		              << " " << ts
-		              << " 0"; // TODO
+		              << " " << ind /* index of scan */
+		              << " " << ts /* timestamp of scan */
+		              << " 0"; /* TODO serial number of scanner */
 		/* new line at end of point information */
 		this->outfile << endl;
 	}

@@ -18,7 +18,6 @@
 
 #include <fstream>
 #include <string>
-#include <bayer/ocam_functions.h>
 
 /* the following classes are defined in this file */
 class color_image_frame_t;
@@ -115,9 +114,6 @@ class color_image_reader_t
 		int num_images; /* number of images in this file */
 		int jpeg_quality; /* quality of compression [1-100] */
 		std::string output_dir; /* where images were written */
-
-		/* camera fisheye calibration data */
-		struct ocam_model calibration;
 
 	/* functions */
 	public:

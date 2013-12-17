@@ -43,7 +43,6 @@ int color_image_frame_t::parse(std::istream& is)
 {
 	stringstream ss;
 	string line;
-	size_t p;
 
 	/* check that stream is still valid */
 	if(is.fail())
@@ -53,7 +52,7 @@ int color_image_frame_t::parse(std::istream& is)
 	getline(is, line);
 	if(line.empty())
 	{
-		this->image_number = -1;
+		this->index = -1;
 		return 0;
 	}
 
@@ -111,7 +110,6 @@ void remove_all_cr(string& m)
 
 int color_image_reader_t::open(const std::string& filename)
 {
-	int i;
 	string m;
 
 	/* close any open files */
@@ -130,22 +128,7 @@ int color_image_reader_t::open(const std::string& filename)
 	this->infile >> this->jpeg_quality;
 	
 	getline(this->infile, this->output_dir);
-	remove_all_cr(this->image_directory);
-
-	/* read calibration info */
-	this->infile >> this->calibration.length_pol;
-	for(i = 0; i < this->calibration.length_pol; i++)
-		this->infile >> this->calibration.pol[i];
-	this->infile >> this->calibration.length_invpol;
-	for(i = 0; i < this->calibration.length_invpol; i++)
-		this->infile >> this->calibration.invpol[i];
-	this->infile >> this->calibration.xc;
-	this->infile >> this->calibration.yc;
-	this->infile >> this->calibration.c;
-	this->infile >> this->calibration.d;
-	this->infile >> this->calibration.e;
-	this->infile >> this->calibration.width;
-	this->infile >> this->calibration.height;
+	remove_all_cr(this->output_dir);
 
 	/* the header should end with an extra newline */
 	getline(this->infile, m);

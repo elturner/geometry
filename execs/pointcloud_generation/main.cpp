@@ -26,6 +26,7 @@ using namespace std;
 #define PATH_FILE_FLAG            "-p"
 #define LASER_FILE_FLAG           "-l"
 #define D_IMAGER_FILE_FLAG        "-d"
+#define FISHEYE_CAMERA_FLAG       "-f"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
@@ -100,6 +101,16 @@ void init_args(cmd_args_t& args)
                        "as in the hardware config file.  The d-imager data "
                        "file should be what was originally exported during "
                        "the data acquisition.", true, 2);
+	args.add(FISHEYE_CAMERA_FLAG, /* specifies params for a camera */
+	               "Specifies four arguments: <camera name> <color "
+	               "metadata file> <fisheye calibration file> <image "
+	               "folder>.  The name should be the same as in the "
+	               "hardware config file.  The metadata file should be "
+	               "the output file after bayer converting the images."
+	               "  The calibration file should be a binary .dat file"
+	               "representing the ocam calib results.  The image "
+	               "directory should be the same one that is referenced"
+	               " by the metadata file.", true, 4);
 	args.add(UNITS_FLAG, /* specifies units to use in output file */
 	               "Given floating-point value specifies the units to "
                        "use in the output file.  A value of 1.0 indicates "
@@ -143,6 +154,8 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	outfile  = args.get_val(OUTPUT_FILE_FLAG);
 
 	/* get optional parameters */
+
+	// TODO read in camera info
 
 	/* units */
 	if(args.tag_seen(UNITS_FLAG))

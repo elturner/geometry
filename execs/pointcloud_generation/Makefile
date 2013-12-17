@@ -27,6 +27,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.cpp \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.cpp \
+		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
@@ -50,6 +51,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.h \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.h \
+		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)geometry/system_path.h \
