@@ -115,7 +115,7 @@ void init_args(cmd_args_t& args)
 	               "Given floating-point value specifies the units to "
                        "use in the output file.  A value of 1.0 indicates "
                        "units of meters.  A value of 1000.0 indicates units"
-                       " units of millimeters.  Value of 3.28084 indicates "
+                       " of millimeters.  Value of 3.28084 indicates "
                        "units of feet.  The default value is 1.0 (meters).",
                        true, 1);
 	args.add(OUTPUT_FILE_FLAG, /* where to store the output */
@@ -125,7 +125,9 @@ void init_args(cmd_args_t& args)
 	args.add(COLOR_BY_HEIGHT_FLAG, /* colors pointcloud by height */
 	               "If seen, will explicitly color the output points "
 	               "based on their height, allowing for the geometry "
-	               "to be easily observed.");
+	               "to be easily observed.  This flag will override "
+	               "coloring from images, even if cameras are provided."
+	               );
 }
 
 /**
@@ -143,6 +145,7 @@ void init_args(cmd_args_t& args)
 int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 {
 	string pathfile, conffile, timefile, outfile;
+	vector<string> fisheye_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
 	double units;
 	int ret;
@@ -155,8 +158,6 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 
 	/* get optional parameters */
 
-	// TODO read in camera info
-
 	/* units */
 	if(args.tag_seen(UNITS_FLAG))
 		units = args.get_val_as<double>(UNITS_FLAG);
@@ -165,7 +166,16 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 
 	/* get coloring method */
 	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
+		/* use height of points to color */
 		c = pointcloud_writer_t::COLOR_BY_HEIGHT;
+	else if(args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags))
+	{
+		/* use camera images to color */
+		c = pointcloud_writer_t::NEAREST_IMAGE;
+
+		/* populate camera info */
+		// TODO
+	}
 	else
 		c = pointcloud_writer_t::NO_COLOR;
 

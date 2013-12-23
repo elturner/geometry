@@ -31,6 +31,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)image/fisheye/ocam_functions.cpp \
+		$(SOURCEDIR)image/fisheye/fisheye_camera.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		main.cpp
@@ -56,6 +57,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)image/fisheye/ocam_functions.h \
+		$(SOURCEDIR)image/fisheye/fisheye_camera.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h
 

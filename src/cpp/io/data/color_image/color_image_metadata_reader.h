@@ -158,6 +158,19 @@ class color_image_reader_t
 		};
 
 		/**
+		 * Returns the number of image frames in this file
+		 *
+		 * Returns the number of images that are referenced
+		 * by the fields in this file.
+		 *
+		 * @return    Returns the number of images
+		 */
+		inline int get_num_images() const
+		{
+			return this->num_images;
+		};
+
+		/**
 		 * Parses the next frame from the file
 		 *
 		 * Will read the next line in the file, and populate
