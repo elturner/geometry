@@ -57,7 +57,7 @@ void transform_t::cat(const transform_t& t)
 	this->T = (t.R * this->T) + t.T;
 }
 		
-void transform_t::apply(Eigen::MatrixXd& pts) const
+void transform_t::apply(MatrixXd& pts) const
 {
 	size_t i, n;
 
@@ -68,4 +68,17 @@ void transform_t::apply(Eigen::MatrixXd& pts) const
 	n = pts.cols();
 	for(i = 0; i < n; i++)
 		pts.col(i) += this->T;
+}
+		
+void transform_t::apply_inverse(MatrixXd& pts) const
+{
+	size_t i, n;
+
+	/* subtract translation from each column */
+	n = pts.cols();
+	for(i = 0; i < n; i++)
+		pts.col(i) -= this->T;
+
+	/* apply inverse rotation matrix */
+	pts = this->R.inverse() * pts;
 }

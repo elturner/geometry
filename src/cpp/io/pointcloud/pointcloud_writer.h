@@ -22,6 +22,7 @@
 #include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
+#include <image/fisheye/fisheye_camera.h>
 
 /* the pointcloud writer class */
 class pointcloud_writer_t
@@ -88,6 +89,11 @@ class pointcloud_writer_t
 		COLOR_METHOD coloring;
 
 		/**
+		 * Specifies the fisheye cameras to use for coloring, if any
+		 */
+		std::vector<fisheye_camera_t> fisheye_cameras;
+
+		/**
 		 * Specifies the units to use in output file.
 		 *
 		 * Value represents the conversion from meters to
@@ -134,6 +140,27 @@ class pointcloud_writer_t
 		         const std::string& conffile,
 			 double u,
 		         COLOR_METHOD c);
+
+		/**
+		 * Adds a camera to this object for use of coloring
+		 *
+		 * If nearest image coloring method is used, then this
+		 * camera will be considered for providing images to
+		 * color the points.  Call this function multiple times
+		 * to provide multiple cameras.
+		 *
+		 * Should be called after this object is opened, since
+		 * camera initialization requires path to be read in.
+		 *
+		 * @param metafile   The metadata file for this camera
+		 * @param calibfile  The binary fisheye calibration file
+		 * @param imgdir     The directory containing camera images
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int add_camera(const std::string& metafile,
+		               const std::string& calibfile,
+		               const std::string& imgdir);
 
 		/**
 		 * Exports all points from this laser scanner to file
@@ -200,10 +227,13 @@ class pointcloud_writer_t
 		 * file in the format of an *.obj file.
 		 *
 		 * @param pts   The matrix specifying the points to write
+		 * @param ind   The index of this scan
+		 * @param ts    The timestamp for these points
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int write_to_obj_file(const Eigen::MatrixXd& pts);
+		int write_to_obj_file(const Eigen::MatrixXd& pts,
+		                      int ind, double ts);
 		
 		/**
 		 * Generates a color based on the given height
@@ -220,7 +250,32 @@ class pointcloud_writer_t
 		 */
 		void height_to_color(int& red, int& green, int& blue,
 		                     double h) const;
-		
+	
+		/**
+		 * Generates a color for given point based on all cameras
+		 *
+		 * Analyzes coloring from all available cameras to find
+		 * the optimal coloring for the specified point.  This 
+		 * will be colored based on the nearest temporal image
+		 * from each camera available, and the camera with the
+		 * best normal vector at that timestamp will be chosen.
+		 *
+		 * Color components will be [0, 255]
+		 *
+		 * @param red   The output red component
+		 * @param green The output green component
+		 * @param blue  The output blue component
+		 * @param x     The input world x-coordinate of point
+		 * @param y     The input world y-coordinate of point
+		 * @param z     The input world z-coordinate of point
+		 * @param t     The input timestamp of point
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int color_from_cameras(int& red, int& green, int& blue,
+		                       double x, double y, double z,
+		                       double t);
+
 		/**
 		 * Rectifies the input 2D laser scan and converts to matrix
 		 *

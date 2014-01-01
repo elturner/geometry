@@ -102,6 +102,7 @@ int get_ocam_model_bin(struct ocam_model* myocam_model,
 	ifstream infile;
 	stringstream ss;
 	int i;
+	unsigned int xc, yc, len, h, w;
 
 	/* attempt to open file */
 	infile.open(filename.c_str(), ios::in | ios::binary);
@@ -121,8 +122,8 @@ int get_ocam_model_bin(struct ocam_model* myocam_model,
 	getline(infile, camera_name, '\0');
 	
 	/* read polynomial size and coefficient values */
-	infile.read((char*) (&(myocam_model->length_pol)),
-	            sizeof(myocam_model->length_pol));
+	infile.read((char*) (&(len)), sizeof(len));
+	myocam_model->length_pol = len;
 	for(i = 0; i < myocam_model->length_pol; i++)
 		infile.read((char*) (&(myocam_model->pol[i])),
 		            sizeof(myocam_model->pol[i]));
@@ -130,8 +131,10 @@ int get_ocam_model_bin(struct ocam_model* myocam_model,
 		return -4; /* could not read from file */
 
 	/* read image center coordinates */
-	infile.read((char*)(&(myocam_model->xc)), sizeof(myocam_model->xc));
-	infile.read((char*)(&(myocam_model->yc)), sizeof(myocam_model->yc));
+	infile.read((char*)(&(xc)), sizeof(xc));
+	myocam_model->xc = xc;
+	infile.read((char*)(&(yc)), sizeof(yc));
+	myocam_model->yc = yc;
 
 	/* skew parameters */
 	infile.read((char*) (&(myocam_model->c)), sizeof(myocam_model->c));
@@ -139,22 +142,22 @@ int get_ocam_model_bin(struct ocam_model* myocam_model,
 	infile.read((char*) (&(myocam_model->e)), sizeof(myocam_model->e));
 
 	/* image size */
-	infile.read((char*) (&(myocam_model->width)),
-	            sizeof(myocam_model->width));
-	infile.read((char*) (&(myocam_model->height)),
-	            sizeof(myocam_model->height));
-	
+	infile.read((char*) (&(w)), sizeof(w));
+	myocam_model->width = w;
+	infile.read((char*) (&(h)), sizeof(h));
+	myocam_model->height = h;
+
 	/* check file status */
 	if(!(infile.good()))
 		return -5; /* could not read from file */
 
 	/* read in inverse polynomial approximation values */
-	infile.read((char*) (&(myocam_model->length_invpol)),
-	            sizeof(myocam_model->length_invpol));
+	infile.read((char*) (&(len)), sizeof(len));
+	myocam_model->length_invpol = len;
 	for(i = 0; i < myocam_model->length_invpol; i++)
 		infile.read((char*) (&(myocam_model->invpol[i])),
 		            sizeof(myocam_model->invpol[i]));
-	if(!(infile.fail()))
+	if(infile.fail())
 		return -6; /* could not read from file */
 
 	/* close file and return success */

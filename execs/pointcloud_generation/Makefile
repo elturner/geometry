@@ -42,6 +42,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/cmd_args.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/progress_bar.h \
+		$(SOURCEDIR)util/binary_search.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \
 		$(SOURCEDIR)config/imuProp.h \

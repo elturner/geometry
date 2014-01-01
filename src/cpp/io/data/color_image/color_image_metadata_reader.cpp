@@ -1,4 +1,5 @@
 #include "color_image_metadata_reader.h"
+#include <iostream>
 #include <fstream>
 #include <istream>
 #include <sstream>
@@ -51,22 +52,24 @@ int color_image_frame_t::parse(std::istream& is)
 	/* parse the next line from file */
 	getline(is, line);
 	if(line.empty())
-	{
-		this->index = -1;
-		return 0;
-	}
+		return -2;
 
 	/* parse values from line */
 	ss.str(line);
-	ss >> this->image_file;
 	ss >> this->index;
+	ss >> this->image_file;
 	ss >> this->timestamp;
+	this->timestamp *= 1000; //TODO remove this 1000
 	ss >> this->exposure;
 	ss >> this->gain;
 
+	/* check that values are valid */
+	if(this->image_file.empty() || this->index < 0)
+		return -3;
+
 	/* check that stream is good */
 	if(is.fail())
-		return -3;
+		return -4;
 	
 	/* success */
 	return 0;
@@ -126,9 +129,14 @@ int color_image_reader_t::open(const std::string& filename)
 	this->infile >> this->camera_name;
 	this->infile >> this->num_images;
 	this->infile >> this->jpeg_quality;
-	
-	getline(this->infile, this->output_dir);
-	remove_all_cr(this->output_dir);
+
+	/* get location of image directory */
+	do
+	{
+		getline(this->infile, this->output_dir);
+		remove_all_cr(this->output_dir);
+	}
+	while(this->output_dir.empty()); /* ignore blank lines */
 
 	/* the header should end with an extra newline */
 	getline(this->infile, m);
@@ -136,6 +144,8 @@ int color_image_reader_t::open(const std::string& filename)
 	if(m.size() > 0)
 	{
 		this->close();
+		cerr << "[color_image_reader_t::open]\tExpected blank"
+		     << " line after header, got: \"" << m << "\"" << endl;
 		return -2;
 	}
 

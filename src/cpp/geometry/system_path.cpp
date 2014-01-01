@@ -342,7 +342,7 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 	/* The system pose gives us:  system -> world
 	 * we want:  sensor -> world */
 	p.cat(system2world); /* sensor -> system + system -> world */
-	
+
 	/* success */
 	return 0;
 }

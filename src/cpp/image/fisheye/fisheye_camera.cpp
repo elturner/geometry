@@ -4,9 +4,14 @@
 #include <geometry/transform.h>
 #include <geometry/system_path.h>
 #include <util/error_codes.h>
+#include <util/binary_search.h>
 #include <vector>
 #include <string>
 #include <new>
+#include <math.h>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <opencv/cv.h>
 
 /**
  * @file fisheye_camera.cpp
@@ -20,13 +25,19 @@
  */
 
 using namespace std;
+using namespace Eigen;
+using namespace cv;
 
 /* function implementations */
 
 fisheye_camera_t::fisheye_camera_t()
 {
 	/* set default empty values */
-	this->clear();
+	this->poses = NULL;
+	this->image_directory = "";
+
+	/* set cache to hold only one image at a time */
+	this->images.set_capacity(1);
 }
 
 fisheye_camera_t::~fisheye_camera_t()
@@ -37,6 +48,7 @@ fisheye_camera_t::~fisheye_camera_t()
 
 int fisheye_camera_t::init(const std::string& calibfile,
                            const std::string& metafile,
+                           const std::string& imgdir,
                            const system_path_t& path)
 {
 	color_image_reader_t infile;
@@ -52,6 +64,13 @@ int fisheye_camera_t::init(const std::string& calibfile,
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
+	/* store image directory location with a trailing slash */
+	this->image_directory = imgdir;
+	if(!imgdir.empty() 
+			&& (*(imgdir.rbegin()) != '/') 
+			&& (*(imgdir.rbegin()) != '\\'))
+		this->image_directory += "/";
+
 	/* read in metadata */
 	ret = infile.open(metafile);
 	if(ret)
@@ -63,6 +82,7 @@ int fisheye_camera_t::init(const std::string& calibfile,
 
 	/* initialize lists for metadata and transforms */
 	this->metadata.resize(infile.get_num_images());
+	this->timestamps.resize(infile.get_num_images());
 	this->poses = new transform_t[infile.get_num_images()];
 
 	/* iterate over image frames, storing metadata */
@@ -79,6 +99,9 @@ int fisheye_camera_t::init(const std::string& calibfile,
 		                    infile.get_camera_name());
 		if(ret)
 			return PROPEGATE_ERROR(-5, ret);
+
+		/* save timestamp for this frame */
+		this->timestamps[i] = this->metadata[i].timestamp; 
 	}
 
 	/* clean up */
@@ -98,4 +121,78 @@ void fisheye_camera_t::clear()
 
 	/* free lists */
 	this->metadata.clear();
+	this->timestamps.clear();
+
+	/* free cache */
+	this->images.clear();
+	this->image_directory = "";
+}
+		
+int fisheye_camera_t::color_point(double px, double py, double pz, double t,
+                                  int& r, int& g, int& b, double& q)
+{
+	string path;
+	MatrixXd pt;
+	Mat img;
+	double point3D[3];
+	double point2D[2];
+	double tmp;
+	int i, ret;
+
+	/* find the closest camera, with respect to time */
+	i = binary_search::get_closest_index(this->timestamps, t);
+	if(i < 0 || i >= (int) this->timestamps.size())
+		return -1; /* invalid index */
+
+	/* get the position of this point in camera 3D coordinates */
+	pt.resize(3, 1);
+	pt(0,0) = px;
+	pt(1,0) = py;
+	pt(2,0) = pz;
+	this->poses[i].apply_inverse(pt);
+	point3D[0] = pt(0,0);
+	point3D[1] = pt(1,0);
+	point3D[2] = pt(2,0);
+
+	/* record normalized z-component as the quality of this coloring */
+	q = point3D[2] / sqrt( (point3D[0]*point3D[0]) 
+		+ (point3D[1]*point3D[1]) + (point3D[2]*point3D[2]));
+
+	/* check if point is behind camera */
+	if(q < 0)
+		return 0; /* do nothing */
+
+	/* the fisheye library assumes camera coordinates use +z facing
+	 * into the camera, so switch x and y, and negate z */
+	tmp = point3D[0];
+	point3D[0] = point3D[1];
+	point3D[1] = tmp;
+	point3D[2] = -point3D[2];
+
+	/* get camera u/v coordinates of this point */
+	world2cam(point2D, point3D, &(this->calibration));
+
+	/* get the image matrix */
+	path = this->image_directory + this->metadata[i].image_file;
+	ret = this->images.get(path, img);
+	if(ret)
+	{
+		cerr << "[fisheye_camera_t::color_point]\tCould not get"
+		     << " image: \"" << this->metadata[i].image_file 
+		     << "\" with full path \"" << path << "\"" << endl;
+		return PROPEGATE_ERROR(-2, ret);
+	}
+
+	/* check if out of bounds */
+	if(point2D[0] >= 0 && point2D[0] < this->calibration.height
+		&& point2D[1] >= 0 && point2D[1] < this->calibration.width)
+	{
+		/* get color from these coordinates */
+		b = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[0];
+		g = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[1];
+		r = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[2];
+	}
+
+	/* success */
+	return 0;
 }

@@ -79,7 +79,8 @@ class transform_t
 		 *
 		 * Consider the following example:
 		 *
-		 * A2C = A2B.cat(B2C)
+		 * A2B.cat(B2C)
+		 * A2C = A2B
 		 *
 		 * @param t    The transform to post-apply to this one
 		 */
@@ -95,6 +96,17 @@ class transform_t
 		 * @param pts   The points to transform in-place
 		 */
 		void apply(Eigen::MatrixXd& pts) const;
+
+		/**
+		 * Applies the inverse of this transform to given list
+		 *
+		 * Given a list of points, represented as columns in
+		 * the input matrix, the inverse of this transform will
+		 * be applied in-place to these points.
+		 *
+		 * @param pts    The points to trnasform in-place
+		 */
+		void apply_inverse(Eigen::MatrixXd& pts) const;
 
 		/* operators */
 

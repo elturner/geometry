@@ -13,6 +13,7 @@
  */
 
 #include <io/data/color_image/color_image_metadata_reader.h>
+#include <image/image_cache.h>
 #include <image/fisheye/ocam_functions.h>
 #include <geometry/transform.h>
 #include <geometry/system_path.h>
@@ -42,6 +43,13 @@ class fisheye_camera_t
 		 * Each element corresponds with an image on disk
 		 */
 		std::vector<color_image_frame_t> metadata;
+		std::vector<double> timestamps;
+
+		/**
+		 * This cache provides efficient storage of images
+		 */
+		image_cache_t images;
+		std::string image_directory;
 
 		/**
 		 * This list represents the camera poses for each frame
@@ -79,7 +87,8 @@ class fisheye_camera_t
 		 */
 		int init(const std::string& calibfile,
 		         const std::string& metafile,
-		         const system_path_t& path);
+		         const std::string& imgdir,
+			 const system_path_t& path);
 
 		/**
 		 * Clears all information from this structure.
@@ -90,7 +99,26 @@ class fisheye_camera_t
 		 */
 		void clear();
 
-	// TODO left off here
+		/**
+		 * Gets the point color and camera-relative properties
+		 *
+		 * Retrieves the color and confidence of coloring
+		 * for the specified point using the nearest
+		 * camera (w.r.t. time).
+		 *
+		 * @param px  The input world x-coordinate of the point
+		 * @param py  The input world y-coordinate of the point
+		 * @param pz  The input world z-coordinate of the point
+		 * @param t   The input timestamp of this point
+		 * @param r   Output red component of coloring
+		 * @param g   Output green component of coloring
+		 * @param b   Output blue component of coloring
+		 * @param q   Output quality, cos(angle) to camera norm
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int color_point(double px, double py, double pz, double t,
+		                int& r, int& g, int& b, double& q);
 };
 
 #endif

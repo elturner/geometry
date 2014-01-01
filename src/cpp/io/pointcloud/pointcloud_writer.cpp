@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <math.h>
+#include <float.h>
 #include <Eigen/Dense>
 #include <io/data/urg/urg_data_reader.h>
 #include <io/data/d_imager/d_imager_data_reader.h>
@@ -33,6 +34,9 @@ using namespace Eigen;
 
 /* the following definitions are settings for output */
 #define HEIGHT_COLORING_PERIOD 2.0  /* period of height coloring, meters */
+
+/* the following defines the default grayscale color of points */
+#define DEFAULT_POINT_COLOR 100
 
 /* function implementations */
 
@@ -98,6 +102,25 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
+
+	/* success */
+	return 0;
+}
+		
+int pointcloud_writer_t::add_camera(const std::string& metafile,
+                                    const std::string& calibfile,
+                                    const std::string& imgdir)
+{
+	int ret;
+
+	/* create a new fisheye camera object */
+	this->fisheye_cameras.resize(this->fisheye_cameras.size()+1);
+
+	/* initialize the new camera */
+	ret = this->fisheye_cameras.back().init(calibfile, metafile, imgdir,
+	                                        this->path);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
 
 	/* success */
 	return 0;
@@ -183,7 +206,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		
 		/* get synchronized timestamp */
 		ts = timefit.convert(scan.timestamp);
-
+		
 		/* get pose of system at this time */
 		ret = this->path.compute_transform_for(laser_pose,ts,name);
 		if(ret)
@@ -198,12 +221,9 @@ int pointcloud_writer_t::export_urg(const string& name,
 		/* convert to world coordinates */
 		laser_pose.apply(scan_points);
 
-		/* convert to desired units */
-		scan_points *= this->units;
-
 		/* write points to output file */
 		if(this->outfile_format == OBJ_FILE)
-			ret = this->write_to_obj_file(scan_points);
+			ret = this->write_to_obj_file(scan_points, i, ts);
 		else /* write to xyz file by default */
 			ret = this->write_to_xyz_file(scan_points, i, ts);
 
@@ -306,12 +326,9 @@ int pointcloud_writer_t::export_tof(const string& name,
 		/* convert to world coordinates */
 		tof_pose.apply(scan_points);
 
-		/* convert to desired units */
-		scan_points *= this->units;
-
 		/* write points to output file */
 		if(this->outfile_format == OBJ_FILE)
-			ret = this->write_to_obj_file(scan_points);
+			ret = this->write_to_obj_file(scan_points, i, ts);
 		else /* write to xyz file by default */
 			ret = this->write_to_xyz_file(scan_points, i, ts);
 
@@ -346,27 +363,32 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 {
 	size_t i, n;
 	int red, green, blue;
+	int ret;
 
 	/* iterate over points */
 	n = pts.cols();
-	red = green = blue = 255;
+	red = green = blue = DEFAULT_POINT_COLOR;
 	for(i = 0; i < n; i++)
 	{
-		/* write geometry */
-		this->outfile << pts(0,i) << " " 
-		              << pts(1,i) << " " 
-		              << pts(2,i); 
+		/* write geometry in desired units */
+		this->outfile << (pts(0,i) * this->units) << " " 
+		              << (pts(1,i) * this->units) << " " 
+		              << (pts(2,i) * this->units); 
 
 		/* optionally color points */
 		switch(this->coloring)
 		{
 			case NEAREST_IMAGE:
-				/* TODO implement coloring by imagery */
+				ret = this->color_from_cameras(
+					red,green,blue,
+					pts(0,i), pts(1,i), pts(2,i), ts);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
 				break;
 			case NO_COLOR:
 			default:
-				/* make all points white */
-				red = green = blue = 255;
+				/* make all points default color */
+				red = green = blue = DEFAULT_POINT_COLOR;
 				break;
 			case COLOR_BY_HEIGHT:
 				/* color points by height pattern */
@@ -386,35 +408,45 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
-		return -1;
+		return -2;
 	return 0;
 }
 
-int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts)
+int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts,
+                                           int ind, double ts)
 {
 	size_t i, n;
 	int red, green, blue;
+	int ret;
+
+	/* ind is unused in obj files */
+	ind = ind;
 
 	/* iterate over points */
 	n = pts.cols();
-	red = green = blue = 255;
+	red = green = blue = DEFAULT_POINT_COLOR;
 	for(i = 0; i < n; i++)
 	{
-		/* write geometry */
-		this->outfile << "v " << pts(0,i)
-		              << " "  << pts(1,i) 
-		              << " "  << pts(2,i);
+		/* write geometry in desired units */
+		this->outfile << "v "
+		              << (pts(0,i) * this->units) << " " 
+		              << (pts(1,i) * this->units) << " " 
+		              << (pts(2,i) * this->units); 
 		
 		/* optionally color points */
 		switch(this->coloring)
 		{
 			case NEAREST_IMAGE:
-				/* TODO implement coloring by imagery */
+				ret = this->color_from_cameras(
+					red,green,blue,
+					pts(0,i), pts(1,i), pts(2,i), ts);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
 				break;
 			case NO_COLOR:
 			default:
 				/* make all points white */
-				red = green = blue = 255;
+				red = green = blue = DEFAULT_POINT_COLOR;
 				break;
 			case COLOR_BY_HEIGHT:
 				/* color points by height pattern */
@@ -432,7 +464,7 @@ int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts)
 	
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
-		return -1;
+		return -2;
 	return 0;
 }
 
@@ -455,6 +487,49 @@ void pointcloud_writer_t::height_to_color(int& red, int& green, int& blue,
 	if(red >= 256) red = 255;
 	if(green >= 256) green = 255;
 	if(blue >= 256) blue = 255;
+}
+		
+int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
+                                            double x, double y, double z,
+                                            double t)
+{
+	double q, q_best;
+	unsigned int i, n;
+	int ret, r, g, b;
+
+	/* search for the best quality, start with lowest possible value */
+	q_best = -DBL_MAX;
+
+	/* start with default color */
+	r = g = b = DEFAULT_POINT_COLOR;
+
+	/* iterate over cameras */
+	n = this->fisheye_cameras.size();
+	for(i = 0; i < n; i++)
+	{
+		/* get coloring from this camera */
+		ret = this->fisheye_cameras[i].color_point(x,y,z,t,r,g,b,q);
+		if(ret)
+		{
+			cerr << "[pointcloud_writer_t::color_from_cameras]"
+			     << "\tError " << ret << " from color point "
+			     << "using camera #" << i << endl;
+			return PROPEGATE_ERROR(-1, ret);
+		}
+
+		/* check if this is best quality so far */
+		if(q > q_best)
+		{
+			/* save coloring */
+			q_best = q;
+			red = r;
+			green = g;
+			blue = b;
+		}
+	}
+
+	/* success */
+	return 0;
 }
 
 int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,

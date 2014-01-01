@@ -102,15 +102,14 @@ void init_args(cmd_args_t& args)
                        "file should be what was originally exported during "
                        "the data acquisition.", true, 2);
 	args.add(FISHEYE_CAMERA_FLAG, /* specifies params for a camera */
-	               "Specifies four arguments: <camera name> <color "
+	               "Specifies three arguments: <color "
 	               "metadata file> <fisheye calibration file> <image "
-	               "folder>.  The name should be the same as in the "
-	               "hardware config file.  The metadata file should be "
+	               "folder>.  The metadata file should be "
 	               "the output file after bayer converting the images."
 	               "  The calibration file should be a binary .dat file"
-	               "representing the ocam calib results.  The image "
+	               " representing the ocam calib results.  The image "
 	               "directory should be the same one that is referenced"
-	               " by the metadata file.", true, 4);
+	               " by the metadata file.", true, 3);
 	args.add(UNITS_FLAG, /* specifies units to use in output file */
 	               "Given floating-point value specifies the units to "
                        "use in the output file.  A value of 1.0 indicates "
@@ -148,7 +147,11 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	vector<string> fisheye_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
 	double units;
-	int ret;
+	int ret, i, n;
+	tictoc_t clk;
+
+	/* time this function */
+	tic(clk);
 
 	/* get the filenames */
 	pathfile = args.get_val(PATH_FILE_FLAG);
@@ -172,9 +175,6 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	{
 		/* use camera images to color */
 		c = pointcloud_writer_t::NEAREST_IMAGE;
-
-		/* populate camera info */
-		// TODO
 	}
 	else
 		c = pointcloud_writer_t::NO_COLOR;
@@ -189,7 +189,29 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 		return PROPEGATE_ERROR(-1, ret);
 	}
 
+	/* read in camera information, if they are being used */
+	if(c == pointcloud_writer_t::NEAREST_IMAGE)
+	{
+		/* iterate over command-line args */
+		n = fisheye_tags.size() / 3;
+		for(i = 0; i < n; i++)
+		{
+			/* add this camera */
+			ret = writer.add_camera(
+				fisheye_tags[3*i], /* metadata file */
+				fisheye_tags[3*i + 1], /* calib file */
+				fisheye_tags[3*i + 2]); /* img dir */
+			if(ret)
+			{
+				cerr << "Error " << ret << ": Unable to "
+				     << "initialize camera #" << i << endl;
+				return PROPEGATE_ERROR(-2, ret);
+			}
+		}
+	}
+
 	/* success */
+	toc(clk, "Initializing parameters");
 	return 0;
 }
 

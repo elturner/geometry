@@ -90,9 +90,11 @@ void image_cache_t::print_status()
 {
 	listptr_t lit;
 
+	/* print out capacity information */
 	cout << "cache size: " << this->image_list.size() << " / "
 	     << this->capacity << " :" << endl;
 	
+	/* list the files in cache, in order */
 	for(lit = this->image_list.begin();
 			lit != this->image_list.end(); lit++)
 		cout << "\t" << lit->filepath << endl;
