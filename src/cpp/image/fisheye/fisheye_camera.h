@@ -19,6 +19,7 @@
 #include <geometry/system_path.h>
 #include <vector>
 #include <string>
+#include <Eigen/StdVector>
 
 /**
  * The fisheye_camera_t class is used to represent camera output
@@ -57,7 +58,8 @@ class fisheye_camera_t
 		 * It is dynamically allocated, since it contains Eigen
 		 * structures. It is the same size as the metadata list.
 		 */
-		transform_t* poses;
+		std::vector<transform_t,
+		            Eigen::aligned_allocator<transform_t> > poses;
 
 	/* functions */
 	public:

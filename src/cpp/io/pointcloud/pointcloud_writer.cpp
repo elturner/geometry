@@ -111,16 +111,16 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
                                     const std::string& calibfile,
                                     const std::string& imgdir)
 {
+	fisheye_camera_t cam;
 	int ret;
 
-	/* create a new fisheye camera object */
-	this->fisheye_cameras.resize(this->fisheye_cameras.size()+1);
-
 	/* initialize the new camera */
-	ret = this->fisheye_cameras.back().init(calibfile, metafile, imgdir,
-	                                        this->path);
+	ret = cam.init(calibfile, metafile, imgdir, this->path);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
+
+	/* add to this structure */
+	this->fisheye_cameras.push_back(cam);
 
 	/* success */
 	return 0;
@@ -206,7 +206,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		
 		/* get synchronized timestamp */
 		ts = timefit.convert(scan.timestamp);
-		
+
 		/* get pose of system at this time */
 		ret = this->path.compute_transform_for(laser_pose,ts,name);
 		if(ret)
@@ -350,12 +350,20 @@ int pointcloud_writer_t::export_tof(const string& name,
 
 void pointcloud_writer_t::close()
 {
+	unsigned int i, n;
+
 	/* check if output stream is open */
 	if(this->outfile.is_open())
 		this->outfile.close();
 	
 	/* clear input values */
 	this->path.clear();
+
+	/* clear camera info */
+	n = this->fisheye_cameras.size();
+	for(i = 0; i < n; i++)
+		this->fisheye_cameras[i].clear();
+	this->fisheye_cameras.clear();
 }
 		
 int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
@@ -401,7 +409,7 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 		              << " " << ((unsigned int) blue)
 		              << " " << ind /* index of scan */
 		              << " " << ts /* timestamp of scan */
-		              << " 0"; /* TODO serial number of scanner */
+		              << " 0"; /* serial number of scanner */
 		/* new line at end of point information */
 		this->outfile << endl;
 	}
@@ -498,7 +506,7 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	int ret, r, g, b;
 
 	/* search for the best quality, start with lowest possible value */
-	q_best = -DBL_MAX;
+	q_best = 0;
 
 	/* start with default color */
 	r = g = b = DEFAULT_POINT_COLOR;

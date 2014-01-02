@@ -59,7 +59,6 @@ int color_image_frame_t::parse(std::istream& is)
 	ss >> this->index;
 	ss >> this->image_file;
 	ss >> this->timestamp;
-	this->timestamp *= 1000; //TODO remove this 1000
 	ss >> this->exposure;
 	ss >> this->gain;
 

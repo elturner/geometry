@@ -33,7 +33,7 @@ using namespace cv;
 fisheye_camera_t::fisheye_camera_t()
 {
 	/* set default empty values */
-	this->poses = NULL;
+	this->poses.clear();
 	this->image_directory = "";
 
 	/* set cache to hold only one image at a time */
@@ -83,7 +83,7 @@ int fisheye_camera_t::init(const std::string& calibfile,
 	/* initialize lists for metadata and transforms */
 	this->metadata.resize(infile.get_num_images());
 	this->timestamps.resize(infile.get_num_images());
-	this->poses = new transform_t[infile.get_num_images()];
+	this->poses.resize(infile.get_num_images());
 
 	/* iterate over image frames, storing metadata */
 	for(i = 0; i < infile.get_num_images(); i++)
@@ -111,15 +111,8 @@ int fisheye_camera_t::init(const std::string& calibfile,
 
 void fisheye_camera_t::clear()
 {
-	/* check for dynamically allocated memory */
-	if(this->poses != NULL)
-	{
-		/* free it */
-		delete[] (this->poses);
-		this->poses = NULL;
-	}
-
 	/* free lists */
+	this->poses.clear();
 	this->metadata.clear();
 	this->timestamps.clear();
 
@@ -154,13 +147,12 @@ int fisheye_camera_t::color_point(double px, double py, double pz, double t,
 	point3D[1] = pt(1,0);
 	point3D[2] = pt(2,0);
 
-	/* record normalized z-component as the quality of this coloring */
-	q = point3D[2] / sqrt( (point3D[0]*point3D[0]) 
-		+ (point3D[1]*point3D[1]) + (point3D[2]*point3D[2]));
-
 	/* check if point is behind camera */
-	if(q < 0)
-		return 0; /* do nothing */
+	if(point3D[2] < 0)
+	{
+		q = -DBL_MAX; /* bad quality */
+		return 0; /* don't color, not seen by camera */
+	}
 
 	/* the fisheye library assumes camera coordinates use +z facing
 	 * into the camera, so switch x and y, and negate z */
@@ -191,7 +183,14 @@ int fisheye_camera_t::color_point(double px, double py, double pz, double t,
 		b = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[0];
 		g = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[1];
 		r = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[2];
+	
+		/* record normalized z-component as the quality 
+		 * of this coloring */
+		q = -point3D[2] / sqrt( (point3D[0]*point3D[0])
+			+(point3D[1]*point3D[1])+(point3D[2]*point3D[2]) );
 	}
+	else
+		q = -DBL_MAX; /* bad quality */
 
 	/* success */
 	return 0;
