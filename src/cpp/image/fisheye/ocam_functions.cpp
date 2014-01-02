@@ -6,6 +6,7 @@
 ------------------------------------------------------------------------------*/
 
 #include "ocam_functions.h"
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -202,6 +203,56 @@ void cam2world(double point3D[3], double point2D[2], struct ocam_model *myocam_m
 //------------------------------------------------------------------------------
 void world2cam(double point2D[2], double point3D[3], struct ocam_model *myocam_model)
 {
+	double *invpol     = myocam_model->invpol; 
+	double xc          = (myocam_model->xc);
+	double yc          = (myocam_model->yc); 
+	double c           = (myocam_model->c);
+	double d           = (myocam_model->d);
+	double e           = (myocam_model->e);
+	int length_invpol  = (myocam_model->length_invpol);
+	double norm        = sqrt(point3D[0]*point3D[0] 
+	                     + point3D[1]*point3D[1]);
+	double theta       = atan(point3D[2]/norm);
+	double t, t_i;
+	double rho, x, y;
+	double invnorm;
+	int i;
+ 
+	/* check value of norm (it will be zero in center of image */
+	if (norm != 0) 
+	{
+		/* compute value of inverse polynomial at position theta */
+		invnorm = 1/norm;
+		t  = theta;
+		rho = 0; /* init sum P(0)*t^N 
+		          * + P(1)*t^(N-1) + ... + P(N-1)*X + P(N) */
+		t_i = 1; /* set to theta^0 = 1 */
+
+		for (i = 0; i < length_invpol; i++)
+		{
+			/* add i'th coefficient */
+			rho += t_i*invpol[length_invpol - i - 1]; 
+			t_i *= t; /* represents theta^i */
+		}
+
+		/* rho is now the distance (in pixels) of the reprojected
+		 * point from the center of the image */
+		x = point3D[0]*invnorm*rho;
+		y = point3D[1]*invnorm*rho;
+ 
+		/* add center coordinates */
+		point2D[0] = x*c + y*d + xc;
+		point2D[1] = x*e + y   + yc;
+	}
+	else
+	{
+		/* zero norm: return center of image */
+		point2D[0] = xc;
+		point2D[1] = yc;
+	}
+}
+void world2cam_old(double point2D[2], double point3D[3], struct ocam_model *myocam_model)
+{
  double *invpol     = myocam_model->invpol; 
  double xc          = (myocam_model->xc);
  double yc          = (myocam_model->yc); 
@@ -243,6 +294,7 @@ void world2cam(double point2D[2], double point3D[3], struct ocam_model *myocam_m
     point2D[1] = yc;
   }
 }
+
 //------------------------------------------------------------------------------
 void create_perspecive_undistortion_LUT( CvMat *mapx, CvMat *mapy, struct ocam_model *ocam_model, float sf)
 {
