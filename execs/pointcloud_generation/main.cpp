@@ -120,7 +120,7 @@ void init_args(cmd_args_t& args)
 	args.add(OUTPUT_FILE_FLAG, /* where to store the output */
 	               "Specifies the file location of where to export the "
                        "generated pointcloud file.  Valid file formats are "
-                       "any of:  *.txt, *.xyz, *.obj", false, 1);
+                       "any of:  *.txt, *.xyz, *.obj, *.pts", false, 1);
 	args.add(COLOR_BY_HEIGHT_FLAG, /* colors pointcloud by height */
 	               "If seen, will explicitly color the output points "
 	               "based on their height, allowing for the geometry "

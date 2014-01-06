@@ -37,6 +37,7 @@ class pointcloud_writer_t
 		{
 			XYZ_FILE,   /* ascii-formatted xyz file */
 			OBJ_FILE,   /* wavefront OBJ file */
+			PTS_FILE,   /* ascii-formatted pts file */
 			UNKNOWN_FILE /* unknown filetype */
 		};
 
@@ -234,7 +235,23 @@ class pointcloud_writer_t
 		 */
 		int write_to_obj_file(const Eigen::MatrixXd& pts,
 		                      int ind, double ts);
-		
+	
+		/**
+		 * Writes a set of points to a *.pts formatted outfile
+		 *
+		 * Given a set of points as an Eigen matrix, will write
+		 * each point (each column of the matrix) to the output
+		 * file in the format of an *.pts file.
+		 *
+		 * @param pts   The matrix specifying the points to write
+		 * @param ind   The index of this scan
+		 * @param ts    The timestamp for these points
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int write_to_pts_file(const Eigen::MatrixXd& pts,
+		                      int ind, double ts);
+
 		/**
 		 * Generates a color based on the given height
 		 *
@@ -246,7 +263,7 @@ class pointcloud_writer_t
 		 * @param red   The output red component
 		 * @param green The output green component
 		 * @param blue  The output blue component
-		 * @param h     THe input height component
+		 * @param h     The input height component
 		 */
 		void height_to_color(int& red, int& green, int& blue,
 		                     double h) const;

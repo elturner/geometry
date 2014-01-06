@@ -99,9 +99,18 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	}
 
 	/* record additional parameters */
-	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
+
+	/* get output file type */
+	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
+	if(this->outfile_format == UNKNOWN_FILE)
+	{
+		cerr << "Error!  Unknown output file format specified: "
+		     << pcfile << endl;
+		this->outfile.close();
+		return -5;
+	}
 
 	/* success */
 	return 0;
@@ -224,6 +233,8 @@ int pointcloud_writer_t::export_urg(const string& name,
 		/* write points to output file */
 		if(this->outfile_format == OBJ_FILE)
 			ret = this->write_to_obj_file(scan_points, i, ts);
+		else if(this->outfile_format == PTS_FILE)
+			ret = this->write_to_pts_file(scan_points, i, ts);
 		else /* write to xyz file by default */
 			ret = this->write_to_xyz_file(scan_points, i, ts);
 
@@ -329,6 +340,8 @@ int pointcloud_writer_t::export_tof(const string& name,
 		/* write points to output file */
 		if(this->outfile_format == OBJ_FILE)
 			ret = this->write_to_obj_file(scan_points, i, ts);
+		else if(this->outfile_format == PTS_FILE)
+			ret = this->write_to_pts_file(scan_points, i, ts);
 		else /* write to xyz file by default */
 			ret = this->write_to_xyz_file(scan_points, i, ts);
 
@@ -440,6 +453,65 @@ int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts,
 		              << (pts(0,i) * this->units) << " " 
 		              << (pts(1,i) * this->units) << " " 
 		              << (pts(2,i) * this->units); 
+		
+		/* optionally color points */
+		switch(this->coloring)
+		{
+			case NEAREST_IMAGE:
+				ret = this->color_from_cameras(
+					red,green,blue,
+					pts(0,i), pts(1,i), pts(2,i), ts);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
+				break;
+			case NO_COLOR:
+			default:
+				/* make all points white */
+				red = green = blue = DEFAULT_POINT_COLOR;
+				break;
+			case COLOR_BY_HEIGHT:
+				/* color points by height pattern */
+				this->height_to_color(red, green, blue,
+				                      pts(2,i));
+				break;
+		}
+		this->outfile << " " << red
+		              << " " << green
+		              << " " << blue;
+
+		/* write new line */
+		this->outfile << endl;
+	}
+	
+	/* check for failure */
+	if(this->outfile.fail() || this->outfile.bad())
+		return -2;
+	return 0;
+}
+
+int pointcloud_writer_t::write_to_pts_file(const Eigen::MatrixXd& pts,
+                                           int ind, double ts)
+{
+	size_t i, n;
+	int red, green, blue;
+	int ret;
+
+	/* each line represents a point, formatted as:
+	 *
+	 *  x y z ts ind r g b
+	 */
+
+	/* iterate over points */
+	n = pts.cols();
+	red = green = blue = DEFAULT_POINT_COLOR;
+	for(i = 0; i < n; i++)
+	{
+		/* write geometry in desired units */
+		this->outfile << (pts(0,i) * this->units) << " " 
+		              << (pts(1,i) * this->units) << " " 
+		              << (pts(2,i) * this->units) << " "
+		              << ts << " "
+		              << ind;
 		
 		/* optionally color points */
 		switch(this->coloring)
@@ -608,6 +680,8 @@ pointcloud_writer_t::FILE_TYPE pointcloud_writer_t::get_file_type(
 		return XYZ_FILE;
 	if(ext3.compare("obj") == 0)
 		return OBJ_FILE;
+	if(ext3.compare("pts") == 0)
+		return PTS_FILE;
 
 	/* no known file type fits */
 	return UNKNOWN_FILE;
