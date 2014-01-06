@@ -205,51 +205,82 @@ class pointcloud_writer_t
 	private:
 
 		/**
-		 * Writes a set of points to an *.xyz formatted outfile
+		 * Writes a set of points to specified outfile
 		 *
 		 * Given a set of points as an Eigen matrix, will write
 		 * each point (each column of the matrix) to the output
+		 * file in the format specified by the structure.
+		 *
+		 * @param pts   The matrix specifying the points to write
+		 * @param ind   The index of this scan
+		 * @param ts    The timestamp for these points
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int write_to_file(const Eigen::MatrixXd& pts,
+		                      int ind, double ts);
+		
+		/**
+		 * Writes a point to an *.xyz formatted outfile
+		 *
+		 * Given a point and its info, will write to the output
 		 * file in the format of an *.xyz file.
 		 *
-		 * @param pts   The matrix specifying the points to write
+		 * @param x     The x-coordinate of point to write
+		 * @param y     The y-coordinate of point to write
+		 * @param z     The z-coordinate of point to write
+		 * @param r     The red component of color to write
+		 * @param g     The green component of color to write
+		 * @param b     The blue component of color to write
 		 * @param ind   The index of this scan
 		 * @param ts    The timestamp for these points
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int write_to_xyz_file(const Eigen::MatrixXd& pts,
+		int write_to_xyz_file(double x, double y, double z,
+		                      int r, int g, int b,
 		                      int ind, double ts);
-
+			
 		/**
-		 * Writes a set of points to an *.obj formatted outfile
+		 * Writes a point to an *.obj formatted outfile
 		 *
-		 * Given a set of points as an Eigen matrix, will write
-		 * each point (each column of the matrix) to the output
+		 * Given a point and its info, will write to the output
 		 * file in the format of an *.obj file.
 		 *
-		 * @param pts   The matrix specifying the points to write
+		 * @param x     The x-coordinate of point to write
+		 * @param y     The y-coordinate of point to write
+		 * @param z     The z-coordinate of point to write
+		 * @param r     The red component of color to write
+		 * @param g     The green component of color to write
+		 * @param b     The blue component of color to write
 		 * @param ind   The index of this scan
 		 * @param ts    The timestamp for these points
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int write_to_obj_file(const Eigen::MatrixXd& pts,
+		int write_to_obj_file(double x, double y, double z,
+		                      int r, int g, int b,
 		                      int ind, double ts);
-	
+		
 		/**
-		 * Writes a set of points to a *.pts formatted outfile
+		 * Writes a point to an *.pts formatted outfile
 		 *
-		 * Given a set of points as an Eigen matrix, will write
-		 * each point (each column of the matrix) to the output
+		 * Given a point and its info, will write to the output
 		 * file in the format of an *.pts file.
 		 *
-		 * @param pts   The matrix specifying the points to write
+		 * @param x     The x-coordinate of point to write
+		 * @param y     The y-coordinate of point to write
+		 * @param z     The z-coordinate of point to write
+		 * @param r     The red component of color to write
+		 * @param g     The green component of color to write
+		 * @param b     The blue component of color to write
 		 * @param ind   The index of this scan
 		 * @param ts    The timestamp for these points
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int write_to_pts_file(const Eigen::MatrixXd& pts,
+		int write_to_pts_file(double x, double y, double z,
+		                      int r, int g, int b,
 		                      int ind, double ts);
 
 		/**

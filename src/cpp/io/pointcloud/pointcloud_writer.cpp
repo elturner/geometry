@@ -231,13 +231,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		laser_pose.apply(scan_points);
 
 		/* write points to output file */
-		if(this->outfile_format == OBJ_FILE)
-			ret = this->write_to_obj_file(scan_points, i, ts);
-		else if(this->outfile_format == PTS_FILE)
-			ret = this->write_to_pts_file(scan_points, i, ts);
-		else /* write to xyz file by default */
-			ret = this->write_to_xyz_file(scan_points, i, ts);
-
+		ret = this->write_to_file(scan_points, i, ts);
 		if(ret)
 		{
 			/* report error */
@@ -338,20 +332,14 @@ int pointcloud_writer_t::export_tof(const string& name,
 		tof_pose.apply(scan_points);
 
 		/* write points to output file */
-		if(this->outfile_format == OBJ_FILE)
-			ret = this->write_to_obj_file(scan_points, i, ts);
-		else if(this->outfile_format == PTS_FILE)
-			ret = this->write_to_pts_file(scan_points, i, ts);
-		else /* write to xyz file by default */
-			ret = this->write_to_xyz_file(scan_points, i, ts);
-
+		ret = this->write_to_file(scan_points, i, ts);
 		if(ret)
 		{
 			/* report error */
 			prog_bar.clear();
 			cerr << "Error!  Difficulty writing to outfile"
 			     << endl;
-			return PROPEGATE_ERROR(-5, ret);
+			return PROPEGATE_ERROR(-6, ret);
 		}
 	}
 
@@ -379,10 +367,11 @@ void pointcloud_writer_t::close()
 	this->fisheye_cameras.clear();
 }
 		
-int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
+int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
                                            int ind, double ts)
 {
 	size_t i, n;
+	double x, y, z;
 	int red, green, blue;
 	int ret;
 
@@ -391,18 +380,17 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 	red = green = blue = DEFAULT_POINT_COLOR;
 	for(i = 0; i < n; i++)
 	{
-		/* write geometry in desired units */
-		this->outfile << (pts(0,i) * this->units) << " " 
-		              << (pts(1,i) * this->units) << " " 
-		              << (pts(2,i) * this->units); 
+		/* get geometry */
+		x = pts(0,i);
+		y = pts(1,i);
+		z = pts(2,i);
 
 		/* optionally color points */
 		switch(this->coloring)
 		{
 			case NEAREST_IMAGE:
 				ret = this->color_from_cameras(
-					red,green,blue,
-					pts(0,i), pts(1,i), pts(2,i), ts);
+					red,green,blue,x,y,z,ts);
 				if(ret)
 					return PROPEGATE_ERROR(-1, ret);
 				break;
@@ -413,138 +401,104 @@ int pointcloud_writer_t::write_to_xyz_file(const Eigen::MatrixXd& pts,
 				break;
 			case COLOR_BY_HEIGHT:
 				/* color points by height pattern */
-				this->height_to_color(red, green, blue,
-				                      pts(2,i));
+				this->height_to_color(red, green, blue, z);
 				break;
 		}
-		this->outfile << " " << ((unsigned int) red)
-		              << " " << ((unsigned int) green)
-		              << " " << ((unsigned int) blue)
-		              << " " << ind /* index of scan */
-		              << " " << ts /* timestamp of scan */
-		              << " 0"; /* serial number of scanner */
-		/* new line at end of point information */
-		this->outfile << endl;
-	}
-
-	/* check for failure */
-	if(this->outfile.fail() || this->outfile.bad())
-		return -2;
-	return 0;
-}
-
-int pointcloud_writer_t::write_to_obj_file(const Eigen::MatrixXd& pts,
-                                           int ind, double ts)
-{
-	size_t i, n;
-	int red, green, blue;
-	int ret;
-
-	/* ind is unused in obj files */
-	ind = ind;
-
-	/* iterate over points */
-	n = pts.cols();
-	red = green = blue = DEFAULT_POINT_COLOR;
-	for(i = 0; i < n; i++)
-	{
-		/* write geometry in desired units */
-		this->outfile << "v "
-		              << (pts(0,i) * this->units) << " " 
-		              << (pts(1,i) * this->units) << " " 
-		              << (pts(2,i) * this->units); 
 		
-		/* optionally color points */
-		switch(this->coloring)
-		{
-			case NEAREST_IMAGE:
-				ret = this->color_from_cameras(
-					red,green,blue,
-					pts(0,i), pts(1,i), pts(2,i), ts);
-				if(ret)
-					return PROPEGATE_ERROR(-1, ret);
-				break;
-			case NO_COLOR:
-			default:
-				/* make all points white */
-				red = green = blue = DEFAULT_POINT_COLOR;
-				break;
-			case COLOR_BY_HEIGHT:
-				/* color points by height pattern */
-				this->height_to_color(red, green, blue,
-				                      pts(2,i));
-				break;
-		}
-		this->outfile << " " << red
-		              << " " << green
-		              << " " << blue;
-
-		/* write new line */
-		this->outfile << endl;
+		/* write points to output file */
+		if(this->outfile_format == OBJ_FILE)
+			ret = this->write_to_obj_file(x, y, z,
+			                              red, green, blue,
+			                              ind, ts);
+		else if(this->outfile_format == PTS_FILE)
+			ret = this->write_to_pts_file(x, y, z,
+			                              red, green, blue,
+			                              ind, ts);
+		else /* write to xyz file by default */
+			ret = this->write_to_xyz_file(x, y, z,
+			                              red, green, blue,
+			                              ind, ts);
 	}
-	
+
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
 		return -2;
 	return 0;
 }
 
-int pointcloud_writer_t::write_to_pts_file(const Eigen::MatrixXd& pts,
+int pointcloud_writer_t::write_to_xyz_file(double x, double y, double z,
+                                           int r, int g, int b,
                                            int ind, double ts)
 {
-	size_t i, n;
-	int red, green, blue;
-	int ret;
+	/* write geometry in desired units */
+	this->outfile << (x * this->units) << " " 
+	              << (y * this->units) << " " 
+	              << (z * this->units) 
+	              << " " << ((unsigned int) r)
+	              << " " << ((unsigned int) g)
+	              << " " << ((unsigned int) b)
+	              << " " << ind /* index of scan */
+	              << " " << ts /* timestamp of scan */
+	              << " 0"; /* serial number of scanner */
+	
+	/* new line at end of point information */
+	this->outfile << endl;
 
+	/* check for failure */
+	if(this->outfile.fail() || this->outfile.bad())
+		return -1;
+	return 0;
+}
+
+int pointcloud_writer_t::write_to_obj_file(double x, double y, double z,
+                                           int r, int g, int b,
+                                           int ind, double ts)
+{
+	/* the following values are not used */
+	ind = ind;
+	ts = ts;
+
+	/* write geometry in desired units */
+	this->outfile << "v " << (x * this->units) << " " 
+	              << (y * this->units) << " " 
+	              << (z * this->units) 
+	              << " " << ((unsigned int) r)
+	              << " " << ((unsigned int) g)
+	              << " " << ((unsigned int) b);
+	
+	/* new line at end of point information */
+	this->outfile << endl;
+
+	/* check for failure */
+	if(this->outfile.fail() || this->outfile.bad())
+		return -1;
+	return 0;
+}
+
+int pointcloud_writer_t::write_to_pts_file(double x, double y, double z,
+                                           int r, int g, int b,
+                                           int ind, double ts)
+{
 	/* each line represents a point, formatted as:
 	 *
 	 *  x y z ts ind r g b
 	 */
 
-	/* iterate over points */
-	n = pts.cols();
-	red = green = blue = DEFAULT_POINT_COLOR;
-	for(i = 0; i < n; i++)
-	{
-		/* write geometry in desired units */
-		this->outfile << (pts(0,i) * this->units) << " " 
-		              << (pts(1,i) * this->units) << " " 
-		              << (pts(2,i) * this->units) << " "
-		              << ts << " "
-		              << ind;
-		
-		/* optionally color points */
-		switch(this->coloring)
-		{
-			case NEAREST_IMAGE:
-				ret = this->color_from_cameras(
-					red,green,blue,
-					pts(0,i), pts(1,i), pts(2,i), ts);
-				if(ret)
-					return PROPEGATE_ERROR(-1, ret);
-				break;
-			case NO_COLOR:
-			default:
-				/* make all points white */
-				red = green = blue = DEFAULT_POINT_COLOR;
-				break;
-			case COLOR_BY_HEIGHT:
-				/* color points by height pattern */
-				this->height_to_color(red, green, blue,
-				                      pts(2,i));
-				break;
-		}
-		this->outfile << " " << red
-		              << " " << green
-		              << " " << blue;
-
-		/* write new line */
-		this->outfile << endl;
-	}
+	/* write geometry in desired units */
+	this->outfile << "v " << (x * this->units) << " " 
+	              << (y * this->units) << " " 
+	              << (z * this->units)
+		      << ts << " " << ind
+	              << " " << ((unsigned int) r)
+	              << " " << ((unsigned int) g)
+	              << " " << ((unsigned int) b);
 	
+	/* new line at end of point information */
+	this->outfile << endl;
+
 	/* check for failure */
 	if(this->outfile.fail() || this->outfile.bad())
-		return -2;
+		return -1;
 	return 0;
 }
 
