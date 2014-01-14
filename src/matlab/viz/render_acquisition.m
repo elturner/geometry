@@ -41,7 +41,7 @@ function [] = render_acquisition(configfile, pathfile, timefile, toffile)
 	
 	% test data for urg
 	theta = linspace(-135,135,1000) * pi / 180;
-	URG = [cos(theta);sin(theta);zeros(size(theta))];
+	URG = sqrt(2) * 1.5 * [cos(theta);sin(theta);zeros(size(theta))];
 	clear theta;
 
 	% prepare figure
@@ -53,7 +53,7 @@ function [] = render_acquisition(configfile, pathfile, timefile, toffile)
 		
 		% get transform of system -> world for this pose
 		T = poses(1:3,i); % translation, units: meters
-		R = get_rotation_matrix(poses(4:6,i)); % rotation matrix
+		R = convert_NED_to_mat(poses(4:6,i)); % rotation matrix
 
 		% get list of nearby poses
 		near_poses = [max(1,i-20):1:min(num_poses,i+20)];
@@ -140,35 +140,6 @@ function [] = render_acquisition(configfile, pathfile, timefile, toffile)
 		view(az, el);
 		drawnow;
 	end
-end
-
-% given euler angles in degrees and NED coordinates, 
-% computes rotation matrix
-function R = get_rotation_matrix(r)
-
-	roll = r(1);
-	pitch = r(2);
-	yaw = r(3);
-
-	% construct a rotation matrix
-	Rx = [1, 0,          0;
-	      0, cos(roll), -sin(roll);
-	      0, sin(roll),  cos(roll)];
-
-	Ry = [ cos(pitch), 0, sin(pitch);
-	       0,          1,          0;
-	      -sin(pitch), 0, cos(pitch)];
-
-	Rz = [cos(yaw), -sin(yaw), 0;
-	      sin(yaw),  cos(yaw), 0;
-	      0       ,  0       , 1];
-
-	NED2ENU = [	0  1  0 ;
-			1  0  0 ;
-			0  0 -1 ];
-
-	% save rotation matrix
-	R = (NED2ENU * Rz * Ry * Rx);
 end
 
 % get nearest pose indices for each scan in the tof scan structure
