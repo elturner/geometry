@@ -1,0 +1,91 @@
+potential file extensions:
+
+	lol -	Localization Output List
+	loc -	Localization Output Contents
+	lof -	Localization Output Format
+	path -	Position and Transform History
+	slop -	System Localization Output Path
+
+header example:
+
+	lol
+	format            little_endian
+	version           1.0
+	dataset_name      20131204-12
+	global_position   true
+	global_rotation   false
+	path3d            true
+	axis_alignment    ENU
+	rotation_order    321
+	look_vector	  0 0 1
+	units             meters
+	element           rigid_transform  13
+	element           pose             12321
+	end_header
+
+settings key-value pairs:
+
+	key		           valid values
+	------------------------------------------
+	format                     "little_endian", "big_endian", "ascii"
+	
+	version	                   <float>
+	
+	dataset_name               <string>
+	
+	global_position            "true", "false"
+	
+	global_rotation            "true", "false"
+	
+	path3d                     "true", "false"
+	
+	axis_alignment             "ENU", "NED"
+	
+	rotation_order             "321", "312", "123"
+	
+	look_vector                <float> <float> <float>
+
+	units                      "meters", "centimeters", "millimeters",
+	                           "kilometers", "inches", "feet", "miles"
+	
+	element                    <type> <unsigned int>
+
+valid element types:
+
+	rigid_transform:
+
+		value           units          type         size
+		--------------------------------------------------
+
+		length_of_name  characters     uint8        1 byte
+		name                           string       <length_of_name>
+                tToCommon_x     <units>        double       8 bytes
+                tToCommon_y     <units>        double       8 bytes
+                tToCommon_z     <units>        double       8 bytes
+                rToCommon_roll  radians        double       8 bytes
+                rToCommon_pitch radians        double       8 bytes
+                rToCommon_yaw   radians        double       8 bytes
+
+
+	pose (if path3d = true):
+
+		value           units          type        size
+		-------------------------------------------------
+
+		timestamp       seconds        double      8 bytes
+		x               <units>        double      8 bytes
+		y               <units>        double      8 bytes
+		z               <units>        double      8 bytes
+		roll            radians        double      8 bytes
+		pitch           radians        double      8 bytes
+		yaw             radians        double      8 bytes
+
+	pose (if path3d = false):
+		
+		value           units          type        size
+		-------------------------------------------------
+
+		timestamp       seconds        double      8 bytes
+		x               <units>        double      8 bytes
+		y               <units>        double      8 bytes
+		heading         radians        double      8 bytes
