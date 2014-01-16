@@ -17,6 +17,7 @@
 
 import os
 import sys
+import shutil
 import subprocess
 
 # Get the location of this file
@@ -67,12 +68,14 @@ if not os.path.exists(LOCALIZATION_FILE):
 EXE_DIR = os.path.join(SCRIPT_LOCATION,'..','bin')
 
 # The following locations are relative paths from the 'scripts/' folder
-POINTCLOUD_EXE = os.path.abspath(os.path.join(EXE_DIR,"pointcloud_gen"))
+POINTCLOUD_EXE = os.path.abspath(os.path.join(EXE_DIR,  "pointcloud_gen"))
 PART_PC_LEVELS_EXE = os.path.abspath(os.path.join(EXE_DIR, \
                                      "partition_pointcloud_levels"))
-XYZ2DQ_EXE = os.path.abspath(os.path.join(EXE_DIR,"xyz2dq"))
-FLOORPLAN_EXE = os.path.abspath(os.path.join(EXE_DIR,"floorplan_gen"))
-
+XYZ2DQ_EXE     = os.path.abspath(os.path.join(EXE_DIR,  "xyz2dq"))
+FLOORPLAN_EXE  = os.path.abspath(os.path.join(EXE_DIR,  "floorplan_gen"))
+FP2MODEL_EXE   = os.path.abspath(os.path.join(EXE_DIR,  "fp2model"))
+FP2MODEL_TEXTURE_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
+                                       "..","execs","fp2model","texture"))
 if sys.platform == 'win32' :
 	TIME_SYNC_EXE += '.exe'
 	BAYER_EXE += '.exe'
@@ -95,9 +98,14 @@ if not os.path.exists(XYZ2DQ_EXE):
 	sys.exit(6)
 
 if not os.path.exists(FLOORPLAN_EXE):
-	print "Error!  Could not find pointcloud generation executable:", \
+	print "Error!  Could not find floorplan executable:", \
 	      FLOORPLAN_EXE
 	sys.exit(7)
+
+if not os.path.exists(FP2MODEL_EXE):
+	print "Error!  Could not find floorplan -> model executable:", \
+	      FP2MODEL_EXE
+	sys.exit(8)
 
 ################################
 ##### Input File Locations #####
@@ -117,13 +125,15 @@ left_camera_dir         = os.path.join("data", "dalsa", "left_camera", \
                                        "color")
 left_camera_metadata    = os.path.join("data", "dalsa", "left_camera", \
                                        "color_left_camera_metadata.txt")
-left_camera_calib       = "TODO" # TODO
+left_camera_calib       = os.path.join("calib", "camera", "intrinsic", \
+                                       "ocam_calib_left.dat")
 right_camera_dir         = os.path.join("data","dalsa","right_camera", \
                                         "color")
 right_camera_metadata    = os.path.join("data", "dalsa", \
                                         "right_camera", \
                                         "color_right_camera_metadata.txt")
-right_camera_calib       = "TODO" # TODO
+right_camera_calib       = os.path.join("calib", "camera", "intrinsic", \
+                                        "ocam_calib_right.dat")
 
 #################################
 ##### Output File Locations #####
@@ -139,6 +149,10 @@ POINTCLOUD_DIR = os.path.join(MODELS_DIR, "pointclouds")
 if not os.path.exists(POINTCLOUD_DIR):
 	os.makedirs(POINTCLOUD_DIR)
 
+PC_LEVELS_DIR  = os.path.join(POINTCLOUD_DIR, "levels")
+if not os.path.exists(PC_LEVELS_DIR):
+	os.makedirs(PC_LEVELS_DIR)
+
 FLOORPLAN_DIR  = os.path.join(MODELS_DIR, "floorplan")
 if not os.path.exists(FLOORPLAN_DIR):
 	os.makedirs(FLOORPLAN_DIR)
@@ -147,11 +161,12 @@ if not os.path.exists(FLOORPLAN_DIR):
 # this script
 mad_file        = LOCALIZATION_FILE
 xyz_file        = os.path.join(POINTCLOUD_DIR, DATASET_NAME + "_full.xyz")
-xyz_levels      = os.path.join(POINTCLOUD_DIR, DATASET_NAME + "_level_")
-xyz_hist        = os.path.joint(POINTCLOUD_DIR, DATASET_NAME + "_hist.m")
+xyz_levels      = os.path.join(PC_LEVELS_DIR,  DATASET_NAME + "_level_")
+xyz_hist        = os.path.join(PC_LEVELS_DIR,  DATASET_NAME + "_hist.m")
 dq_file         = os.path.join(FLOORPLAN_DIR,  "wall_samples.dq")
 fp_file         = os.path.join(FLOORPLAN_DIR,  DATASET_NAME + ".fp")
-obj_file        = os.path.join(FLOORPLAN_DIR,  DATASET_NAME + ".obj")
+texture_dir     = os.path.join(FLOORPLAN_DIR,  "texture")
+obj_file        = os.path.join(texture_dir,  DATASET_NAME + ".obj")
 
 ####################
 ##### RUN CODE #####
@@ -166,7 +181,7 @@ print ""
 
 print "##### creating colored pointcloud #####"
 ret = subprocess.call([POINTCLOUD_EXE, \
-                      "-c", hardware_config_file, \
+                      "-c", hardware_config_xml, \
                       "-f", left_camera_metadata, left_camera_calib, \
                             left_camera_dir, \
                       "-f", right_camera_metadata, right_camera_calib, \
@@ -180,7 +195,7 @@ ret = subprocess.call([POINTCLOUD_EXE, \
                       stdout=None, stderr=None, stdin=None, shell=False)
 if ret != 0:
 	print "Error! Pointcloud generation program returned",ret
-	sys.exit(8)
+	sys.exit(9)
 
 ###################################
 ##### POINTCLOUD PARTITIONING #####
@@ -194,7 +209,7 @@ ret = subprocess.call([PART_PC_LEVELS_EXE, \
                       stdout=None, stderr=None, stdin=None, shell=False)
 if ret != 0:
 	print "Error! Pointcloud partitioning program returned",ret
-	sys.exit(9)
+	sys.exit(10)
 
 # TODO look at this output and use it for further processing
 
@@ -209,21 +224,31 @@ ret = subprocess.call([XYZ2DQ_EXE, \
                       stdout=None, stderr=None, stdin=None, shell=False)
 if ret != 0:
 	print "Error! Wall sampling program returned",ret
-	sys.exit(10)
+	sys.exit(11)
 
 ################################
 ##### FLOORPLAN GENERATION #####
 ################################
 
+# make floorplan from wall samples
 print "##### generating floor plans #####"
 ret = subprocess.call([FLOORPLAN_EXE, \
                       dq_file, mad_file, fp_file], \
                       executable=FLOORPLAN_EXE, cwd=DATASET_DIR, \
                       stdout=None, stderr=None, stdin=None, shell=False)
 if ret != 0:
-	print "Error! Wall sampling program returned",ret
-	sys.exit(11)
+	print "Error! Floorplan generation program returned",ret
+	sys.exit(12)
 
+# copy over texture directory for model
+if not os.path.exists(texture_dir):
+	shutil.copytree(FP2MODEL_TEXTURE_DIR, texture_dir) 
 
-# TODO left off here
-
+# make obj from floorplan
+print "##### generating extruded model #####"
+ret = subprocess.call([FP2MODEL_EXE, \
+                      obj_file, fp_file], \
+                      executable=FP2MODEL_EXE, cwd=DATASET_DIR, \
+                      stdout=None, stderr=None, stdin=None, shell=False)
+if ret != 0:
+	print "Error! Floorplan->model program returned",ret
