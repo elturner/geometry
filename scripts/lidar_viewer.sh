@@ -15,6 +15,7 @@
 # program paths
 PREPROCESSOR_PROG="/home/elturner/Documents/research/programs/LidarViewer-2.12/bin/LidarPreprocessor"
 VIEWER_PROG="/home/elturner/Documents/research/programs/LidarViewer-2.12/bin/LidarViewer"
+ILLUMINATOR_PROG="/home/elturner/Documents/research/programs/LidarViewer-2.12/bin/LidarIlluminator"
 
 #############################################################
 
@@ -49,4 +50,5 @@ ${PREPROCESSOR_PROG} -np 1024 -ooc 1000 -o ${oct_file} -ASCIIRGB 0 1 2 3 4 5 ${x
 
 # run the viewer
 echo "viewing pointcloud..."
-${VIEWER_PROG} ${oct_file}
+#${VIEWER_PROG} ${oct_file}
+${ILLUMINATOR_PROG} -cache 2000 -radius 50
