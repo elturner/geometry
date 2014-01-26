@@ -32,6 +32,7 @@ cmd_args_t::cmd_args_t()
 	this->tags.clear();
 	this->files.clear();
 	this->required_file_types.clear();
+	this->filetype_purposes.clear();
 }
 
 cmd_args_t::~cmd_args_t()
@@ -40,6 +41,7 @@ cmd_args_t::~cmd_args_t()
 	this->tags.clear();
 	this->files.clear();
 	this->required_file_types.clear();
+	this->filetype_purposes.clear();
 }
 
 void cmd_args_t::add(const string& t, const string& d, bool o, int n)
@@ -52,10 +54,12 @@ void cmd_args_t::add(const string& t, const string& d, bool o, int n)
 	this->tags.insert(make_pair<string, cmd_tag_t>(t, tag));
 }
 		
-void cmd_args_t::add_required_file_type(const std::string& ext, int m)
+void cmd_args_t::add_required_file_type(const string& ext, int m,
+                                        const string& purpose)
 {
 	/* insert this file type into the required file types map */
 	this->required_file_types[ext] = m;
+	this->filetype_purposes[ext] = purpose;
 }
 
 int cmd_args_t::parse(int argc, char** argv)
@@ -181,6 +185,7 @@ void cmd_args_t::print_usage(char* prog_name) const
 {
 	map<string, cmd_tag_t>::const_iterator it;
 	map<string, int>::const_iterator rit;
+	map<string, string>::const_iterator pit;
 	string tab;
 	stringstream line;
 	int i, indent;
@@ -218,27 +223,31 @@ void cmd_args_t::print_usage(char* prog_name) const
 		line << "<files...>";
 	cmd_args_t::write_line_with_indent(line.str(), indent);
 
-	/* print details */
-	cerr << endl << endl
-	     << " Where:" << endl
-	     << endl;
-
-	/* iterate over each tag */
-	for(it = this->tags.begin(); it != this->tags.end(); it++)
+	/* print details about tags */
+	cerr << endl << endl;
+	if(this->tags.size() > 0)
 	{
-		/* prepare tag string */
-		line.str("");
-		line << tab << it->second.tag; 
-		if(it->second.tag.size() < tab.size())
-			line << tab.substr(it->second.tag.size());
-		else
-			line << tab;
-		indent = line.str().size();
+		cerr << " Where:" << endl
+		     << endl;
 
-		/* print description with indents */
-		line << (it->second.optional ? "Optional.  " : "")
-		     << it->second.description << endl << endl; 
-		cmd_args_t::write_line_with_indent(line.str(), indent);
+		/* iterate over each tag */
+		for(it = this->tags.begin(); it != this->tags.end(); it++)
+		{
+			/* prepare tag string */
+			line.str("");
+			line << tab << it->second.tag; 
+			if(it->second.tag.size() < tab.size())
+				line << tab.substr(it->second.tag.size());
+			else
+				line << tab;
+			indent = line.str().size();
+	
+			/* print description with indents */
+			line << (it->second.optional ? "Optional.  " : "")
+			     << it->second.description << endl << endl; 
+			cmd_args_t::write_line_with_indent(line.str(),
+			                                   indent);
+		}
 	}
 
 	/* print required file information */
@@ -252,11 +261,27 @@ void cmd_args_t::print_usage(char* prog_name) const
 				rit != this->required_file_types.end();
 				rit++)
 		{
+			/* prepare indent string */
+			line.str("");
+			line << tab << "*." << rit->first; 
+			if(rit->first.size()+2 < tab.size())
+				line << tab.substr(rit->first.size()+2);
+			else
+				line << tab;
+			indent = line.str().size();
+	
+			/* get purpose of file */
+			pit = this->filetype_purposes.find(rit->first);
+
 			/* print info about this file type */
-			cerr << tab << "*." << rit->first
-			     << tab << "At least " << rit->second
+			line << "At least " << rit->second
 			     << (rit->second == 1 ? " file " : " files ")
-			     << "required" << endl << endl;
+			     << "required."
+			     << ((pit == this->filetype_purposes.end())
+			          ? "" : ("  " + pit->second))
+			     << endl << endl;
+			cmd_args_t::write_line_with_indent(line.str(),
+			                                   indent);
 		}
 	}
 

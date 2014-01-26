@@ -51,6 +51,10 @@ class cmd_args_t
 		 * file required. */
 		std::map<std::string, int> required_file_types;
 
+		/* this map indicates the purpose for each file type
+		 * extension, if provided */
+		std::map<std::string, std::string> filetype_purposes;
+
 	/* functions */
 	public:
 
@@ -86,11 +90,13 @@ class cmd_args_t
 		 * thrown if fewer than this many instances of the
 		 * specified file type are provided.
 		 *
-		 * @param ext   The extension to look for when parsing
-		 * @param m     The minimum number of occurances of ext
+		 * @param ext     The extension to look for when parsing
+		 * @param m       The minimum number of occurances of ext
+		 * @param purpose Human-readable description of filetype
 		 */
 		void add_required_file_type(const std::string& ext,
-		                            int m = 1);
+		                            int m = 1,
+		                            const std::string& purpose="");
 
 		/**
 		 * Parses the specified command-line arguments
