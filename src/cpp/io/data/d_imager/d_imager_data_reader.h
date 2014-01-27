@@ -29,8 +29,8 @@ class d_imager_frame_t
 
 		/* the following parameters are defined by
 		 * the scanner, and do not change from frame-to-frame */
-		int image_width;  /* dimensions of depth image */
-		int image_height; /* dimensions of depth image */
+		unsigned int image_width;  /* dimensions of depth image */
+		unsigned int image_height; /* dimensions of depth image */
 
 		/* the following parameters represent the data of 
 		 * this scan frame */
@@ -107,8 +107,8 @@ class d_imager_reader_t
 		std::ifstream infile;
 
 		/* Scanner metadata */
-		int image_width;  /* image dimensions */
-		int image_height; /* image dimensions */
+		unsigned int image_width;  /* image dimensions */
+		unsigned int image_height; /* image dimensions */
 		int fps;  /* the frames-per-second reported */
 		int freq; /* the frequency mode of the scanner */
 
@@ -134,6 +134,22 @@ class d_imager_reader_t
 		~d_imager_reader_t();
 
 		/**
+		 * Retrieves the image width value from file.
+		 */
+		inline unsigned int get_image_width() const
+		{
+			return this->image_width;
+		};
+		
+		/**
+		 * Retrieves the image height value from file.
+		 */
+		inline unsigned int get_image_height() const
+		{
+			return this->image_height;
+		};
+
+		/**
 		 * Retrieves the fps value from file
 		 *
 		 * This function will return the fps value indicated
@@ -146,7 +162,19 @@ class d_imager_reader_t
 			return this->fps;
 		};
 
-		inline unsigned int get_num_scans() const {
+		/**
+		 * Retrieves the freq value from file.
+		 */
+		inline int get_freq() const
+		{
+			return this->freq;
+		};
+
+		/**
+		 * Retrieves the num_scans value from file.
+		 */
+		inline unsigned int get_num_scans() const 
+		{
 			return this->num_scans;
 		};
 

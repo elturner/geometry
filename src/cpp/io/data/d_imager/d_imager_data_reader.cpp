@@ -28,8 +28,8 @@ using namespace std;
 d_imager_frame_t::d_imager_frame_t()
 {
 	/* initialize empty frame */
-	this->image_width = -1;
-	this->image_height = -1;
+	this->image_width = 0;
+	this->image_height = 0;
 	this->index = -1;
 	this->timestamp = 0;
 	this->xdat = NULL;
@@ -122,8 +122,8 @@ int d_imager_frame_t::parse(istream& is)
 d_imager_reader_t::d_imager_reader_t()
 {
 	/* set default values */
-	this->image_width = -1;
-	this->image_height = -1;
+	this->image_width = 0;
+	this->image_height = 0;
 	this->fps = -1;
 	this->freq = -1;
 	this->read_so_far = 0;
@@ -156,11 +156,14 @@ int d_imager_reader_t::open(const std::string& filename)
 		return -2;
 
 	/* read header metadata */
-	this->infile.read( (char*) (&(this->image_width)),  	  sizeof(int) );
-	this->infile.read( (char*) (&(this->image_height)), 	  sizeof(int) );
-	this->infile.read( (char*) (&(this->fps)),          	  sizeof(int) );
-	this->infile.read( (char*) (&(this->freq)),         	  sizeof(int) );
-	this->infile.read( (char*) (&(this->num_scans)), sizeof(unsigned int) );
+	this->infile.read((char*) (&(this->image_width)), 
+	                  sizeof(unsigned int) );
+	this->infile.read((char*) (&(this->image_height)),
+	                  sizeof(unsigned int) );
+	this->infile.read((char*) (&(this->fps)), sizeof(int) );
+	this->infile.read((char*) (&(this->freq)), sizeof(int) );
+	this->infile.read((char*) (&(this->num_scans)),
+	                  sizeof(unsigned int) );
 
 	/* initialize counter */
 	this->read_so_far = 0;
