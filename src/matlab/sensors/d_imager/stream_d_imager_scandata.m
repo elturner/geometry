@@ -54,11 +54,16 @@ function [] = stream_d_imager_scandata(filename, pc, Rtocommon, Ttocommon)
 	num_scans    = fread(fid, 1, 'uint32');
 
 	% read each scan
+	index = 0;
 	pts_per_scan = image_width * image_height;
 	while(~feof(fid))
 	
 		% read in timestamp
 		timestamp = fread(fid, 1, 'uint64');
+		if(isempty(timestamp))
+			continue;
+		end
+		index = index + 1;
 
 		% read in pointcloud
 		xdat = fread(fid, pts_per_scan, 'int16');
@@ -82,6 +87,7 @@ function [] = stream_d_imager_scandata(filename, pc, Rtocommon, Ttocommon)
 			M = reshape(ndat, image_width, image_height)';
 
 			imagesc(M);
+			title(['frame ', num2str(index)]); 
 		end
 
 		% render the frame

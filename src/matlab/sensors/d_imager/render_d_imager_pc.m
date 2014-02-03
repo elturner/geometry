@@ -5,8 +5,8 @@ function [] = render_d_imager_pc(scan)
 	%
 
 	% initialize figure
+	clf;
 	axis equal;
-	hold off;
 	set(gcf, 'renderer', 'opengl');
 
 	% plot points to figure
