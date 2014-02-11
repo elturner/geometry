@@ -17,7 +17,8 @@ int config_t::parseargs(int argc, char** argv)
 	/* set default config */
 	this->fp_infile = NULL;
 	this->windows_infile = NULL;
-	this->obj_outfile = NULL;
+	this->outfile = NULL;
+	this->output_type = unknown_file;
 
 	/* save program name */
 	this->prog_name = argv[0];
@@ -39,19 +40,22 @@ int config_t::parseargs(int argc, char** argv)
 			{
 				/* check for outfiles */
 				case obj_file:
-					if(this->obj_outfile != NULL)
+				case wrl_file:
+					if(this->outfile != NULL)
 					{
 						PRINT_WARNING("Multiple"
-							" obj files "
+							" output files "
 							"specified, "
 							"using:");
 						PRINT_WARNING(
-							this->obj_outfile);
+							this->outfile);
 						PRINT_WARNING("");
 					}
 					else
 					{
-						this->obj_outfile = argv[i];
+						/* save output file */
+						this->outfile = argv[i];
+						this->output_type = ft;
 					}
 					break;
 
@@ -107,7 +111,7 @@ int config_t::parseargs(int argc, char** argv)
 		PRINT_ERROR("Must specify input floorplan file!");
 		return -1;
 	}
-	if(!this->obj_outfile)
+	if(!this->outfile)
 	{
 		PRINT_ERROR("Must specify an outfile!");
 		return -3;

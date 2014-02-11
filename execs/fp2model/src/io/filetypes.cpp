@@ -19,6 +19,10 @@ filetype_t filetype_of(char* filename)
 	if(endswith(filename, ".obj"))
 		return obj_file;
 
+	/* check if wrl */
+	if(endswith(filename, ".wrl"))
+		return wrl_file;
+
 	/* check if mad */
 	if(endswith(filename, ".mad"))
 		return mad_file;

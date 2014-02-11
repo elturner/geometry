@@ -23,7 +23,8 @@ class config_t
 	char* windows_infile; /* provided windows file */
 
 	/* the list of output files */
-	char* obj_outfile; /* location to write output obj file */
+	filetype_t output_type; /* filetype of output file */
+	char* outfile; /* location to write output file */
 
 	/*** functions ***/
 	public:

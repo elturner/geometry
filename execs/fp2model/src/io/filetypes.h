@@ -11,6 +11,7 @@ typedef enum FILETYPE
 	mad_file,
 	fp_file,
 	obj_file,
+	wrl_file,
 	windows_file,
 	unknown_file
 } filetype_t;

@@ -11,6 +11,7 @@
 
 #include "floorplan.h"
 #include "window.h"
+#include <fstream>
 
 /* the building_model_t class houses all required
  * aspects of a building model, and has functions
@@ -62,7 +63,7 @@ class building_model_t
 	/* export_obj:
 	 *
 	 * 	Exports this building model to the specified
-	 * 	Wavefront OBJ file.  No texturing will be applied.
+	 * 	Wavefront OBJ file.
 	 *
 	 * return value:
 	 *
@@ -70,6 +71,37 @@ class building_model_t
 	 */
 	int export_obj(char* filename);
 	 
+	/* export_wrl:
+	 *
+	 * 	Exports this building model to the specified
+	 * 	VMRL file.
+	 *
+	 * return value:
+	 *
+	 * 	Returns zero on success, non-zero on failure.
+	 */
+	int export_wrl(char* filename);
+
+	/* helper functions */
+	private:
+
+	/* write_floor_to_wrl:
+	 *
+	 * 	Exports floor as a wrl shape.
+	 */
+	void write_floor_to_wrl(std::ostream& outfile);
+	
+	/* write_ceiling_to_wrl:
+	 *
+	 * 	Exports ceiling as a wrl shape.
+	 */
+	void write_ceiling_to_wrl(std::ostream& outfile);
+	
+	/* write_wall_to_wrl:
+	 *
+	 * 	Exports wall #i as a wrl shape.
+	 */
+	void write_wall_to_wrl(std::ostream& outfile);
 };
 
 #endif
