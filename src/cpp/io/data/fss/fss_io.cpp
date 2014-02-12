@@ -54,7 +54,7 @@ void reader_t::close()
 	this->frame_timestamps.clear();
 }
 
-int reader_t::open(std::string& filename)
+int reader_t::open(const std::string& filename)
 {
 	frame_t frame;
 	unsigned int i;

@@ -439,7 +439,7 @@ namespace fss
 			 * @return   Returns zero on success, 
 			 *           non-zero on failure.
 			 */
-			int open(std::string& filename);
+			int open(const std::string& filename);
 
 			/* accessors */
 
