@@ -364,6 +364,7 @@ int pointcloud_writer_t::export_fss(const std::string& filename)
 	unsigned int i, j, num_frames;
 
 	/* open input data file */
+	infile.set_correct_for_bias(true);
 	ret = infile.open(filename);
 	if(ret)
 	{
@@ -423,7 +424,8 @@ int pointcloud_writer_t::export_fss(const std::string& filename)
 		/* get the noise of the points */
 		noise.resize(frame.points.size());
 		for(j = 0; j < frame.points.size(); j++)
-			noise[j] = frame.points[j].stddev;
+			noise[j] = frame.points[j].stddev
+					+ frame.points[j].width;
 
 		/* convert to world coordinates */
 		fss_pose.apply(scan_points);
