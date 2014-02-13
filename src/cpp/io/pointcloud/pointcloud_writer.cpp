@@ -9,6 +9,7 @@
 #include <Eigen/Dense>
 #include <io/data/urg/urg_data_reader.h>
 #include <io/data/d_imager/d_imager_data_reader.h>
+#include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
 #include <util/error_codes.h>
@@ -348,6 +349,94 @@ int pointcloud_writer_t::export_tof(const string& name,
 	prog_bar.clear();
 	return 0;
 }
+		
+int pointcloud_writer_t::export_fss(const std::string& filename)
+{
+	MatrixXd scan_points;
+	progress_bar_t prog_bar;
+	fss::reader_t infile;
+	fss::frame_t frame;
+	transform_t fss_pose;
+	int ret;
+	unsigned int i, num_frames;
+
+	/* open input data file */
+	ret = infile.open(filename);
+	if(ret)
+	{
+		/* report error */
+		cerr << "Error!  Unable to open fss file: "
+		     << filename << endl;
+		return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* prepare progress bar */
+	prog_bar.set_name(infile.scanner_name());
+
+	/* iterate through file */
+	num_frames = infile.num_frames();
+	for(i = 0; i < num_frames; i++)
+	{
+		/* update progress bar */
+		prog_bar.update(i, num_frames);
+
+		/* get next scan */
+		ret = infile.get(frame, i);
+		if(ret)
+		{
+			/* report error */
+			prog_bar.clear();
+			cerr << "Error!  Difficulty parsing fss scan #"
+			     << i << " from: "
+			     << filename << endl;
+			return PROPEGATE_ERROR(-2, ret);
+		}
+
+		/* rectify the points in this scan */
+		ret = pointcloud_writer_t::convert_fss_scan(scan_points,
+					                       frame);
+		if(ret)
+		{
+			/* report error */
+			prog_bar.clear();
+			cerr << "Error!  Difficulty using fss data from: "
+			     << filename << endl;
+			return PROPEGATE_ERROR(-3, ret);
+		}
+		
+		/* get pose of system at this time */
+		ret = this->path.compute_transform_for(fss_pose,
+				frame.timestamp, infile.scanner_name());
+		if(ret)
+		{
+			/* report error */
+			prog_bar.clear();
+			cerr << "Error! Can't compute fss pose at time "
+			     << frame.timestamp << " for "
+			     << infile.scanner_name() << endl;
+			return PROPEGATE_ERROR(-4, ret);
+		}
+
+		/* convert to world coordinates */
+		fss_pose.apply(scan_points);
+
+		/* write points to output file */
+		ret = this->write_to_file(scan_points, i, frame.timestamp);
+		if(ret)
+		{
+			/* report error */
+			prog_bar.clear();
+			cerr << "Error!  Difficulty writing to outfile"
+			     << endl;
+			return PROPEGATE_ERROR(-5, ret);
+		}
+	}
+
+	/* success */
+	infile.close();
+	prog_bar.clear();
+	return 0;
+}
 
 void pointcloud_writer_t::close()
 {
@@ -613,6 +702,27 @@ int pointcloud_writer_t::convert_d_imager_scan(MatrixXd& mat,
 		mat(0, i) = MM2METERS(frame.xdat[i]);
 		mat(1, i) = MM2METERS(frame.ydat[i]);
 		mat(2, i) = MM2METERS(frame.zdat[i]);
+	}
+
+	/* success */
+	return 0;
+}
+		
+int pointcloud_writer_t::convert_fss_scan(Eigen::MatrixXd& mat,
+		                            const fss::frame_t& frame)
+{
+	size_t i, n;
+
+	/* resize the matrix */
+	n = frame.points.size();
+	mat.resize(3, n);
+
+	/* iterate over points */
+	for(i = 0; i < n; i++)
+	{
+		mat(0,i) = frame.points[i].x;
+		mat(1,i) = frame.points[i].y;
+		mat(2,i) = frame.points[i].z;
 	}
 
 	/* success */

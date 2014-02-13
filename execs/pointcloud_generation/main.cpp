@@ -26,6 +26,7 @@ using namespace std;
 #define PATH_FILE_FLAG            "-p"
 #define LASER_FILE_FLAG           "-l"
 #define D_IMAGER_FILE_FLAG        "-d"
+#define FSS_FILE_FLAG             "--fss"
 #define FISHEYE_CAMERA_FLAG       "-f"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
@@ -101,6 +102,9 @@ void init_args(cmd_args_t& args)
                        "as in the hardware config file.  The d-imager data "
                        "file should be what was originally exported during "
                        "the data acquisition.", true, 2);
+	args.add(FSS_FILE_FLAG, /* specifies fss file */
+	               "Specifies one arguments:  <fss file path>.  This "
+	               "file specifies a filtered range scan list.",true,1);
 	args.add(FISHEYE_CAMERA_FLAG, /* specifies params for a camera */
 	               "Specifies three arguments: <color "
 	               "metadata file> <fisheye calibration file> <image "
@@ -231,6 +235,7 @@ int process_all_files(pointcloud_writer_t& writer, cmd_args_t& args)
 {
 	vector<string> laser_files;
 	vector<string> d_imager_files;
+	vector<string> fss_files;
 	size_t i, n;
 	int ret;
 
@@ -250,7 +255,7 @@ int process_all_files(pointcloud_writer_t& writer, cmd_args_t& args)
 				cerr << "Error " << ret 
 				     << ": Unable to export "
 				     << laser_files[i] << endl;
-				return PROPEGATE_ERROR(-3, ret);
+				return PROPEGATE_ERROR(-1, ret);
 			}
 		}
 	}
@@ -271,7 +276,27 @@ int process_all_files(pointcloud_writer_t& writer, cmd_args_t& args)
 				cerr << "Error " << ret 
 				     << ": Unable to export "
 				     << d_imager_files[i] << endl;
-				return PROPEGATE_ERROR(-4, ret);
+				return PROPEGATE_ERROR(-2, ret);
+			}
+		}
+	}
+	
+	/* get fss files, if provided */
+	if(args.tag_seen(FSS_FILE_FLAG, fss_files))
+	{
+		/* iterate over fss files */
+		n = fss_files.size();
+		for(i = 0; i < n; i ++)
+		{
+			/* parse next fss file */
+			ret = writer.export_fss(fss_files[i]);
+			if(ret)
+			{
+				/* report error */
+				cerr << "Error " << ret 
+				     << ": Unable to export "
+				     << fss_files[i] << endl;
+				return PROPEGATE_ERROR(-3, ret);
 			}
 		}
 	}

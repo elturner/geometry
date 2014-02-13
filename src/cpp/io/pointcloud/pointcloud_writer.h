@@ -19,6 +19,7 @@
 #include <Eigen/Dense>
 #include <io/data/urg/urg_data_reader.h>
 #include <io/data/d_imager/d_imager_data_reader.h>
+#include <io/data/fss/fss_io.h>
 #include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
@@ -194,6 +195,18 @@ class pointcloud_writer_t
 		               const std::string& datfile);
 
 		/**
+		 * Exports all points from this fss file to output
+		 *
+		 * Will export all points parsed from the input .fss
+		 * file to the output pointcloud file.
+		 *
+		 * @param filename   The input file to parse
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int export_fss(const std::string& filename);
+
+		/**
 		 * Closes all open files
 		 *
 		 * Closes all input and output file streams in use
@@ -359,6 +372,21 @@ class pointcloud_writer_t
 		 */
 		static int convert_d_imager_scan(Eigen::MatrixXd& mat,
 		                        const d_imager_frame_t& frame);
+
+		/**
+		 * Converts a fss frame to an Eigen matrix structure
+		 *
+		 * Will take one frame parsed from a fss file, and
+		 * populates the specified Eigen matrix with points from
+		 * the frame.
+		 *
+		 * @param mat    The matrix to populate
+		 * @param frame  The fss frame to convert
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		static int convert_fss_scan(Eigen::MatrixXd& mat,
+		                            const fss::frame_t& frame);
 
 		/**
 		 * Determine file type given file path

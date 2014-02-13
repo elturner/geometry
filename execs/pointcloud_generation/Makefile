@@ -27,6 +27,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.cpp \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.cpp \
+		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
@@ -40,6 +41,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/tictoc.h \
 		$(SOURCEDIR)util/cmd_args.h \
+		$(SOURCEDIR)util/endian.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/progress_bar.h \
 		$(SOURCEDIR)util/binary_search.h \
@@ -55,6 +57,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.h \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.h \
+		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
