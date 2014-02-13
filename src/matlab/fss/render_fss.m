@@ -23,13 +23,14 @@ function [] = render_fss(fss)
 	is_paused = false;
 	should_exit = false;
 	scan_index = 1;
+	N = length(fss.scans);
 	while(~should_exit)
 
 		% verify that scan index is valid
 		if(scan_index <= 0)
-			scan_index = fss.num_scans;
+			scan_index = N;
 		end
-		if(scan_index > fss.num_scans)
+		if(scan_index > N)
 			scan_index = 1;
 		end
 
@@ -40,7 +41,7 @@ function [] = render_fss(fss)
 		scatter3(fss.scans(scan_index).pts(1,:), ...
 			fss.scans(scan_index).pts(2,:), ...
 			fss.scans(scan_index).pts(3,:), 10, ...
-			fss.scans(scan_index).intensity);
+			fss.scans(scan_index).stddev);
 		title([fss.scanner_name, ', scan #', ...
 			num2str(scan_index), ' at timestamp ', ...
 			num2str(fss.scans(scan_index).timestamp)]);

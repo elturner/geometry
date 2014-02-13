@@ -1,4 +1,4 @@
-function fss = read_fss(filename)
+function fss = read_fss(filename, NUM_SCANS)
 	% fss = read_fss(filename)
 	%
 	%	Reads the fss (Filtered with Statistics Scan) file,
@@ -8,6 +8,8 @@ function fss = read_fss(filename)
 	% arguments:
 	%
 	%	filename -	Path to fss file
+	%
+	%	NUM_SCANS -	Optional.  Reads only first n scans.
 	%
 	% output:
 	%
@@ -101,6 +103,11 @@ function fss = read_fss(filename)
 		end
 	end
 
+	% check for optional params
+	if(~exist('NUM_SCANS', 'var'))
+		NUM_SCANS = fss.num_scans;
+	end
+
 	% for now, this function only supports binary reads
 	if(strcmp(format, 'little_endian'))
 		format = 'l';
@@ -113,7 +120,7 @@ function fss = read_fss(filename)
 
 	% parse body of the file
 	disp('reading body...');
-	N = fss.num_scans;
+	N = NUM_SCANS;
 	M = fss.num_points_per_scan;
 	fss.scans = struct('timestamp', ...
 		mat2cell(zeros(1,N), 1, ones(1,N)), ...
@@ -125,7 +132,7 @@ function fss = read_fss(filename)
 	for i = 1:N
 
 		% display progress to user
-		if(mod(i,50) == 0)
+		if(mod(i,10) == 0)
 			disp(['reading scan #',num2str(i),...
 			      '/',num2str(N),'...']);
 		end
