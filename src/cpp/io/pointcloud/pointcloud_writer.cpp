@@ -143,6 +143,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 	MatrixXd scan_points;
 	vector<double> coses;
 	vector<double> sines;
+	vector<double> noise;
 	progress_bar_t prog_bar;
 	urg_reader_t infile;
 	urg_frame_t scan;
@@ -232,7 +233,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		laser_pose.apply(scan_points);
 
 		/* write points to output file */
-		ret = this->write_to_file(scan_points, i, ts);
+		ret = this->write_to_file(scan_points, i, ts, noise);
 		if(ret)
 		{
 			/* report error */
@@ -254,6 +255,7 @@ int pointcloud_writer_t::export_tof(const string& name,
 {
 	FitParams timefit;
 	MatrixXd scan_points;
+	vector<double> noise;
 	progress_bar_t prog_bar;
 	d_imager_reader_t infile;
 	d_imager_frame_t frame;
@@ -333,7 +335,7 @@ int pointcloud_writer_t::export_tof(const string& name,
 		tof_pose.apply(scan_points);
 
 		/* write points to output file */
-		ret = this->write_to_file(scan_points, i, ts);
+		ret = this->write_to_file(scan_points, i, ts, noise);
 		if(ret)
 		{
 			/* report error */
@@ -357,8 +359,9 @@ int pointcloud_writer_t::export_fss(const std::string& filename)
 	fss::reader_t infile;
 	fss::frame_t frame;
 	transform_t fss_pose;
+	vector<double> noise;
 	int ret;
-	unsigned int i, num_frames;
+	unsigned int i, j, num_frames;
 
 	/* open input data file */
 	ret = infile.open(filename);
@@ -417,11 +420,17 @@ int pointcloud_writer_t::export_fss(const std::string& filename)
 			return PROPEGATE_ERROR(-4, ret);
 		}
 
+		/* get the noise of the points */
+		noise.resize(frame.points.size());
+		for(j = 0; j < frame.points.size(); j++)
+			noise[j] = frame.points[j].stddev;
+
 		/* convert to world coordinates */
 		fss_pose.apply(scan_points);
 
 		/* write points to output file */
-		ret = this->write_to_file(scan_points, i, frame.timestamp);
+		ret = this->write_to_file(scan_points, i,
+		                          frame.timestamp, noise);
 		if(ret)
 		{
 			/* report error */
@@ -457,7 +466,7 @@ void pointcloud_writer_t::close()
 }
 		
 int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
-                                           int ind, double ts)
+                         int ind, double ts, vector<double>& noise)
 {
 	size_t i, n;
 	double x, y, z;
@@ -491,6 +500,12 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 			case COLOR_BY_HEIGHT:
 				/* color points by height pattern */
 				this->height_to_color(red, green, blue, z);
+				break;
+			case COLOR_BY_NOISE:
+				/* check if noise provided */
+				if(noise.size() > i)
+					this->noise_to_color(red, 
+						green, blue, noise[i]);
 				break;
 		}
 		
@@ -610,6 +625,36 @@ void pointcloud_writer_t::height_to_color(int& red, int& green, int& blue,
 	if(red >= 256) red = 255;
 	if(green >= 256) green = 255;
 	if(blue >= 256) blue = 255;
+}
+		
+void pointcloud_writer_t::noise_to_color(int& red, int& green, int& blue,
+                                         double n) const
+{
+	double max_noise = 0.1; /* if noise more than 10cm,
+	                         * we have problems */
+
+	/* always use same green value */
+	green = 128;
+
+	/* check if noise is in reasonable range */
+	if(n < 0)
+	{
+		/* red means bad, blue means good */
+		red = 0;
+		blue = 255;
+	}
+	else if(n > max_noise) 
+	{
+		/* red means bad, blue means good */
+		red = 255;
+		blue = 0;
+	}
+	else
+	{
+		/* interpolate */
+		red = (int)(255 * n / max_noise);
+		blue = (int)(255 * (max_noise - n) / max_noise);
+	}	
 }
 		
 int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,

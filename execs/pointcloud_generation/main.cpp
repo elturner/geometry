@@ -31,6 +31,7 @@ using namespace std;
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
+#define COLOR_BY_NOISE_FLAG       "--color_by_noise"
 
 /* the following are helper functions for this program */
 void init_args(cmd_args_t& args);
@@ -131,6 +132,13 @@ void init_args(cmd_args_t& args)
 	               "to be easily observed.  This flag will override "
 	               "coloring from images, even if cameras are provided."
 	               );
+	args.add(COLOR_BY_NOISE_FLAG, /* colors pointcloud by noise */
+	               "If seen, will explicitly color the output points "
+	               "based on their noise values, if such info is "
+	               "provided.  Noise estimates only available from "
+	               ".fss files.  This flag will override "
+	               "coloring from images, even if cameras are provided."
+	               );
 }
 
 /**
@@ -175,6 +183,10 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
 		/* use height of points to color */
 		c = pointcloud_writer_t::COLOR_BY_HEIGHT;
+	else if(args.tag_seen(COLOR_BY_NOISE_FLAG))
+	{
+		c = pointcloud_writer_t::COLOR_BY_NOISE;
+	}
 	else if(args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags))
 	{
 		/* use camera images to color */

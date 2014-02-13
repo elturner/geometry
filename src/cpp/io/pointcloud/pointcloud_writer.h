@@ -49,6 +49,7 @@ class pointcloud_writer_t
 		{
 			NO_COLOR, /* add no color information to output */
 			COLOR_BY_HEIGHT, /* color output by height */
+			COLOR_BY_NOISE, /* color output by noise level */
 			NEAREST_IMAGE /* color points based on imagery */
 		};
 
@@ -227,11 +228,13 @@ class pointcloud_writer_t
 		 * @param pts   The matrix specifying the points to write
 		 * @param ind   The index of this scan
 		 * @param ts    The timestamp for these points
+		 * @param noise Noise values for points, Ignored if empty.
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int write_to_file(const Eigen::MatrixXd& pts,
-		                      int ind, double ts);
+		                  int ind, double ts,
+		                  std::vector<double>& noise);
 		
 		/**
 		 * Writes a point to an *.xyz formatted outfile
@@ -312,6 +315,23 @@ class pointcloud_writer_t
 		void height_to_color(int& red, int& green, int& blue,
 		                     double h) const;
 	
+		/**
+		 * Generates a color based on a given noise value
+		 *
+		 * Will generate a color as an (r,g,b) triplet
+		 * based on the provided noise (std. dev.) estimate
+		 * for the point in question.
+		 *
+		 * Color components will be in [0,255]
+		 *
+		 * @param red   The output red component
+		 * @param green The output green component
+		 * @param blue  The output blue component
+		 * @param n     The input noise component
+		 */
+		void noise_to_color(int& red, int& green, int& blue,
+		                    double n) const;
+		
 		/**
 		 * Generates a color for given point based on all cameras
 		 *
