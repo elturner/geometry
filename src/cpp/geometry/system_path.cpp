@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <new>
-#include <math.h>
+#include <cmath>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <config/backpackConfig.h>
@@ -138,6 +138,13 @@ int system_path_t::readmad(const std::string& filename)
 
 	/* cleanup */
 	infile.close();
+
+	/* final pass-over of poses to compute additional values,
+	 * such as linear and rotational velocity */
+	for(i = 1; i < num_poses; i++)
+		this->pl[i-1].compute_velocity(this->pl[i]);
+
+	/* success */
 	return 0;
 }
 		
@@ -402,6 +409,29 @@ pose_t::pose_t() {}
 
 pose_t::~pose_t() {}
 
+double pose_t::dist_sq(const pose_t& other) const
+{
+	double x, y, z;
+
+	/* compute distance */
+	x = this->T(0) - other.T(0);
+	y = this->T(1) - other.T(1);
+	z = this->T(2) - other.T(2);
+	return x*x + y*y + z*z;
+}
+		
+void pose_t::print() const
+{
+	Matrix<double,3,3> r = this->R.toRotationMatrix();
+
+	cout << this->timestamp << " "
+	     << this->T(0) << " " << this->T(1) << " " << this->T(2) << " "
+	     << r(0,0) << " " << r(0,1) << " " << r(0,2) << " "
+	     << r(1,0) << " " << r(1,1) << " " << r(1,2) << " "
+	     << r(2,0) << " " << r(2,1) << " " << r(2,2) << " "
+	     << endl;
+}
+
 void pose_t::compute_transform_NED(double roll, double pitch, double yaw)
 {
 	double cr, sr, cp, sp, cy, sy;
@@ -480,26 +510,53 @@ void pose_t::compute_transform_NED(double roll, double pitch, double yaw)
 	 */
 	this->R = Quaternion<double>(q4, q1, q2, q3);
 }
-
-double pose_t::dist_sq(const pose_t& other) const
-{
-	double x, y, z;
-
-	/* compute distance */
-	x = this->T(0) - other.T(0);
-	y = this->T(1) - other.T(1);
-	z = this->T(2) - other.T(2);
-	return x*x + y*y + z*z;
-}
 		
-void pose_t::print() const
+void pose_t::compute_velocity(const pose_t& next_pose)
 {
-	Matrix<double,3,3> r = this->R.toRotationMatrix();
+	Matrix<double, 3, 3> inc;
+	double theta, dt;
 
-	cout << this->timestamp << " "
-	     << this->T(0) << " " << this->T(1) << " " << this->T(2) << " "
-	     << r(0,0) << " " << r(0,1) << " " << r(0,2) << " "
-	     << r(1,0) << " " << r(1,1) << " " << r(1,2) << " "
-	     << r(2,0) << " " << r(2,1) << " " << r(2,2) << " "
-	     << endl;
+	/* get the elapsed time between poses */
+	dt = next_pose.timestamp - this->timestamp;
+
+	/* Compute the linear velocity by finding the incremental
+	 * translation:
+	 *
+	 * v = dT / dt
+	 *
+	 * This gives the velocity in world coordinates in units of
+	 * meters per second.
+	 */
+	this->v = (next_pose.T - this->T) / dt;
+
+	/* The rotational velocity is derived from the incremental
+	 * rotation matrix with the equations found here:
+	 *
+	 * http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation
+	 * #Log_map_from_SO.283.29_to_so.283.29
+	 *
+	 * The magnitude of the rotation from a matrix is:
+	 *
+	 * theta = arccos( (trace(R) - 1) / 2 )
+	 * w = (1 / (2 * sin(theta) )) * [R(3,2) - R(2,3) ;
+	 *                                R(1,3) - R(3,1) ;
+	 *                                R(2,1) - R(1,2) ]
+	 *
+	 * This computation gives the rotational velocity in the system
+	 * coordinate frame for the current pose, NOT the world coordinate
+	 * frame.
+	 */
+	inc = this->R.inverse().toRotationMatrix()
+			* next_pose.R.toRotationMatrix();
+	theta = acos((inc.trace() - 1.0) / 2.0);
+	
+	/* get unit vector for rotational velocity */
+	this->w(0) = inc(3,2) - inc(2,3);
+	this->w(1) = inc(1,3) - inc(3,1);
+	this->w(2) = inc(2,1) - inc(1,2);
+	this->w /= (0.5/sin(theta));
+
+	/* compute the magnitude of this vector to be the rotational
+	 * velocity in units of radians per second */
+	this->w *= theta / dt;
 }

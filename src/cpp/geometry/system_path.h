@@ -170,18 +170,46 @@ class pose_t
 	/*** parameters ***/
 	public:
 
-		/* for a single pose, we are interested in temporal and 
-		 * spatial position */
+		/**
+		 * The timestamp associated with this pose.
+		 *
+		 * For a single pose, we are interested in both temporal
+		 * and spatial positions.  This value is represented in
+		 * units of seconds, in the synchronized system clock.
+		 */
 		double timestamp;
 
-		/* Position of system common specified in ENU coordinates */
-		Eigen::Vector3d T; /* meters */
+		/**
+		 * Translation vector for this pose.
+		 *
+		 * Position of system common specified in ENU coordinates
+		 * in units of meters.
+		 */
+		Eigen::Vector3d T;
 		
-		/* The following specify the orientation of the scanner
-		 * at this pose as a rotation from system coordinates
-		 * to world coordinates */
-		Eigen::Quaternion<double> R; /* rotation to world coords */
-	
+		/**
+		 * Specifies the orientation of the system.
+		 *
+		 * A rotation from system coordinates to 
+		 * world coordinates */
+		Eigen::Quaternion<double> R;
+
+		/**
+		 * The linear velocity of the system at this pose.
+		 * 
+		 * This value is represented in WORLD COORDINATES, in
+		 * units of meters / second.
+		 */
+		Eigen::Vector3d v;
+
+		/** 
+		 * The angular velocity of the system at this pose.
+		 *
+		 * This value is represented in SYSTEM COORDINATES, in
+		 * units of radians/second.
+		 */
+		Eigen::Vector3d w;
+
 	/*** functions ***/
 	public:
 	
@@ -215,7 +243,7 @@ class pose_t
 		};
 
 		/* geometry */
-	
+
 		/**
 		 * Computes the squared-distance between two poses
 		 *
@@ -255,6 +283,22 @@ class pose_t
 		 */
 		void compute_transform_NED(double roll, double pitch,
 		                           double yaw);
+		
+		/**
+		 * Computes the linear and angular velocity at this pose
+		 *
+		 * The velocity values will be stored in the corresponding
+		 * fields in this object. The velocity is assumed to be 
+		 * constant between poses.  The velocity of the system 
+		 * at pose #i is the same as the velocity at poses [i,i+1).
+		 *
+		 * As such, to find the delta position, the successor pose
+		 * must be given to compute velocities.
+		 *
+		 * @param next_pose  The next pose in path after this one
+		 */
+		void compute_velocity(const pose_t& next_pose);
+
 };
 
 #endif
