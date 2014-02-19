@@ -43,7 +43,7 @@ class pose_t;
 class system_path_t
 {
 	/*** parameters ***/
-	private:
+	protected:
 
 		/* this pose list represents the poses in the system_path,
 		 * in chronological order (dynamically allocated). */
@@ -143,7 +143,7 @@ class system_path_t
 		                     const std::string& s) const;
 
 	/* helper functions */
-	private:
+	protected:
 
 		/**
 		 * Computes index of last pose at or before time t.
