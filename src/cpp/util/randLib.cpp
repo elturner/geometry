@@ -106,7 +106,7 @@ double randLib::r4_nor(std::vector<int>& kn, std::vector<double>& fn, std::vecto
 				for( ; ; ) {
 					x = - 0.2904764 * log ( r4_uni ( jsr ) );
 					y = - log ( r4_uni ( jsr ) );
-					if ( x * x <= y + y ); {
+					if ( x * x <= y + y ) {
 						break;
 					}
 				}
