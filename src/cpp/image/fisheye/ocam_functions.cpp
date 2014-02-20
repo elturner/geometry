@@ -108,16 +108,28 @@ int get_ocam_model_bin(struct ocam_model* myocam_model,
 	/* attempt to open file */
 	infile.open(filename.c_str(), ios::in | ios::binary);
 	if(!(infile.is_open()))
+	{
+		cerr << "[get_ocam_model_bin]\tUnable to open file: "
+		     << filename << endl;
 		return -1; /* unable to open file */
+	}
 
 	/* read magic number from file */
 	infile.read(magic, MAGIC_NUMBER_LEN);
 	if(!(infile.good()))
+	{
+		cerr << "[get_ocam_model_bin]\tInvalid file stream: "
+		     << filename << endl;
 		return -2; /* could not read from file */
-	
+	}
+
 	/* check that filetype is correct */
 	if(strcmp(magic, MAGIC_NUMBER))
+	{
+		cerr << "[get_ocam_model_bin]\tInvalid ocam bin file: "
+		     << filename << endl;
 		return -3; /* magic number is different */
+	}
 
 	/* get the camera name */
 	getline(infile, camera_name, '\0');

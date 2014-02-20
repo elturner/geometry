@@ -94,16 +94,7 @@ int cameraProp::assign_props(std::map<std::string,std::string>& property_map) {
 		this->configFile = it->second;
 	}
 
-	// Extract the config file name
-	it = property_map.find("K");
-	if(it == property_map.end()) {
-		ret_code = 1;
-	}
-	else {
-		this->K = sensorProp::extract_as_csv_vector<double>(it->second,9);
-	}
-
-	// Extract the config file name
+	// Extract the rotation to common
 	it = property_map.find("rToCommon");
 	if(it == property_map.end()) {
 		ret_code = 1;
@@ -112,7 +103,7 @@ int cameraProp::assign_props(std::map<std::string,std::string>& property_map) {
 		this->rToCommon = sensorProp::extract_as_csv_vector<double>(it->second,3);
 	}
 
-	// Extract the config file name
+	// Extract the translation to common
 	it = property_map.find("tToCommon");
 	if(it == property_map.end()) {
 		ret_code = 1;

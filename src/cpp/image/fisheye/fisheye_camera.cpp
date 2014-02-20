@@ -91,7 +91,13 @@ int fisheye_camera_t::init(const std::string& calibfile,
 		/* get the next frame info */
 		ret = infile.next(this->metadata[i]);
 		if(ret)
+		{
+			cerr << "[fisheye_camera_t::init]\tUnable to parse"
+			     << " metadata #" << i << "/"
+			     << infile.get_num_images() << " from "
+			     << metafile << endl;
 			return PROPEGATE_ERROR(-4, ret);
+		}
 
 		/* compute transform of camera at this frame */
 		ret = path.compute_transform_for(this->poses[i],

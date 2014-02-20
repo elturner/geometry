@@ -141,8 +141,9 @@ int system_path_t::readmad(const std::string& filename)
 
 	/* final pass-over of poses to compute additional values,
 	 * such as linear and rotational velocity */
-	for(i = 1; i < num_poses; i++)
-		this->pl[i-1].compute_velocity(this->pl[i]);
+//TODO
+//	for(i = 1; i < num_poses; i++)
+//		this->pl[i-1].compute_velocity(this->pl[i]);
 
 	/* success */
 	return 0;
