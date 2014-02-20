@@ -134,6 +134,13 @@ right_camera_metadata    = os.path.join("data", "dalsa", \
                                         "color_right_camera_metadata.txt")
 right_camera_calib       = os.path.join("calib", "camera", "intrinsic", \
                                         "ocam_calib_right.dat")
+back_camera_dir          = os.path.join("data","dalsa","back_camera", \
+                                        "color")
+back_camera_metadata     = os.path.join("data", "dalsa", \
+                                        "back_camera", \
+                                        "color_back_camera_metadata.txt")
+back_camera_calib        = os.path.join("calib", "camera", "intrinsic", \
+                                        "ocam_calib_back.dat")
 
 #################################
 ##### Output File Locations #####
@@ -186,6 +193,8 @@ ret = subprocess.call([POINTCLOUD_EXE, \
                             left_camera_dir, \
                       "-f", right_camera_metadata, right_camera_calib, \
                             right_camera_dir, \
+                      "-f", back_camera_metadata, back_camera_calib, \
+                            back_camera_dir, \
                       "-l", geom_scanner_name, geom_scanner_datafile, \
                       "-o", xyz_file, \
                       "-p", LOCALIZATION_FILE, \
