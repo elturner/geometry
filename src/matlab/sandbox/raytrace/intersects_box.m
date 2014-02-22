@@ -18,13 +18,6 @@ function x = intersects_box(a, b, bounds)
 
 	x = false;
 	
-	% check if box contains end points
-	if( (sum((bounds(:,1) < a) & (a < bounds(:,2))) == 3) ...
-		|| (sum((bounds(:,1) < b) & (b < bounds(:,2))) == 3 ) )
-		x = true;
-		return;
-	end
-
 	% define ray properties
 	orig = a;
 	invdir = 1 ./ (b-a);
@@ -71,7 +64,7 @@ function x = intersects_box(a, b, bounds)
 	end
 
 	% check if line is too short to intersect
-	if(tmin > tmax || tmax > 1 || tmin < 0)
+	if(tmin > tmax || tmin > 1 || tmax < 0)
 		return;
 	end
 
