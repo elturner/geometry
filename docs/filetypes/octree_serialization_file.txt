@@ -1,0 +1,64 @@
+----------------------------------------------
+Octree Serialization File Format Documentation
+----------------------------------------------
+
+Written by Eric Turner
+February 22, 2014
+
+----------------------------------------------
+----------------------------------------------
+
+This format is meant to represent the information
+stored in an octree.  As such, the file is organized
+in a prefix depth-first ordering of the tree.
+
+The file format also depends on how the octdata_t class
+is extended.  Data blocks for each octdata_t object will
+be written to the file, and it is assumed that these blocks
+are consistant and parsable.
+
+----------------------------------------------
+----------------------------------------------
+
+Header:
+
+Variable        Type           Size
+--------------------------------------
+magic_number    'octfile\0'    8 bytes
+max_depth       int32          4 bytes
+
+After the header starts the prefix depth-first ordering of
+the nodes, starting with the root node.  The values in the
+header are stored in little-endian ordering.
+
+----------------------------------------------
+----------------------------------------------
+
+Node Serialization:
+
+Variable        Type           Size
+--------------------------------------
+center_x        double         8 bytes
+center_y        double         8 bytes
+center_z        double         8 bytes
+halfwidth       double         8 bytes
+hasdata         boolean        1 byte
+data            <octdata_t serialization> // only present if hasdata != 0
+haschild0       boolean        1 byte
+child0          <octnode_t serialization> // only present if haschild0 != 0
+haschild1       boolean        1 byte
+child1          <octnode_t serialization> // only present if haschild1 != 0
+haschild2       boolean        1 byte
+child2          <octnode_t serialization> // only present if haschild2 != 0
+haschild3       boolean        1 byte
+child3          <octnode_t serialization> // only present if haschild3 != 0
+haschild4       boolean        1 byte
+child4          <octnode_t serialization> // only present if haschild4 != 0
+haschild5       boolean        1 byte
+child5          <octnode_t serialization> // only present if haschild5 != 0
+haschild6       boolean        1 byte
+child6          <octnode_t serialization> // only present if haschild6 != 0
+haschild7       boolean        1 byte
+child7          <octnode_t serialization> // only present if haschild7 != 0
+
+
