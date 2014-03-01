@@ -27,7 +27,11 @@ class octree_t
 		/* root of the tree and its relative position */
 		octnode_t* root;
 
-		/* the tree expands down some max depth */
+		/* the tree expands down some max depth.  If this
+		 * value is negative, the tree is ill-defined.  If
+		 * this value is zero, the tree is empty.  If this
+		 * value is positive, then the tree has this many
+		 * levels. */
 		int max_depth;
 
 	/*** function ***/

@@ -205,7 +205,7 @@ int octree_t::raycarve(vector<octnode_t*>& leafs,
 		return PROPEGATE_ERROR(-2, ret);
 
 	/* carve the tree */
-	this->root->raycarve(leafs, line, this->max_depth);
+	this->root->raycarve(leafs, line, this->max_depth-1);
 
 	/* success */
 	return 0;
