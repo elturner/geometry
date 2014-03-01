@@ -25,7 +25,7 @@ Header:
 Variable        Type           Size
 --------------------------------------
 magic_number    'octfile\0'    8 bytes
-max_depth       int32          4 bytes
+max_depth       unsigned int   4 bytes
 
 After the header starts the prefix depth-first ordering of
 the nodes, starting with the root node.  The values in the
@@ -61,4 +61,17 @@ child6          <octnode_t serialization> // only present if haschild6 != 0
 haschild7       boolean        1 byte
 child7          <octnode_t serialization> // only present if haschild7 != 0
 
+----------------------------------------------
+----------------------------------------------
+
+Octdata Serialization:
+
+Variable        Type           Size
+--------------------------------------
+count           unsigned int   4 bytes
+prob_sum        double         8 bytes
+prob_sum_sq     double         8 bytes
+corner_sum      double         8 bytes
+planar_sum      double         8 bytes
+fp_room         int            4 bytes
 

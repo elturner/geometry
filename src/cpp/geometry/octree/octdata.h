@@ -7,7 +7,7 @@
  *
  * @section DESCRIPTION
  *
- * This is the virtual class used to store data in an octree_t.  Arbitrary
+ * This is the class used to store data in an octree_t.  Arbitrary
  * data can be stored in the octree by extending this class and adding
  * these to the tree.
  */
@@ -18,15 +18,59 @@
  * the octree.  This is only interesting at the leaves. */
 class octdata_t
 {
+	/* parameters */
+	private:
+
+		/* the following values are used to track statistical
+		 * samples of the corresponding node to these data */
+		unsigned int count; /* number of observed samples */
+		double prob_sum; /* sum of probability samples */
+		double prob_sum_sq; /* sum of square of prob samples */
+
+		/* the following values are used to estimate geometric
+		 * properties of this voxel, such as flatness, curviture,
+		 * or corner detection */
+		double corner_sum; /* sum of corner estimates for node */
+		double planar_sum; /* sum of flatness estimates for node */
+
+		/* the following values relate to any imported floorplans,
+		 * which associate this node to a room within the floor
+		 * plans.  A negative value indicates that it intersected
+		 * no rooms. */
+		int fp_room;
+
+		/* This value is set to true only if this node intersects
+		 * an original deterministic input scan.  It is used for
+		 * debugging and comparison purposes to see the effect
+		 * of the probabilistic scanning method compared to
+		 * previous techniques. */
+		bool is_carved;
+
 	/* functions */
 	public:
-		
+
+		/*########################################################
+		 * The following functions are called by the octree class
+		 *########################################################
+		 */
+
 		/* constructors */
+
+		/**
+		 * Initializes empty octdata object
+		 */
+		octdata_t();
+
+		/**
+		 * Initializes octdata object with a single sample
+		 */
+		octdata_t(double prob_samp, double corner_samp=0.0,
+		          double planar_samp=0.0);
 
 		/**
 		 * Frees all memory and resources
 		 */
-		virtual ~octdata_t() =0;
+		~octdata_t();
 
 		/* accessors */
 
@@ -42,7 +86,7 @@ class octdata_t
 		 *
 		 * @param p  The data to merge into this object
 		 */
-		virtual void merge(octdata_t* p) =0;
+		void merge(octdata_t* p);
 
 		/**
 		 * Clones this object.
@@ -53,7 +97,7 @@ class octdata_t
 		 *
 		 * @return  Returns a deep-copy of this object.
 		 */
-		virtual octdata_t* clone() =0;
+		octdata_t* clone() const;
 
 		/* i/o */
 
@@ -66,7 +110,7 @@ class octdata_t
 		 *
 		 * @param os  The output binary stream to write to
 		 */
-		virtual void serialize(std::ostream& os) =0;
+		void serialize(std::ostream& os) const;
 
 		/**
 		 * Parses stream to populate this object
@@ -80,7 +124,14 @@ class octdata_t
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		virtual int parse(std::istream& is) =0;
+		int parse(std::istream& is);
+
+		/*########################################################
+		 * The remaining functions will not be called by octree_t
+		 *########################################################
+		 */
+
+		// TODO
 };
 
 #endif
