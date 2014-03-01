@@ -74,7 +74,7 @@ octnode_t::~octnode_t()
 	}
 }
 	
-bool octnode_t::isleaf()
+bool octnode_t::isleaf() const
 {
 	int i;
 
@@ -115,7 +115,7 @@ void octnode_t::init_child(int i)
 	this->children[i] = new octnode_t(cc, chw);
 }
 	
-octnode_t* octnode_t::clone()
+octnode_t* octnode_t::clone() const
 {
 	octnode_t* c;
 	int i;
@@ -139,6 +139,7 @@ octnode_t* octnode_t::clone()
 int octnode_t::contains(const Vector3d& p) const
 {
 	Vector3d diff;
+	double d;
 
 	/* check that p is within cube around center of this node */
 	diff = (p - this->center);
@@ -192,7 +193,8 @@ octnode_t* octnode_t::retrieve(const Vector3d& p) const
 
 	/* check if child exists */
 	if(this->children[i] == NULL)
-		return this; /* no child, return current node as deepest */
+		return ((octnode_t*) this); /* no child, return current
+		                             * node as deepest */
 	return this->children[i]->retrieve(p); /* recurse through child */
 }
 
@@ -208,7 +210,7 @@ void octnode_t::raytrace(vector<octnode_t*>& leafs,
 	/* check if this node is a leaf (and if so, add it) */
 	if(this->isleaf())
 	{
-		leafs.push_back(this);
+		leafs.push_back((octnode_t*) this);
 		return;
 	}
 
@@ -223,6 +225,7 @@ void octnode_t::raycarve(vector<octnode_t*>& leafs,
 {
 	Vector3d child_center;
 	Matrix<double,3,2> child_bounds;
+	unsigned int i;
 	double chw;
 
 	/* check if we reached final depth, or if this node
@@ -274,7 +277,6 @@ void octnode_t::raycarve(vector<octnode_t*>& leafs,
 void octnode_t::serialize(ostream& os) const
 {
 	double d;
-	char c;
 	unsigned int i;
 
 	/* write out node geometry information */
@@ -334,7 +336,7 @@ int octnode_t::parse(std::istream& is)
 	if(c != 0)
 	{
 		/* read in data */
-		this->data = new octdata_t(); // TODO make this allowable
+		this->data = new octdata_t();
 		ret = this->data->parse(is);
 		if(ret)
 			return -1; /* could not read data */

@@ -46,7 +46,9 @@ class linesegment_t
 			/* store values */
 			orig = a;
 			end = b;
-			invdir = 1/(end-orig);
+			invdir(0) = 1/(end(0)-orig(0));
+			invdir(1) = 1/(end(1)-orig(1));
+			invdir(2) = 1/(end(2)-orig(2));
 			s[0] = (invdir[0] < 0);
 			s[1] = (invdir[1] < 0);
 			s[2] = (invdir[2] < 0);

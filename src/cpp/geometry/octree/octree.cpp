@@ -18,75 +18,6 @@
 using namespace std;
 using namespace Eigen;
 
-/***** Helper Functions *****/
-
-/* The ordering of the children for each leaf is as follows:
- *
- * 		y
- *              ^
- *       1      |      0
- *              |
- * -------------+-------------> x	(top, z+)
- *              |
- *       2      |      3
- *              |
- *
- * 		y
- *              ^
- *       5      |      4
- *              |
- * -------------+-------------> x	(bottom, z-)
- *              |
- *       6      |      7
- *              |
- */
-inline Vector3d relative_child_pos(int child_index)
-{
-	Vector3d v;
-
-	/* returns the relative position of a child
-	 * with respect to its parent's center, with each
-	 * dimension of size 1 */
-	switch(child_index)
-	{
-		/* top children */
-		case 0:
-			v << 1, 1, 1;
-			break;
-		case 1:
-			v << -1, 1, 1;
-			break;
-		case 2:
-			v << -1,-1, 1;
-			break;
-		case 3:
-			v <<  1,-1, 1;
-			break;
-
-		/* bottom children */
-		case 4:
-			v << 1, 1,-1;
-			break;
-		case 5:
-			v << -1, 1,-1;
-			break;
-		case 6:
-			v << -1,-1,-1;
-			break;
-		case 7:
-			v <<  1,-1,-1;
-			break;
-		
-		/* invalid input */
-		default:
-			v << 0, 0, 0;
-			break;
-	}
-
-	/* return position */
-	return v;
-}
-
 /***** OCTTREE FUNCTIONS ****/
 
 octree_t::octree_t()
@@ -123,7 +54,7 @@ void octree_t::set_resolution(double r)
 	this->max_depth = 0;
 }
 	
-double octree_t::get_resolution()
+double octree_t::get_resolution() const
 {
 	return (2.0 * this->root->halfwidth) / (1 << this->max_depth);
 }
@@ -167,6 +98,7 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 	if(this->root->data == NULL && this->max_depth == 0)
 	{
 		this->root->center = p;
+		this->max_depth++;
 		return 0;
 	}
 
@@ -247,7 +179,7 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 }
 
 void octree_t::raytrace(vector<octnode_t*>& leafs,
-                        const Vector3d& a, const Vector3d& b)
+                        const Vector3d& a, const Vector3d& b) const
 {
 	/* create a line segment from these points */
 	linesegment_t line(a,b);
@@ -329,7 +261,7 @@ int octree_t::parse(const string& fn)
 	this->root = new octnode_t();
 
 	/* read in tree information */
-	ret = this->root.parse(infile);
+	ret = this->root->parse(infile);
 	if(ret)
 		return PROPEGATE_ERROR(-3, ret);
 

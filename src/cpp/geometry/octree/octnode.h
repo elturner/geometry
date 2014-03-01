@@ -198,4 +198,73 @@ class octnode_t
 		int parse(std::istream& is);
 };
 
+/***** Helper Functions *****/
+
+/* The ordering of the children for each leaf is as follows:
+ *
+ * 		y
+ *              ^
+ *       1      |      0
+ *              |
+ * -------------+-------------> x	(top, z+)
+ *              |
+ *       2      |      3
+ *              |
+ *
+ * 		y
+ *              ^
+ *       5      |      4
+ *              |
+ * -------------+-------------> x	(bottom, z-)
+ *              |
+ *       6      |      7
+ *              |
+ */
+inline Eigen::Vector3d relative_child_pos(int child_index)
+{
+	Eigen::Vector3d v;
+
+	/* returns the relative position of a child
+	 * with respect to its parent's center, with each
+	 * dimension of size 1 */
+	switch(child_index)
+	{
+		/* top children */
+		case 0:
+			v << 1, 1, 1;
+			break;
+		case 1:
+			v << -1, 1, 1;
+			break;
+		case 2:
+			v << -1,-1, 1;
+			break;
+		case 3:
+			v <<  1,-1, 1;
+			break;
+
+		/* bottom children */
+		case 4:
+			v << 1, 1,-1;
+			break;
+		case 5:
+			v << -1, 1,-1;
+			break;
+		case 6:
+			v << -1,-1,-1;
+			break;
+		case 7:
+			v <<  1,-1,-1;
+			break;
+		
+		/* invalid input */
+		default:
+			v << 0, 0, 0;
+			break;
+	}
+
+	/* return position */
+	return v;
+};
+
 #endif

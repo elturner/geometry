@@ -29,6 +29,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
+		$(SOURCEDIR)geometry/octree/octree.cpp \
+		$(SOURCEDIR)geometry/octree/octnode.cpp \
+		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/probability/noisy_scan.cpp \
 		src/main.cpp
 
@@ -53,6 +56,10 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
+		$(SOURCEDIR)geometry/octree/octree.h \
+		$(SOURCEDIR)geometry/octree/octnode.h \
+		$(SOURCEDIR)geometry/octree/octdata.h \
+		$(SOURCEDIR)geometry/octree/linesegment.h \
 		$(SOURCEDIR)geometry/probability/noisy_scan.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
