@@ -17,6 +17,7 @@ using namespace std;
 
 #include <Eigen/Dense>
 #include <vector>
+#include <string>
 #include <geometry/octree/octree.h>
 #include <stdlib.h>
 
@@ -27,6 +28,7 @@ using namespace Eigen;
  */
 int main(int argc, char** argv)
 {
+	string filename = "/home/elturner/Desktop/tree_out_test.oct";
 	vector<octnode_t*> leafs;
 	octree_t tree(0.05);
 	int ret;
@@ -43,7 +45,7 @@ int main(int argc, char** argv)
 	}
 
 	/* export tree to file */
-	ret = tree.serialize("tree_out_test.oct");
+	ret = tree.serialize(filename);
 	if(ret)
 	{
 		cerr << "Unable to export: " << ret << endl;

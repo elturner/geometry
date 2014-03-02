@@ -6,7 +6,7 @@ SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
 IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
 BUILDDIR = build/src/cpp
-EXECUTABLE = sandbox # ../../bin/procarve
+EXECUTABLE = ../../bin/procarve
 
 # defines for the program
 

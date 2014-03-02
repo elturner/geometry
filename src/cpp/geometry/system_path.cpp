@@ -141,9 +141,8 @@ int system_path_t::readmad(const std::string& filename)
 
 	/* final pass-over of poses to compute additional values,
 	 * such as linear and rotational velocity */
-//TODO
-//	for(i = 1; i < num_poses; i++)
-//		this->pl[i-1].compute_velocity(this->pl[i]);
+	for(i = 1; i < num_poses; i++)
+		this->pl[i-1].compute_velocity(this->pl[i]);
 
 	/* success */
 	return 0;
@@ -550,12 +549,12 @@ void pose_t::compute_velocity(const pose_t& next_pose)
 	inc = this->R.inverse().toRotationMatrix()
 			* next_pose.R.toRotationMatrix();
 	theta = acos((inc.trace() - 1.0) / 2.0);
-	
+		
 	/* get unit vector for rotational velocity */
-	this->w(0) = inc(3,2) - inc(2,3);
-	this->w(1) = inc(1,3) - inc(3,1);
-	this->w(2) = inc(2,1) - inc(1,2);
-	this->w /= (0.5/sin(theta));
+	this->w(0) = inc(2,1) - inc(1,2);
+	this->w(1) = inc(0,2) - inc(2,0);
+	this->w(2) = inc(1,0) - inc(0,1);
+	this->w /= (2*sin(theta)); /* normalize */
 
 	/* compute the magnitude of this vector to be the rotational
 	 * velocity in units of radians per second */
