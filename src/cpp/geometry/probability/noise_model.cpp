@@ -1,6 +1,6 @@
 #include "noise_model.h"
 #include <io/data/fss/fss_io.h>
-#include <goemetry/system_path.h>
+#include <geometry/system_path.h>
 #include <geometry/probability/noisy_timestamp.h>
 #include <geometry/probability/noisy_scan.h>
 #include <util/error_codes.h>
@@ -29,7 +29,6 @@ noise_model_t::noise_model_t()
 {
 	/* all internal structures automatically constructed,
 	 * just need to put default values for other parameters */
-	this->scanner_calib = NULL; /* no scanner calib defined yet */
 }
 		
 noise_model_t::~noise_model_t()
@@ -64,7 +63,7 @@ int noise_model_t::set_sensor(const string& sn)
 	int ret;
 
 	/* retrieve this sensor's transform from the path info */
-	ret = this->path.get_extrinsics_for(this->scanner_calib, sn);
+	ret = this->path.get_extrinsics_for(this->sensor_calib, sn);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
@@ -89,7 +88,6 @@ void noise_model_t::set_scan(const fss::point_t& p)
 int noise_model_t::generate_sample(Vector3d& sensor_pos,
                                    Vector3d& scan_pos) const
 {
-	Vector3d scanpoint_sensor_coords;
 	pose_t system_pose;
 	transform_t system2world, sensor_trans;
 	double ts;
@@ -103,9 +101,9 @@ int noise_model_t::generate_sample(Vector3d& sensor_pos,
 
 	/* use this timestamp to interpolate a position along the
 	 * path.  This is represented by a translation and rotation */
-	ret = this->compute_pose_at(system_pose, ts);
+	ret = this->path.compute_pose_at(system_pose, ts);
 	if(ret)
-		return PROPEGATE_ERROR(-1, ret); /* can't find pose */
+		return PROPEGATE_ERROR(-2, ret); /* can't find pose */
 
 	/* system -> world */
 	system2world.T = system_pose.T;
@@ -113,7 +111,7 @@ int noise_model_t::generate_sample(Vector3d& sensor_pos,
 
 	/* The system pose gives us:  system -> world
 	 * we want:  sensor -> world */
-	sensor_trans = this->scanner_calib; /* sensor -> system */
+	sensor_trans = this->sensor_calib; /* sensor -> system */
 	sensor_trans.cat(system2world); /* sensor -> system
 	                                 *    + system -> world */
 
@@ -123,11 +121,11 @@ int noise_model_t::generate_sample(Vector3d& sensor_pos,
 	sensor_pos = sensor_trans.T;
 
 	/* from here, get a random sample of the scan point */
-	scanpoint_sensor_coords = this->scan.generate_sample();
+	scan_pos = this->scan.generate_sample();
 
 	/* transform this point from sensor coordinates to world coordinates
 	 * by using the sensor pos transform */
-	scan_pos = this->sensor_trans.apply(scanpoint_sensor_coords);
+	sensor_trans.apply(scan_pos);
 
 	/* success */
 	return 0;

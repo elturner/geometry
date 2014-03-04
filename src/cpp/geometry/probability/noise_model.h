@@ -16,7 +16,7 @@
  */
 
 #include <io/data/fss/fss_io.h>
-#include <goemetry/system_path.h>
+#include <geometry/system_path.h>
 #include <geometry/probability/noisy_timestamp.h>
 #include <geometry/probability/noisy_scan.h>
 #include <Eigen/Dense>
@@ -32,9 +32,9 @@ class noise_model_t
 		 * following components of the localization: */
 		noisy_timestamp_t clock; /* the system clock has noise */
 		system_path_t path; /* the path localization has noise */
-		transform_t* scanner_calib; /* the scanner's transform
-		                             * with respect to system
-		                             * common */
+		transform_t sensor_calib; /* the scanner's transform
+		                           * with respect to system
+		                           * common */
 		noisy_scan_t scan; /* instrinsic noise from scanners */
 
 	/* functions */

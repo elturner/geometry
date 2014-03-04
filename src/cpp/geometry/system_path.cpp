@@ -325,7 +325,6 @@ int system_path_t::get_extrinsics_for(transform_t& t,
                                       const std::string& s) const
 {
 	map<string, transform_t*>::const_iterator it;	
-	int ret;
 
 	/* check if valid sensor */
 	it = this->transform_map.find(s);
