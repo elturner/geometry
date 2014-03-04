@@ -98,6 +98,15 @@ class transform_t
 		void apply(Eigen::MatrixXd& pts) const;
 
 		/**
+		 * Applies this transform to the given 3D point
+		 *
+		 * Given a point, this transform will be applied in-place.
+		 *
+		 * @param p   The point to transform.
+		 */
+		void apply(Eigen::Vector3d& p) const;
+
+		/**
 		 * Applies the inverse of this transform to given list
 		 *
 		 * Given a list of points, represented as columns in
@@ -107,6 +116,16 @@ class transform_t
 		 * @param pts    The points to trnasform in-place
 		 */
 		void apply_inverse(Eigen::MatrixXd& pts) const;
+
+		/**
+		 * Applies the inverse of this transform to the given point
+		 *
+		 * Will apply the inverse of this transform in-place on the
+		 * specified point p.
+		 *
+		 * @param p   The point to modify.
+		 */
+		void apply_inverse(Eigen::Vector3d& p) const;
 
 		/* operators */
 

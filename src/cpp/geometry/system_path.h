@@ -104,7 +104,7 @@ class system_path_t
 		 */
 		void clear();
 
-		/* acessors */
+		/* accessors */
 
 		/**
 		 * Generates the interpolated pose for specified timestamp.
@@ -121,6 +121,20 @@ class system_path_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int compute_pose_at(pose_t& p, double t) const;
+
+		/**
+		 * Retrieves the rigid transform for the given sensor
+		 *
+		 * Will retrieve the sensor->system transform for
+		 * the sensor with the specified name.
+		 *
+		 * @param t   Where to store the transform for this sensor
+		 * @param s   The name of the sensor to retrieve
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int get_extrinsics_for(transform_t& t,
+		                       const std::string& s) const;
 
 		/**
 		 * Computes transform of specified sensor at given timestamp

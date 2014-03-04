@@ -70,6 +70,11 @@ void transform_t::apply(MatrixXd& pts) const
 		pts.col(i) += this->T;
 }
 		
+void transform_t::apply(Vector3d& p) const
+{
+	p = (this->R * p) + this->T;
+}
+		
 void transform_t::apply_inverse(MatrixXd& pts) const
 {
 	size_t i, n;
@@ -81,4 +86,9 @@ void transform_t::apply_inverse(MatrixXd& pts) const
 
 	/* apply inverse rotation matrix */
 	pts = this->R.inverse() * pts;
+}
+
+void transform_t::apply_inverse(Vector3d& p) const
+{
+	p = this->R.inverse() * (p - this->T);
 }
