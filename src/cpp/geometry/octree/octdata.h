@@ -126,12 +126,24 @@ class octdata_t
 		 */
 		int parse(std::istream& is);
 
-		/*########################################################
+		/*
+		 *########################################################
 		 * The remaining functions will not be called by octree_t
 		 *########################################################
 		 */
 
-		// TODO
+		/**
+		 * Adds a carving observation to this data object
+		 *
+		 * Will increment the observation count, and update
+		 * the appropriate sums based on this observation.
+		 *
+		 * @param prob     The observed carved probability
+		 * @param corner   The observed corner coefficient
+		 * @param planar   The observed planarity coefficient
+		 */
+		void add_sample(double prob, double corner=0.0, 
+		                double planar=0.0);
 };
 
 #endif

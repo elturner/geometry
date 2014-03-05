@@ -116,3 +116,12 @@ int octdata_t::parse(istream& is)
 		return -1; /* failure */
 	return 0; /* success */
 }
+		
+void octdata_t::add_sample(double prob, double corner, double planar)
+{
+	this->count       ++; /* update observation count */
+	this->prob_sum    += prob; /* add probability observation */
+	this->prob_sum_sq += prob*prob; /* square of probability sample */
+	this->corner_sum  += corner; /* add corner coefficient obs. */
+	this->planar_sum  += planar; /* add planarity observation */
+}

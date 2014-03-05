@@ -130,6 +130,16 @@ class octnode_t
 		octnode_t* retrieve(const Eigen::Vector3d& p) const;
 
 		/**
+		 * Simplifies the tree structure at the given location
+		 *
+		 * Will attempt to simplify the tree structure under
+		 * this node that intersects the given point.  The
+		 * simplification process will check the data objects
+		 * of the children of each node.
+		 */
+		// TODO
+
+		/**
 		 * Will find all subnode leafs that intersect this line
 		 *
 		 * Will ray trace the line segment given through this
