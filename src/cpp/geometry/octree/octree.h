@@ -103,6 +103,14 @@ class octree_t
 		 */
 		void clone_from(const octree_t& other);
 
+		/**
+		 * Returns a pointer to the root node of this tree.
+		 *
+		 * @return   Returns root node pointer.
+		 */
+		inline octnode_t* get_root() const
+		{ return this->root; };
+
 		/* geometry */
 
 		/**

@@ -218,15 +218,20 @@ int octree_t::raycarve(vector<octnode_t*>& leafs,
 int octree_t::serialize(const string& fn) const
 {
 	ofstream outfile;
+	unsigned int c;
 
 	/* open binary file for writing */
 	outfile.open(fn.c_str(), ios_base::out | ios_base::binary);
 	if(!(outfile.is_open()))
 		return -1; /* could not open file */
 
+	/* get number of nodes in tree */
+	c = (this->root == NULL) ? 0 : this->root->get_num_nodes();
+	
 	/* export header information */
 	outfile.write(OCTFILE_MAGIC_NUMBER, OCTFILE_MAGIC_LENGTH);
 	outfile.write((char*) &(this->max_depth), sizeof(this->max_depth));
+	outfile.write((char*) &c, sizeof(c));
 
 	/* export tree information */
 	this->root->serialize(outfile);
@@ -240,6 +245,7 @@ int octree_t::parse(const string& fn)
 {
 	char magic[OCTFILE_MAGIC_LENGTH];
 	ifstream infile;
+	unsigned int c;
 	int ret;
 
 	/* open binary file for reading */
@@ -254,6 +260,7 @@ int octree_t::parse(const string& fn)
 	
 	/* get remainder of header information */
 	infile.read((char*) &(this->max_depth), sizeof(this->max_depth));
+	infile.read((char*) &c, sizeof(c)); /* count # of nodes in tree */
 
 	/* destroy any existing information */
 	if(this->root != NULL)

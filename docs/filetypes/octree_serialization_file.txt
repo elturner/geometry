@@ -26,6 +26,7 @@ Variable        Type           Size
 --------------------------------------
 magic_number    'octfile\0'    8 bytes
 max_depth       unsigned int   4 bytes
+num_nodes       unsigned int   4 bytes
 
 After the header starts the prefix depth-first ordering of
 the nodes, starting with the root node.  The values in the
