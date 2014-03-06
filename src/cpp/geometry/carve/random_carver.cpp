@@ -36,7 +36,8 @@ random_carver_t::random_carver_t()
 
 int random_carver_t::init(const string& madfile, const string& confile,
                           double res, unsigned int num_samps,
-                          double clk_err)
+                          double clk_err,
+                          unsigned int simp_mo, double simp_mls)
 {
 	int ret;
 
@@ -52,6 +53,7 @@ int random_carver_t::init(const string& madfile, const string& confile,
 
 	/* initialize octree and algorithm parameters */
 	this->tree.set_resolution(res);
+	this->simplifier.init(simp_mo, simp_mls);
 	this->num_samples = num_samps;
 	this->clock_uncertainty = clk_err;
 
@@ -100,7 +102,7 @@ int random_carver_t::carve(const string& fssfile)
 	/* iterate through scans, incorporating them into the octree */
 	tic(clk);
 	progbar.set_name(infile.scanner_name());
-	n = infile.num_frames();
+	n = 10; // TODO infile.num_frames();
 	for(i = 0; i < n; i++)
 	{
 		/* parse the current frame and update user on progress */
@@ -144,6 +146,7 @@ int random_carver_t::carve(const string& fssfile)
 				     << ret << endl;
 				return ret;
 			}
+
 		}
 	}
 	

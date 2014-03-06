@@ -18,6 +18,7 @@
  */
 
 #include <geometry/octree/octree.h>
+#include <geometry/octree/simplifier.h>
 #include <geometry/probability/noise_model.h>
 #include <string>
 
@@ -45,6 +46,10 @@ class random_carver_t
 		/* The octree holds the output representation of the
 		 * space carving */
 		octree_t tree;
+
+		/* The simplifier object is used to simplify the tree
+		 * during the carving process. */
+		simplifier_t simplifier;
 
 		/* algorithm parameters */
 
@@ -79,13 +84,16 @@ class random_carver_t
 		 * @param res       The carve resolution, in meters
 		 * @param num_samps The number of samples per point to use
 		 * @param clk_err   The system clock uncertainty, in secs
+		 * @param simp_mo   The simp. param. min. obs.
+		 * @param simp_mls  The simp. param min label strength
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int init(const std::string& madfile,
 		         const std::string& confile,
 		         double res, unsigned int num_samps,
-		         double clk_err);
+		         double clk_err,
+		         unsigned int simp_mo, double simp_mls);
 
 		/**
 		 * Carves all input scan points into the octree

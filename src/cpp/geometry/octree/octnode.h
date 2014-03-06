@@ -130,16 +130,6 @@ class octnode_t
 		octnode_t* retrieve(const Eigen::Vector3d& p) const;
 
 		/**
-		 * Simplifies the tree structure at the given location
-		 *
-		 * Will attempt to simplify the tree structure under
-		 * this node that intersects the given point.  The
-		 * simplification process will check the data objects
-		 * of the children of each node.
-		 */
-		// TODO
-
-		/**
 		 * Will find all subnode leafs that intersect this line
 		 *
 		 * Will ray trace the line segment given through this
@@ -176,6 +166,17 @@ class octnode_t
 		 */
 		void raycarve(std::vector<octnode_t*>& leafs,
 		              const linesegment_t& line, int d);
+
+		/**
+		 * Returns the count of this node and all its subnodes
+		 *
+		 * Will recursively count the number of subnodes under
+		 * this node, and return the value (the count includes
+		 * this node).
+		 *
+		 * @return   Returns the count of allocated nodes.
+		 */
+		unsigned int get_num_nodes() const;
 
 		/* i/o */
 

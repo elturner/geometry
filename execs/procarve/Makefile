@@ -32,6 +32,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/octree/simplifier.cpp \
 		$(SOURCEDIR)geometry/probability/noisy_scan.cpp \
 		$(SOURCEDIR)geometry/probability/noisy_timestamp.cpp \
 		$(SOURCEDIR)geometry/probability/noise_model.cpp \
@@ -64,6 +65,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/octree/linesegment.h \
+		$(SOURCEDIR)geometry/octree/simplifier.h \
 		$(SOURCEDIR)geometry/probability/noisy_scan.h \
 		$(SOURCEDIR)geometry/probability/noisy_timestamp.h \
 		$(SOURCEDIR)geometry/probability/noise_model.h \

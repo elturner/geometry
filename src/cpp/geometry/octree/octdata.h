@@ -144,6 +144,46 @@ class octdata_t
 		 */
 		void add_sample(double prob, double corner=0.0, 
 		                double planar=0.0);
+
+		/**
+		 * Returns the count of number of observations seen
+		 *
+		 * @return  The count of observations seen by this object.
+		 */
+		inline unsigned int get_count() const
+		{ return this->count; };
+
+		/**
+		 * Returns the best estimate of recorded probability
+		 *
+		 * Will average all samples seen, and return the best
+		 * estimate for the probability value stored in this
+		 * data object.
+		 *
+		 * @return   Returns the probability stored in this object
+		 */
+		inline double get_probability() const
+		{ return (this->prob_sum / this->count); };
+
+		/**
+		 * Returns the uncertainty of the probability estimate
+		 *
+		 * Will return the variance of the samples collected
+		 * so far of the probability value in this data object.
+		 * Variance is the square of the standard deviation.
+		 *
+		 * @return   Returns the variance of the prob. estimate
+		 */
+		inline double get_uncertainty() const
+		{
+			/* get mean estimate */
+			double p = this->get_probability();
+
+			/* compute variance:
+			 *
+			 * Var[x] = E[x^2] - E[x]^2 */
+			return ((this->prob_sum_sq/this->count) - (p*p));
+		};
 };
 
 #endif

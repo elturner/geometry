@@ -34,7 +34,7 @@ int main()
 	string octfile = dataset + "models/carving/testcarve.oct";
 
 	/* initialize */
-	ret = carver.init(madfile, confile, 0.01, 30, 0.003);
+	ret = carver.init(madfile, confile, 0.05, 300, 0.003, 1, 0);
 	if(ret)
 	{
 		cerr << "Unable to init carver: " << ret << endl;

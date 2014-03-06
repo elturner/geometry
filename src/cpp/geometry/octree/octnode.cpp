@@ -274,6 +274,22 @@ void octnode_t::raycarve(vector<octnode_t*>& leafs,
 	}
 }
 		
+unsigned int octnode_t::get_num_nodes() const
+{
+	unsigned int i, c;
+
+	/* count self */
+	c = 1;
+
+	/* iterate over children */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+		if(this->children[i] != NULL)
+			c += this->children[i]->get_num_nodes();
+
+	/* return total */
+	return c;
+}
+		
 void octnode_t::serialize(ostream& os) const
 {
 	double d;
