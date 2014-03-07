@@ -316,7 +316,9 @@ int system_path_t::compute_pose_at(pose_t& p, double t) const
 	p.T = ((1 - weight) * this->pl[i].T)
 	      + (weight * (this->pl[i+1].T));
 	p.R = this->pl[i].R.slerp(weight, this->pl[i+1].R);
-
+	p.v = this->pl[i].v; /* velocity is assumed constant for edge */
+	p.w = this->pl[i].w; /* ang. vel. also assumed piece-wise const. */
+	
 	/* success */
 	return 0;
 }

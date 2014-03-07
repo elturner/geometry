@@ -251,6 +251,8 @@ class pose_t
 			this->timestamp = rhs.timestamp;
 			this->T = rhs.T;
 			this->R = rhs.R;
+			this->v = rhs.v;
+			this->w = rhs.w;
 
 			/* return the value of this point */
 			return (*this);
