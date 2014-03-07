@@ -32,12 +32,6 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
-		$(SOURCEDIR)geometry/octree/simplifier.cpp \
-		$(SOURCEDIR)geometry/probability/noisy_scan.cpp \
-		$(SOURCEDIR)geometry/probability/noisy_timestamp.cpp \
-		$(SOURCEDIR)geometry/probability/noise_model.cpp \
-		$(SOURCEDIR)geometry/carve/random_carver.cpp \
-		$(SOURCEDIR)geometry/carve/point_carver.cpp \
 		src/main.cpp
 
 HEADERS =	$(SOURCEDIR)util/error_codes.h \
@@ -64,13 +58,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
-		$(SOURCEDIR)geometry/octree/linesegment.h \
-		$(SOURCEDIR)geometry/octree/simplifier.h \
-		$(SOURCEDIR)geometry/probability/noisy_scan.h \
-		$(SOURCEDIR)geometry/probability/noisy_timestamp.h \
-		$(SOURCEDIR)geometry/probability/noise_model.h \
-		$(SOURCEDIR)geometry/carve/random_carver.h \
-		$(SOURCEDIR)geometry/carve/point_carver.h
+		$(SOURCEDIR)geometry/octree/linesegment.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 
@@ -96,7 +84,7 @@ todo:
 	grep -n --color=auto "TODO" $(SOURCES) $(HEADERS)
 
 grep:
-	grep -n --color=auto "p, q" $(SOURCES) $(HEADERS)
+	grep -n --color=auto "$(SEARCH)" $(SOURCES) $(HEADERS)
 
 size:
 	wc $(SOURCES) $(HEADERS)
