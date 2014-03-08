@@ -1,13 +1,13 @@
-#ifndef NOISY_SCAN_H
-#define NOISY_SCAN_H
+#ifndef NOISY_SCANPOINT_H
+#define NOISY_SCANPOINT_H
 
 /**
- * @file noisy_scan.h
+ * @file noisy_scanpoint.h
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  *
  * @section DESCRIPTION
  *
- * This file contains the noisy_scan_t class, which represents the
+ * This file contains the noisy_scanpoint_t class, which represents the
  * probability distribution for a single line-of-sight scan, where
  * the position of the scanner and the noise within the scan are modeled
  * with some uncertainty.
@@ -24,7 +24,7 @@
 /**
  * The scan distribution class models uncertainty from scanner internals
  */
-class noisy_scan_t
+class noisy_scanpoint_t
 {
 	/* parameters */
 	private:
@@ -52,7 +52,7 @@ class noisy_scan_t
 		/**
 		 * Initializes a default scan point
 		 */
-		noisy_scan_t();
+		noisy_scanpoint_t();
 
 		/**
 		 * Initializes scan point based on input geometry
@@ -63,7 +63,7 @@ class noisy_scan_t
 		 * @param sr  The std. dev. along ray of point
 		 * @param sl  The std. dev. orthogonal to ray of point.
 		 */
-		noisy_scan_t(double x, double y, double z, 
+		noisy_scanpoint_t(double x, double y, double z, 
 		             double sr, double sl);
 
 		/* accessors */
@@ -101,6 +101,30 @@ class noisy_scan_t
 		 * @param sl  The std. dev. orthogonal to ray of point.
 		 */
 		void set(double x,double y,double z,double sr,double sl);
+
+		/**
+		 * Returns the mean of the scan point's position
+		 *
+		 * Will return the mean of the distribution that
+		 * represents the scan point's position in sensor
+		 * coordinates.
+		 *
+		 * @return   Returns the mean position of scan point.
+		 */
+		inline Eigen::Vector3d& get_mean() const
+		{ return this->P; };
+
+		/**
+		 * Returns the covariance matrix of the scan point
+		 *
+		 * Will return the covariance matrix of the gaussian
+		 * distribution that represents the scan point's
+		 * poisition in sensor coordinates.
+		 *
+		 * @return   Returns the covariance matrix of scan point
+		 */
+		inline Eigen::Matrix3d& get_cov() const
+		{ return this->C; };
 
 		/* probability */
 

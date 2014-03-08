@@ -19,15 +19,18 @@
  * This class requires the Eigen framework.
  */
 
-#include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
+#include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <string>
 #include <iostream>
 #include <Eigen/Dense>
 
-/* the following types are used to represent covariance matrices for
- * this class */
+/* the following types are used to represent matrices for this class */
+
+/* dimensionality of various parameters */
+#define NUM_SENSOR_INPUT_VARS 7
+#define NUM_SCANPOINT_INPUT_VARS 10
 
 /* output position covariance mat */
 typedef Eigen::Matrix<double, 3, 3> pos_cov_t;
@@ -44,7 +47,8 @@ typedef Eigen::Matrix<double, 3, 3> pos_cov_t;
  *	z_sensor2system
  *	ts_std
  */
-typedef Eigen::Matrix<double, 7, 7> sensor_cov_t;
+typedef Eigen::Matrix<double,
+        NUM_SENSOR_INPUT_VARS, NUM_SENSOR_INPUT_VARS> sensor_cov_t;
 
 /* The covariance matrix used to represent the uncertainties in the
  * values that are ued as input to determine the distribution of the
@@ -62,7 +66,34 @@ typedef Eigen::Matrix<double, 7, 7> sensor_cov_t;
  * 	z_point2sensor
  * 	ts_std
  */
-typedef Eigen::Matrix<double, 10, 10> scanpoint_cov_t;
+typedef Eigen::Matrix<double,
+        NUM_SCANPOINT_INPUT_VARS, NUM_SCANPOINT_INPUT_VARS> scanpoint_cov_t;
+
+/* the jacobain matrix of the transform from input random variables to
+ * a sensor position in world coordinates.  The input variables are
+ * the same as for the sensor covariance matrix, and the output size
+ * is the length of the position vector (i.e. 3) */
+typedef Eigen::Matrix<double,
+        3, NUM_SENSOR_INPUT_VARS> sensor_jacobian_t;
+
+/* The jacobian matrix of the transform from input random variables to
+ * a scanpoint position in world coordinates.  The input variables are
+ * the same as for the scanpoint covariance matrix, and the output
+ * size is the length of the position vector (3). */
+typedef Eigen::Matrix<double,
+        3, NUM_SCANPOINT_INPUT_VARS> scanpoint_jacobian_t;
+
+/* The input vector for a sensor position distribution has these
+ * dimensions.  This is used as an input vector to be multiplied by
+ * the corresponding jacobian */
+typedef Eigen::Matrix<double,
+        NUM_SENSOR_INPUT_VARS, 1> sensor_jacobian_input_t;
+
+/* The input vector for a scan point position distribution has these
+ * dimensions.  This is used as an input vector to be multiplied by
+ * the corresponding jacobian */
+typedef Eigen::Matrix<double,
+        NUM_SCANPOINT_INPUT_VARS, 1> scanpoint_jacobian_input_t;
 
 /**
  * The scan_model_t class models noise in a sensor's world-coords position.
@@ -99,23 +130,19 @@ class scan_model_t
 		double roll, pitch, yaw; /* units: radians */
 
 		/**
-		 * useful representations of the rotation matrix defined
-		 * by how the uncertainty in timestamp and the current
-		 * angular velocity affect the pose of the sensor.
+		 * The following values are used to cache expensive
+		 * matrix computations that are required for each scan
+		 * point. The notation is a concatenation of the
+		 * multiplied matrices.  For example:
 		 *
-		 * R_ts = I3 + [w]_x * sin(|w|*ts)
-		 * 		+ [w]_x^2 * (1 - cos(|w|*ts))
-		 *
-		 * R_ts_p = [w]_x*cos(|w|*ts)*|w| + [w]_x^2*sin(|w|*ts)*|w|
+		 * 	RzRydRxRtsRl2s = Rz * Ry * (dRx/droll) * R_ts 
+		 * 				* sensor_calib.R
 		 */
-		Eigen::Matrix3d R_ts; /* rotation matrix of ang. vel. */
-		Eigen::Matrix3d R_ts_p; /* derivative of R_ts w.r.t ts */
-
-		/**
-		 * The covariance matrix for the input random variables
-		 * for modeling the pose position.
-		 * */
-		sensor_cov_t input_sensor_cov;
+		Eigen::Matrix3d RzRydRxRtsRl2s;
+		Eigen::Matrix3d RzdRyRxRtsRl2s;
+		Eigen::Matrix3d dRzRyRxRtsRl2s;
+		Eigen::Matrix3d RzRyRxRtspRl2s;
+		Eigen::Matrix3d RzRyRxRtsRl2s;
 
 		/**
 		 * The covariance matrix for the input random variables
@@ -123,7 +150,7 @@ class scan_model_t
 		 * world coordinates.
 		 */
 		scanpoint_cov_t input_scanpoint_cov;
-	
+
 		/*-----------------*/
 		/* computed values */
 		/*-----------------*/
@@ -216,10 +243,8 @@ class scan_model_t
 		 * have been called at least once each.
 		 *
 		 * @param p    The scan point and its corresponding noise
-		 *
-		 * @return  Returns zero on success, non-zero on failure.
 		 */
-		int set_point(const fss::point_t& p);
+		void set_point(const noisy_scanpoint_t& p);
 
 		/*---------------------*/
 		/* debugging functions */

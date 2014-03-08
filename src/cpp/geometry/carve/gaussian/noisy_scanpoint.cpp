@@ -1,4 +1,4 @@
-#include "noisy_scan.h"
+#include "noisy_scanpoint.h"
 #include <util/randLib.h>
 #include <vector>
 #include <iostream>
@@ -6,12 +6,12 @@
 #include <Eigen/Geometry>
 
 /**
- * @file noisy_scan.h
+ * @file noisy_scanpoint.h
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  *
  * @section DESCRIPTION
  *
- * This file implements the noisy_scan_t class, which is used to
+ * This file implements the noisy_scanpoint_t class, which is used to
  * represent uncertainty in scan points, in the scanner's frame of
  * reference.
  *
@@ -21,26 +21,26 @@
 using namespace std;
 using namespace Eigen;
 
-noisy_scan_t::noisy_scan_t()
+noisy_scanpoint_t::noisy_scanpoint_t()
 {
 	/* default values */
 	this->set(0.0, 0.0, 0.0, 0.0, 0.0);
 }
 		
-noisy_scan_t::noisy_scan_t(double x, double y, double z, 
+noisy_scanpoint_t::noisy_scanpoint_t(double x, double y, double z, 
                            double sr, double sl)
 {
 	/* set values */
 	this->set(x, y, z, sr, sl);
 }
 		
-void noisy_scan_t::set(const Eigen::Vector3d& p, const Eigen::Matrix3d& c)
+void noisy_scanpoint_t::set(const Eigen::Vector3d& p, const Eigen::Matrix3d& c)
 {
 	this->P = p;
 	this->C = c;
 }
 		
-void noisy_scan_t::set(double x, double y, double z, double sr, double sl)
+void noisy_scanpoint_t::set(double x, double y, double z, double sr, double sl)
 {
 	Vector3d a, b, c, r;
 	double da, db;
@@ -78,7 +78,7 @@ void noisy_scan_t::set(double x, double y, double z, double sr, double sl)
 	this->C(2,0)=sl*a(2); this->C(2,1)=sl*b(2); this->C(2,2)=sr*r(2);
 }
 		
-Vector3d noisy_scan_t::generate_sample() const
+Vector3d noisy_scanpoint_t::generate_sample() const
 {
 	vector<double> samples;
 	Vector3d p, q;
