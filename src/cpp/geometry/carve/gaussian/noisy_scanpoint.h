@@ -111,7 +111,7 @@ class noisy_scanpoint_t
 		 *
 		 * @return   Returns the mean position of scan point.
 		 */
-		inline Eigen::Vector3d& get_mean() const
+		inline const Eigen::Vector3d& get_mean() const
 		{ return this->P; };
 
 		/**
@@ -123,7 +123,7 @@ class noisy_scanpoint_t
 		 *
 		 * @return   Returns the covariance matrix of scan point
 		 */
-		inline Eigen::Matrix3d& get_cov() const
+		inline const Eigen::Matrix3d& get_cov() const
 		{ return this->C; };
 
 		/* probability */

@@ -143,6 +143,7 @@ class scan_model_t
 		Eigen::Matrix3d dRzRyRxRtsRl2s;
 		Eigen::Matrix3d RzRyRxRtspRl2s;
 		Eigen::Matrix3d RzRyRxRtsRl2s;
+		Eigen::Matrix3d RzRyRxRl2s;
 
 		/**
 		 * The covariance matrix for the input random variables

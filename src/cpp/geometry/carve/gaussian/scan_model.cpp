@@ -3,6 +3,7 @@
 #include <geometry/transform.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <util/error_codes.h>
+#include <util/rotLib.h>
 #include <cmath>
 #include <string>
 #include <iostream>
@@ -77,7 +78,6 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 {
 	Vector3d euler, T_ts;
 	Matrix3d wx, wx_sq, Rx, Ry, Rz, dRx, dRy, dRz, RtsRl2s;
-	sensor_jacobian_input_t E_input;
 	double w_abs, w0, w1, w2, theta, sintheta, costheta;
 	double cr, sr, cp, sp, cy, sy;
 	int ret;
@@ -177,10 +177,13 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	J_sensor.block(0,6,3,1) = (R_s2w * R_ts_p * this->sensor_calib.T) 
 				+ this->pose.v;
 
+	/* the mean of the output distribution should be the deterministic
+	 * position of the sensor in world coordinates, since all
+	 * input errors are assumed to be zero-mean */
+	this->output_sensor_mean = (R_s2w * this->sensor_calib.T) 
+	                           + this->pose.T; /* deterministic pos */
+	
 	/* compute the output distribution for the sensor position */
-	E_input << roll, pitch, yaw,
-	           this->pose.T(0), this->pose.T(1), this->pose.T(2), 0;
-	this->output_sensor_mean = J_sensor * E_input;
 	this->output_sensor_cov = J_sensor * input_sensor_cov
 					* J_sensor.transpose();
 
@@ -191,6 +194,7 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	this->dRzRyRxRtsRl2s = R_dy * RtsRl2s;
 	this->RzRyRxRtspRl2s = R_s2w * R_ts_p * this->sensor_calib.R;
 	this->RzRyRxRtsRl2s  = R_s2w * RtsRl2s;
+	this->RzRyRxRl2s     = R_s2w * this->sensor_calib.R;
 
 	/* populate the input covariance matrix for the scan point
 	 * distribution computation with the covariances between
@@ -221,7 +225,6 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 void scan_model_t::set_point(const noisy_scanpoint_t& p)
 {
 	Vector3d T_p2l; /* mean position of scan point in sensor coords */
-	scanpoint_jacobian_input_t E_input;
 	
 	/* The jacobian computed for the scanpoint transform
 	 * function.  This matrix is useful for estimating the
@@ -238,6 +241,9 @@ void scan_model_t::set_point(const noisy_scanpoint_t& p)
 	/* fully populate input covariance matrix for the input
 	 * random variables used to compute scanpoint position */
 	this->input_scanpoint_cov.block(6,6,3,3) = p.get_cov();
+	cout << "point's original cov: " << endl << p.get_cov() << endl;
+	cout << "point's input cov:" << endl << this->input_scanpoint_cov
+	     << endl << endl << endl;
 
 	/* populate the jacobian of the scanpoint's transformation
 	 * with computed values, using the cached values that were
@@ -251,18 +257,13 @@ void scan_model_t::set_point(const noisy_scanpoint_t& p)
 	J_scanpoint.block(0,6,3,3) = this->RzRyRxRtsRl2s;
 	J_scanpoint.block(0,9,3,1) = this->RzRyRxRtspRl2s * T_p2l;
 
+	/* the mean of the output distribution should be the deterministic
+	 * position of the scan point in world coordinates, since all
+	 * input errors are assumed to be zero-mean */
+	this->output_scanpoint_mean = this->RzRyRxRl2s * T_p2l
+	                              + this->output_sensor_mean;
+	
 	/* compute the output distribution for the scan point position */
-	E_input << this->roll, /* rotation angles */
-	           this->pitch,
-		   this->yaw,
-		   this->output_sensor_mean(0), /* sensor in world coords */
-		   this->output_sensor_mean(1),
-		   this->output_sensor_mean(2),
-		   T_p2l(0), /* scan point in sensor coords */
-		   T_p2l(1), 
-		   T_p2l(2), 
-		   0; /* mean timestamp error */
-	this->output_scanpoint_mean = J_scanpoint * E_input;
 	this->output_scanpoint_cov = J_scanpoint
 		* this->input_scanpoint_cov * J_scanpoint.transpose(); 
 }
