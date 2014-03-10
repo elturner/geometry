@@ -107,14 +107,11 @@ int random_carver_t::carve(const string& fssfile)
 	}
 	toc(clk, "Parsing scan file");
 
-	// TODO outfile for debugging
-	outfile.open("/home/elturner/Desktop/test.txt");
-
 	/* iterate through scans, incorporating them into the octree */
 	tic(clk);
 	progbar.set_name(infile.scanner_name());
-	n = 10; // TODO infile.num_frames();
-	for(i = 9; i < n; i++)
+	n = infile.num_frames();
+	for(i = 0; i < n; i++)
 	{
 		/* parse the current frame and update user on progress */
 		progbar.update(i, n);
@@ -145,7 +142,7 @@ int random_carver_t::carve(const string& fssfile)
 
 		/* iterate over points in frame */
 		m = frame.points.size();
-		for(j = 0; j < m; j++)
+		for(j = 0; j < m; j ++)
 		{
 			/* get statistics of j'th point */
 			point.set(frame.points[j].x,
@@ -153,18 +150,18 @@ int random_carver_t::carve(const string& fssfile)
 				  frame.points[j].z,
 				  frame.points[j].stddev,
 				  frame.points[j].width);
+			if(!point.has_finite_noise())
+				continue;
+
+			/* model the combined statistics of this point */
 			model.set_point(point);
 
 			// TODO planarity/edge info about scan?
-
-			// TODO debugging, print out point info
-			model.serialize(outfile);
+		
+			// TODO add to octree
 		}
 	}
 	
-	// TODO close debugging
-	outfile.close();
-
 	/* inform user that processing is finished */
 	progbar.clear();
 	label = "Random carving of " + infile.scanner_name();

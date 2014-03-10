@@ -26,75 +26,6 @@
 #include <iostream>
 #include <Eigen/Dense>
 
-/* the following types are used to represent matrices for this class */
-
-/* dimensionality of various parameters */
-#define NUM_SENSOR_INPUT_VARS 7
-#define NUM_SCANPOINT_INPUT_VARS 10
-
-/* output position covariance mat */
-typedef Eigen::Matrix<double, 3, 3> pos_cov_t;
-
-/* The covariance matrix used to represent uncertainties in the values
- * that are used as input in determining the distribution of the sensor's
- * position. This matrix has the following ordering:
- *
- *	roll
- *	pitch
- *	yaw
- *	x_sensor2system
- *	y_sensor2system
- *	z_sensor2system
- *	ts_std
- */
-typedef Eigen::Matrix<double,
-        NUM_SENSOR_INPUT_VARS, NUM_SENSOR_INPUT_VARS> sensor_cov_t;
-
-/* The covariance matrix used to represent the uncertainties in the
- * values that are ued as input to determine the distribution of the
- * scan point's position in world coordinates.  The matrix has the
- * following ordering:
- *
- * 	roll
- * 	pitch
- * 	yaw
- * 	x_sensor2world
- * 	y_sensor2world
- * 	z_sensor2world
- * 	x_point2sensor
- * 	y_point2sensor
- * 	z_point2sensor
- * 	ts_std
- */
-typedef Eigen::Matrix<double,
-        NUM_SCANPOINT_INPUT_VARS, NUM_SCANPOINT_INPUT_VARS> scanpoint_cov_t;
-
-/* the jacobain matrix of the transform from input random variables to
- * a sensor position in world coordinates.  The input variables are
- * the same as for the sensor covariance matrix, and the output size
- * is the length of the position vector (i.e. 3) */
-typedef Eigen::Matrix<double,
-        3, NUM_SENSOR_INPUT_VARS> sensor_jacobian_t;
-
-/* The jacobian matrix of the transform from input random variables to
- * a scanpoint position in world coordinates.  The input variables are
- * the same as for the scanpoint covariance matrix, and the output
- * size is the length of the position vector (3). */
-typedef Eigen::Matrix<double,
-        3, NUM_SCANPOINT_INPUT_VARS> scanpoint_jacobian_t;
-
-/* The input vector for a sensor position distribution has these
- * dimensions.  This is used as an input vector to be multiplied by
- * the corresponding jacobian */
-typedef Eigen::Matrix<double,
-        NUM_SENSOR_INPUT_VARS, 1> sensor_jacobian_input_t;
-
-/* The input vector for a scan point position distribution has these
- * dimensions.  This is used as an input vector to be multiplied by
- * the corresponding jacobian */
-typedef Eigen::Matrix<double,
-        NUM_SCANPOINT_INPUT_VARS, 1> scanpoint_jacobian_input_t;
-
 /**
  * The scan_model_t class models noise in a sensor's world-coords position.
  *
@@ -126,31 +57,19 @@ class scan_model_t
 		/* The deterministic pose of a sensor */
 		pose_t pose; /* this is the maximum-likelihood pose */
 
-		/* Euler angles corresponding to this pose's rotation */
-		double roll, pitch, yaw; /* units: radians */
-
 		/**
 		 * The following values are used to cache expensive
 		 * matrix computations that are required for each scan
-		 * point. The notation is a concatenation of the
-		 * multiplied matrices.  For example:
-		 *
-		 * 	RzRydRxRtsRl2s = Rz * Ry * (dRx/droll) * R_ts 
-		 * 				* sensor_calib.R
+		 * point.
 		 */
-		Eigen::Matrix3d RzRydRxRtsRl2s;
-		Eigen::Matrix3d RzdRyRxRtsRl2s;
-		Eigen::Matrix3d dRzRyRxRtsRl2s;
-		Eigen::Matrix3d RzRyRxRtspRl2s;
-		Eigen::Matrix3d RzRyRxRtsRl2s;
-		Eigen::Matrix3d RzRyRxRl2s;
-
-		/**
-		 * The covariance matrix for the input random variables
-		 * used for modeling the scan point's position in
-		 * world coordinates.
-		 */
-		scanpoint_cov_t input_scanpoint_cov;
+		Eigen::Matrix3d R_s2w; /* rotation from system to world */
+		Eigen::Matrix3d R_s2w_t; /* transpose of R_s2w */
+		Eigen::Matrix3d R_l2w; /* rotation matrix from sensor
+		                        * coordinates to world coords */
+		Eigen::Matrix3d R_l2w_t; /* transpose of R_l2w */
+		Eigen::Matrix3d twwt; /* outer product of angular velocity
+		                       * axis of rotation, scaled by 
+		                       * uncertainty in angle (radians^2) */
 
 		/*-----------------*/
 		/* computed values */
@@ -166,7 +85,7 @@ class scan_model_t
 		 * The output covariance matrix of the sensor's world
 		 * position, as determined by all input parameters.
 		 */
-		pos_cov_t output_sensor_cov;
+		Eigen::Matrix3d output_sensor_cov;
 
 		/**
 		 * The output mean of the scanpoint's world position,
@@ -178,7 +97,7 @@ class scan_model_t
 		 * The output covariance matrix of the scanpoint's world
 		 * position, as determined by all input parameters.
 		 */
-		pos_cov_t output_scanpoint_cov;
+		Eigen::Matrix3d output_scanpoint_cov;
 
 	/* functions */
 	public:
@@ -273,6 +192,17 @@ class scan_model_t
 		 * @param out   The output stream to write this info
 		 */
 		void serialize(std::ostream& out) const;
+
+		/**
+		 * Will export meshes of gaussian models to OBJ file
+		 *
+		 * Will export a mesh representing the basic shape
+		 * of the probability distribution of this point/sensor
+		 * pair to a wavefront OBJ file stream.
+		 *
+		 * @param out   The output stream to write to
+		 */
+		void writeobj(std::ostream& out) const;
 };
 
 #endif

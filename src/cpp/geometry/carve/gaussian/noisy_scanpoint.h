@@ -40,6 +40,9 @@ class noisy_scanpoint_t
 		 * gaussian to the distribution of this point. */
 		Eigen::Matrix3d C;
 
+		/* boolean indicating that scan has finite uncertainty */
+		bool finite_noise;
+
 	/* functions */
 	public:
 
@@ -125,6 +128,14 @@ class noisy_scanpoint_t
 		 */
 		inline const Eigen::Matrix3d& get_cov() const
 		{ return this->C; };
+
+		/**
+		 * Returns true iff this scan has finite noise
+		 *
+		 * @return   Returns boolean indicating finite point error
+		 */
+		inline bool has_finite_noise() const
+		{ return this->finite_noise; };
 
 		/* probability */
 

@@ -21,6 +21,11 @@
 using namespace std;
 using namespace Eigen;
 
+/* defines used by this class */
+#define MAX_ALLOWED_NOISE 1000 /* units: meters */
+
+/* function implementations */
+
 noisy_scanpoint_t::noisy_scanpoint_t()
 {
 	/* default values */
@@ -43,7 +48,17 @@ void noisy_scanpoint_t::set(const Eigen::Vector3d& p, const Eigen::Matrix3d& c)
 void noisy_scanpoint_t::set(double x, double y, double z, double sr, double sl)
 {
 	Vector3d a, b, c, r;
+	Matrix3d A, S, M;
 	double da, db;
+
+	/* check for finite noise */
+	if(sr > MAX_ALLOWED_NOISE || sl > MAX_ALLOWED_NOISE)
+	{
+		this->finite_noise = false;
+		return;
+	}
+	else
+		this->finite_noise = true;
 
 	/* save mean position */
 	this->P(0) = x;
@@ -71,11 +86,16 @@ void noisy_scanpoint_t::set(double x, double y, double z, double sr, double sl)
 	c.normalize();
 	a = c;
 	b = r.cross(a);
+	A << a,b,r; /* orthonormal basis for point -> sensor transform */
+
+	/* record std. devs in each direction along ray */
+	S << sl, 0, 0,
+	     0, sl, 0,
+	     0, 0, sr;
 
 	/* prepare coefficient matrix */
-	this->C(0,0)=sl*a(0); this->C(0,1)=sl*b(0); this->C(0,2)=sr*r(0);
-	this->C(1,0)=sl*a(1); this->C(1,1)=sl*b(1); this->C(1,2)=sr*r(1);
-	this->C(2,0)=sl*a(2); this->C(2,1)=sl*b(2); this->C(2,2)=sr*r(2);
+	M = A * S;
+	this->C = M * M.transpose();
 }
 		
 Vector3d noisy_scanpoint_t::generate_sample() const
