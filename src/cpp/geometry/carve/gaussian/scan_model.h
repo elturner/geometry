@@ -57,6 +57,10 @@ class scan_model_t
 		/* The deterministic pose of a sensor */
 		pose_t pose; /* this is the maximum-likelihood pose */
 
+		/*---------------*/
+		/* cached values */
+		/*---------------*/
+
 		/**
 		 * The following values are used to cache expensive
 		 * matrix computations that are required for each scan
@@ -71,9 +75,9 @@ class scan_model_t
 		                       * axis of rotation, scaled by 
 		                       * uncertainty in angle (radians^2) */
 
-		/*-----------------*/
-		/* computed values */
-		/*-----------------*/
+		/*------------------------------*/
+		/* computed distribution values */
+		/*------------------------------*/
 		
 		/**
 		 * The output mean of the sensor's world position,

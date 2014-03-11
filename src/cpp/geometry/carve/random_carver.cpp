@@ -69,7 +69,6 @@ int random_carver_t::carve(const string& fssfile)
 {
 	fss::reader_t infile;
 	fss::frame_t frame;
-	ofstream outfile;
 	progress_bar_t progbar;
 	scan_model_t model;
 	noisy_scanpoint_t point;
@@ -142,7 +141,7 @@ int random_carver_t::carve(const string& fssfile)
 
 		/* iterate over points in frame */
 		m = frame.points.size();
-		for(j = 0; j < m; j ++)
+		for(j = 0; j < m; j++)
 		{
 			/* get statistics of j'th point */
 			point.set(frame.points[j].x,
@@ -157,7 +156,7 @@ int random_carver_t::carve(const string& fssfile)
 			model.set_point(point);
 
 			// TODO planarity/edge info about scan?
-		
+
 			// TODO add to octree
 		}
 	}

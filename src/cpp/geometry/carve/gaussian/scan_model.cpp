@@ -229,4 +229,14 @@ void scan_model_t::writeobj(std::ostream& out) const
 		    			- 2*s(i)*U(2,i))
 		    <<  " 0 0 255" << endl;
 	}
+
+	/* export some faces */
+	out << "f -6 -4 -2" << endl
+	    << "f -4 -5 -2" << endl
+	    << "f -5 -3 -2" << endl
+	    << "f -3 -6 -2" << endl
+	    << "f -4 -6 -1" << endl
+	    << "f -5 -4 -1" << endl
+	    << "f -3 -5 -1" << endl
+	    << "f -6 -3 -1" << endl;
 }
