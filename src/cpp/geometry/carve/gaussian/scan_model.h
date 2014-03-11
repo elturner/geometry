@@ -22,6 +22,7 @@
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
+#include <geometry/carve/gaussian/carve_map.h>
 #include <string>
 #include <iostream>
 #include <Eigen/Dense>
@@ -169,6 +170,19 @@ class scan_model_t
 		 * @param p    The scan point and its corresponding noise
 		 */
 		void set_point(const noisy_scanpoint_t& p);
+
+		/**
+		 * Initializes the given carve map structure with results
+		 *
+		 * Will initialize the input carve map structure with the
+		 * computed results from this object.  This function should
+		 * be called after the call to set_point().  This call
+		 * will copy over the global gaussian distributions of
+		 * the sensor and scan-point positions.
+		 *
+		 * @param cm   The carve map to initialize
+		 */
+		void populate(carve_map_t& cm) const;
 
 		/*---------------------*/
 		/* debugging functions */

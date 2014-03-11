@@ -72,6 +72,7 @@ int random_carver_t::carve(const string& fssfile)
 	progress_bar_t progbar;
 	scan_model_t model;
 	noisy_scanpoint_t point;
+	carve_map_t map;
 	string label;
 	tictoc_t clk;
 	unsigned int i, n, j, m;
@@ -155,12 +156,15 @@ int random_carver_t::carve(const string& fssfile)
 			/* model the combined statistics of this point */
 			model.set_point(point);
 
+			/* generate a carve map from statistical model */
+			model.populate(map);
+
 			// TODO planarity/edge info about scan?
 
 			// TODO add to octree
 		}
 	}
-	
+
 	/* inform user that processing is finished */
 	progbar.clear();
 	label = "Random carving of " + infile.scanner_name();

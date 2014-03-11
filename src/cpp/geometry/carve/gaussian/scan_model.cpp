@@ -2,6 +2,7 @@
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
+#include <geometry/carve/gaussian/carve_map.h>
 #include <util/error_codes.h>
 #include <util/rotLib.h>
 #include <cmath>
@@ -106,8 +107,8 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	this->twwt = w * w.transpose();
 	
 	/* get noise distribution of input data */
-	input_C_pose = Matrix3d::Zero(); // TODO system xyz uncertainty
-	input_C_rpy = Matrix3d::Zero(); // TODO system rpy uncertainty
+	input_C_pose = 0.0001*Matrix3d::Identity(); // TODO system xyz cov
+	input_C_rpy = 0.017*Matrix3d::Identity(); // TODO system rpy cov
 
 	/* compute intermediary terms */
 	T_l2s_cross << 0, -this->sensor_calib.T(2), this->sensor_calib.T(1),
@@ -160,6 +161,14 @@ void scan_model_t::set_point(const noisy_scanpoint_t& p)
 
 	/* compute the output distribution for the scan point position */
 	this->output_scanpoint_cov = this->output_sensor_cov+C_ts+C_noise;
+}
+		
+void scan_model_t::populate(carve_map_t& cm) const
+{
+	/* initialize the given carve map with the output of this
+	 * structure's computation */
+	cm.init(this->output_sensor_mean,    this->output_sensor_cov,
+	        this->output_scanpoint_mean, this->output_scanpoint_cov);
 }
 
 /*---------------------*/
