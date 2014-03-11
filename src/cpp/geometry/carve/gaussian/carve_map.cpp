@@ -208,7 +208,9 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 	/* return the final probability */
 	return p_total;
 }
-		
+
+/* debugging functions */
+
 void carve_map_t::print_sampling(ostream& os) const
 {
 	Vector3d x;
@@ -235,6 +237,56 @@ void carve_map_t::print_sampling(ostream& os) const
 		os << x(0) << " " << x(1) << " " << x(2) << " " << f
 		   << endl;
 	}
+}
+
+void carve_map_t::writeobj(ostream& out) const
+{
+	int i;
+
+	/* write points to file */
+	out << "v " << this->scanpoint_mean(0)
+	    <<  " " << this->scanpoint_mean(1)
+	    <<  " " << this->scanpoint_mean(2)
+	    <<  " 255 0 0" << endl;
+
+	/* sample the distribution */
+	JacobiSVD<Matrix3d> solver(this->scanpoint_cov,
+	                           Eigen::ComputeFullU);
+	Matrix3d U = solver.matrixU();
+	Vector3d s = solver.singularValues();
+	s(0) = sqrt(s(0)); s(1) = sqrt(s(1)); s(2) = sqrt(s(2));
+
+	/* print two standard deviations in each direction */
+	for(i = 0; i < 3; i++)
+	{
+		/* forward */
+		out << "v " << (this->scanpoint_mean(0)
+					+ 2*s(i)*U(0,i))
+		    <<  " " << (this->scanpoint_mean(1)
+		    			+ 2*s(i)*U(1,i))
+		    <<  " " << (this->scanpoint_mean(2)
+		    			+ 2*s(i)*U(2,i))
+		    <<  " 0 0 255" << endl;
+
+		/* backward */
+		out << "v " << (this->scanpoint_mean(0)
+					- 2*s(i)*U(0,i))
+		    <<  " " << (this->scanpoint_mean(1)
+		    			- 2*s(i)*U(1,i))
+		    <<  " " << (this->scanpoint_mean(2)
+		    			- 2*s(i)*U(2,i))
+		    <<  " 0 0 255" << endl;
+	}
+
+	/* export some faces */
+	out << "f -6 -4 -2" << endl
+	    << "f -4 -5 -2" << endl
+	    << "f -5 -3 -2" << endl
+	    << "f -3 -6 -2" << endl
+	    << "f -4 -6 -1" << endl
+	    << "f -5 -4 -1" << endl
+	    << "f -3 -5 -1" << endl
+	    << "f -6 -3 -1" << endl;
 }
 
 /* helper functions */

@@ -210,17 +210,6 @@ class scan_model_t
 		 * @param out   The output stream to write this info
 		 */
 		void serialize(std::ostream& out) const;
-
-		/**
-		 * Will export meshes of gaussian models to OBJ file
-		 *
-		 * Will export a mesh representing the basic shape
-		 * of the probability distribution of this point/sensor
-		 * pair to a wavefront OBJ file stream.
-		 *
-		 * @param out   The output stream to write to
-		 */
-		void writeobj(std::ostream& out) const;
 };
 
 #endif

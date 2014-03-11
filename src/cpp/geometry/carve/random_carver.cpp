@@ -1,6 +1,6 @@
 #include "random_carver.h"
-#include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <geometry/carve/gaussian/scan_model.h>
+#include <geometry/carve/frame_model.h>
 #include <geometry/octree/octree.h>
 #include <io/data/fss/fss_io.h>
 #include <util/progress_bar.h>
@@ -68,14 +68,13 @@ int random_carver_t::init(const string& madfile, const string& confile,
 int random_carver_t::carve(const string& fssfile)
 {
 	fss::reader_t infile;
-	fss::frame_t frame;
+	fss::frame_t inframe;
 	progress_bar_t progbar;
 	scan_model_t model;
-	noisy_scanpoint_t point;
-	carve_map_t map;
+	frame_model_t curr_frame, prev_frame;
 	string label;
 	tictoc_t clk;
-	unsigned int i, n, j, m;
+	unsigned int i, n;
 	int ret;
 
 	/* read in scan file */
@@ -113,9 +112,11 @@ int random_carver_t::carve(const string& fssfile)
 	n = infile.num_frames();
 	for(i = 0; i < n; i++)
 	{
-		/* parse the current frame and update user on progress */
+		/* inform user of progress */
 		progbar.update(i, n);
-		ret = infile.get(frame, i);
+		
+		/* parse the current frame and update user on progress */
+		ret = infile.get(inframe, i);
 		if(ret)
 		{
 			/* error occurred reading frame, inform user */
@@ -126,9 +127,11 @@ int random_carver_t::carve(const string& fssfile)
 			     << ret << endl;
 			return ret;
 		}
+		
+		// TODO planarity/edge info about scan?
 
-		/* prepare model for this frame */
-		ret = model.set_frame(frame.timestamp, this->path);
+		/* compute carving model for this frame */
+		ret = curr_frame.init(inframe, model, this->path);
 		if(ret)
 		{
 			/* error occurred computing frame parameters */
@@ -139,30 +142,21 @@ int random_carver_t::carve(const string& fssfile)
 			     << ret << endl;
 			return ret;
 		}
-
-		/* iterate over points in frame */
-		m = frame.points.size();
-		for(j = 0; j < m; j++)
+		
+		/* only proceed from here if we have two frame's worth
+		 * of data, so we can interpolate the distributions
+		 * between them and carve the corresponding volume. */
+		if(i == 0)
 		{
-			/* get statistics of j'th point */
-			point.set(frame.points[j].x,
-			          frame.points[j].y,
-				  frame.points[j].z,
-				  frame.points[j].stddev,
-				  frame.points[j].width);
-			if(!point.has_finite_noise())
-				continue;
-
-			/* model the combined statistics of this point */
-			model.set_point(point);
-
-			/* generate a carve map from statistical model */
-			model.populate(map);
-
-			// TODO planarity/edge info about scan?
-
-			// TODO add to octree
+			/* prepare for the next frame */
+			curr_frame.swap(prev_frame);
+			continue;
 		}
+
+		// TODO add to octree
+
+		/* prepare for the next frame */
+		curr_frame.swap(prev_frame);
 	}
 
 	/* inform user that processing is finished */

@@ -9,7 +9,6 @@
 #include <string>
 #include <iostream>
 #include <Eigen/Dense>
-#include <Eigen/Geometry>
 
 /**
  * @file scan_model.cpp
@@ -198,54 +197,4 @@ void scan_model_t::serialize(ostream& out) const
 		for(c = 0; c < 3; c++)
 			out << this->output_scanpoint_cov(r,c) << " ";
 	out << endl;
-}
-		
-void scan_model_t::writeobj(std::ostream& out) const
-{
-	int i;
-
-	/* write points to file */
-	out << "v " << this->output_scanpoint_mean(0)
-	    <<  " " << this->output_scanpoint_mean(1)
-	    <<  " " << this->output_scanpoint_mean(2)
-	    <<  " 255 0 0" << endl;
-
-	/* sample the distribution */
-	JacobiSVD<Matrix3d> solver(this->output_scanpoint_cov,
-	                           Eigen::ComputeFullU);
-	Matrix3d U = solver.matrixU();
-	Vector3d s = solver.singularValues();
-	s(0) = sqrt(s(0)); s(1) = sqrt(s(1)); s(2) = sqrt(s(2));
-
-	/* print two standard deviations in each direction */
-	for(i = 0; i < 3; i++)
-	{
-		/* forward */
-		out << "v " << (this->output_scanpoint_mean(0)
-					+ 2*s(i)*U(0,i))
-		    <<  " " << (this->output_scanpoint_mean(1)
-		    			+ 2*s(i)*U(1,i))
-		    <<  " " << (this->output_scanpoint_mean(2)
-		    			+ 2*s(i)*U(2,i))
-		    <<  " 0 0 255" << endl;
-
-		/* backward */
-		out << "v " << (this->output_scanpoint_mean(0)
-					- 2*s(i)*U(0,i))
-		    <<  " " << (this->output_scanpoint_mean(1)
-		    			- 2*s(i)*U(1,i))
-		    <<  " " << (this->output_scanpoint_mean(2)
-		    			- 2*s(i)*U(2,i))
-		    <<  " 0 0 255" << endl;
-	}
-
-	/* export some faces */
-	out << "f -6 -4 -2" << endl
-	    << "f -4 -5 -2" << endl
-	    << "f -5 -3 -2" << endl
-	    << "f -3 -6 -2" << endl
-	    << "f -4 -6 -1" << endl
-	    << "f -5 -4 -1" << endl
-	    << "f -3 -5 -1" << endl
-	    << "f -6 -3 -1" << endl;
-}
+}	

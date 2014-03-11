@@ -157,6 +157,17 @@ class carve_map_t
 		 */
 		void print_sampling(std::ostream& os) const;
 
+		/**
+		 * Will export meshes of gaussian models to OBJ file
+		 *
+		 * Will export a mesh representing the basic shape
+		 * of the probability distribution of this point/sensor
+		 * pair to a wavefront OBJ file stream.
+		 *
+		 * @param out   The output stream to write to
+		 */
+		void writeobj(std::ostream& out) const;
+	
 	/* helper functions */
 	private:
 

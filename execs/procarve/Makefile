@@ -33,6 +33,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/carve/random_carver.cpp \
+		$(SOURCEDIR)geometry/carve/frame_model.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/scan_model.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/carve_map.cpp \
@@ -64,6 +65,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/octree/linesegment.h \
 		$(SOURCEDIR)geometry/carve/random_carver.h \
+		$(SOURCEDIR)geometry/carve/frame_model.h \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.h \
 		$(SOURCEDIR)geometry/carve/gaussian/scan_model.h \
 		$(SOURCEDIR)geometry/carve/gaussian/carve_map.h
