@@ -14,9 +14,8 @@
 
 #include <Eigen/Dense>
 #include <iostream>
-#include <vector>
+#include "shape.h"
 #include "octdata.h"
-#include "linesegment.h"
 
 /* number of children each node in the octree has */
 #define CHILDREN_PER_NODE 8
@@ -37,7 +36,6 @@ class octnode_t
 		 * of the tree. */
 		Eigen::Vector3d center;
 		double halfwidth; /* distance from center to edge */
-		Eigen::Matrix<double,3,2> bounds; /* bounds of cube */
 
 		/* each node also stored data elements */
 		octdata_t* data; /* only non-null for leaves */
@@ -130,42 +128,26 @@ class octnode_t
 		octnode_t* retrieve(const Eigen::Vector3d& p) const;
 
 		/**
-		 * Will find all subnode leafs that intersect this line
-		 *
-		 * Will ray trace the line segment given through this
-		 * node and its children.  All leaf nodes found will be
-		 * added to the specified vector.
-		 *
-		 * @param leafs   Where to store intersected leaf nodes
-		 * @param line    The line segment to test
-		 */
-		void raytrace(std::vector<octnode_t*>& leafs,
-		              const linesegment_t& line) const;
-
-		/**
-		 * Will carve node along specified line segment
+		 * Will insert shape into node, updating tree structure
 		 *
 		 * This function will add subnodes to this node, either
 		 * to the specified depth or until a depth at which
 		 * a node already has data stored.
 		 *
 		 * After this call, all leaf nodes under this node that
-		 * are intersected by this line segment are stored
-		 * in the specified 'leafs' list.  These nodes may
-		 * or may not have data pointers already associated
-		 * with them.
+		 * are intersected by this line segment are given to
+		 * the input shape, where s.apply_to_leaf() is called
+		 * on each of their data elements.
 		 *
 		 * This function is recursive, and will perform intersection
 		 * checks for all subnodes, but NOT for the top-level
 		 * node.  Only call this function after checking top-level
 		 * node against the given line.
 		 *
-		 * @param leafs  Where to store intersected leaf nodes
-		 * @param line   The line segment to test
+		 * @param s      The shape to insert and analyze
 		 * @param d      The depth at which to carve
 		 */
-		void raycarve(std::vector<octnode_t*>& leafs,
-		              const linesegment_t& line, int d);
+		void insert(const shape_t& s, int d);
 
 		/**
 		 * Returns the count of this node and all its subnodes

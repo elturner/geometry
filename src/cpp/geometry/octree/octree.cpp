@@ -1,10 +1,8 @@
 #include "octree.h"
 #include "octnode.h"
 #include "octdata.h"
-#include "linesegment.h"
+#include "shape.h"
 #include <util/error_codes.h>
-
-#include <vector>
 #include <string>
 #include <iomanip>
 #include <iostream>
@@ -178,34 +176,27 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 	return 0;
 }
 
-void octree_t::raytrace(vector<octnode_t*>& leafs,
-                        const Vector3d& a, const Vector3d& b) const
+int octree_t::insert(const shape_t& s)
 {
-	/* create a line segment from these points */
-	linesegment_t line(a,b);
-
-	/* get all leaf nodes that intersect line segment */
-	this->root->raytrace(leafs, line);
-}
-	
-int octree_t::raycarve(vector<octnode_t*>& leafs,
-                       const Vector3d& a, const Vector3d& b)
-{
+	Vector3d p;
+	unsigned int i, n;
 	int ret;
 
-	/* create a line segment from these points */
-	linesegment_t line(a,b);
+	/* make sure all of shape is contained within this tree's domain */
+	n = s.num_verts();
+	for(i = 0; i < n; i++)
+	{
+		/* get vertex as a point */
+		p = s.get_vertex(i);
 
-	/* make sure all of line is contained within this tree's domain */
-	ret = this->include_in_domain(a);
-	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
-	ret = this->include_in_domain(b);
-	if(ret)
-		return PROPEGATE_ERROR(-2, ret);
+		/* extend tree if necessary */
+		ret = this->include_in_domain(p);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
 
 	/* carve the tree */
-	this->root->raycarve(leafs, line, this->max_depth-1);
+	this->root->insert(s, this->max_depth-1);
 
 	/* success */
 	return 0;

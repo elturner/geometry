@@ -1,13 +1,12 @@
 #include "octnode.h"
+#include "shape.h"
 #include "octdata.h"
-#include "linesegment.h"
 #include <Eigen/Dense>
-#include <vector>
 #include <iostream>
 
 /**
  * @file octnode.cpp
- * @auther Eric TUrner <elturner@eecs.berkeley.edu>
+ * @auther Eric Turner <elturner@eecs.berkeley.edu>
  *
  * @section DESCRIPTION
  *
@@ -27,7 +26,6 @@ octnode_t::octnode_t()
 	/* set default values */
 	this->center << 0,0,0;
 	this->halfwidth = -1;
-	this->bounds << 0,0,0,0,0,0;
 	this->data = NULL;
 
 	/* set children to null */
@@ -45,9 +43,6 @@ octnode_t::octnode_t(const Vector3d& c, double hw)
 	/* set default geometry values */
 	this->center = c;
 	this->halfwidth = hw;
-	this->bounds << (c(0)-hw), (c(0)+hw),
-	                (c(1)-hw), (c(1)+hw),
-	                (c(2)-hw), (c(2)+hw);
 
 	/* set children to null */
 	for(i = 0; i < CHILDREN_PER_NODE; i++)
@@ -198,33 +193,9 @@ octnode_t* octnode_t::retrieve(const Vector3d& p) const
 	return this->children[i]->retrieve(p); /* recurse through child */
 }
 
-void octnode_t::raytrace(vector<octnode_t*>& leafs,
-                         const linesegment_t& line) const
-{
-	int i;
-
-	/* first, check if this ray even intersects this node */
-	if(!line.intersects(this->bounds))
-		return;
-
-	/* check if this node is a leaf (and if so, add it) */
-	if(this->isleaf())
-	{
-		leafs.push_back((octnode_t*) this);
-		return;
-	}
-
-	/* recurse for children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
-		if(this->children[i] != NULL)
-			this->children[i]->raytrace(leafs, line);
-}
-		
-void octnode_t::raycarve(vector<octnode_t*>& leafs,
-                         const linesegment_t& line, int d)
+void octnode_t::insert(const shape_t& s, int d)
 {
 	Vector3d child_center;
-	Matrix<double,3,2> child_bounds;
 	unsigned int i;
 	double chw;
 
@@ -233,8 +204,9 @@ void octnode_t::raycarve(vector<octnode_t*>& leafs,
 	 * deeper. */
 	if(d <= 0 || this->data != NULL)
 	{
-		/* reached final depth, add this node and finish */
-		leafs.push_back(this);
+		/* reached final depth, apply to this node and finish */
+		this->data = s.apply_to_leaf(this->center,
+				this->halfwidth, this->data);
 		return;
 	}
 
@@ -246,31 +218,25 @@ void octnode_t::raycarve(vector<octnode_t*>& leafs,
 		if(this->children[i] != NULL)
 		{
 			/* check for intersection */
-			if(!line.intersects(this->children[i]->bounds))
+			if(!s.intersects(this->children[i]->center,
+				         this->children[i]->halfwidth))
 				continue;
-
-			/* recurse */
-			this->children[i]->raycarve(leafs, line, d-1);
 		}
 		else
 		{
 			/* child does not exist. check
-			 * if ray passes through it. */
+			 * if shape would intersect it. */
 			child_center = relative_child_pos(i)*chw
 					+ this->center; 
-			child_bounds <<
-				(child_center(0)-chw),(child_center(0)+chw),
-				(child_center(1)-chw),(child_center(1)+chw),
-				(child_center(2)-chw),(child_center(2)+chw);
-			if(!line.intersects(child_bounds))
+			if(!s.intersects(child_center, chw))
 				continue;
 
-			/* ray passes through it, so make the subnode */
+			/* shape intersects it, so make the subnode */
 			this->children[i] = new octnode_t(child_center,chw);
-
-			/* recurse */
-			this->children[i]->raycarve(leafs, line, d-1);
 		}
+
+		/* recurse */
+		this->children[i]->insert(s, d-1);
 	}
 }
 		
@@ -336,9 +302,6 @@ int octnode_t::parse(std::istream& is)
 	is.read((char*) &d, sizeof(d)); this->center(1) = d;
 	is.read((char*) &d, sizeof(d)); this->center(2) = d;
 	is.read((char*) &d, sizeof(d)); this->halfwidth = d;
-	this->bounds << (this->center(0)-d), (this->center(0)+d),
-	                (this->center(1)-d), (this->center(1)+d),
-	                (this->center(2)-d), (this->center(2)+d);
 
 	/* delete any existing data */
 	if(this->data != NULL)
