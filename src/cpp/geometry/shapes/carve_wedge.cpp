@@ -246,7 +246,28 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
                                         double hw, octdata_t* d) const
 {
-	return d; // TODO
+	double val, xsize;
+	unsigned int i;
+
+	/* sample the originating carve maps at this location */
+	val = 0;
+	xsize = 2*hw;
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+		val += this->maps[i]->compute(c, xsize);
+
+	/* use the average of this sample */
+	val /= NUM_MAPS_PER_WEDGE;
+
+	/* check if data already exist for this spot */
+	if(d == NULL)
+	{
+		/* create a new data element */
+		d = new octdata_t();
+	}
+		
+	/* add to data */
+	d->add_sample(val);
+	return d;
 }
 		
 /*-----------*/
