@@ -45,6 +45,13 @@ class random_carver_t
 		 * It is expressed in units of seconds. */
 		double clock_uncertainty;
 
+		/* the carving buffer, in units of standard deviations,
+		 * dictates how far past each point will be carved. A
+		 * non-zero buffer allows for the exterior-mapped portions
+		 * of the probability distributions to be explicity
+		 * represented in the octree. */
+		double carving_buffer;
+
 	/* functions */
 	public:
 
@@ -64,12 +71,13 @@ class random_carver_t
 		 * @param confile   The xml hardware config file
 		 * @param res       The carve resolution, in meters
 		 * @param clk_err   The system clock uncertainty, in secs
+		 * @param carvebuf  The carving buffer, units of std. dev.
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int init(const std::string& madfile,
 		         const std::string& confile,
-		         double res, double clk_err);
+		         double res, double clk_err, double carvebuf);
 
 		/**
 		 * Carves all input scan points into the octree

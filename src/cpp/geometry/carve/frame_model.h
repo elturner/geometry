@@ -13,6 +13,7 @@
 
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
+#include <geometry/octree/octree.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
 #include <vector>
@@ -86,7 +87,32 @@ class frame_model_t
 		 * @param other   The other frame to swap with
 		 */
 		void swap(frame_model_t& other);
-		
+
+		/*----------*/
+		/* geometry */
+		/*----------*/
+
+		/**
+		 * Will carve/insert this frame info into the given octree
+		 *
+		 * Given an octree, and a next frame, will generate
+		 * carve shapes to insert into the octree, which will map
+		 * the carve_maps stored in this tree into the octree
+		 * structure.
+		 *
+		 * The next frame is required in order to define the volume
+		 * between frames, which is represented by individual
+		 * carve_wedge_t's, that are inserted into the tree.
+		 *
+		 * @param tree   The tree to modify
+		 * @param next   The next frame in the sequence
+		 * @param buf    In units of std. devs., carving buffer
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int carve(octree_t& tree, const frame_model_t& next,
+		          double buf) const;
+
 		/*-----------*/
 		/* debugging */
 		/*-----------*/

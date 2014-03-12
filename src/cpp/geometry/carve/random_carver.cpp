@@ -35,7 +35,7 @@ random_carver_t::random_carver_t()
 }
 
 int random_carver_t::init(const string& madfile, const string& confile,
-                          double res, double clk_err)
+                          double res, double clk_err, double carvebuf)
 {
 	int ret;
 
@@ -60,6 +60,7 @@ int random_carver_t::init(const string& madfile, const string& confile,
 	/* initialize octree and algorithm parameters */
 	this->tree.set_resolution(res);
 	this->clock_uncertainty = clk_err;
+	this->carving_buffer = carvebuf;
 
 	/* success */
 	return 0;
@@ -153,7 +154,19 @@ int random_carver_t::carve(const string& fssfile)
 			continue;
 		}
 
-		// TODO add to octree
+		/* add frame information to octree */
+		ret = prev_frame.carve(this->tree, curr_frame,
+		                       this->carving_buffer);
+		if(ret)
+		{
+			/* error occurred carving this frame */
+			progbar.clear();
+			ret = PROPEGATE_ERROR(-5, ret);
+			cerr << "[random_carver_t::carve]\tUnable to "
+			     << "carve frame #" << i << " into tree, "
+			     << "Error " << ret << endl;
+			return ret;
+		}
 
 		/* prepare for the next frame */
 		curr_frame.swap(prev_frame);

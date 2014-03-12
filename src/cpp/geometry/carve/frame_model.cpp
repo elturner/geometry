@@ -1,6 +1,8 @@
 #include "frame_model.h"
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
+#include <geometry/octree/octree.h>
+#include <geometry/carve/carve_wedge.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
@@ -112,6 +114,35 @@ void frame_model_t::swap(frame_model_t& other)
 	this->map_list = other.map_list;
 	other.map_list = ptr;
 }
+	
+/*----------*/
+/* geometry */
+/*----------*/
+
+int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
+                         double buf) const
+{
+	carve_wedge_t wedge;
+	unsigned int i;
+
+	/* iterate over every edge in this scan */
+	for(i = 0; i < this->num_points-1; i++)
+	{
+		/* generate a wedge from two points in the current
+		 * scan and two points in the next scan */
+		wedge.init(&(this->map_list[i]), &(this->map_list[i+1]),
+		           &(next.map_list[i]), &(next.map_list[i+1]), buf);
+	
+		// TODO carve this wedge
+	}
+
+	/* success */
+	return 0;
+}
+
+/*-----------*/
+/* debugging */
+/*-----------*/
 
 int frame_model_t::writeobj(const string& fn) const
 {

@@ -112,7 +112,63 @@ class carve_map_t
 		/*-------------*/
 		/* computation */
 		/*-------------*/
+	
+		/**
+		 * Copies sensor mean position into given structure
+		 *
+		 * Will set the position of the given vector to the
+		 * sensor mean position of this carving object.
+		 *
+		 * @param s   Where to copy the sensor mean position
+		 */
+		inline void get_sensor_mean(Eigen::Vector3d& s) const
+		{ s = this->sensor_mean; };
+
+		/**
+		 * Copies sensor covariance into given structure
+		 *
+		 * Will set the given matrix to the sensor position's
+		 * covariance matrix.
+		 *
+		 * @param C  Where to copy the covariance matrix.
+		 */
+		inline void get_sensor_cov(Eigen::Matrix3d& C) const
+		{ C = this->sensor_cov; };
+
+		/**
+		 * Copies scanpoint mean position into given structure
+		 *
+		 * Will set the position of the given vector to the
+		 * scanpoint mean position of this carving object.
+		 *
+		 * @param p  Where to copy the scanpoint mean position
+		 */
+		inline void get_scanpoint_mean(Eigen::Vector3d& p) const
+		{ p = this->scanpoint_mean; };
 		
+		/**
+		 * Copies scanpoint covariance into given structure
+		 *
+		 * Will set the given matrix to the scanpoint position's
+		 * covariance matrix.
+		 *
+		 * @param C  Where to copy the covariance matrix.
+		 */
+		inline void get_scanpoint_cov(Eigen::Matrix3d& C) const
+		{ C = this->scanpoint_cov; };
+
+		/**
+		 * Yields the variance of the scanpoint position along ray
+		 *
+		 * Returns the variance of the position of the scanpoint
+		 * of this carve map, marginalized along the length
+		 * of the ray.
+		 *
+		 * @return   Returns variance of scanpoint pos along ray
+		 */
+		inline double get_scanpoint_var() const
+		{ return this->scanpoint_var; };
+
 		/**
 		 * Computes the value of this carve map at the given loc
 		 *
