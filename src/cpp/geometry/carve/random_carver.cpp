@@ -110,7 +110,7 @@ int random_carver_t::carve(const string& fssfile)
 	/* iterate through scans, incorporating them into the octree */
 	tic(clk);
 	progbar.set_name(infile.scanner_name());
-	n = 3; // TODO infile.num_frames();
+	n = 300; // TODO infile.num_frames();
 	for(i = 0; i < n; i++)
 	{
 		/* inform user of progress */

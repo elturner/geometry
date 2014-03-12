@@ -123,20 +123,14 @@ void frame_model_t::swap(frame_model_t& other)
 int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
                          double buf) const
 {
-	progress_bar_t progbar;
 	carve_wedge_t wedge;
 	unsigned int i, n;
 	int ret;
 
 	/* iterate over every edge in this scan */
-	progbar.set_name("frame");
-	progbar.set_color(progress_bar_t::BLUE);
 	n = this->num_points - 1;
 	for(i = 0; i < n; i++)
 	{
-		/* update user */
-		progbar.update(i, n);
-
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
 		wedge.init(&(this->map_list[i]), &(this->map_list[i+1]),
@@ -147,7 +141,6 @@ int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
 		if(ret)
 			return PROPEGATE_ERROR(-1, ret);
 	}
-	progbar.clear();
 
 	/* success */
 	return 0;
