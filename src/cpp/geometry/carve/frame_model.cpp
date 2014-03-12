@@ -2,10 +2,11 @@
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
-#include <geometry/carve/carve_wedge.h>
+#include <geometry/shapes/carve_wedge.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -122,19 +123,31 @@ void frame_model_t::swap(frame_model_t& other)
 int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
                          double buf) const
 {
+	progress_bar_t progbar;
 	carve_wedge_t wedge;
-	unsigned int i;
+	unsigned int i, n;
+	int ret;
 
 	/* iterate over every edge in this scan */
-	for(i = 0; i < this->num_points-1; i++)
+	progbar.set_name("frame");
+	progbar.set_color(progress_bar_t::BLUE);
+	n = this->num_points - 1;
+	for(i = 0; i < n; i++)
 	{
+		/* update user */
+		progbar.update(i, n);
+
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
 		wedge.init(&(this->map_list[i]), &(this->map_list[i+1]),
 		           &(next.map_list[i]), &(next.map_list[i+1]), buf);
-	
-		// TODO carve this wedge
+
+		/* carve this wedge in the tree */
+		ret = tree.insert(wedge);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
 	}
+	progbar.clear();
 
 	/* success */
 	return 0;

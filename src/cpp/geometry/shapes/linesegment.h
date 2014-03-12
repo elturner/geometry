@@ -11,12 +11,14 @@
  * line segments for efficient ray-tracing through octrees.
  */
 
+#include <geometry/octree/shape.h>
+#include <geometry/octree/octdata.h>
 #include <Eigen/Dense>
 
 /**
  * the linesegment_t class represents a line segment in 3D space
  */
-class linesegment_t
+class linesegment_t : public shape_t
 {
 	/* parameters */
 	private:
@@ -55,6 +57,34 @@ class linesegment_t
 		};
 
 		/**
+		 * Frees all memory and resources
+		 */
+		~linesegment_t() { /* do nothing */ };
+
+		/**
+		 * Retrieves the number of vertices that compose this line
+		 *
+		 * @return   The number of vertices in line
+		 */
+		inline unsigned int num_verts() const
+		{ return 2; /* it's a line, duh */ };
+		
+		/**
+		 * Retrieves the i'th vertex of shape in 3D space
+		 *
+		 * @param i  The vertex index to retrieve
+		 *
+		 * @return   The i'th vertex
+		 */
+		inline Eigen::Vector3d get_vertex(unsigned int i) const
+		{
+			/* determine which endpoint to return */
+			if(i == 0)
+				return orig;
+			return end;
+		};
+
+		/**
 		 * Tests intersection of this line segment with cube
 		 *
 		 * Given the min and max corners of an axis-aligned cube,
@@ -73,15 +103,22 @@ class linesegment_t
 		 * http://www.scratchapixel.com/lessons/3d-basic-lessons/
 		 * lesson-7-intersecting-simple-shapes/ray-box-intersection/
 		 *
-		 * @param bounds  The bounds of the cube, 3x2 matrix
+		 * @param c   Center of the cube
+		 * @param hw  Half-width of the cube
 		 *
 		 * @return    Returns true iff line intersects cube
 		 */
-		inline bool intersects(const Eigen::Matrix<double,3,2>&
-		                       bounds) const
+		inline bool intersects(const Eigen::Vector3d& c,
+		                       double hw) const
 		{
 			double tmin, tmax, tymin, tymax, tzmin, tzmax; 
-			
+			Eigen::Matrix<double,3,2> bounds;
+
+			/* populate bounds */
+			bounds << c(0) - hw, c(0) + hw,
+			          c(1) - hw, c(1) + hw,
+			          c(2) - hw, c(2) + hw;
+
 			/* compute intersections in x-coordinates */
 			tmin = (bounds(0,this->s[0]) - this->orig(0))
 			 		* this->invdir(0); 
@@ -130,6 +167,35 @@ class linesegment_t
 
 			/* line intersects box */
 			return true;
+		};
+		
+		/**
+		 * Will be called on leaf nodes this shape intersects
+		 *
+		 * This function will allow the shape to modify the
+		 * data stored at leaf nodes that it intersects.  It
+		 * will be given the current data element, and should
+		 * return the modified data element.  If the input
+		 * is null, this function is expected to allocate a
+		 * new octdata_t object to use.
+		 *
+		 * Typically, the return value should be the same as
+		 * the input.
+		 *
+		 * @param c    The center position of leaf node
+		 * @param hw   The half-width of leaf node
+		 * @param d    The original data, can be null
+		 *
+		 * @return     Returns pointer to the modified data
+		 */
+		inline octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
+		                                double hw,
+		                                octdata_t* d) const
+		{
+			/* do nothing */
+			c = c;
+			hw = hw;
+			return d;
 		};
 };
 

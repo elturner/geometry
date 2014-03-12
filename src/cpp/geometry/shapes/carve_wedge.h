@@ -22,6 +22,7 @@
  */
 
 #include <geometry/carve/gaussian/carve_map.h>
+#include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
 #include <iostream>
 #include <Eigen/Dense>
@@ -36,7 +37,7 @@
  * This shape originates from four scan points, two neighboring scans
  * from one frame, then the same indices in the successor frame.
  */
-class carve_wedge_t
+class carve_wedge_t : public shape_t
 {
 	/* parameters */
 	private:
@@ -90,6 +91,28 @@ class carve_wedge_t
 		          carve_map_t* b1, carve_map_t* b2,
 			  double nb);
 
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Retrieves the number of vertices that compose this shape
+		 *
+		 * @return   The number of vertices in shape
+		 */
+		inline unsigned int num_verts() const
+		{ return NUM_VERTICES_PER_WEDGE; };
+		
+		/**
+		 * Retrieves the i'th vertex of shape in 3D space
+		 *
+		 * @param i  The vertex index to retrieve
+		 *
+		 * @return   The i'th vertex
+		 */
+		inline Eigen::Vector3d get_vertex(unsigned int i) const
+		{ return this->verts[i]; };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/
@@ -124,8 +147,8 @@ class carve_wedge_t
 		 *
 		 * @return    Returns the modified data, or new data object.
 		 */
-		octdata_t* apply(const Eigen::Vector3d& c, double hw,
-		                 octdata_t* d) const;
+		octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
+		                         double hw, octdata_t* d) const;
 
 		/*-----------*/
 		/* debugging */

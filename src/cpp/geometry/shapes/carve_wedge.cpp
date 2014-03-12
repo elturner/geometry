@@ -227,7 +227,7 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 	{
 		/* construct array for current triangle */
 		for(j = 0; j < NUM_VERTS_PER_TRI; j++) /* iter over verts */
-			for(k = 0; j < 3; k++) /* iter over dims */
+			for(k = 0; k < 3; k++) /* iter over dims */
 				curr_tri[j][k] = vs[tri_inds[i][j]][k];
 
 		/* compute normal for this triangle */
@@ -243,8 +243,8 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 	return false;
 }
 		
-octdata_t* carve_wedge_t::apply(const Eigen::Vector3d& c, double hw,
-                                octdata_t* d) const
+octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
+                                        double hw, octdata_t* d) const
 {
 	return d; // TODO
 }
