@@ -1,4 +1,3 @@
-
 /*
  *                  FAST POLYGON-CUBE INTERSECTION TESTS
  *                  by Melinda (Daniel) Green
@@ -32,7 +31,6 @@
  * with a point-within-polyhedron test.  The origin would be a natural point
  * to check in such a test.
  */
-
 
 #include "pcube.h"
 

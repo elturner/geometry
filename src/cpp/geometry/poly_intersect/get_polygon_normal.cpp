@@ -23,7 +23,7 @@
  *  (see Graphics Gems III) but is slightly more efficient than Newell's
  *  for triangles and quads (slightly less efficient for higher polygons).
  */
-static real *
+real *
 get_polygon_normal(real normal[3],
 		   int nverts, const real verts[/* nverts */][3])
 {
@@ -43,5 +43,3 @@ get_polygon_normal(real normal[3],
     }
     return normal;
 }
-
-// TODO

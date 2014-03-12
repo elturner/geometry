@@ -1,4 +1,3 @@
-
 /*
  *			polygon_intersects_cube()
  *			by Don Hatch
@@ -73,7 +72,7 @@ polygon_contains_point_3d(int nverts, const real verts[/* nverts */][3],
     FOR(i,nverts) {
 	v = verts[i];
 	w = verts[(i+1)%nverts];
-	if (xdirection = seg_contains_point(v[xaxis], w[xaxis], point[xaxis])) {
+	if ((xdirection = seg_contains_point(v[xaxis], w[xaxis], point[xaxis]))) {
 	    if (seg_contains_point(v[yaxis], w[yaxis], point[yaxis])) {
 		if (xdirection * (point[xaxis]-v[xaxis])*(w[yaxis]-v[yaxis]) <= 
 		    xdirection * (point[yaxis]-v[yaxis])*(w[xaxis]-v[xaxis]))
@@ -204,6 +203,10 @@ polygon_intersects_cube(int nverts, const real verts[/* nverts */][3],
 {
     int i, best_diagonal[3];
     real p[3], t;
+
+    /* currently unused parameter */
+    already_know_vertices_are_outside_cube
+    	= already_know_vertices_are_outside_cube;
 
     /*
      * If any edge intersects the cube, return 1.
