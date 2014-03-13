@@ -43,7 +43,7 @@ int main()
 	     << endl;
 
 	/* export */
-	ret = tree_exporter::export_leafs_to_obj(objfile, tree);
+	ret = tree_exporter::export_exterior_cubes_to_obj(objfile, tree);
 	if(ret)
 	{
 		cerr << "Unable to export to obj, error: " << ret << endl;

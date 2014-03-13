@@ -63,6 +63,39 @@ void floorplan_t::compute_edges(vector<edge_t>& edges) const
 		}
 	}
 }
+
+void floorplan_t::compute_edges_for_room(vector<edge_t>& edges,
+                                         unsigned int ri) const
+{
+	set<int>::iterator tit;
+	unsigned int ti, t_other, ni;
+
+	/* clear input arguments */
+	edges.clear();
+
+	/* iterate over triangles */
+	for(tit = this->rooms[ri].tris.begin();
+			tit != this->rooms[ri].tris.end(); tit++)
+	{
+		/* get triangle index */
+		ti = *tit;
+
+		/* check edges of this triangle */
+		for(ni = 0; ni < NUM_EDGES_PER_TRI; ni++)
+		{
+			/* is this edge one-sided? */
+			t_other = this->tris[ti].neighs[ni];
+			if(!this->rooms[ri].tris.count(t_other))
+			{
+				/* neighboring triangle is not in
+				 * room, so edge is one-sided,
+				 * so add it to our list */
+				edges.push_back(
+					this->tris[ti].get_edge(ni));
+			}
+		}
+	}
+}
 	
 void floorplan_t::compute_bounds(double& min_x, double& min_y,
                                  double& max_x, double& max_y) const

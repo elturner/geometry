@@ -38,6 +38,9 @@ class random_carver_t
 		 * space carving */
 		octree_t tree;
 
+		/* total number of rooms imported into this tree */
+		unsigned int num_rooms;
+
 		/* algorithm parameters */
 
 		/* The clock error represents the uncertainty (std. dev.)
@@ -92,6 +95,19 @@ class random_carver_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int carve(const std::string& fssfile);
+
+		/**
+		 * Imports floor plan information into a carved tree
+		 *
+		 * After carving, calling this function will parse
+		 * a floorplan and import its room information into
+		 * the tree.
+		 *
+		 * @param fpfile   The input .fp file to parse and use
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int import_fp(const std::string& fpfile);
 
 		/**
 		 * Exports the stored octree to a .oct file

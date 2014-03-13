@@ -196,6 +196,23 @@ namespace fp
 				std::vector<edge_t>& edges) const;
 
 			/**
+			 * Computes boundary edges for the given room
+			 *
+			 * Will add all boundary edges of the specified
+			 * room to the given list.  No specific ordering
+			 * is guaranteed.
+			 *
+			 * Any existing elements in this list will
+			 * be erased.
+			 *
+			 * @param edges    Where to store the edges
+			 * @param ri       The index of room to analyze
+			 */
+			void compute_edges_for_room(
+					std::vector<edge_t>& edges,
+					unsigned int ri) const;
+
+			/**
 			 * Computes the 2D bounds on this floorplan.
 			 *
 			 * Will find the 2D bounding box, and store the

@@ -196,6 +196,14 @@ class octdata_t
 			 * Var[x] = E[x^2] - E[x]^2 */
 			return ((this->prob_sum_sq/this->count) - (p*p));
 		};
+
+		/**
+		 * Sets the floor plan room number of this data object
+		 *
+		 * @param r   The index of the room that contains these data
+		 */
+		inline void set_fp_room(int r)
+		{ this->fp_room = r; };
 };
 
 #endif

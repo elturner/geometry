@@ -1,4 +1,6 @@
 #include "random_carver.h"
+#include <mesh/floorplan/floorplan.h>
+#include <geometry/shapes/extruded_poly.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/frame_model.h>
 #include <geometry/octree/octree.h>
@@ -32,6 +34,7 @@ random_carver_t::random_carver_t()
 {
 	/* default parameter values */
 	this->clock_uncertainty = 0;
+	this->num_rooms = 0;
 }
 
 int random_carver_t::init(const string& madfile, const string& confile,
@@ -61,6 +64,7 @@ int random_carver_t::init(const string& madfile, const string& confile,
 	this->tree.set_resolution(res);
 	this->clock_uncertainty = clk_err;
 	this->carving_buffer = carvebuf;
+	this->num_rooms = 0;
 
 	/* success */
 	return 0;
@@ -176,6 +180,37 @@ int random_carver_t::carve(const string& fssfile)
 	progbar.clear();
 	label = "Random carving of " + infile.scanner_name();
 	toc(clk, label.c_str());
+
+	/* success */
+	return 0;
+}
+		
+int random_carver_t::import_fp(const std::string& fpfile)
+{
+	fp::floorplan_t f;
+	extruded_poly_t poly;
+	unsigned int i, n;
+	int ret;
+
+	/* read in floor plan */
+	ret = f.import_from_fp(fpfile);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* iterate over the rooms of this floorplan, and generate
+	 * a shape object for each room */
+	n = f.rooms.size();
+	for(i = 0; i < n; i++)
+	{
+		/* create shape */
+		poly.init(f, this->num_rooms + i, i);
+	
+		/* import into tree */
+		this->tree.find(poly);
+	}
+
+	/* update number of rooms in building */
+	this->num_rooms += n;
 
 	/* success */
 	return 0;

@@ -31,6 +31,10 @@ int main()
 	string madfile = dataset + "Localization/Magneto_TEST_OL_LC_3D.mad";
 	string fssfile = dataset
 			+ "data/urg/H1214157/urg_H1214157_scandata.fss";
+	string dimfile = dataset
+			+ "data/d_imager/d_imager_scandata.fss";
+	string fpfile  = dataset
+			+ "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
 	string octfile = dataset + "models/carving/testcarve.oct";
 
 	/* initialize */
@@ -42,11 +46,25 @@ int main()
 	}
 
 	/* process */
-	ret = carver.carve(fssfile);
+	//ret = carver.carve(dimfile);
 	if(ret)
 	{
-		cerr << "unable to carve: " << ret << endl;
+		cerr << "unable to carve d-imager: " << ret << endl;
 		return 2;
+	}
+	//ret = carver.carve(fssfile);
+	if(ret)
+	{
+		cerr << "unable to carve urg: " << ret << endl;
+		return 3;
+	}
+
+	/* import some floorplans */
+	ret = carver.import_fp(fpfile);
+	if(ret)
+	{
+		cerr << "unable to import floorplan: " << ret << endl;
+		return 4;
 	}
 
 	/* export */
@@ -54,7 +72,7 @@ int main()
 	if(ret)
 	{
 		cerr << "unable to export: " << ret << endl;
-		return 3;
+		return 4;
 	}
 
 	/* success */
