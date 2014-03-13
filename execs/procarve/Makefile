@@ -42,6 +42,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/scan_model.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/carve_map.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/poly2d.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/fpcube.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/pcube.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.cpp \
@@ -81,6 +82,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.h \
 		$(SOURCEDIR)geometry/carve/gaussian/scan_model.h \
 		$(SOURCEDIR)geometry/carve/gaussian/carve_map.h \
+		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)geometry/poly_intersect/pcube.h \
 		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.h \
 		$(SOURCEDIR)geometry/poly_intersect/vec.h
