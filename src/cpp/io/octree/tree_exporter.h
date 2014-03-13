@@ -35,6 +35,21 @@ namespace tree_exporter
 	 */
 	int export_leafs_to_obj(const std::string& filename,
 	                        const octree_t& tree);
+
+	/**
+	 * Will export leaf nodes labeled as exterior to cubes in OBJ
+	 *
+	 * This function will generate a Wavefront OBJ file that
+	 * contains cubes generated where the exterior-labeled leaf
+	 * nodes of the given tree reside.
+	 *
+	 * @param filename   The path to the .obj file to write
+	 * @param tree       The tree to export
+	 *
+	 * @return           Returns zero on success, non-zero on failure.
+	 */
+	int export_exterior_cubes_to_obj(const std::string& filename,
+	                                 const octree_t& tree);
 }
 
 #endif
