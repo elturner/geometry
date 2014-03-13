@@ -111,6 +111,34 @@ class octnode_t
 		 */
 		int contains(const Eigen::Vector3d& p) const;
 
+		/**
+		 * Will attempt to simplify this node
+		 *
+		 * A simplification can occur when every child exists
+		 * and is a leaf.  If the data for all these children
+		 * fits simplification thresholds, then the children's
+		 * data will be merged, and this node will become a
+		 * leaf with the merged data.
+		 *
+		 * Note that this function call is NOT recursive.  It
+		 * will only check if this node can be simplified, not
+		 * its subnodes.
+		 *
+		 * @return   Returns true iff the node was simplified
+		 */
+		bool simplify();
+		
+		/**
+		 * Will subdivide a leaf node into child nodes
+		 *
+		 * If this node is a leaf node, then child nodes will
+		 * be allocated under this node, and their data elements
+		 * will be a subdivision of this node's data element.
+		 *
+		 * @return   Returns true iff successfully subdivided
+		 */
+		bool subdivide();
+
 		/* recursive calls */
 
 		/**

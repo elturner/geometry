@@ -15,7 +15,7 @@ using namespace std;
 
 /* function implementations */
 
-#include <io/octree/tree_exporter.h> // TODO left off here
+#include <io/octree/tree_exporter.h>
 #include <geometry/octree/octree.h>
 
 /**

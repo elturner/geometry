@@ -183,9 +183,11 @@ int random_carver_t::carve(const string& fssfile)
 
 int random_carver_t::serialize(const string& octfile) const
 {
+	tictoc_t clk;
 	int ret;
 
 	/* serialize the octree */
+	tic(clk);
 	ret = this->tree.serialize(octfile);
 	if(ret)
 	{
@@ -196,6 +198,7 @@ int random_carver_t::serialize(const string& octfile) const
 		     << octfile << endl;
 		return -1;
 	}
+	toc(clk, "Exporting octfile");
 
 	/* success */
 	return 0;

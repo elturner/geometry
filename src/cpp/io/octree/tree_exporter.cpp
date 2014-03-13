@@ -61,7 +61,7 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 		   <<  " " << red
 		   <<  " " << green
 		   <<  " " << blue
-		   << endl; // TODO add color
+		   << endl;
 	}
 
 	/* recurse through the node's children */

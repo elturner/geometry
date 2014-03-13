@@ -177,6 +177,55 @@ int octnode_t::contains(const Vector3d& p) const
 	return 6; /* lower left */
 }
 	
+bool octnode_t::simplify()
+{
+	unsigned int i;
+	bool thresh_met, t;
+
+	/* check if every child exists and has non-null data */
+	thresh_met = true; /* arbitrary initial value */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* check if child exists */
+		if(this->children[i] == NULL)
+			return false; /* cannot be simplified */
+		
+		/* check if child's data exist */
+		if(this->children[i]->data == NULL)
+			return false; /* cannot be simplified */
+
+		/* check if child's data meets threshold requirements */
+		if(this->children[i]->data->get_count() == 0)
+			return false; /* not enough data */
+	
+		/* get label for child */
+		t = this->children[i]->data->is_interior();
+		if(i == 0)
+			thresh_met = t; /* no other children compared yet */
+		else if(t != thresh_met)
+			return false; /* children disagree */
+	}
+
+	/* all checks have been passed, we can simplify this node */
+	if(this->data == NULL)
+		this->data = new octdata_t();
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* merge child data with this data, remove child */
+		this->data->merge(this->children[i]->data);
+		delete (this->children[i]);
+		this->children[i] = NULL;
+	}
+
+	/* success */
+	return true;
+}
+		
+bool octnode_t::subdivide()
+{
+	return false; // TODO
+}
+
 octnode_t* octnode_t::retrieve(const Vector3d& p) const
 {
 	int i;
@@ -204,6 +253,8 @@ void octnode_t::insert(const shape_t& s, int d)
 	 * deeper. */
 	if(d <= 0 || this->data != NULL)
 	{
+		// TODO perform a 'should subdivide' check here
+
 		/* reached final depth, apply to this node and finish */
 		this->data = s.apply_to_leaf(this->center,
 				this->halfwidth, this->data);
@@ -238,7 +289,10 @@ void octnode_t::insert(const shape_t& s, int d)
 		/* recurse */
 		this->children[i]->insert(s, d-1);
 	}
-}
+
+	/* attempt to simplify this node */
+	this->simplify();
+}	
 		
 unsigned int octnode_t::get_num_nodes() const
 {

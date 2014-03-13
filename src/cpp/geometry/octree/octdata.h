@@ -166,6 +166,18 @@ class octdata_t
 		{ return (this->prob_sum / this->count); };
 
 		/**
+		 * Returns best estimate of whether this node is interior
+		 *
+		 * Will use the recorded probability to judge if the
+		 * node that contains these data should be identified
+		 * as interior or exterior.
+		 *
+		 * @return  Returns true iff data indicates interior label
+		 */
+		inline bool is_interior() const
+		{ return (this->get_probability() > 0.5); };
+
+		/**
 		 * Returns the uncertainty of the probability estimate
 		 *
 		 * Will return the variance of the samples collected
