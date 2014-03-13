@@ -124,17 +124,33 @@ int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
                          double buf) const
 {
 	carve_wedge_t wedge;
-	unsigned int i, n;
+	unsigned int i, ta, tb, na, nb, n;
 	int ret;
 
 	/* iterate over every edge in this scan */
 	n = this->num_points - 1;
 	for(i = 0; i < n; i++)
 	{
+		/* get the scanpoints to use from each frame, checking
+		 * for and avoiding bad scan points */
+		ta = na = i;
+		tb = nb = i+1;
+		while(!this->is_valid[ta] && ta > 0)
+			ta--;
+		while(!this->is_valid[tb] && tb < n-1)
+			tb++;
+
+		/* do the same thing for the next frame, checking for
+		 * bad scan points */
+		while(!next.is_valid[na] && na > 0)
+			na--;
+		while(!next.is_valid[nb] && nb < n-1)
+			nb++;
+
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
-		wedge.init(&(this->map_list[i]), &(this->map_list[i+1]),
-		           &(next.map_list[i]), &(next.map_list[i+1]), buf);
+		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
+		           &(next.map_list[na]), &(next.map_list[nb]), buf);
 
 		/* carve this wedge in the tree */
 		ret = tree.insert(wedge);
