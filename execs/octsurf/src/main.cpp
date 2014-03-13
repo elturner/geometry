@@ -15,6 +15,7 @@ using namespace std;
 
 /* function implementations */
 
+#include <io/octree/tree_exporter.h> // TODO left off here
 #include <geometry/octree/octree.h>
 
 /**
@@ -28,6 +29,7 @@ int main()
 	/* set input files */
 	string dataset = "/home/elturner/Desktop/data/20131204-16/";
 	string octfile = dataset + "models/carving/testcarve.oct";
+	string objfile = "/home/elturner/Desktop/test.obj";
 
 	/* initialize */
 	ret = tree.parse(octfile);
@@ -39,6 +41,14 @@ int main()
 
 	cout << "input tree # nodes: " << tree.get_root()->get_num_nodes()
 	     << endl;
+
+	/* export */
+	ret = tree_exporter::export_leafs_to_obj(objfile, tree);
+	if(ret)
+	{
+		cerr << "Unable to export to obj, error: " << ret << endl;
+		return 2;
+	}
 
 	/* success */
 	return 0;

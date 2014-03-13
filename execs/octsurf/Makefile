@@ -19,6 +19,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlparser.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
+		$(SOURCEDIR)io/octree/tree_exporter.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
@@ -33,6 +34,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
+		$(SOURCEDIR)io/octree/tree_exporter.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
