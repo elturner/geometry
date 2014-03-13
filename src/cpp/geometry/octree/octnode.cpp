@@ -241,6 +241,22 @@ octnode_t* octnode_t::retrieve(const Vector3d& p) const
 		                             * node as deepest */
 	return this->children[i]->retrieve(p); /* recurse through child */
 }
+		
+void octnode_t::find(const shape_t& s)
+{
+	unsigned int i;
+
+	/* check if we have reached a node with data */
+	if(this->data != NULL)
+		this->data = s.apply_to_leaf(this->center,
+		                             this->halfwidth,
+		                             this->data);
+	
+	/* recurse on any existent children */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+		if(this->children[i] != NULL)
+			this->children[i]->find(s);
+}
 
 void octnode_t::insert(const shape_t& s, int d)
 {

@@ -129,6 +129,18 @@ class octree_t
 		int include_in_domain(const Eigen::Vector3d& p);
 
 		/**
+		 * Will find all leaf nodes that overlap this shape
+		 *
+		 * This function will find all pre-existing leaf nodes
+		 * in the tree that intersect with the given shape.  For
+		 * each of these nodes found, the apply_to_leaf() function
+		 * of the shape will be called on it.
+		 *
+		 * @param s   The shape to test
+		 */
+		void find(const shape_t& s);
+
+		/**
 		 * Will insert the given shape into the tree
 		 *
 		 * This function will add nodes to the tree, either
