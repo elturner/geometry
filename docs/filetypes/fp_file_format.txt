@@ -1,0 +1,23 @@
+The .fp file format is used to house information about
+floorplan geometry.  This is formatted as an ASCII file,
+with the following information:
+
+ *
+ * File Format for .fp (all units in meters)
+ * -----------------------------------------
+ *
+ * 	<resolution>		// the resolution of model, in meters
+ *	<num_verts>
+ *	<num_tris>
+ *	<num_rooms>
+ *	<x1> <y1>		// first vertex position (two doubles)
+ *	...
+ *	<xn> <yn>		// n'th vertex position (two doubles)
+ *	<i1> <j1> <k1>		// first triangle (three ints)
+ *	...
+ *	<im> <jm> <km>		// m'th triangle (three ints)
+ *	<z1_min> <z1_max> <num_tris> <t_1> <t_2> ... <t_k1>	// room 1
+ *	...
+ *	<zr_min> <zr_max> <num_tris> <t_1> <t_2> ... <t_kr>	// room r
+ *
+ *
