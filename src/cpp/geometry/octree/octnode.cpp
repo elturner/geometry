@@ -221,11 +221,6 @@ bool octnode_t::simplify()
 	return true;
 }
 		
-bool octnode_t::subdivide()
-{
-	return false; // TODO
-}
-
 octnode_t* octnode_t::retrieve(const Vector3d& p) const
 {
 	int i;
@@ -254,7 +249,9 @@ void octnode_t::find(const shape_t& s)
 	
 	/* recurse on any existent children */
 	for(i = 0; i < CHILDREN_PER_NODE; i++)
-		if(this->children[i] != NULL)
+		if(this->children[i] != NULL
+			&& s.intersects(this->children[i]->center,
+			                this->children[i]->halfwidth))
 			this->children[i]->find(s);
 }
 
@@ -269,8 +266,6 @@ void octnode_t::insert(const shape_t& s, int d)
 	 * deeper. */
 	if(d <= 0 || this->data != NULL)
 	{
-		// TODO perform a 'should subdivide' check here
-
 		/* reached final depth, apply to this node and finish */
 		this->data = s.apply_to_leaf(this->center,
 				this->halfwidth, this->data);

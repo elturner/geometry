@@ -52,7 +52,7 @@ int main()
 		cerr << "unable to carve d-imager: " << ret << endl;
 		return 2;
 	}
-	//ret = carver.carve(fssfile);
+	ret = carver.carve(fssfile);
 	if(ret)
 	{
 		cerr << "unable to carve urg: " << ret << endl;

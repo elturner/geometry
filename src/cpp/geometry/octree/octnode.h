@@ -128,17 +128,6 @@ class octnode_t
 		 */
 		bool simplify();
 		
-		/**
-		 * Will subdivide a leaf node into child nodes
-		 *
-		 * If this node is a leaf node, then child nodes will
-		 * be allocated under this node, and their data elements
-		 * will be a subdivision of this node's data element.
-		 *
-		 * @return   Returns true iff successfully subdivided
-		 */
-		bool subdivide();
-
 		/* recursive calls */
 
 		/**

@@ -198,6 +198,17 @@ class octdata_t
 		};
 
 		/**
+		 * Gets the floor plan room number of this data object.
+		 *
+		 * If no room index has been assigned, the value will
+		 * be negative.
+		 *
+		 * @return    Returns the global room number index
+		 */
+		inline int get_fp_room() const
+		{ return (this->fp_room); };
+
+		/**
 		 * Sets the floor plan room number of this data object
 		 *
 		 * @param r   The index of the room that contains these data

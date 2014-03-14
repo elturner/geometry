@@ -117,7 +117,7 @@ void export_exterior_cubes_to_obj_recur(ostream& os, const octnode_t* node)
 			{ 1, 1,-1},
 			{ 1,-1,-1},
 			{-1,-1,-1},
-			{-1, 1,-1}};
+			{-1, 1,-1}	};
 
 	/* check if this node is a leaf (i.e. it has data) */
 	if(node->data != NULL && !(node->data->is_interior()))

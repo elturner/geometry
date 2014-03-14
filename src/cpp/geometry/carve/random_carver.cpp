@@ -189,10 +189,12 @@ int random_carver_t::import_fp(const std::string& fpfile)
 {
 	fp::floorplan_t f;
 	extruded_poly_t poly;
+	tictoc_t clk;
 	unsigned int i, n;
 	int ret;
 
 	/* read in floor plan */
+	tic(clk);
 	ret = f.import_from_fp(fpfile);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
@@ -211,6 +213,7 @@ int random_carver_t::import_fp(const std::string& fpfile)
 
 	/* update number of rooms in building */
 	this->num_rooms += n;
+	toc(clk, "Importing floor plan");
 
 	/* success */
 	return 0;

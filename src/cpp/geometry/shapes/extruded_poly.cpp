@@ -1,6 +1,7 @@
 #include "extruded_poly.h"
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
+#include <geometry/poly_intersect/poly2d.h>
 #include <mesh/floorplan/floorplan.h>
 #include <stdlib.h>
 #include <map>
@@ -127,6 +128,11 @@ Vector3d extruded_poly_t::get_vertex(unsigned int i) const
 		
 bool extruded_poly_t::intersects(const Vector3d& c, double hw) const
 {
+	double bounds_x[2]; /* xmin, xmax */
+	double bounds_y[2]; /* ymin, ymax */
+	unsigned int i, num_verts, num_edges, num_tris;
+	int p, q, r;
+
 	/* check intersection along z */
 	if(c(2) - hw > this->ceiling_height 
 			|| c(2) + hw < this->floor_height)
@@ -134,14 +140,65 @@ bool extruded_poly_t::intersects(const Vector3d& c, double hw) const
 	
 	/* now we only have to worry about 2D intersection with an
 	 * axis-aligned bounding box */
-	// TODO left off here
+	bounds_x[0] = c(0) - hw; /* x-min for box */
+	bounds_x[1] = c(0) + hw; /* x-max for box */
+	bounds_y[0] = c(1) - hw; /* y-min for box */
+	bounds_y[1] = c(1) + hw; /* y-max for box */
 	
-	// TODO
+	/* check if the vertices of this polygon intersect the box */
+	num_verts = this->verts.cols();
+	for(i = 0; i < num_verts; i++)
+		if(poly2d::point_in_aabb(this->verts(0,i), this->verts(1,i),
+		                         bounds_x[0], bounds_y[0],
+		                         bounds_x[1], bounds_y[1]))
+			return true; /* intersects with vertex */
+	
+	/* check if the edges of this polygon intersect the box */
+	num_edges = this->edges.cols();
+	for(i = 0; i < num_edges; i++)
+	{
+		/* get vertex indices for this line */
+		p = this->edges(0,i);
+		q = this->edges(1,i);
+
+		/* test if line intersects */
+		if(poly2d::line_in_aabb(this->verts(0,p), this->verts(1,p),
+		                        this->verts(0,q), this->verts(1,q),
+		                        bounds_x, bounds_y))
+			return true; /* intersects with edge */
+	}
+		
+	/* since no vertices and no edges intersect, then the only
+	 * way an intersection could occur is if the box is entirely
+	 * contained within the polygon.  Check if the center of the box
+	 * is inside any of the triangles */
+	num_tris = this->tris.cols();
+	for(i = 0; i < num_tris; i++)
+	{
+		/* get vertices for triangle */
+		p = this->tris(0,i);
+		q = this->tris(1,i);
+		r = this->tris(2,i);
+
+		/* test if center of box intersects with triangle */
+		if(poly2d::point_in_triangle(
+				this->verts(0,p), this->verts(1,p),
+				this->verts(0,q), this->verts(1,q),
+				this->verts(0,r), this->verts(1,r),
+				c(0), c(1)))
+			return true; /* center intersects triangle */
+	}
+
+	/* no intersections found */
+	return false;
 }
 		
 octdata_t* extruded_poly_t::apply_to_leaf(const Vector3d& c,
                                           double hw, octdata_t* d) const
 {
+	/* node size inputs are not used */
+	hw = hw;
+
 	/* check if leaf is non-null */
 	if(d != NULL)
 		d->set_fp_room(this->room_index); /* set room label */
