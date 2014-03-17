@@ -41,9 +41,6 @@ public:
 	// for the camera.
 	std::string configFile;
 
-	// This is the camera calibration matrix K
-	std::vector<double> K;
-
 	// This is the euler angle rotations from the camera frame
 	// to a common frame of reference.  It is in degrees.
 	std::vector<double> rToCommon;

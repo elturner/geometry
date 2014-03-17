@@ -21,7 +21,6 @@
 #include <ostream>
 #include <iostream>
 
-// Property Files
 #include <config/sensorProp.h>
 
 // XML parser is included in this header file

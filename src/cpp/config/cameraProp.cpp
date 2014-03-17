@@ -19,7 +19,6 @@ cameraProp::cameraProp() {
 	this->serialNum = "";
 	this->virtualSerialNumber = "";
 	this->configFile = "";
-	this->K.clear();
 	this->rToCommon.clear();
 	this->tToCommon.clear();
 }
@@ -93,7 +92,7 @@ int cameraProp::assign_props(std::map<std::string,std::string>& property_map) {
 	else {
 		this->configFile = it->second;
 	}
-
+	
 	// Extract the rotation to common
 	it = property_map.find("rToCommon");
 	if(it == property_map.end()) {
