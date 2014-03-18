@@ -29,13 +29,11 @@ int main()
 	string dataset = "/home/elturner/Desktop/data/20131204-16/";
 	string confile = dataset + "config/backpack_config.xml";
 	string madfile = dataset + "Localization/Magneto_TEST_OL_LC_3D.mad";
-	string fssfile = dataset
-			+ "data/urg/H1214157/urg_H1214157_scandata.fss";
-	string dimfile = dataset
-			+ "data/d_imager/d_imager_scandata.fss";
-	string fpfile  = dataset
-			+ "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
+	string fssfile = dataset + "data/urg/H1214157/urg_H1214157_scandata.fss";
+	string dimfile = dataset + "data/d_imager/d_imager_scandata.fss";
+	string fpfile  = dataset + "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
 	string octfile = dataset + "models/carving/testcarve.oct";
+
 
 	/* initialize */
 	ret = carver.init(madfile, confile, 0.05, 0.003, 2);
@@ -46,17 +44,11 @@ int main()
 	}
 
 	/* process */
-	//ret = carver.carve(dimfile);
-	if(ret)
-	{
-		cerr << "unable to carve d-imager: " << ret << endl;
-		return 2;
-	}
 	ret = carver.carve(fssfile);
 	if(ret)
 	{
 		cerr << "unable to carve urg: " << ret << endl;
-		return 3;
+		return 2;
 	}
 
 	/* import some floorplans */
@@ -64,7 +56,7 @@ int main()
 	if(ret)
 	{
 		cerr << "unable to import floorplan: " << ret << endl;
-		return 4;
+		return 3;
 	}
 
 	/* export */

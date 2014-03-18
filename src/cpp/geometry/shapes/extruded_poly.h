@@ -149,7 +149,7 @@ class extruded_poly_t : public shape_t
 		 * @return     Returns pointer to the modified data d
 		 */
 		octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
-		                         double hw, octdata_t* d) const;
+		                         double hw, octdata_t* d);
 
 		/*-----------*/
 		/* debugging */

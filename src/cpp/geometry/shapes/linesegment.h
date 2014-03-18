@@ -190,7 +190,7 @@ class linesegment_t : public shape_t
 		 */
 		inline octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
 		                                double hw,
-		                                octdata_t* d) const
+		                                octdata_t* d)
 		{
 			/* do nothing */
 			c = c;

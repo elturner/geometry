@@ -138,7 +138,7 @@ class octree_t
 		 *
 		 * @param s   The shape to test
 		 */
-		void find(const shape_t& s);
+		void find(shape_t& s);
 
 		/**
 		 * Will insert the given shape into the tree
@@ -158,7 +158,7 @@ class octree_t
 		 *
 		 * @return    Returns zero on success, non-zero on failure
 		 */
-		int insert(const shape_t& s);
+		int insert(shape_t& s);
 		
 		/* i/o */
 

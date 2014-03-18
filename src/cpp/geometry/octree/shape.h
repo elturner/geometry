@@ -93,7 +93,7 @@ class shape_t
 		 */
 		virtual octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
 		                                 double hw,
-		                                 octdata_t* d) const =0;
+		                                 octdata_t* d) =0;
 };
 
 #endif

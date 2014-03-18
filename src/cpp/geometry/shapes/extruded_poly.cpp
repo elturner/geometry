@@ -194,9 +194,10 @@ bool extruded_poly_t::intersects(const Vector3d& c, double hw) const
 }
 		
 octdata_t* extruded_poly_t::apply_to_leaf(const Vector3d& c,
-                                          double hw, octdata_t* d) const
+                                          double hw, octdata_t* d)
 {
 	/* node size inputs are not used */
+	c(0);
 	hw = hw;
 
 	/* check if leaf is non-null */

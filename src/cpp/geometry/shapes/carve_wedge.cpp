@@ -3,6 +3,7 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/poly_intersect/pcube.h>
 #include <geometry/poly_intersect/get_polygon_normal.h>
+#include <util/error_codes.h>
 #include <stdlib.h>
 #include <iostream>
 #include <Eigen/Dense>
@@ -244,7 +245,7 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 }
 		
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
-                                        double hw, octdata_t* d) const
+                                        double hw, octdata_t* d)
 {
 	double val, xsize;
 	unsigned int i;
@@ -269,10 +270,113 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 	d->add_sample(val);
 	return d;
 }
+
+/*-----*/
+/* i/o */
+/*-----*/
+
+void carve_wedge_t::serialize(std::ostream& os) const
+{
+	unsigned int i, j, n;
+
+	/* export the vertices of this wedge */
+	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
+	{
+		/* export current vertex position */
+		n = this->verts[i].rows();
+		for(j = 0; j < n; j++)
+			os.write((char*) &(this->verts[i](j)),
+			         sizeof(this->verts[i](j)));
+	}
+
+	/* export the carve maps of this wedge */
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+		this->maps[i]->serialize(os);
+}
+
+int carve_wedge_t::parse(std::istream& is)
+{
+	unsigned int i, j, n;
+	int ret;
+
+	/* must allocate new map objects to populate.  Only
+	 * do this if the current map objects are null. */
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+		if(this->maps[i] != NULL)
+			return -(i+1); /* cannot populate this */
+	
+	/* read in the vertices of this wedge */
+	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
+	{
+		/* import current vertex */
+		n = this->verts[i].rows();
+		for(j = 0; j < n; j++)
+			is.read((char*) &(this->verts[i](j)),
+			        sizeof(this->verts[i](j)));
+	}
+
+	/* create a map and populate it for each map in the file */
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+	{
+		/* parse map from stream */
+		this->maps[i] = new carve_map_t();
+		ret = this->maps[i]->parse(is);
+		if(ret)
+			return PROPEGATE_ERROR(-NUM_MAPS_PER_WEDGE, ret);
+	}
+
+	/* check validity of stream */
+	if(is.bad())
+		return (-NUM_MAPS_PER_WEDGE-1);
+
+	/* success */
+	return 0;
+}
 		
+void carve_wedge_t::free_maps()
+{
+	unsigned int i;
+
+	/* free each map pointer */
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+		if(this->maps[i] != NULL)
+		{
+			/* free this map if not null */
+			delete (this->maps[i]);
+			this->maps[i] = NULL;
+		}
+}
+
 /*-----------*/
 /* debugging */
 /*-----------*/
+
+void carve_wedge_t::print_params(std::ostream& os) const
+{
+	unsigned int i;
+
+	/* export wedge information */
+	os << "-----------" << endl
+	   << "wedge info:" << endl
+	   << "-----------" << endl
+	   << endl;
+	
+	/* export each vertex */
+	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
+		os << "verts[" << i << "] = "
+		   << this->verts[i].transpose() << endl;
+	
+	/* export each map */
+	os << endl;
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+	{
+		os << "maps[" << i << "] = " << endl;
+		this->maps[i]->print_params(os);
+	}
+	
+	/* whitespace */
+	os << endl << endl << endl;
+}
 
 void carve_wedge_t::writeobj(std::ostream& os) const
 {

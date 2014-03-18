@@ -237,7 +237,7 @@ octnode_t* octnode_t::retrieve(const Vector3d& p) const
 	return this->children[i]->retrieve(p); /* recurse through child */
 }
 		
-void octnode_t::find(const shape_t& s)
+void octnode_t::find(shape_t& s)
 {
 	unsigned int i;
 
@@ -255,7 +255,7 @@ void octnode_t::find(const shape_t& s)
 			this->children[i]->find(s);
 }
 
-void octnode_t::insert(const shape_t& s, int d)
+void octnode_t::insert(shape_t& s, int d)
 {
 	Vector3d child_center;
 	unsigned int i;

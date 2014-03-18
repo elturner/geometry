@@ -176,13 +176,13 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 	return 0;
 }
 		
-void octree_t::find(const shape_t& s)
+void octree_t::find(shape_t& s)
 {
 	/* find all leafs that intersect this shape */
 	this->root->find(s);
 }
 
-int octree_t::insert(const shape_t& s)
+int octree_t::insert(shape_t& s)
 {
 	Vector3d p;
 	unsigned int i, n;

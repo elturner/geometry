@@ -154,7 +154,7 @@ class octnode_t
 		 *
 		 * @param s   The shape to test
 		 */
-		void find(const shape_t& s);
+		void find(shape_t& s);
 
 		/**
 		 * Will insert shape into node, updating tree structure
@@ -176,7 +176,7 @@ class octnode_t
 		 * @param s      The shape to insert and analyze
 		 * @param d      The depth at which to carve
 		 */
-		void insert(const shape_t& s, int d);
+		void insert(shape_t& s, int d);
 
 		/**
 		 * Returns the count of this node and all its subnodes
