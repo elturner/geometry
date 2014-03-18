@@ -35,6 +35,10 @@ class cmd_args_t
 	/* parameters */
 	private:
 
+		/* overall description of program.  Is printed
+		 * first if the usage information is displayed. */
+		std::string program_description;
+		
 		/* list of tags the program is interested in
 		 * searching for, mapped to the arguments parsed
 		 * after this tag */
@@ -67,6 +71,19 @@ class cmd_args_t
 		 * Frees all memory and resources
 		 */
 		~cmd_args_t();
+
+		/**
+		 * Sets the program description string
+		 *
+		 * This string will be printed at the top of
+		 * the usage information.  This is a good place
+		 * to put an overall description of what the
+		 * program does and why it's useful.
+		 *
+		 * @param s   The string to use as the program description
+		 */
+		inline void set_program_description(const std::string& s)
+		{ this->program_description = s; };
 
 		/**
 		 * Adds tag information to this structure

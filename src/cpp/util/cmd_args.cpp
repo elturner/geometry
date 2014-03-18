@@ -29,6 +29,7 @@ using namespace std;
 cmd_args_t::cmd_args_t()
 {
 	/* empty structures for now */
+	this->program_description = "";
 	this->tags.clear();
 	this->files.clear();
 	this->required_file_types.clear();
@@ -192,9 +193,23 @@ void cmd_args_t::print_usage(char* prog_name) const
 
 	/* set reasonable tab width */
 	tab = "        "; /* tab width: 8 */
+	
+	/* print program description if available */
+	if(!(this->program_description.empty()))
+	{
+		/* write subsection header */
+		line.str("");
+		cerr << endl << " Description:" << endl
+		     << endl;
+
+		/* write description as indented line */
+		line << tab << this->program_description;
+		cmd_args_t::write_line_with_indent(line.str(), tab.size());
+	}
 
 	/* print program name */
-	cerr << endl
+	line.str("");
+	cerr << endl << endl
 	     << " Usage:" << endl
 	     << endl;
 	line << tab << prog_name << " ";
@@ -222,7 +237,7 @@ void cmd_args_t::print_usage(char* prog_name) const
 	if(this->required_file_types.size() > 0)
 		line << "<files...>";
 	cmd_args_t::write_line_with_indent(line.str(), indent);
-
+	
 	/* print details about tags */
 	cerr << endl << endl;
 	if(this->tags.size() > 0)
