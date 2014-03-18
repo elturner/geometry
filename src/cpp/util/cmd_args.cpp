@@ -205,11 +205,12 @@ void cmd_args_t::print_usage(char* prog_name) const
 		/* write description as indented line */
 		line << tab << this->program_description;
 		cmd_args_t::write_line_with_indent(line.str(), tab.size());
+		cerr << endl;
 	}
 
 	/* print program name */
 	line.str("");
-	cerr << endl << endl
+	cerr << endl
 	     << " Usage:" << endl
 	     << endl;
 	line << tab << prog_name << " ";
