@@ -27,6 +27,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
+		$(SOURCEDIR)io/carve/chunk_io.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
@@ -66,6 +67,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
+		$(SOURCEDIR)io/carve/chunk_io.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \

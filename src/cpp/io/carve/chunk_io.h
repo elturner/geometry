@@ -31,13 +31,17 @@ namespace chunk
 	class chunklist_header_t;
 	class chunklist_reader_t;
 	class chunklist_writer_t;
+	class chunk_header_t;
 	class chunk_reader_t;
 	class chunk_writer_t;
+	class point_index_t;
 
 	/* the following definitions are used for .chunklist file i/o */
-	static const std::string CHUNKLIST_MAGIC_NUMBER     = "chunklist";
-	static const std::string CHUNKFILE_MAGIC_NUMBER     = "chunkfile";
-	static const std::string END_HEADER_STRING          = "end_header"; 
+	static const std::string CHUNKLIST_MAGIC_NUMBER      = "chunklist";
+	static const std::string CHUNKFILE_MAGIC_NUMBER      = "chunkfile";
+	static const size_t      CHUNKFILE_MAGIC_NUMBER_SIZE =
+	                        (CHUNKFILE_MAGIC_NUMBER.size()+1);
+	static const std::string END_HEADER_STRING           = "end_header";
 
 	/* the following are valid header tags in the .chunklist file */
 	static const std::string HEADER_TAG_CENTER        = "center";
@@ -323,7 +327,425 @@ namespace chunk
 			void close();
 	};
 
-	// TODO left off here
+	/**
+	 * The header information for .chunk files
+	 */
+	class chunk_header_t
+	{
+		/* security */
+		friend class chunk_reader_t;
+		friend class chunk_writer_t;
+
+		/* parameters */
+		private:
+
+			/* the following fields are part of the
+			 * header for .chunk files */
+			unsigned long long uuid; /* universally unique id */
+			double center_x; /* x-position of chunk center */
+			double center_y; /* y-position of chunk center */
+			double center_z; /* z-position of chunk center */
+			double halfwidth; /* halfwidth of chunk volume */
+			unsigned int num_points; /* number of scanpoints */
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Initializes default (invalid) parameters 
+			 */
+			chunk_header_t();
+
+			/**
+			 * Initializes values of header.
+			 *
+			 * Will initialze this header structure to
+			 * the given values
+			 *
+			 * @param u    The uuid of this chunk
+			 * @param cx   The x-pos of chunk center
+			 * @param cy   The y-pos of chunk center
+			 * @param cz   The z-pos of chunk center
+			 * @param hw   The halfwidth of chunk
+			 * @parma np   The number of intersecting scanpoints
+			 */
+			void init(unsigned long long u,
+			          double cx, double cy, double cz,
+			          double hw);
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Parses the given stream as a chunk header
+			 *
+			 * Will parse binary header information from
+			 * the specified input stream.
+			 *
+			 * @param is   The stream to parse
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
+			 */
+			int parse(std::istream& is);
+
+			/**
+			 * Prints this header info to the given stream
+			 *
+			 * Will print the info specified in this header
+			 * object to the given output binary stream.
+			 *
+			 * @param os   The stream to write to
+			 */
+			void print(std::ostream& os) const;
+
+			/**
+			 * Prints the number of written scanpoints to header
+			 *
+			 * Given a stream object to an open binary .chunk
+			 * file for writing, will seek to the
+			 * head of the stream and write the specified
+			 * number of intersected scanpoints to the file.
+			 *
+			 * After this call, the stream will be positioned
+			 * at the end of the header.
+			 *
+			 * @param os   The binary stream to write to
+			 * @param np   The number of points to write
+			 */
+			void write_num_points(std::ostream& os,
+			                      unsigned int np);
+	};
+
+	/**
+	 * This parses binary .chunk files from disk.
+	 */
+	class chunk_reader_t
+	{
+		/* parameters */
+		private:
+		
+			/* the file input stream */
+			std::ifstream infile;
+
+			/* header information from the file */
+			chunk_header_t header;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Initializes empty reader
+			 */
+			chunk_reader_t();
+
+			/**
+			 * Frees all memory and resources
+			 */
+			~chunk_reader_t();
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Opens .chunk file for reading
+			 *
+			 * Will attempt to open and parse the given
+			 * .chunk file for reading.  On success, the
+			 * header will be parsed from the file.
+			 *
+			 * @param filename   The path to the file to open
+			 *
+			 * @return    Returns zero on success, non-zero
+			 *            on error.
+			 */
+			int open(const std::string& filename);
+
+			/**
+			 * Returns the number of point indices in file
+			 *
+			 * @return   The number of elements in the file
+			 */
+			inline unsigned int num_points() const
+			{ return this->header.num_points; };
+
+			/**
+			 * Retrieves the next index set from the file
+			 *
+			 * Will retrieve the next element from the
+			 * body of the file.  Should only be called
+			 * after a successful call to open().
+			 *
+			 * @param i   Where to store index info
+			 *
+			 * @return    Returns zero on success, non-zero
+			 *            on failure.
+			 */
+			int next(point_index_t& i);
+			
+			/**
+			 * Closes the reader, freeing resources.
+			 *
+			 * Will close this reader if a file is open.
+			 */
+			void close();
+	};
+
+	/**
+	 * This writes binary .chunk files to disk.
+	 */
+	class chunk_writer_t
+	{
+		/* parameters */
+		private:
+
+			/* the output stream to write to */
+			std::ofstream outfile;
+
+			/* the header information to use */
+			chunk_header_t header;
+
+			/* the number of points written so far */
+			unsigned int num_written_so_far;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Initialzes empty writer
+			 */
+			chunk_writer_t();
+
+			/**
+			 * Frees all memory and resources
+			 */
+			~chunk_writer_t();
+
+			/**
+			 * Initializes writer with specified values
+			 *
+			 * @param uuid   The uuid for this chunk
+			 * @param cx     The x-coordinate of chunk center
+			 * @param cy     The y-coordinate of chunk center
+			 * @param cz     The z-coordinate of chunk center
+			 * @param hw     The halfwidth of chunk volume
+			 */
+			void init(unsigned long long uuid,
+			          double cx, double cy, double cz,
+			          double hw);
+
+			/*-----*/ 
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Opens a .chunk file for writing
+			 *
+			 * On success of this call, the file will be
+			 * opened, and a header will be written.  This
+			 * header will specify zero points, but will
+			 * be overwritten when the file is closed to
+			 * reflect the accurate value.
+			 *
+			 * This function should be called after init().
+			 *
+			 * @param filename   The file to write to
+			 *
+			 * @return      Returns zero on success, non-zero
+			 *              on failure.
+			 */
+			int open(const std::string& filename);
+
+			/**
+			 * Writes this point's info to the file body
+			 *
+			 * This function can only be called on an open
+			 * file.  It will write the given point's info
+			 * to disk.
+			 *
+			 * @param i    The point index to write
+			 */
+			void write(const point_index_t& i);
+
+			/**
+			 * Closes this file and frees resources
+			 *
+			 * Will close an open file stream.  Before
+			 * closing, this function will update the file
+			 * to how many point indices were written.
+			 */
+			void close();
+	};
+	
+	/**
+	 * This class represents the global indices of a single scan point
+	 */
+	class point_index_t
+	{
+		/* parameters */
+		public:
+
+			/* the following values represent the
+			 * global index of a scan point */
+
+			/**
+			 * Denotes which sensor generated this point.
+			 *
+			 * The sensor indices are determined
+			 * by how the sensor names are ordered in
+			 * the .chunklist file.
+			 */
+			unsigned int sensor_index;
+			
+			/**
+			 * Denotes which frame this point belongs to
+			 *
+			 * For a given sensor, denotes which scan frame
+			 * of that sensor generated this point.
+			 */
+			unsigned int frame_index;
+
+			/**
+			 * Denotes index within a frame
+			 *
+			 * For a specific frame of a specific sensor,
+			 * this value indices the index of this point
+			 * within that frame.
+			 */
+			unsigned int point_index;
+		
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Constructs default index (0,0,0)
+			 */
+			point_index_t();
+
+			/**
+			 * Constructs index based on input values
+			 *
+			 * @param si   The sensor index
+			 * @param fi   The frame index
+			 * @param pi   The point index
+			 */
+			point_index_t(unsigned int si,
+			              unsigned int fi,
+			              unsigned int pi);
+	
+			/**
+			 * Sets this object to the specified values
+			 *
+			 * @param si   The sensor index
+			 * @param fi   The frame index
+			 * @param pi   The point index
+			 */
+			inline void set(unsigned int si,
+			                unsigned int fi,
+			                unsigned int pi)
+			{
+				/* store the values */
+				this->sensor_index = si;
+				this->frame_index = fi;
+				this->point_index = pi;
+			};
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+	
+			/**
+			 * Parses a single point index from .chunk file
+			 *
+			 * Will parse the open stream as a binary .chunk
+			 * file, and read in a single point, storing
+			 * the result in this structure.
+			 *
+			 * @param is   The input file stream to parse
+			 */
+			void parse(std::istream& is);
+
+			/**
+			 * Prints a single point index to a .chunk stream
+			 *
+			 * Will print the values contained within this
+			 * point_index_t object to the specified output
+			 * binary stream, formatted as a .chunk file.
+			 *
+			 * @param os   The output file to write to
+			 */
+			void print(std::ostream& os) const;
+	
+			/*------------*/
+			/* operataors */
+			/*------------*/
+	
+			/**
+			 * Check if two point indices are equal
+			 */
+			inline bool operator == (
+					const point_index_t& other) const
+			{
+				return ((this->sensor_index 
+						== other.sensor_index)
+					&& (this->frame_index
+						== other.frame_index)
+					&& (this->point_index
+						== other.point_index));
+			};
+
+			/**
+			 * Sets value of point
+			 */
+			inline point_index_t& operator = (
+					const point_index_t& other)
+			{
+				/* set each parameter */
+				this->sensor_index = other.sensor_index;
+				this->frame_index = other.frame_index;
+				this->point_index = other.point_index;
+
+				/* return the result */
+				return (*this);
+			};
+
+			/**
+			 * Used for ordering objects in maps or sets
+			 */
+			inline bool operator < (
+					const point_index_t& other) const
+			{
+				/* check each parameter in order */
+				if(this->sensor_index < other.sensor_index)
+					return true;
+				if(this->sensor_index > other.sensor_index)
+					return false;
+				if(this->frame_index < other.frame_index)
+					return true;
+				if(this->frame_index > other.frame_index)
+					return false;
+				return (this->point_index 
+						< other.point_index);
+			};
+	};
 }
 
 #endif

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 /**
  * @file main.cpp
@@ -33,7 +34,6 @@ int main()
 	string dimfile = dataset + "data/d_imager/d_imager_scandata.fss";
 	string fpfile  = dataset + "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
 	string octfile = dataset + "models/carving/testcarve.oct";
-
 
 	/* initialize */
 	ret = carver.init(madfile, confile, 0.05, 0.003, 2);

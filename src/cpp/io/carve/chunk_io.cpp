@@ -5,6 +5,7 @@
 #include <fstream>
 #include <ios>
 #include <string>
+#include <string.h>
 #include <vector>
 #include <util/error_codes.h>
 
@@ -341,4 +342,271 @@ void chunklist_writer_t::close()
 	this->chunks_written_so_far = 0;
 }
 
-// TODO
+/*--------------------------*/
+/* chunk_header_t functions */
+/*--------------------------*/
+			
+chunk_header_t::chunk_header_t()
+{
+	/* set default values */
+	this->uuid = 0;
+	this->center_x = 0.0;
+	this->center_y = 0.0;
+	this->center_z = 0.0;
+	this->halfwidth = -1;
+	this->num_points = 0;
+}
+
+void chunk_header_t::init(unsigned long long u,
+                          double cx, double cy, double cz,
+                          double hw)
+{
+	/* set given values */
+	this->uuid = u;
+	this->center_x = cx;
+	this->center_y = cy;
+	this->center_z = cz;
+	this->halfwidth = hw;
+	this->num_points = 0; /* initialize to no points */
+}
+			
+int chunk_header_t::parse(std::istream& is)
+{
+	char m[CHUNKFILE_MAGIC_NUMBER_SIZE];
+	
+	/* check for magic number */
+	is.read(m, CHUNKFILE_MAGIC_NUMBER_SIZE);
+	if(memcmp(m, CHUNKFILE_MAGIC_NUMBER.c_str(),
+			CHUNKFILE_MAGIC_NUMBER_SIZE))
+	{
+		/* wrong magic number */
+		cerr << "[chunk::chunk_header_t::parse]\t"
+		     << "Input file is not a valid .chunk file" << endl;
+		return -1;
+	}
+
+	/* parse the input binary stream,
+	 * all values are assumed to be in little-endian ordering */
+	is.read((char*) &(this->uuid),       sizeof(this->uuid));
+	is.read((char*) &(this->center_x),   sizeof(this->center_x));
+	is.read((char*) &(this->center_y),   sizeof(this->center_y));
+	is.read((char*) &(this->center_z),   sizeof(this->center_z));
+	is.read((char*) &(this->halfwidth),  sizeof(this->halfwidth));
+	is.read((char*) &(this->num_points), sizeof(this->num_points));
+
+	/* check file stream */
+	if(is.bad())
+	{
+		/* could not finish header */
+		cerr << "[chunk::chunk_header_t::parse]\t"
+		     << "Unable to parse header information" << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}
+
+void chunk_header_t::print(std::ostream& os) const
+{
+	/* write magic number */
+	os.write(CHUNKFILE_MAGIC_NUMBER.c_str(),
+	         CHUNKFILE_MAGIC_NUMBER_SIZE);
+
+	/* write values */
+	os.write((char*) &(this->uuid),       sizeof(this->uuid));
+	os.write((char*) &(this->center_x),   sizeof(this->center_x));
+	os.write((char*) &(this->center_y),   sizeof(this->center_y));
+	os.write((char*) &(this->center_z),   sizeof(this->center_z));
+	os.write((char*) &(this->halfwidth),  sizeof(this->halfwidth));
+	os.write((char*) &(this->num_points), sizeof(this->num_points));
+}
+			
+void chunk_header_t::write_num_points(std::ostream& os,
+                                      unsigned int np)
+{
+	/* save the number of points */
+	this->num_points = np;
+
+	/* go back to start of file, and rewrite header */
+	os.seekp(ios_base::beg);
+	this->print(os);
+}
+
+/*--------------------------*/
+/* chunk_reader_t functions */
+/*--------------------------*/
+
+chunk_reader_t::chunk_reader_t()
+{
+	/* No parameters need to be explicitly set */
+}
+
+chunk_reader_t::~chunk_reader_t()
+{
+	/* close the file if it is open */
+	this->close();
+}
+			
+int chunk_reader_t::open(const std::string& filename)
+{
+	int ret;
+
+	/* close any open streams */
+	this->close();
+
+	/* attempt to open binary file stream */
+	this->infile.open(filename.c_str(),
+			ios_base::in | ios_base::binary);
+	if(!(this->infile.is_open()))
+	{
+		/* could not open file */
+		cerr << "[chunk::chunk_reader_t::open]\t"
+		     << "Unable to open file for reading: "
+		     << filename << endl;
+		return -1;
+	}
+
+	/* read in header information */
+	ret = this->header.parse(this->infile);
+	if(ret)
+	{
+		/* could not read header */
+		cerr << "[chunk::chunk_reader_t::open]\t"
+		     << "Unable to parse header from file: "
+		     << filename << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}
+			
+int chunk_reader_t::next(point_index_t& i)
+{
+	/* check if we're good */
+	if(this->infile.bad())
+		return -1; /* not good */
+
+	/* read next point */
+	i.parse(this->infile);
+	
+	/* success */
+	return 0;
+}
+			
+void chunk_reader_t::close()
+{
+	/* check if streams are open.  If so, close them */
+	if(this->infile.is_open())
+		this->infile.close();
+}
+
+/*--------------------------*/
+/* chunk_writer_t functions */
+/*--------------------------*/
+
+chunk_writer_t::chunk_writer_t()
+{
+	/* set defaults */
+	this->num_written_so_far = 0;
+}
+			
+chunk_writer_t::~chunk_writer_t()
+{
+	/* close the file if it is open */
+	this->close();
+}
+			
+void chunk_writer_t::init(unsigned long long uuid,
+                          double cx, double cy, double cz,
+                          double hw)
+{
+	/* initialize this writer to have these values */
+	this->header.init(uuid, cx, cy, cz, hw);
+}
+			
+int chunk_writer_t::open(const std::string& filename)
+{
+	/* close streams if necessary */
+	this->close();
+	this->num_written_so_far = 0;
+
+	/* attempt to open this binary file for writing */
+	this->outfile.open(filename.c_str(),
+			ios_base::out | ios_base::binary);
+	if(!(this->outfile.is_open()))
+	{
+		/* unable to open file for writing */
+		cerr << "[chunk::chunk_writer_t::open]\t"
+		     << "Unable to open file for writing: "
+		     << filename << endl;
+		return -1;
+	}
+
+	/* attempt to write header information (as a place-holder) */
+	this->header.print(this->outfile);
+
+	/* success */
+	return 0;
+}
+			
+void chunk_writer_t::write(const point_index_t& i)
+{
+	/* write the given point */
+	i.print(this->outfile);
+	this->num_written_so_far++;
+}
+			
+void chunk_writer_t::close()
+{
+	/* check if stream is even open */
+	if(!(this->outfile.is_open()))
+		return; /* don't need to do anything */
+
+	/* since this stream is open, we should update the
+	 * number of points written */
+	this->header.write_num_points(this->outfile,
+	                              this->num_written_so_far);
+
+	/* close the file */
+	this->outfile.close();
+}
+
+/*-------------------------*/
+/* point_index_t functions */
+/*-------------------------*/
+
+point_index_t::point_index_t()
+{
+	/* set default values */
+	this->sensor_index = 0;
+	this->frame_index  = 0;
+	this->point_index  = 0;
+}
+
+point_index_t::point_index_t(unsigned int si,
+                             unsigned int fi,
+                             unsigned int pi)
+{
+	/* set given values */
+	this->sensor_index = si;
+	this->frame_index = fi;
+	this->point_index = pi;
+}
+			
+void point_index_t::parse(std::istream& is)
+{
+	/* parse the given stream for points */
+	is.read((char*) &(this->sensor_index), sizeof(this->sensor_index));
+	is.read((char*) &(this->frame_index),  sizeof(this->frame_index ));
+	is.read((char*) &(this->point_index),  sizeof(this->point_index ));
+}
+
+void point_index_t::print(std::ostream& os) const
+{
+	/* print the point info */
+	os.write((char*) &(this->sensor_index), sizeof(this->sensor_index));
+	os.write((char*) &(this->frame_index),  sizeof(this->frame_index ));
+	os.write((char*) &(this->point_index),  sizeof(this->point_index ));
+}
