@@ -1,0 +1,84 @@
+
+*********************************************
+* Format Specification for .chunklist Files *
+*********************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+March 18, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the format and motivation for the .chunklist
+file format.  These files are used to store meta-information about
+chunks generated during the process of carving a scan volume.
+
+Chunks are stored to disk in order to allow for parallelization of
+carving, and reduce active memory load.
+
+This file contains a listing of all chunks generated for a particular
+carving, as well as meta-information about the total volume.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in ascii.
+
+*****************
+* Header Format *
+*****************
+
+The file contains a header, followed by a list of chunk uuids.  The header
+is represented as follows:
+
+chunklist                 // magic-num denoting filetype (must come first)
+center <x> <y> <z>        // <x,y,z> position of volume center (meters)
+halfwidth <hw>            // denotes halfwidth of total volume (meters)
+num_chunks <num>          // denotes number of chunks
+chunk_dir <directory>     // relative path to where chunk files are stored
+sensor <name_of_sensor_0> // defines a sensor (multiple lines can appear)
+sensor <name_of_sensor_1> // defines another sensor (index = 1)
+sensor <name_of_sensor_2> // defines another sensor (index = 2)
+end_header		  // denotes end of header (must come last)
+
+Aside from the magic number and the 'end_header', the lines can appear
+in any order.  An arbitrary number of 'sensor' lines can appear
+
+The following is an example header, which uses only one sensor:
+
+chunklist
+center 0.0 0.0 0.0
+halfwidth 100.0
+chunk_dir chunks/
+num_chunks 12312
+sensor H1234567
+end_header
+
+***************
+* Body Format *
+***************
+
+The body of the file is a list of uuids for chunks.  Each uuid is a hex
+string, which is also the name of the chunk file that contains the
+data for that chunk.  Each uuid is on its own line.
+
+For example, if the file referenced three chunks, this could be an example
+body:
+
+05A45BEF
+45E5DAC5
+90FDEA24
+
+And if we take the example header from above, this would indicate that the
+following files existed:
+
+chunks/05A45BEF.chunk
+chunks/45E5DAC5.chunk
+chunks/90FDEA24.chunk
+
+See chunk_file_format.txt to parse each chunk file.

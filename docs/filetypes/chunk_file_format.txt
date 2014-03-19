@@ -1,0 +1,75 @@
+
+*****************************************
+* Format Specification for .chunk Files *
+*****************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+March 18, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .chunk files, which are used
+to store lists of scan wedge indices.  A specific chunk file will contain
+the indices of all the scan points that intersect a particular volume
+in space for a given dataset.  The data in the file can then be used to
+process that volume independently from the remaining volume covered by
+the dataset.
+
+A scan point intersects a chunk if the line segment from the sensor
+position to the scan point position intersects, or comes close to
+intersecting, the cube that defines the volume of that chunk.
+
+Each chunk volume is represented as a cube, defined by a center-position
+in 3D space and a halfwidth, which represents half the length of an edge.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in binary, in little-endian ordering.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of scan point indices.
+
+The header is represented by the following:
+
+-------------------------------------------------------------------
+value     type                 size       description
+-------------------------------------------------------------------
+magic     string               10 bytes   The literal "chunkfile\0"
+uuid      unsigned long long   8 bytes    A unique identifier for this chunk
+cx        double               8 bytes    x-coordinate of chunk center
+cy        double               8 bytes    y-coordinate of chunk center
+cz        double               8 bytes    z-coordinate of chunk center
+hw        double               8 bytes    Half-width of chunk volume
+num       unsigned int         4 bytes    Num. of scanpoint indices in file
+-------------------------------------------------------------------
+
+Following the header is the list of scanpoint indices.  Each scan point
+index is represented by three integers:
+
+	- the index of the sensor that originated the scan point
+	- the index of the scan frame of that sensor that contains the point
+	- the index of the point within that frame.
+
+The mapping of sensor names to sensor indices is stored within the
+corresponding .chunklist file that holds the metadata for all chunk files.
+
+-------------------------------------------------------------------
+value     type             size       description
+-------------------------------------------------------------------
+sensor    unsigned int     4 bytes    Index of sensor that originated scan
+frame     unsigned int     4 bytes    Index of frame of this sensor
+point     unsigned int     4 bytes    Index of point within frame
+-------------------------------------------------------------------
+
+All indices are indexed from zero.
+
