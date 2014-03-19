@@ -51,7 +51,11 @@
 #Ignore test or sandbox directories
 **/sandbox/**
 
-# Ignore bin directory
+#Ignore doxygen files
+**/doxygen/html/**
+**/doxygen/latex/**
+
+#Ignore bin directory
 bin/
 
 #Ignore compiled AVR hex files
