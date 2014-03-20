@@ -199,7 +199,7 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 		/* create a chunk file based on this data object */
 		uuid = (unsigned long long) d;
 		filename = this->full_chunk_dir 
-				+ chunk_exporter_t::ptr_to_uuid(mit->first)
+				+ chunk_exporter_t::ptr_to_uuid(d)
 				+ CHUNKFILE_EXTENSION;
 		
 		/* insert into map */

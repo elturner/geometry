@@ -233,6 +233,7 @@ int chunklist_reader_t::open(const std::string& filename)
 		/* unable to parse header */
 		cerr << "[chunklist_reader_t::open]\tUnable to parse "
 		     << "file header: " << filename << endl;
+		this->infile.close();
 		return PROPEGATE_ERROR(-2, ret);
 	}
 
@@ -475,6 +476,7 @@ int chunk_reader_t::open(const std::string& filename)
 		cerr << "[chunk::chunk_reader_t::open]\t"
 		     << "Unable to parse header from file: "
 		     << filename << endl;
+		this->infile.close();
 		return -2;
 	}
 

@@ -1,8 +1,10 @@
 #include "frame_model.h"
+#include <io/carve/chunk_io.h>
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <geometry/shapes/carve_wedge.h>
+#include <geometry/shapes/chunk_exporter.h>
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
@@ -121,6 +123,48 @@ void frame_model_t::swap(frame_model_t& other)
 /* geometry */
 /*----------*/
 
+int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
+                          double buf, unsigned int si, unsigned int fi,
+                          chunk_exporter_t& chunker) const
+{
+	carve_wedge_t wedge;
+	vector<chunk::point_index_t> vals;
+	unsigned int i, ta, tb, na, nb, n;
+	int ret;
+
+	/* iterate over every edge in this scan */
+	n = this->num_points - 1;
+	for(i = 0; i < n; i++)
+	{
+		/* get indices for this wedge */
+		this->find_wedge_indices(i, next, ta, tb, na, nb);
+
+		/* prepare point index vals */
+		vals.resize(4);
+		vals[0].set(si, fi, ta);
+		vals[1].set(si, fi, tb);
+		vals[2].set(si, fi, na);
+		vals[3].set(si, fi, nb);
+
+		/* generate a wedge from two points in the current
+		 * scan and two points in the next scan */
+		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
+		           &(next.map_list[na]), &(next.map_list[nb]), buf);
+
+		/* set the chunker to this shape */
+		chunker.set(&wedge, vals);
+
+		/* insert this chunker into the tree to chunk intersected
+		 * volume */
+		ret = tree.insert(chunker);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* success */
+	return 0;
+}
+
 int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
                          double buf) const
 {
@@ -132,21 +176,8 @@ int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
 	n = this->num_points - 1;
 	for(i = 0; i < n; i++)
 	{
-		/* get the scanpoints to use from each frame, checking
-		 * for and avoiding bad scan points */
-		ta = na = i;
-		tb = nb = i+1;
-		while(!this->is_valid[ta] && ta > 0)
-			ta--;
-		while(!this->is_valid[tb] && tb < n-1)
-			tb++;
-
-		/* do the same thing for the next frame, checking for
-		 * bad scan points */
-		while(!next.is_valid[na] && na > 0)
-			na--;
-		while(!next.is_valid[nb] && nb < n-1)
-			nb++;
+		/* get indices for this wedge */
+		this->find_wedge_indices(i, next, ta, tb, na, nb);
 
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
@@ -185,4 +216,31 @@ int frame_model_t::writeobj(const string& fn) const
 	/* clean up */
 	outfile.close();
 	return 0;
+}
+		
+void frame_model_t::find_wedge_indices(unsigned int i,
+		                       const frame_model_t& next,
+		                       unsigned int& ta,
+		                       unsigned int& tb,
+		                       unsigned int& na,
+		                       unsigned int& nb) const
+{
+	unsigned int tn = this->num_points - 1;
+	unsigned int nn = next.num_points - 1;
+
+	/* get the scanpoints to use from each frame, checking
+	 * for and avoiding bad scan points */
+	ta = na = i;
+	tb = nb = i+1;
+	while(!this->is_valid[ta] && ta > 0)
+		ta--;
+	while(!this->is_valid[tb] && tb < tn)
+		tb++;
+
+	/* do the same thing for the next frame, checking for
+	 * bad scan points */
+	while(!next.is_valid[na] && na > 0)
+		na--;
+	while(!next.is_valid[nb] && nb < nn)
+		nb++;
 }

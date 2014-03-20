@@ -15,6 +15,7 @@
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <string>
+#include <vector>
 
 /**
  * The random_carver_t class builds an octree from range scans.
@@ -81,6 +82,31 @@ class random_carver_t
 		int init(const std::string& madfile,
 		         const std::string& confile,
 		         double res, double clk_err, double carvebuf);
+
+		/**
+		 * Finds and exports all chunks to disk
+		 *
+		 * Given a list of scan files to process, will iterate
+		 * through all scans, find which scans intersects which
+		 * chunks of the world volume, and export corresponding
+		 * chunk files to the specified location on disk.
+		 *
+		 * The size of the chunks is determined by the resolution
+		 * passed to the init() funciton, which should be called
+		 * before calling this function.
+		 *
+		 * NOTE: the chunk dir should be relative to the
+		 * directory that contains chunklist.
+		 *
+		 * @param fss_files   A list of scan filenames to use
+		 * @param chunklist   File location to export chunklist
+		 * @param chunk_dir   The directory to export chunks
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int export_chunks(const std::vector<std::string>& fss_files,
+		                  const std::string& chunklist,
+		                  const std::string& chunk_dir);
 
 		/**
 		 * Carves all input scan points into the octree

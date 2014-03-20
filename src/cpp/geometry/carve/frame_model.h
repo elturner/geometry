@@ -16,6 +16,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
+#include <geometry/shapes/chunk_exporter.h>
 #include <vector>
 #include <string>
 
@@ -93,6 +94,29 @@ class frame_model_t
 		/*----------*/
 
 		/**
+		 * Will populate chunks using this frame with the given tree
+		 *
+		 * Given an octree and a chunk exporter, will insert
+		 * this frame into the tree using the chunk exporter,
+		 * so that this frame will be added to all chunks in
+		 * the tree that intersect it.  These chunks will be
+		 * written to disk by the exporter.
+		 *
+		 * @param tree     The tree to use to generate chunks
+		 * @param next     The next frame in the sequence
+		 * @param buf      In units of std. devs., carving buffer
+		 * @param si       The index of the originating scanner
+		 * @param fi       The index of this frame
+		 * @param chunker  The chunk exporter to export chunks
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int export_chunks(octree_t& tree, const frame_model_t& next,
+		                  double buf, unsigned int si,
+		                  unsigned int fi, 
+		                  chunk_exporter_t& chunker) const;
+
+		/**
 		 * Will carve/insert this frame info into the given octree
 		 *
 		 * Given an octree, and a next frame, will generate
@@ -129,6 +153,29 @@ class frame_model_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int writeobj(const std::string& fn) const;
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Will find valid point indices for a wedge
+		 *
+		 * Given the index of a wedge, will compute the
+		 * scanpoint indices to use to generate that wedge
+		 *
+		 * @param i     The wedge index
+		 * @param next  The next frame to use to generate wedge
+		 * @param ta    Where to store this scan's a-index
+		 * @param tb    Where to store this scan's b-index
+		 * @param na    Where to store next scan's a-index
+		 * @param nb    Where to store next scan's b-index
+		 */
+		void find_wedge_indices(unsigned int i,
+		                        const frame_model_t& next,
+		                        unsigned int& ta,
+		                        unsigned int& tb,
+		                        unsigned int& na,
+		                        unsigned int& nb) const;
 };
 
 #endif

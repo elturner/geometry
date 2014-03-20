@@ -34,9 +34,11 @@ int main()
 	string dimfile = dataset + "data/d_imager/d_imager_scandata.fss";
 	string fpfile  = dataset + "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
 	string octfile = dataset + "models/carving/testcarve.oct";
+	string chunklist = "/home/elturner/Desktop/chunktest/test.chunklist";
+	string chunkdir = "chunks";
 
 	/* initialize */
-	ret = carver.init(madfile, confile, 0.05, 0.003, 2);
+	ret = carver.init(madfile, confile, 2.0, 0.003, 2);
 	if(ret)
 	{
 		cerr << "Unable to init carver: " << ret << endl;
@@ -44,7 +46,10 @@ int main()
 	}
 
 	/* process */
-	ret = carver.carve(fssfile);
+	vector<string> files;
+	files.push_back(fssfile);
+	ret = carver.export_chunks(files, chunklist, chunkdir); 
+	//ret = carver.carve(fssfile);
 	if(ret)
 	{
 		cerr << "unable to carve urg: " << ret << endl;
@@ -52,7 +57,7 @@ int main()
 	}
 
 	/* import some floorplans */
-	ret = carver.import_fp(fpfile);
+//	ret = carver.import_fp(fpfile);
 	if(ret)
 	{
 		cerr << "unable to import floorplan: " << ret << endl;
@@ -60,7 +65,7 @@ int main()
 	}
 
 	/* export */
-	ret = carver.serialize(octfile);
+//	ret = carver.serialize(octfile);
 	if(ret)
 	{
 		cerr << "unable to export: " << ret << endl;

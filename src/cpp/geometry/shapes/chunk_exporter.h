@@ -152,8 +152,6 @@ class chunk_exporter_t : public shape_t
 		 *
 		 * @param clfile     Where to write the chunklist file
 		 * @param chunk_dir  The relative directory to store chunks
-		 *
-		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		void open(const std::string& clfile,
 		         const std::string& chunk_dir);
