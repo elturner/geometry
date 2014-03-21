@@ -193,7 +193,8 @@ void chunklist_header_t::print(ostream& outfile) const
 
 chunklist_reader_t::chunklist_reader_t()
 {
-	/* no processing necessary to set up */
+	/* set default values */
+	this->directory = "";
 }
 
 chunklist_reader_t::~chunklist_reader_t()
@@ -212,6 +213,7 @@ void chunklist_reader_t::close()
 
 int chunklist_reader_t::open(const std::string& filename)
 {
+	size_t sep;
 	int ret;
 
 	/* close any open files */
@@ -237,9 +239,29 @@ int chunklist_reader_t::open(const std::string& filename)
 		return PROPEGATE_ERROR(-2, ret);
 	}
 
+	/* store directory of filename */
+	sep = filename.find_last_of("\\/");
+	if(sep == string::npos)
+		this->directory = ""; /* in working directory */
+	else
+	{
+		/* include slash */
+		this->directory = filename.substr(0, sep+1);
+	}
+
 	/* successfully opened file and parsed the header.  Now it is
 	 * in a state to read the list of uuids */
 	return 0;
+}
+			
+void chunklist_reader_t::get_sensor_names(std::vector<std::string>&
+                                          sensor_names) const
+{
+	/* populate vector */
+	sensor_names.clear();
+	sensor_names.insert(sensor_names.begin(),
+			this->header.sensor_names.begin(),
+			this->header.sensor_names.end());
 }
 
 size_t chunklist_reader_t::num_chunks() const
@@ -263,7 +285,8 @@ int chunklist_reader_t::next(std::string& file)
 		return -2;
 
 	/* populate the file location */
-	file = this->header.chunk_dir + uuid + CHUNKFILE_EXTENSION;
+	file = this->directory + this->header.chunk_dir
+			+ uuid + CHUNKFILE_EXTENSION;
 
 	/* success */
 	return 0;

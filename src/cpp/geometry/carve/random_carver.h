@@ -12,6 +12,7 @@
  * and insert those models into an octree.
  */
 
+#include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <string>
@@ -109,6 +110,40 @@ class random_carver_t
 		                  const std::string& chunk_dir);
 
 		/**
+		 * Carves all input scans in a chunk-by-chunk fashion
+		 *
+		 * Will parse specified chunk list, and read in all
+		 * chunks from disk.  For each chunk, the referenced
+		 * scans will be carved into the tree, and that chunk
+		 * will be simplified before the next chunk is imported.
+		 *
+		 * @param fss_files    A list of the scan filenames to use
+		 * @param chunklist    File location to import chunks
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int carve_all_chunks(
+			const std::vector<std::string>& fss_files,
+			const std::string& chunklist);
+
+		/**
+		 * Carves a single chunk into the tree
+		 *
+		 * Will parse the specified chunk file, and carve it into
+		 * the tree.  It is assumed that the fss_files list
+		 * will be the same size and order as the sensors referenced
+		 * in the corresponding chunklist file.
+		 *
+		 * @param fss_files   A list of fss file streams
+		 * @param chunkfile   The chunkfile to parse
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int carve_chunk(
+			const std::vector<fss::reader_t*>& fss_files,
+			const std::string& chunkfile);
+
+		/**
 		 * Carves all input scan points into the octree
 		 *
 		 * Given the path to a .fss scan file, will parse this
@@ -120,7 +155,7 @@ class random_carver_t
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int carve(const std::string& fssfile);
+		int carve_direct(const std::string& fssfile);
 
 		/**
 		 * Imports floor plan information into a carved tree

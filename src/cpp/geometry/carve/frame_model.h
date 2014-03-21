@@ -89,6 +89,18 @@ class frame_model_t
 		 */
 		void swap(frame_model_t& other);
 
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Retrieves number of points stored in frame
+		 *
+		 * @return   Returns number of points stored in this frame
+		 */
+		inline unsigned int get_num_points() const
+		{ return this->num_points; };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/
@@ -136,6 +148,23 @@ class frame_model_t
 		 */
 		int carve(octree_t& tree, const frame_model_t& next,
 		          double buf) const;
+
+		/**
+		 * Will carve an individual wedge from this frame into tree
+		 *
+		 * Given an octree and a next frame, will generate
+		 * a single wedge from this frame and insert it
+		 * into the octree.
+		 *
+		 * @param tree    The tree to modify
+		 * @param next    The next frame in the sequence
+		 * @param buf     In units of std. devs., carving buffer
+		 * @param i       The index of the wedge to carve.
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int carve_single(octree_t& tree, const frame_model_t& next,
+		                 double buf, unsigned int i) const;
 
 		/*-----------*/
 		/* debugging */

@@ -288,7 +288,7 @@ class chunk_exporter_t : public shape_t
 			/* convert pointer to string */
 			ss.str("");
 			ss << p;
-			return ss.str();
+			return ss.str().substr(2); /* remove '0x' */
 		};
 
 };

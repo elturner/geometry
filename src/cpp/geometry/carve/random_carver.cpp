@@ -6,13 +6,16 @@
 #include <geometry/carve/frame_model.h>
 #include <geometry/octree/octree.h>
 #include <io/data/fss/fss_io.h>
+#include <io/carve/chunk_io.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <Eigen/Dense>
+#include <limits.h>
 #include <iostream>
 #include <string>
 #include <map>
+#include <set>
 
 /**
  * @file random_carver.cpp
@@ -212,8 +215,322 @@ int random_carver_t::export_chunks(const vector<string>& fss_files,
 	/* success */
 	return 0;
 }
+		
+int random_carver_t::carve_all_chunks(
+			const vector<string>& fss_files,
+			const string& chunklist)
+{
+	vector<string> sensor_names;
+	vector<fss::reader_t*> fss_streams;
+	chunk::chunklist_reader_t chunk_infile;
+	progress_bar_t progbar;
+	unsigned int i, j, num_sensors_in_file, num_sensors_given;
+	size_t num_chunks;
+	string chunkfile;
+	fss::reader_t* swap;
+	tictoc_t clk;
+	int ret;
 
-int random_carver_t::carve(const string& fssfile)
+	/* attempt to parse the chunklist file */
+	tic(clk);
+	ret = chunk_infile.open(chunklist);
+	if(ret)
+	{
+		/* unable to parse */
+		cerr << "[random_carver_t::carve_all_chunks]\t"
+		     << "Unable to read chunklist file: " << chunklist
+		     << endl;
+		return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* get sensor ordering */
+	chunk_infile.get_sensor_names(sensor_names);
+	num_sensors_in_file = sensor_names.size();
+
+	/* open sensor files */
+	num_sensors_given = fss_files.size();
+	fss_streams.resize(num_sensors_given);
+	for(i = 0; i < num_sensors_given; i++)
+	{
+		/* open this fss file for reading */
+		fss_streams[i] = new fss::reader_t();
+		fss_streams[i]->set_correct_for_bias(true); 
+				/* correct statistical bias */
+		fss_streams[i]->set_convert_to_meters(true);
+				/* we want units of meters */
+		ret = fss_streams[i]->open(fss_files[i]);
+		if(ret)
+		{
+			/* could not open given file */
+			cerr << "[random_carver_t::carve_all_chunks]\t"
+			     << "Unable to open fss file: "
+			     << fss_files[i] << endl;
+			
+			/* clean up and return */
+			chunk_infile.close();
+			for(j = 0; j <= i; j++)
+			{
+				fss_streams[j]->close();
+				delete (fss_streams[j]);
+			}
+			fss_streams.clear();
+			return PROPEGATE_ERROR(-2, ret);
+		}
+	}
+
+	/* reorder sensors to what chunklist uses */
+	for(i = 0; i < num_sensors_in_file; i++)
+	{
+		/* check all streams for the i'th sensor from file */
+		for(j = i; j < num_sensors_given; j++)
+		{
+			/* is this the right sensor? */
+			if(!sensor_names[i].compare(
+					fss_streams[j]->scanner_name()))
+			{
+				/* swap this stream to the desired
+				 * position in list */
+				swap = fss_streams[j];
+				fss_streams[j] = fss_streams[i];
+				fss_streams[i] = swap;
+
+				/* done searching */
+				break;
+			}
+		}
+
+		/* check if successful */
+		if(j >= num_sensors_given)
+		{
+			/* could not find necessary sensor */
+			cerr << "[random_carver_t::carve_all_chunks]\t"
+			     << "ERROR: A necessary .fss file is missing!"
+			     << " Please make sure you include the file "
+			     << " for sensor: \"" << sensor_names[i] << "\""
+			     << endl << endl;
+			
+			/* clean up and return */
+			chunk_infile.close();
+			for(j = 0; j < num_sensors_given; j++)
+			{
+				fss_streams[j]->close();
+				delete (fss_streams[j]);
+			}
+			fss_streams.clear();
+			return PROPEGATE_ERROR(-3, ret);
+		}
+	}
+	toc(clk, "Parsing chunk list");
+
+	/* iterate over the chunks in this file */
+	tic(clk);
+	progbar.set_name("Processing chunks");
+	num_chunks = chunk_infile.num_chunks();
+	for(i = 0; i < num_chunks; i++)
+	{
+		/* update user */
+		progbar.update(i, num_chunks);
+
+		/* get the file for the next chunk */
+		ret = chunk_infile.next(chunkfile);
+		if(ret)
+		{
+			/* report error to user and continue */
+			ret = PROPEGATE_ERROR(-4, ret);
+			progbar.clear();
+			cerr << "[random_carver_t::carve_all_chunks]\t"
+			     << "Unable to get uuid for chunk #" << i
+			     << ", Error " << ret << endl << endl;
+			continue;
+		}
+
+		/* process this chunk */
+		ret = this->carve_chunk(fss_streams, chunkfile); 
+		if(ret)
+		{
+			/* report error and continue */
+			ret = PROPEGATE_ERROR(-5, ret);
+			progbar.clear();
+			cerr << "[random_carver_t::carve_all_chunks]\t"
+			     << "Error " << ret << ": Unable to process "
+			     << "chunk #" << i << ": " << chunkfile
+			     << endl << endl;
+			continue;
+		}
+	}
+
+	/* clean up */
+	chunk_infile.close();
+	for(j = 0; j < num_sensors_given; j++)
+	{
+		fss_streams[j]->close();
+		delete (fss_streams[j]);
+	}
+	fss_streams.clear();
+	progbar.clear();
+	toc(clk, "Processing all chunks");
+
+	/* success */
+	return 0;
+}
+
+int random_carver_t::carve_chunk(
+			const std::vector<fss::reader_t*>& fss_files,
+			const std::string& chunkfile)
+{
+	fss::frame_t inframe;
+	set<chunk::point_index_t> inds;
+	set<chunk::point_index_t>::iterator it;
+	chunk::chunk_reader_t infile;
+	chunk::point_index_t pi;
+	frame_model_t curr_frame, next_frame;
+	scan_model_t model;
+	unsigned int i, n, si, fi;
+	int ret;
+
+	/* open this chunk file for reading */
+	ret = infile.open(chunkfile);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* import the indices in this chunk */
+	n = infile.num_points();
+	for(i = 0; i < n; i++)
+	{
+		/* get the point index structure from file */
+		ret = infile.next(pi);
+		if(ret)
+		{
+			/* could not read from file */
+			infile.close();
+			return PROPEGATE_ERROR(-2, ret);
+		}
+
+		/* import this index into index set.  Since the
+		 * set is sorted, the indices will be ordered
+		 * with sensor-major, then frame, then point-minor
+		 * ordering, which allows us to carve everything
+		 * efficiently while only preparing each frame
+		 * once. */
+		inds.insert(pi);
+	}
+
+	/* iterate over the indices referenced in this chunk */
+	si = fi = UINT_MAX; /* set sensor and frame indices to invalid */
+	for(it = inds.begin(); it != inds.end(); it++)
+	{
+		/* check if we need to update sensor */
+		if(it->sensor_index != si)
+		{
+			/* update index */
+			si = it->sensor_index;
+
+			/* update noise model for this sensor */
+			ret = model.set_sensor(
+				fss_files[si]->scanner_name(), 
+				this->clock_uncertainty, this->path);
+			if(ret)
+			{
+				/* not a recognized sensor */
+				infile.close();
+				return PROPEGATE_ERROR(-3, ret);
+			}
+			
+			/* if we updated the sensor, then we 
+			 * need to update the frame as well */
+			fi = UINT_MAX;
+		}
+
+		/* check if need to update frame referenced */
+		if(it->frame_index != fi)
+		{
+			/* check if we are going to the next
+			 * adjacent frame, in which case we can
+			 * swap current with next */
+			if(it->frame_index == fi-1
+					&& next_frame.get_num_points() > 0)
+			{
+				/* swap with next to keep using
+				 * this frame, since the next frame
+				 * is already populated, and what we
+				 * want for this frame anyway. */
+				curr_frame.swap(next_frame);
+			}
+			else
+			{
+				/* need to read in current frame from
+				 * scratch */
+				ret = fss_files[si]->get(inframe,
+						it->frame_index);
+				if(ret)
+				{
+					/* error occurred, abort! */
+					infile.close();
+					return PROPEGATE_ERROR(-4, ret);
+				}
+				
+				/* update model for current frame */
+				ret = curr_frame.init(inframe, model,
+				                      this->path);
+				if(ret)
+				{
+					/* error occurred! */
+					infile.close();
+					return PROPEGATE_ERROR(-5, ret);
+				}
+			}
+			
+			/* update index */
+			fi = it->frame_index;
+
+			/* get next frame, which must always be read
+			 * in from scratch */
+			ret = fss_files[si]->get(inframe, fi+1);
+			if(ret)
+			{
+				/* error occurred, which may likely be
+				 * caused by index overflow if
+				 * fi >= num frames.  But if that's
+				 * the case, then we want to still return
+				 * an error, since the chunk files shouldn't
+				 * have that. */
+				infile.close();
+				return PROPEGATE_ERROR(-6, ret);
+			}
+
+			/* update model for next frame */
+			ret = next_frame.init(inframe, model, this->path);
+			if(ret)
+			{
+				/* error occurred in statistical
+				 * calculations */
+				infile.close();
+				return PROPEGATE_ERROR(-7, ret);
+			}
+		}
+
+		// TODO planarity/edge info about scan?
+	
+		/* carve the referenced wedge */
+		ret = curr_frame.carve_single(this->tree, next_frame,
+				this->carving_buffer, it->point_index);
+		if(ret)
+		{
+			/* error occurred during carving */
+			infile.close();
+			return PROPEGATE_ERROR(-8, ret);
+		}
+	}
+
+	/* simplify this chunk now that it is fully carved */
+	// TODO
+
+	/* clean up */
+	infile.close();
+	return 0;
+}
+
+int random_carver_t::carve_direct(const string& fssfile)
 {
 	fss::reader_t infile;
 	fss::frame_t inframe;

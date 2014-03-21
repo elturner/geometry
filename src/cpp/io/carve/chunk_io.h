@@ -157,6 +157,9 @@ namespace chunk
 			/* the input file stream being read from */
 			std::ifstream infile;
 
+			/* directory that contains input file */
+			std::string directory; 
+
 			/* the header information from this file */
 			chunklist_header_t header;
 
@@ -202,6 +205,19 @@ namespace chunk
 			int open(const std::string& filename);
 
 			/* accessors */
+
+			/**
+			 * Retrieves the list of references sensors
+			 *
+			 * Will populate the given vector with the names
+			 * of sensors referenced in this chunklist file.
+			 * The original contents of this vector will 
+			 * be deleted.
+			 *
+			 * @param sensor_names   Where to store sensor names
+			 */
+			void get_sensor_names(std::vector<std::string>&
+			                      sensor_names) const;
 
 			/**
 			 * Returns the number of chunks in the opened file

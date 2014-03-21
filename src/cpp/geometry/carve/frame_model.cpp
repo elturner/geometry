@@ -139,12 +139,22 @@ int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
 		/* get indices for this wedge */
 		this->find_wedge_indices(i, next, ta, tb, na, nb);
 
-		/* prepare point index vals */
-		vals.resize(4);
-		vals[0].set(si, fi, ta);
-		vals[1].set(si, fi, tb);
-		vals[2].set(si, fi, na);
-		vals[3].set(si, fi, nb);
+		/* prepare point index vals
+		 *
+		 * If we wanted to store all point indices, we would use:
+		 * 	
+		 * 	vals.resize(4);
+		 * 	vals[0].set(si, fi,   ta);
+		 * 	vals[1].set(si, fi,   tb);
+		 * 	vals[2].set(si, fi+1, na);
+		 * 	vals[3].set(si, fi+1, nb);
+		 *
+		 * But since we're interested in regenerating wedges
+		 * from these chunks, we want to store the wedge index,
+		 * not the point index.
+		 */
+		vals.resize(1);
+		vals[0].set(si, fi, i);
 
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
@@ -168,27 +178,42 @@ int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
 int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
                          double buf) const
 {
-	carve_wedge_t wedge;
-	unsigned int i, ta, tb, na, nb, n;
+	unsigned int i, n;
 	int ret;
 
 	/* iterate over every edge in this scan */
 	n = this->num_points - 1;
 	for(i = 0; i < n; i++)
 	{
-		/* get indices for this wedge */
-		this->find_wedge_indices(i, next, ta, tb, na, nb);
-
-		/* generate a wedge from two points in the current
-		 * scan and two points in the next scan */
-		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
-		           &(next.map_list[na]), &(next.map_list[nb]), buf);
-
-		/* carve this wedge in the tree */
-		ret = tree.insert(wedge);
+		/* carve the i'th wedge */
+		ret = this->carve_single(tree, next, buf, i);
 		if(ret)
 			return PROPEGATE_ERROR(-1, ret);
 	}
+
+	/* success */
+	return 0;
+}
+		
+int frame_model_t::carve_single(octree_t& tree, const frame_model_t& next,
+                                double buf, unsigned int i) const
+{
+	carve_wedge_t wedge;
+	unsigned int ta, tb, na, nb;
+	int ret;
+
+	/* get indices for this wedge */
+	this->find_wedge_indices(i, next, ta, tb, na, nb);
+
+	/* generate a wedge from two points in the current
+	 * scan and two points in the next scan */
+	wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
+	           &(next.map_list[na]), &(next.map_list[nb]), buf);
+
+	/* carve this wedge in the tree */
+	ret = tree.insert(wedge);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
 
 	/* success */
 	return 0;

@@ -38,7 +38,7 @@ int main()
 	string chunkdir = "chunks";
 
 	/* initialize */
-	ret = carver.init(madfile, confile, 2.0, 0.003, 2);
+	ret = carver.init(madfile, confile, 0.05, 0.003, 2);
 	if(ret)
 	{
 		cerr << "Unable to init carver: " << ret << endl;
@@ -48,8 +48,20 @@ int main()
 	/* process */
 	vector<string> files;
 	files.push_back(fssfile);
-	ret = carver.export_chunks(files, chunklist, chunkdir); 
-	//ret = carver.carve(fssfile);
+//	ret = carver.export_chunks(files, chunklist, chunkdir); 
+	if(ret)
+	{
+		cerr << "unable to export chunks: " << ret << endl;
+		return 2;
+	}
+//	ret = carver.carve_all_chunks(files, chunklist);
+	if(ret)
+	{
+		cerr << "unable to process chunks: " << ret << endl;
+		return 3;
+	}
+
+	ret = carver.carve_direct(fssfile);
 	if(ret)
 	{
 		cerr << "unable to carve urg: " << ret << endl;
@@ -57,7 +69,7 @@ int main()
 	}
 
 	/* import some floorplans */
-//	ret = carver.import_fp(fpfile);
+	ret = carver.import_fp(fpfile);
 	if(ret)
 	{
 		cerr << "unable to import floorplan: " << ret << endl;
@@ -65,7 +77,7 @@ int main()
 	}
 
 	/* export */
-//	ret = carver.serialize(octfile);
+	ret = carver.serialize(octfile);
 	if(ret)
 	{
 		cerr << "unable to export: " << ret << endl;
