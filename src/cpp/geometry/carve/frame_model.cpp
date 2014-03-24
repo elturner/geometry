@@ -218,6 +218,32 @@ int frame_model_t::carve_single(octree_t& tree, const frame_model_t& next,
 	/* success */
 	return 0;
 }
+		
+int frame_model_t::carve_single(octnode_t* node, unsigned int depth,
+                                const frame_model_t& next, double buf,
+                                unsigned int i) const
+{
+	carve_wedge_t wedge;
+	unsigned int ta, tb, na, nb;
+
+	/* check validity of input */
+	if(node == NULL)
+		return -1;
+
+	/* get indices for this wedge */
+	this->find_wedge_indices(i, next, ta, tb, na, nb);
+
+	/* generate a wedge from two points in the current
+	 * scan and two points in the next scan */
+	wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
+	           &(next.map_list[na]), &(next.map_list[nb]), buf);
+
+	/* carve this wedge in the tree */
+	node->insert(wedge, depth);
+
+	/* success */
+	return 0;
+}
 
 /*-----------*/
 /* debugging */

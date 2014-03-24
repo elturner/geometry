@@ -16,6 +16,12 @@
 using namespace std;
 using namespace Eigen;
 
+/* helper macros */
+
+/* this macro is used to find the relative depth of two sized nodes */
+#define GET_RELATIVE_DEPTH(rootsize, leafsize) \
+		( (int) round( log((rootsize) / (leafsize)) / log(2.0) ) );
+
 /***** OCTTREE FUNCTIONS ****/
 
 octree_t::octree_t()
@@ -37,7 +43,32 @@ octree_t::~octree_t()
 {
 	this->clear();
 }
-	
+
+octree_t::octree_t(const Eigen::Vector3d& c, double hw, double r)
+{
+	this->set(c, hw, r);
+}
+
+/* accessors */
+		
+void octree_t::set(const Eigen::Vector3d& c, double hw, double r)
+{
+	int d;
+
+	/* clear tree if necessary */
+	this->clear();
+
+	/* construct root with given size and position */
+	this->root = new octnode_t(c, hw);
+
+	/* set resolution accordingly */
+	d = GET_RELATIVE_DEPTH(2.0*hw, r);
+	if(d >= 0)
+		this->max_depth = d; /* only save if valid depth */
+	else
+		this->max_depth = 0; /* invalid depth parameters */
+}
+
 void octree_t::set_resolution(double r)
 {
 	Vector3d c;
@@ -174,6 +205,29 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 
 	/* success */
 	return 0;
+}
+		
+octnode_t* octree_t::expand(const Eigen::Vector3d& p, double hw,
+                            unsigned int& rd)
+{
+	int ret, d;
+
+	/* first, verify that this point is contained in the tree */
+	ret = this->include_in_domain(p);
+	if(ret)
+		return NULL; /* tree not initialized */
+
+	/* get the relative depth of the specified halfwidth */
+	d = GET_RELATIVE_DEPTH(this->root->halfwidth, hw);
+	if(d < 0)
+		return this->root; /* not getting any bigger than this */
+	if(d > this->max_depth)
+		d = this->max_depth; /* not getting any smaller than this */
+
+	/* expand the tree structure */
+	rd = this->max_depth - d; /* save relative depth of output 
+	                           * to bottom of tree */
+	return this->root->expand(p, d);
 }
 		
 void octree_t::find(shape_t& s)

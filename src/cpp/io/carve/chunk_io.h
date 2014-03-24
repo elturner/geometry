@@ -205,6 +205,38 @@ namespace chunk
 			int open(const std::string& filename);
 
 			/* accessors */
+			
+			/**
+			 * Returns the X-coordinate of center position
+			 *
+			 * @return    Returns center position x-coord
+			 */
+			inline double center_x() const
+			{ return this->header.center_x; };
+
+			/**
+			 * Returns the Y-coordinate of center position
+			 *
+			 * @return    Returns center position y-coord
+			 */
+			inline double center_y() const
+			{ return this->header.center_y; };
+
+			/**
+			 * Returns the Z-coordinate of center position
+			 *
+			 * @return    Returns center position z-coord
+			 */
+			inline double center_z() const
+			{ return this->header.center_z; };
+			
+			/**
+			 * Returns the halfwidth recovered from file
+			 *
+			 * @return   Returns the specified halfwidth
+			 */
+			inline double halfwidth() const
+			{ return this->header.halfwidth; };
 
 			/**
 			 * Retrieves the list of references sensors
@@ -468,6 +500,50 @@ namespace chunk
 			 * Frees all memory and resources
 			 */
 			~chunk_reader_t();
+		
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
+			/**
+			 * Returns the number of point indices in file
+			 *
+			 * @return   The number of elements in the file
+			 */
+			inline unsigned int num_points() const
+			{ return this->header.num_points; };
+			
+			/**
+			 * Returns the X-coordinate of center position
+			 *
+			 * @return    Returns center position x-coord
+			 */
+			inline double center_x() const
+			{ return this->header.center_x; };
+
+			/**
+			 * Returns the Y-coordinate of center position
+			 *
+			 * @return    Returns center position y-coord
+			 */
+			inline double center_y() const
+			{ return this->header.center_y; };
+
+			/**
+			 * Returns the Z-coordinate of center position
+			 *
+			 * @return    Returns center position z-coord
+			 */
+			inline double center_z() const
+			{ return this->header.center_z; };
+			
+			/**
+			 * Returns the halfwidth recovered from file
+			 *
+			 * @return   Returns the specified halfwidth
+			 */
+			inline double halfwidth() const
+			{ return this->header.halfwidth; };
 
 			/*-----*/
 			/* i/o */
@@ -486,14 +562,6 @@ namespace chunk
 			 *            on error.
 			 */
 			int open(const std::string& filename);
-
-			/**
-			 * Returns the number of point indices in file
-			 *
-			 * @return   The number of elements in the file
-			 */
-			inline unsigned int num_points() const
-			{ return this->header.num_points; };
 
 			/**
 			 * Retrieves the next index set from the file

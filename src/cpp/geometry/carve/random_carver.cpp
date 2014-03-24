@@ -220,6 +220,7 @@ int random_carver_t::carve_all_chunks(
 			const vector<string>& fss_files,
 			const string& chunklist)
 {
+	Eigen::Vector3d treecenter;
 	vector<string> sensor_names;
 	vector<fss::reader_t*> fss_streams;
 	chunk::chunklist_reader_t chunk_infile;
@@ -242,6 +243,14 @@ int random_carver_t::carve_all_chunks(
 		     << endl;
 		return PROPEGATE_ERROR(-1, ret);
 	}
+	
+	/* prepare tree for importing chunks.  This will
+	 * clear any existing data from tree. */
+	treecenter << chunk_infile.center_x(),
+	              chunk_infile.center_y(),
+	              chunk_infile.center_z();
+	this->tree.set(treecenter, chunk_infile.halfwidth(),
+	               this->tree.get_resolution());
 
 	/* get sensor ordering */
 	chunk_infile.get_sensor_names(sensor_names);
@@ -378,14 +387,17 @@ int random_carver_t::carve_chunk(
 			const std::vector<fss::reader_t*>& fss_files,
 			const std::string& chunkfile)
 {
+	Eigen::Vector3d chunkcenter;
 	fss::frame_t inframe;
 	set<chunk::point_index_t> inds;
 	set<chunk::point_index_t>::iterator it;
 	chunk::chunk_reader_t infile;
 	chunk::point_index_t pi;
+	octnode_t* chunknode;
 	frame_model_t curr_frame, next_frame;
 	scan_model_t model;
-	unsigned int i, n, si, fi;
+	progress_bar_t progbar;
+	unsigned int i, n, si, fi, chunkdepth;
 	int ret;
 
 	/* open this chunk file for reading */
@@ -415,10 +427,25 @@ int random_carver_t::carve_chunk(
 		inds.insert(pi);
 	}
 
+	/* prepare chunk location within tree */
+	chunkcenter << infile.center_x(),
+	               infile.center_y(),
+	               infile.center_z();
+	chunknode = this->tree.expand(chunkcenter, infile.halfwidth(),
+	                              chunkdepth);
+	if(chunknode == NULL)
+		return PROPEGATE_ERROR(-3, ret); /* tree not initialized */
+
 	/* iterate over the indices referenced in this chunk */
 	si = fi = UINT_MAX; /* set sensor and frame indices to invalid */
+	progbar.set_name("    Current chunk");
+	progbar.set_color(progress_bar_t::PURPLE);
+	i = 0;
 	for(it = inds.begin(); it != inds.end(); it++)
 	{
+		/* update user */
+		progbar.update(i++, n);
+
 		/* check if we need to update sensor */
 		if(it->sensor_index != si)
 		{
@@ -433,7 +460,7 @@ int random_carver_t::carve_chunk(
 			{
 				/* not a recognized sensor */
 				infile.close();
-				return PROPEGATE_ERROR(-3, ret);
+				return PROPEGATE_ERROR(-4, ret);
 			}
 			
 			/* if we updated the sensor, then we 
@@ -466,7 +493,7 @@ int random_carver_t::carve_chunk(
 				{
 					/* error occurred, abort! */
 					infile.close();
-					return PROPEGATE_ERROR(-4, ret);
+					return PROPEGATE_ERROR(-5, ret);
 				}
 				
 				/* update model for current frame */
@@ -476,7 +503,7 @@ int random_carver_t::carve_chunk(
 				{
 					/* error occurred! */
 					infile.close();
-					return PROPEGATE_ERROR(-5, ret);
+					return PROPEGATE_ERROR(-6, ret);
 				}
 			}
 			
@@ -495,7 +522,7 @@ int random_carver_t::carve_chunk(
 				 * an error, since the chunk files shouldn't
 				 * have that. */
 				infile.close();
-				return PROPEGATE_ERROR(-6, ret);
+				return PROPEGATE_ERROR(-7, ret);
 			}
 
 			/* update model for next frame */
@@ -505,27 +532,28 @@ int random_carver_t::carve_chunk(
 				/* error occurred in statistical
 				 * calculations */
 				infile.close();
-				return PROPEGATE_ERROR(-7, ret);
+				return PROPEGATE_ERROR(-8, ret);
 			}
 		}
 
 		// TODO planarity/edge info about scan?
 	
 		/* carve the referenced wedge */
-		ret = curr_frame.carve_single(this->tree, next_frame,
-				this->carving_buffer, it->point_index);
+		ret = curr_frame.carve_single(chunknode, chunkdepth,
+			next_frame, this->carving_buffer, it->point_index);
 		if(ret)
 		{
 			/* error occurred during carving */
 			infile.close();
-			return PROPEGATE_ERROR(-8, ret);
+			return PROPEGATE_ERROR(-9, ret);
 		}
 	}
 
 	/* simplify this chunk now that it is fully carved */
-	// TODO
+	chunknode->simplify_recur();
 
 	/* clean up */
+	progbar.clear();
 	infile.close();
 	return 0;
 }

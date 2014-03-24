@@ -221,6 +221,34 @@ bool octnode_t::simplify()
 	return true;
 }
 		
+bool octnode_t::simplify_recur()
+{
+	bool should_simplify;
+	unsigned int i;
+
+	/* check if already simplified */
+	if(this->isleaf())
+		return true;
+
+	/* attempt to simplify children */
+	should_simplify = true;
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* check if we can simplify the leaf */
+		if(this->children[i] == NULL)
+			should_simplify = false; /* not all exist */
+		else
+			should_simplify 
+				&= this->children[i]->simplify_recur();
+	}
+
+	/* if all children are simplified and non-null, then we can
+	 * attempt to simplify this node as well */
+	if(!should_simplify)
+		return false;
+	return this->simplify();
+}
+		
 octnode_t* octnode_t::retrieve(const Vector3d& p) const
 {
 	int i;
@@ -235,6 +263,26 @@ octnode_t* octnode_t::retrieve(const Vector3d& p) const
 		return ((octnode_t*) this); /* no child, return current
 		                             * node as deepest */
 	return this->children[i]->retrieve(p); /* recurse through child */
+}
+		
+octnode_t* octnode_t::expand(const Eigen::Vector3d& p, unsigned int d)
+{
+	int i;
+
+	/* check if we've expanded enough */
+	if(d == 0)
+		return this;
+
+	/* find the child that contains p */
+	i = this->contains(p);
+	if(i < 0)
+		return NULL; /* p not even in this node */
+
+	/* create the child if doesn't already exist */
+	this->init_child(i); /* does nothing if child already exists */
+
+	/* recurse */
+	return this->children[i]->expand(p, d-1);
 }
 		
 void octnode_t::find(shape_t& s)
@@ -300,9 +348,6 @@ void octnode_t::insert(shape_t& s, int d)
 		/* recurse */
 		this->children[i]->insert(s, d-1);
 	}
-
-	/* attempt to simplify this node */
-	this->simplify();
 }	
 		
 unsigned int octnode_t::get_num_nodes() const

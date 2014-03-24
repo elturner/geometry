@@ -58,11 +58,34 @@ class octree_t
 		octree_t(double r);
 
 		/**
+		 * Constructs an empty tree with the specified initial size
+		 *
+		 * Will construct an empty tree with the initial center
+		 * position and size given, with the specified resolution.
+		 *
+		 * @param c   The center of the tree, units of length
+		 * @param hw  The halfwidth of tree's root, units of length
+		 * @param r   The resolution of the tree, units of length
+		 */
+		octree_t(const Eigen::Vector3d& c, double hw, double r);
+
+		/**
 		 * Frees all memory and resources
 		 */
 		~octree_t();
 
 		/* accessors */
+
+		/**
+		 * Sets the size of this tree.
+		 *
+		 * This call will clear any existing data from the tree.
+		 *
+		 * @param c  The center of the tree, units of length
+		 * @param hw  The halfwidth of tree's root, units of length
+		 * @param r   The resolution of the tree, units of length
+		 */
+		void set(const Eigen::Vector3d& c, double hw, double r);
 
 		/**
 		 * Sets a new resolution for this tree.
@@ -127,6 +150,31 @@ class octree_t
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int include_in_domain(const Eigen::Vector3d& p);
+
+		/**
+		 * Expands the structure of the tree at the given point
+		 *
+		 * Will grow the structure of the tree at the specified
+		 * point so that the node with the specified halfwidth
+		 * exists.  This node will be created if it does not
+		 * already exist, and will be returned.
+		 *
+		 * If the tree has not been initialized with a resolution,
+		 * then this function will return NULL.
+		 *
+		 * After this call, the value rd will contain the relative
+		 * depth from the output returned node to the max depth
+		 * of this tree.  In this sense, the output node can act
+		 * as a tree with max depth rd.
+		 *
+		 * @param p   The point at which to expand the tree
+		 * @param hw  The halfwidth of the desired node
+		 * @param rd  Where to store the relative depth of output
+		 * 
+		 * @return    Returns a pointer to the node in question
+		 */
+		octnode_t* expand(const Eigen::Vector3d& p, double hw,
+		                  unsigned int& rd);
 
 		/**
 		 * Will find all leaf nodes that overlap this shape

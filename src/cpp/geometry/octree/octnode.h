@@ -127,8 +127,19 @@ class octnode_t
 		 * @return   Returns true iff the node was simplified
 		 */
 		bool simplify();
-		
+	
 		/* recursive calls */
+
+		/**
+		 * Will recursively simplify this node and its subnodes
+		 *
+		 * Will attempt to simplify the subnodes of this node
+		 * recursively, and if successful, will attempt to
+		 * simplify this node as well.
+		 *
+		 * @return  Returns true iff the node was fully simplified
+		 */
+		bool simplify_recur();
 
 		/**
 		 * Gets the leaf node that contains this point.
@@ -143,6 +154,23 @@ class octnode_t
 		 * @return   Returns pointer to leaf node containing p.
 		 */
 		octnode_t* retrieve(const Eigen::Vector3d& p) const;
+
+		/**
+		 * Will expand tree structure so p is covered at depth d
+		 *
+		 * Will recursively expand the tree structure that
+		 * intersects the given point, so that the node d-levels
+		 * down exists.  Will return this node.
+		 *
+		 * If the tree is already expanded to this depth, then
+		 * no modification to the structure will occur.
+		 *
+		 * @param p  The point at which to expand
+		 * @param d  The relative depth to expand
+		 *
+		 * @return   Returns the node at relative depth d covering p
+		 */
+		octnode_t* expand(const Eigen::Vector3d& p, unsigned int d);
 
 		/**
 		 * Will find all leaf nodes that overlap this shape

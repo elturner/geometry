@@ -166,6 +166,26 @@ class frame_model_t
 		int carve_single(octree_t& tree, const frame_model_t& next,
 		                 double buf, unsigned int i) const;
 
+		/**
+		 * Will carve an individual wedge into a subnode of octree
+		 *
+		 * Will generate a single wedge from this frame and insert
+		 * it into the specified subnode of a tree.  Useful if
+		 * you want to modify only a part of a tree, and not
+		 * insert the wedge into the full tree.
+		 *
+		 * @param node    The tree node to modify
+		 * @param depth   The max depth to insert the wedge in node
+		 * @param next    The next frame in the sequence
+		 * @param buf     In units of std. devs., carving buffer
+		 * @param i       The index of the wedge to carve.
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int carve_single(octnode_t* node, unsigned int depth,
+		                 const frame_model_t& next, double buf,
+		                 unsigned int i) const;
+
 		/*-----------*/
 		/* debugging */
 		/*-----------*/

@@ -38,7 +38,7 @@ int main()
 	string chunkdir = "chunks";
 
 	/* initialize */
-	ret = carver.init(madfile, confile, 0.05, 0.003, 2);
+	ret = carver.init(madfile, confile, 0.0625, 0.003, 2);
 	if(ret)
 	{
 		cerr << "Unable to init carver: " << ret << endl;
