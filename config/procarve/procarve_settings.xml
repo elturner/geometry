@@ -1,0 +1,53 @@
+<settings>
+<!-- This file contains run settings for the procarve suite of programs -->
+
+	<!-- This value indicates how far to carve past each scan point
+	     when performing volumetric analysis.  The volume just past
+	     the position of a point can be labeled as solid with some
+	     certainty, and this parameter indicates how far back to
+	     provide that labeling.  It uses the uncertainty in the
+	     position of the point in order to increase robustness.
+
+	     This value is in units of standard deviation of the point
+	     position.  So, the actual distance carved may vary from
+	     point-to-point, but will be scaled by this amount. -->
+	<procarve_carvebuf>2.0</procarve_carvebuf>
+
+	<!-- This value indicates the size of chunks that are generated
+	     by the scan_chunker program.  The size of a chunk will not
+	     affect the output model, only the processing speed and memory
+	     usage.
+	     
+	     Each chunk represents a cube in space that can be processed
+	     independently.  Larger chunks require more memory to hold,
+	     whereas smaller chunks will increase the number of total
+	     computations and also reduce the programs ability to
+	     simplify the model.
+
+	     The chunksize is measured in meters, and a value that
+	     indicates the general expected feature-length of the
+	     model is recommended.  That is, if the model contains
+	     huge open areas, it is recommended to increase the chunk size,
+	     but if the model is only composed of tight spaces, then
+	     a smaller chunk size is recommended.  These recommendations
+	     are only for processing-efficiency purposes, and again,
+	     will not affect the quality of the output model. -->
+	<procarve_chunksize>2.0</procarve_chunksize>
+
+	<!-- This value represents where on disk the chunk files are stored.
+	     The directory specified is relative to the location of the
+	     chunklist file given to the program.  So, for example, if
+	     the following chunklist file is specified:
+
+	        chunklist file:     foo/bar/list.chunklist
+	        procarve_chunkdir:  baz/chunks
+
+	     Then the chunks will be written to:
+
+	        final directory:    foo/bar/baz/chunks/
+	     
+	     If left blank, the chunk files will be put in the same
+	     directory as the chunklist file. -->
+	<procarve_chunkdir>chunks</procarve_chunkdir>
+	
+</settings>
