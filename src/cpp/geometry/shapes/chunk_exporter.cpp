@@ -54,7 +54,7 @@ chunk_exporter_t::~chunk_exporter_t()
 	if(!(this->chunk_map.empty()))
 	{
 		/* Uh oh!  The user didn't call close! */
-		cerr << "[chunk_exporter_t:~chunk_exporter_t]\t"
+		cerr << "[chunk_exporter_t::~chunk_exporter_t]\t"
 		     << "You forgot to call chunk_exporter_t::close()"
 		     << endl;
 

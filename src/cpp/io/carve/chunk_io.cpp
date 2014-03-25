@@ -164,6 +164,10 @@ void chunklist_header_t::print(ostream& outfile) const
 {
 	unsigned int i, n;
 
+	/* make sure to preserve precision when printing to ascii */
+	outfile.setf(ios::fixed , ios::floatfield);
+	outfile.precision(24);
+
 	/* print current header information to stream */
 	outfile << CHUNKLIST_MAGIC_NUMBER << endl
 	   << HEADER_TAG_CENTER << " "

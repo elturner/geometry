@@ -54,14 +54,14 @@ int main()
 		cerr << "unable to export chunks: " << ret << endl;
 		return 2;
 	}
-//	ret = carver.carve_all_chunks(files, chunklist);
+	ret = carver.carve_all_chunks(files, chunklist);
 	if(ret)
 	{
 		cerr << "unable to process chunks: " << ret << endl;
 		return 3;
 	}
 
-	ret = carver.carve_direct(fssfile);
+//	ret = carver.carve_direct(fssfile);
 	if(ret)
 	{
 		cerr << "unable to carve urg: " << ret << endl;

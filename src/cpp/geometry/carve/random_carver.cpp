@@ -205,6 +205,7 @@ int random_carver_t::export_chunks(const vector<string>& fss_files,
 
 		/* inform user that processing is finished */
 		progbar.clear();
+		infile.close();
 		label = "Chunking of " + infile.scanner_name();
 		toc(clk, label.c_str());
 	}
