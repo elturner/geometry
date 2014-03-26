@@ -26,6 +26,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlparser.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
+		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)io/carve/chunk_io.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
@@ -47,6 +48,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/fpcube.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/pcube.cpp \
 		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.cpp \
+		src/procarve_run_settings.cpp \
 		src/main.cpp
 
 HEADERS =	$(SOURCEDIR)util/error_codes.h \
@@ -67,6 +69,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
+		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)io/carve/chunk_io.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
@@ -88,7 +91,8 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)geometry/poly_intersect/pcube.h \
 		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.h \
-		$(SOURCEDIR)geometry/poly_intersect/vec.h
+		$(SOURCEDIR)geometry/poly_intersect/vec.h \
+		src/procarve_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 

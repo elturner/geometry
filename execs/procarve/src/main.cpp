@@ -1,3 +1,5 @@
+#include "procarve_run_settings.h"
+#include <geometry/carve/random_carver.h>
 #include <iostream>
 #include <string>
 
@@ -16,72 +18,70 @@ using namespace std;
 
 /* function implementations */
 
-#include <geometry/carve/random_carver.h>
-
 /**
  * The main function for this program
  */
-int main()
+int main(int argc, char** argv)
 {
+	procarve_run_settings_t settings;
 	random_carver_t carver;
+	unsigned int i, n;
 	int ret;
 	
 	/* set input files */
-	string dataset = "/home/elturner/Desktop/data/20131204-16/";
-	string confile = dataset + "config/backpack_config.xml";
-	string madfile = dataset + "Localization/Magneto_TEST_OL_LC_3D.mad";
-	string fssfile = dataset + "data/urg/H1214157/urg_H1214157_scandata.fss";
-	string dimfile = dataset + "data/d_imager/d_imager_scandata.fss";
-	string fpfile  = dataset + "models/floorplan/Magneto_TEST_OL_LC_3D_i40.fp";
-	string octfile = dataset + "models/carving/testcarve.oct";
-	string chunklist = "/home/elturner/Desktop/chunktest/test.chunklist";
-	string chunkdir = "chunks";
-
-	/* initialize */
-	ret = carver.init(madfile, confile, 0.0625, 0.003, 2);
+	ret = settings.parse(argc, argv);
 	if(ret)
 	{
-		cerr << "Unable to init carver: " << ret << endl;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to parse command-line args." << endl;
 		return 1;
 	}
 
-	/* process */
-	vector<string> files;
-	files.push_back(fssfile);
-//	ret = carver.export_chunks(files, chunklist, chunkdir); 
+	/* initialize */
+	ret = carver.init(settings.madfile, settings.confile,
+			settings.timefile, settings.resolution, 
+			settings.default_clock_uncertainty,
+			settings.carvebuf);
 	if(ret)
 	{
-		cerr << "unable to export chunks: " << ret << endl;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to init carver." << endl;
 		return 2;
-	}
-	ret = carver.carve_all_chunks(files, chunklist);
-	if(ret)
-	{
-		cerr << "unable to process chunks: " << ret << endl;
-		return 3;
 	}
 
-//	ret = carver.carve_direct(fssfile);
+	/* process */
+	ret = carver.carve_all_chunks(settings.fssfiles,
+	                              settings.chunklist);
 	if(ret)
 	{
-		cerr << "unable to carve urg: " << ret << endl;
-		return 2;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to process chunks." << endl;
+		return 3;
 	}
 
 	/* import some floorplans */
-	ret = carver.import_fp(fpfile);
-	if(ret)
+	n = settings.fpfiles.size();
+	for(i = 0; i < n; i++)
 	{
-		cerr << "unable to import floorplan: " << ret << endl;
-		return 3;
+		/* import current floorplan */
+		ret = carver.import_fp(settings.fpfiles[i]);
+		if(ret)
+		{
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to import floorplan "
+			     << settings.fpfiles[i] << endl;
+			return 4;
+		}
 	}
 
 	/* export */
-	ret = carver.serialize(octfile);
+	ret = carver.serialize(settings.octfile);
 	if(ret)
 	{
-		cerr << "unable to export: " << ret << endl;
-		return 4;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to export tree to " 
+		     << settings.octfile << endl;
+		return 5;
 	}
 
 	/* success */

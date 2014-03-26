@@ -89,4 +89,10 @@ def get_all_fss_files(dataset_dir):
 def get_chunklist(dataset_dir):
 	return os.path.abspath(os.path.join(dataset_dir, \
 		"models", "carving", "cache.chunklist"))
+##
+# Returns the expected location of the carved octree file
+#
+def get_octree(dataset_dir):
+	return os.path.abspath(os.path.join(dataset_dir, \
+		"models", "carving", "carving.oct"))
 
