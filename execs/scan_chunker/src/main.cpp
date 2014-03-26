@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 
 	/* initialize */
 	ret = carver.init(settings.madfile, settings.confile,
-	                  settings.chunk_size, 0.003,
+	                  settings.chunk_size, 0.003, // TODO use timesync
 	                  settings.carvebuf);
 	if(ret)
 	{

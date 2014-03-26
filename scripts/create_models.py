@@ -23,10 +23,12 @@ import subprocess
 # Get the location of this file
 SCRIPT_LOCATION = os.path.dirname(__file__)
 
-# Import the config
+# Import our python files
 PYTHON_SRC_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
                                  '..', 'src','python'))
+PYTHON_CONFIG_DIR   = os.path.join(PYTHON_SRC_DIR, 'config'))
 sys.path.append(PYTHON_SRC_DIR)
+sys.path.append(PYTHON_CONFIG_DIR)
 import config
 
 ###################################
@@ -77,13 +79,17 @@ FP2MODEL_EXE   = os.path.abspath(os.path.join(EXE_DIR,  "fp2model"))
 FP2MODEL_TEXTURE_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
                                        "..","execs","fp2model","texture"))
 if sys.platform == 'win32' :
-	TIME_SYNC_EXE += '.exe'
-	BAYER_EXE += '.exe'
+	POINTCLOUD_EXE     += '.exe'
+	PART_PC_LEVELS_EXE += '.exe'
+	XYZ2DQ_EXE         += '.exe'
+	FLOORPLAN_EXE      += '.exe'
+	FP2MODEL_EXE       += '.exe'
 
 # Verify that these executables exist
 if not os.path.exists(POINTCLOUD_EXE):
-	print "Error!  Could not find pointcloud generation executable:", \
-	      POINTCLOUD_EXE
+	print "Error!  Could not find pointcloud", \
+		"generation executable:", \
+		POINTCLOUD_EXE
 	sys.exit(4)
 
 if not os.path.exists(PART_PC_LEVELS_EXE):
