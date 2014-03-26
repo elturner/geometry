@@ -68,6 +68,7 @@ int cmd_args_t::parse(int argc, char** argv)
 	map<string, cmd_tag_t>::iterator it;
 	map<string, vector<string> >::iterator fit;
 	map<string, int>::iterator rit;
+	unsigned int num_required;
 	string ext, tag;
 	int i, j;
 
@@ -160,6 +161,11 @@ int cmd_args_t::parse(int argc, char** argv)
 	for(rit = this->required_file_types.begin();
 			rit != this->required_file_types.end(); rit++)
 	{
+		/* determine how many of this file were required */
+		num_required = (unsigned int) rit->second;
+		if(num_required == 0)
+			continue;
+
 		/* check how many occurances of this file type there were */
 		fit = this->files.find(rit->first);
 		if(fit == this->files.end()
@@ -290,10 +296,14 @@ void cmd_args_t::print_usage(char* prog_name) const
 			pit = this->filetype_purposes.find(rit->first);
 
 			/* print info about this file type */
-			line << "At least " << rit->second
-			     << (rit->second == 1 ? " file " : " files ")
-			     << "required."
-			     << ((pit == this->filetype_purposes.end())
+			if(rit->second == 0)
+				line << "Optional file arguments.";
+			else if(rit->second == 1)
+				line << "At least one file required.";
+			else
+				line << "At least " << rit->second
+				     << " files required.";
+			line << ((pit == this->filetype_purposes.end())
 			          ? "" : ("  " + pit->second))
 			     << endl << endl;
 			cmd_args_t::write_line_with_indent(line.str(),
