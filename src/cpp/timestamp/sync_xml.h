@@ -27,6 +27,7 @@ class FitParams
 		 * clock to system windows clock */
 		double slope;
 		double offset;
+		double stddev;
 
 	/* functions */
 	public:
@@ -128,7 +129,7 @@ public:
 		If this sensor does not appear then a blank copy of 
 		FitParams is returned
 	*/
-	FitParams get(const std::string& sensorName);
+	FitParams get(const std::string& sensorName) const;
 
 	/*
 		void print();

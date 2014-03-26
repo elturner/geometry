@@ -5,6 +5,7 @@
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/frame_model.h>
 #include <geometry/octree/octree.h>
+#include <timestamp/sync_xml.h>
 #include <io/data/fss/fss_io.h>
 #include <io/carve/chunk_io.h>
 #include <util/progress_bar.h>
@@ -37,12 +38,12 @@ using namespace std;
 random_carver_t::random_carver_t()
 {
 	/* default parameter values */
-	this->clock_uncertainty = 0;
 	this->num_rooms = 0;
 }
 
 int random_carver_t::init(const string& madfile, const string& confile,
-                          double res, double clk_err, double carvebuf)
+                          const string& tsfile,
+                          double res, double dcu, double carvebuf)
 {
 	int ret;
 
@@ -63,11 +64,19 @@ int random_carver_t::init(const string& madfile, const string& confile,
 		     << " system hardware config, Error " << ret << endl;
 		return PROPEGATE_ERROR(-2, ret); /* cannot read file */
 	}
+	if(!this->timesync.read(tsfile))
+	{
+		/* report error to user */
+		cerr << "[random_carver_t::init]\tUnable to parse the "
+		     << "time synchronization output xml file: "
+		     << tsfile << endl;
+		return PROPEGATE_ERROR(-3, ret);
+	}
 
 	/* initialize octree and algorithm parameters */
 	this->tree.set_resolution(res);
-	this->clock_uncertainty = clk_err;
 	this->carving_buffer = carvebuf;
+	this->default_clock_uncertainty = dcu;
 	this->num_rooms = 0;
 
 	/* success */
@@ -119,7 +128,8 @@ int random_carver_t::export_chunks(const vector<string>& fss_files,
 
 		/* prepare noisy model for this scanner */
 		ret = model.set_sensor(infile.scanner_name(), 
-	                       this->clock_uncertainty, this->path);
+	        	this->get_clock_uncertainty_for_sensor(
+				infile.scanner_name()), this->path);
 		if(ret)
 		{
 			/* not a recognized sensor */
@@ -456,7 +466,8 @@ int random_carver_t::carve_chunk(
 			/* update noise model for this sensor */
 			ret = model.set_sensor(
 				fss_files[si]->scanner_name(), 
-				this->clock_uncertainty, this->path);
+				this->get_clock_uncertainty_for_sensor(
+				fss_files[si]->scanner_name()), this->path);
 			if(ret)
 			{
 				/* not a recognized sensor */
@@ -588,7 +599,8 @@ int random_carver_t::carve_direct(const string& fssfile)
 
 	/* prepare noisy model for this scanner */
 	ret = model.set_sensor(infile.scanner_name(), 
-	                       this->clock_uncertainty, this->path);
+	                       this->get_clock_uncertainty_for_sensor(
+	                       infile.scanner_name()), this->path);
 	if(ret)
 	{
 		/* not a recognized sensor */
@@ -729,4 +741,20 @@ int random_carver_t::serialize(const string& octfile) const
 
 	/* success */
 	return 0;
+}
+		
+double random_carver_t::get_clock_uncertainty_for_sensor(
+                        const string& sensor_name) const
+{
+	FitParams clk;
+
+	/* get the timesync parameters for this sensor */
+	clk = this->timesync.get(sensor_name);
+
+	/* check if std. dev. is valid */
+	if(clk.stddev < 0)
+		return this->default_clock_uncertainty;
+
+	/* return this sensor's specific uncertainty */
+	return clk.stddev;
 }

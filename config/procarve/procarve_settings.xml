@@ -49,5 +49,19 @@
 	     If left blank, the chunk files will be put in the same
 	     directory as the chunklist file. -->
 	<procarve_chunkdir>chunks</procarve_chunkdir>
-	
+
+	<!-- This value represents the default uncertainty of a sensor's
+	     timestamp value.  This is represented as the standard
+	     deviation of the error in the timestamps of a sensor. Most
+	     sensors will be able to generate this value automatically,
+	     but if for some sensors, we need a default level of uncertainty
+	     to use.
+
+	     This is measured in units of seconds.  It is recommended to
+	     keep it at a few milliseconds, since that is the level of
+	     precision that most sensors use when timestamping. -->
+	<procarve_default_clock_uncertainty>
+		0.005
+	</procarve_default_clock_uncertainty>
+
 </settings>

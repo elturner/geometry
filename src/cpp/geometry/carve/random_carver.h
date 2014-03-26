@@ -13,6 +13,7 @@
  */
 
 #include <io/data/fss/fss_io.h>
+#include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <string>
@@ -47,8 +48,14 @@ class random_carver_t
 
 		/* The clock error represents the uncertainty (std. dev.)
 		 * of the system clock when timestamping hardware sensors.
-		 * It is expressed in units of seconds. */
-		double clock_uncertainty;
+		 * It is expressed in units of seconds. This error can
+		 * be different for different sensors, and is described
+		 * in the time synchronization output file. */
+		SyncXml timesync;
+
+		/* if unable to compute the timestamp uncertainty for a
+		 * particular sensor, use this value */
+		double default_clock_uncertainty;
 
 		/* the carving buffer, in units of standard deviations,
 		 * dictates how far past each point will be carved. A
@@ -74,15 +81,18 @@ class random_carver_t
 		 *
 		 * @param madfile   The path file for this dataset
 		 * @param confile   The xml hardware config file
+		 * @param tsfile    The time synchronization output xml file
 		 * @param res       The carve resolution, in meters
-		 * @param clk_err   The system clock uncertainty, in secs
+		 * @param dcu       The default clock uncertainty
 		 * @param carvebuf  The carving buffer, units of std. dev.
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int init(const std::string& madfile,
 		         const std::string& confile,
-		         double res, double clk_err, double carvebuf);
+		         const std::string& tsfile,
+		         double res, double dcu,
+		         double carvebuf);
 
 		/**
 		 * Finds and exports all chunks to disk
@@ -182,6 +192,22 @@ class random_carver_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int serialize(const std::string& octfile) const;
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Gets the timestamp uncertainty for a specific sensor
+		 *
+		 * Given the sensor name, will look up the timestamp
+		 * uncertainty for that sensor, and return the desired
+		 * value.
+		 *
+		 * @return   Returns the std. dev. of the clock error for
+		 *           the specified sensor.
+		 */
+		double get_clock_uncertainty_for_sensor(
+				const std::string& sensor_name) const;
 };
 
 #endif

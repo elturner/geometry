@@ -38,6 +38,7 @@ using namespace std;
 
 /* xml tags to check for in settings file */
 
+#define XML_DEFAULT_CLOCK_UNCERTAINTY "procarve_default_clock_uncertainty"
 #define XML_CARVEBUF_TAG  "procarve_carvebuf"
 #define XML_CHUNKSIZE_TAG "procarve_chunksize"
 #define XML_CHUNKDIR_TAG  "procarve_chunkdir"
@@ -56,6 +57,7 @@ chunker_run_settings_t::chunker_run_settings_t()
 	/* the following values are read from an input xml settings
 	 * file.  If that file does not have the setting listed, then
 	 * the following default settings will be used. */
+	this->default_clock_uncertainty = 0.001; /* units of seconds */
 	this->carvebuf  = 2; /* two standard deviations */
 	this->chunk_size = 2.0; /* default chunks: cube edge two meters */
 	this->chunkdir  = "chunks"; /* by default, put chunks in a subdir */
@@ -141,6 +143,9 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 		this->chunk_size = settings.getAsDouble(XML_CHUNKSIZE_TAG);
 	if(settings.is_prop(XML_CHUNKDIR_TAG))
 		this->chunkdir = settings.get(XML_CHUNKDIR_TAG);
+	if(settings.is_prop(XML_DEFAULT_CLOCK_UNCERTAINTY))
+		this->default_clock_uncertainty = settings.getAsDouble(
+			XML_DEFAULT_CLOCK_UNCERTAINTY);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

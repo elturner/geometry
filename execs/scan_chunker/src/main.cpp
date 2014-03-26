@@ -29,11 +29,16 @@ int main(int argc, char** argv)
 	/* get command-line arguments */
 	ret = settings.parse(argc, argv);
 	if(ret)
+	{
+		cerr << "[main]\tUnable to import settings" << endl;
 		return 1;
+	}
 
 	/* initialize */
 	ret = carver.init(settings.madfile, settings.confile,
-	                  settings.chunk_size, 0.003, // TODO use timesync
+	                  settings.timefile,
+	                  settings.chunk_size,
+	                  settings.default_clock_uncertainty,
 	                  settings.carvebuf);
 	if(ret)
 	{

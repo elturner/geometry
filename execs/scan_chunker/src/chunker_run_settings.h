@@ -58,6 +58,18 @@ class chunker_run_settings_t
 		 * to store the generated chunks to disk */
 
 		/**
+		 * The default clock uncertainty to use
+		 *
+		 * The clock uncertainty for a sensor can be computed
+		 * based on how well a linear fit modeled its timestamp
+		 * synchronization, but if this value is unavailable, then
+		 * the following value is used instead.  It is measured
+		 * in units of seconds, and denotes a standard deviation
+		 * of the error.
+		 */
+		double default_clock_uncertainty;
+
+		/**
 		 * How far past scan points to carve, in units of
 		 * standard deviations.
 		 */

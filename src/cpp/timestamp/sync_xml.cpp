@@ -53,13 +53,15 @@ void SyncXml::clear() {
 
 	Reads the file provided into the class
 */
-bool SyncXml::read(const std::string& filename) {
+bool SyncXml::read(const std::string& filename)
+{
 
 	// Copy the filename into the class data
 	_filename = filename;
-
+	
 	// Read in the xml file into the class data
-	if (!_doc.LoadFile(_filename.c_str())) {
+	if (!_doc.LoadFile(_filename.c_str()))
+	{
 		cerr << "[SyncXml::read] - Error loading xml document : "
 			<< _filename << endl;
 		this->clear();
@@ -69,14 +71,16 @@ bool SyncXml::read(const std::string& filename) {
 	// Check the top level node ptr to see if it says
 	// exactly "timesync"
 	TiXmlNode * node_ptr = _doc.FirstChildElement();
-	if (node_ptr == NULL) {
-		cerr << "[SyncXml::read] - Head node was NULL. Is the file empty?"
-			<< endl;
+	if (node_ptr == NULL)
+	{
+		cerr << "[SyncXml::read] - Head node was NULL. "
+		     << "Is the file empty?" << endl;
 		this->clear();
 		return false;
 	}
 	string headTag = node_ptr->Value();
-	if (headTag.compare("timesync") != 0) {
+	if (headTag.compare("timesync") != 0)
+	{
 		cerr << "[SyncXml::read] - Head node is <" << headTag
 			<< "> instead of expected <timestamp>" << endl;
 		this->clear();
@@ -88,41 +92,70 @@ bool SyncXml::read(const std::string& filename) {
 	FitParams fitParams;
 
 	node_ptr = node_ptr->FirstChildElement();
-	while (node_ptr != NULL) {
-		
+	while (node_ptr != NULL)
+	{
 		// Get the scale
-		TiXmlNode * slope_ptr = node_ptr->FirstChildElement("slope");
-		if (slope_ptr == NULL) {
-			cerr << "[SyncXml::read] - Missing <scale> node in block: " 
-				<< "<" << node_ptr->Value() << ">" << endl;
+		TiXmlNode * slope_ptr 
+			= node_ptr->FirstChildElement("slope");
+		if (slope_ptr == NULL)
+		{
+			cerr << "[SyncXml::read] - Missing <scale> node "
+			     << "in block: " 
+			     << "<" << node_ptr->Value() << ">" << endl;
 			this->clear();
 			return false;
 		}
-		if (TiXmlTools::countChildTextElements(slope_ptr) != 1) {
-			cerr << "[SyncXml::read] - Malformed <scale> node in block: "
-				<< "<" << node_ptr->Value() << ">" << endl;
+		if (TiXmlTools::countChildTextElements(slope_ptr) != 1)
+		{
+			cerr << "[SyncXml::read] - Malformed <scale> node"
+			     << " in block: "
+			     << "<" << node_ptr->Value() << ">" << endl;
 			this->clear();
 			return false;
 		}
-		TiXmlTools::stringToNumber<double>(slope_ptr->FirstChild()->Value(),
-			fitParams.slope);
+		TiXmlTools::stringToNumber<double>(
+				slope_ptr->FirstChild()->Value(),
+				fitParams.slope);
 
 		// Get the offset
-		TiXmlNode * offset_ptr = node_ptr->FirstChildElement("offset");
+		TiXmlNode * offset_ptr 
+			= node_ptr->FirstChildElement("offset");
 		if (offset_ptr == NULL) {
-			cerr << "[SyncXml::read] - Missing <offset> node in block: "
-				<< "<" << node_ptr->Value() << ">" << endl;
+			cerr << "[SyncXml::read] - Missing <offset> node "
+			     << "in block: "
+			     << "<" << node_ptr->Value() << ">" << endl;
 			this->clear();
 			return false;
 		}
-		if (TiXmlTools::countChildTextElements(offset_ptr) != 1) {
-			cerr << "[SyncXml::read] - Malformed <offset> node in block: "
-				<< "<" << node_ptr->Value() << ">" << endl;
+		if (TiXmlTools::countChildTextElements(offset_ptr) != 1)
+		{
+			cerr << "[SyncXml::read] - Malformed <offset> "
+			     << "node in block: "
+			     << "<" << node_ptr->Value() << ">" << endl;
 			this->clear();
 			return false;
 		}
-		TiXmlTools::stringToNumber<double>(offset_ptr->FirstChild()->Value(),
-			fitParams.offset);
+		TiXmlTools::stringToNumber<double>(
+				offset_ptr->FirstChild()->Value(),
+				fitParams.offset);
+
+		// Get the std. dev., if it is available
+		TiXmlNode* stddev_ptr 
+			= node_ptr->FirstChildElement("stddev");
+		if(stddev_ptr == NULL 
+			|| TiXmlTools::countChildTextElements(
+				stddev_ptr) != 1)
+		{
+			/* set 'invalid' value for stddev */
+			fitParams.stddev = -1;
+		}
+		else
+		{
+			// get the value
+			TiXmlTools::stringToNumber<double>(
+				stddev_ptr->FirstChild()->Value(),
+				fitParams.stddev);
+		}
 
 		// Insert into data map
 		_data[node_ptr->Value()] = fitParams;
@@ -153,16 +186,21 @@ bool SyncXml::isMember(const std::string& sensorName) {
 	If this sensor does not appear then a blank copy of
 	FitParams is returned
 */
-FitParams SyncXml::get(const std::string& sensorName) {
+FitParams SyncXml::get(const std::string& sensorName) const {
 
-	map<string, FitParams>::iterator it =
+	map<string, FitParams>::const_iterator it =
 		_data.find(sensorName);
-	if (it == _data.end()) {
+	if (it == _data.end())
+	{
+		/* set default invalid values */
 		FitParams blank;
 		blank.offset = blank.slope = 0;
+		blank.stddev = -1;
 		return blank;
 	}
-	else {
+	else
+	{
+		/* return the found data */
 		return it->second;
 	}
 }
