@@ -61,6 +61,7 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 		   <<  " " << red
 		   <<  " " << green
 		   <<  " " << blue
+		   <<  " # probability: " << p
 		   << endl;
 	}
 
