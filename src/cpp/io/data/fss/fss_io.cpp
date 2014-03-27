@@ -6,6 +6,7 @@
 #include <ios>
 #include <string>
 #include <vector>
+#include <mutex>
 #include <util/error_codes.h>
 #include <util/endian.h>
 #include <util/binary_search.h>
@@ -19,6 +20,8 @@
  * Implements the reader and writer classes for the .fss file format.
  * This format is used to store range, depth, or time-of-flight data
  * with synchronized timestamps and statistical information.
+ * 
+ * Make sure to compile with -std=c++0x to support C++11 standard.
  */
 
 /* use the following namespaces for the implementations in this file */
@@ -133,9 +136,16 @@ int reader_t::get(frame_t& frame, unsigned int i)
 	double c;
 	int ret;
 
+	/* lock the mutex */
+	mtx.lock();
+	
 	/* check that input index is valid */
 	if(i >= this->header.num_scans)
+	{
+		/* clean up and return */
+		this->mtx.unlock();
 		return -1;
+	}
 
 	/* move infile to the appropriate stream position */
 	this->infile.seekg(this->frame_positions[i]);
@@ -143,7 +153,11 @@ int reader_t::get(frame_t& frame, unsigned int i)
 	/* get the current frame */
 	ret = frame.parse(this->infile, this->header);
 	if(ret)
+	{
+		/* clean up and return */
+		this->mtx.unlock();
 		return PROPEGATE_ERROR(-2, ret);
+	}
 
 	/* perform auto-conversions, if selected */
 	if(this->auto_convert_to_meters)
@@ -163,6 +177,7 @@ int reader_t::get(frame_t& frame, unsigned int i)
 			frame.points[j].correct_for_bias();
 
 	/* success */
+	this->mtx.unlock();
 	return 0;
 }
 			

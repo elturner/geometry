@@ -28,7 +28,7 @@ int main()
 	
 	/* set input files */
 	string dataset = "/home/elturner/Desktop/data/20131204-16/";
-	string octfile = dataset + "models/carving/testcarve.oct";
+	string octfile = dataset + "models/carving/ref_carving.oct";
 	string objfile = "/home/elturner/Desktop/test.obj";
 
 	/* initialize */

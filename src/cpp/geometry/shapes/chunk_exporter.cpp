@@ -203,7 +203,7 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 				+ CHUNKFILE_EXTENSION;
 		
 		/* insert into map */
-		ins = this->chunk_map.insert(make_pair<octdata_t*,
+		ins = this->chunk_map.insert(pair<octdata_t*,
 				chunk_writer_t*>(d, new chunk_writer_t()));
 		if(!(ins.second))
 		{
@@ -245,7 +245,7 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 			cerr << "[chunk_exporter_t::apply_to_leaf]\t"
 			     << "WARNING: need to insert pre-existing data"
 			     << endl << endl;
-			ins = this->chunk_map.insert(make_pair<octdata_t*,
+			ins = this->chunk_map.insert(pair<octdata_t*,
 				chunk_writer_t*>(d, new chunk_writer_t()));
 			mit = ins.first;
 		}

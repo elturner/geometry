@@ -72,9 +72,8 @@ void extruded_poly_t::init(const fp::floorplan_t& f,
 			/* attempt to insert this vertex. if this vertex
 			 * has been seen before, then the size of the
 			 * map will not change */
-			vit = vert_map.insert(
-				make_pair<int, unsigned int>(vi,
-					vert_map.size()));
+			vit = vert_map.insert(pair<int, unsigned int>(vi,
+						vert_map.size()));
 		
 			/* copy triangle value into this structure */
 			this->tris(vii, ti) = vit.first->second;

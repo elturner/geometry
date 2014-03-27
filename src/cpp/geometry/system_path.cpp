@@ -180,8 +180,7 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 		}
 
 		/* add this transform to our map */
-		this->transform_map.insert(make_pair<string, transform_t*>(
-				imus[i].name, t));
+		this->transform_map.insert(make_pair(imus[i].name, t));
 	}
 
 	/* store laser transforms */
@@ -201,8 +200,7 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 		}
 
 		/* add this transform to our map */
-		this->transform_map.insert(make_pair<string, transform_t*>(
-				lasers[i].name, t));
+		this->transform_map.insert(make_pair(lasers[i].name, t));
 	}
 
 	/* store camera transforms */
@@ -222,8 +220,7 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 		}
 
 		/* add this transform to our map */
-		this->transform_map.insert(make_pair<string, transform_t*>(
-				cameras[i].name, t));
+		this->transform_map.insert(make_pair(cameras[i].name, t));
 	}
 
 	/* store d-imager transforms */
@@ -243,8 +240,7 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 		}
 
 		/* add this transform to our map */
-		this->transform_map.insert(make_pair<string, transform_t*>(
-				tofs[i].name, t));
+		this->transform_map.insert(make_pair(tofs[i].name, t));
 	}
 
 	/* success */

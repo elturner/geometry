@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 	ret = carver.init(settings.madfile, settings.confile,
 			settings.timefile, settings.resolution, 
 			settings.default_clock_uncertainty,
-			settings.carvebuf);
+			settings.carvebuf, settings.num_threads);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "

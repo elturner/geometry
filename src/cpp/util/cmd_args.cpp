@@ -52,7 +52,7 @@ void cmd_args_t::add(const string& t, const string& d, bool o, int n)
 	/* create a new tag structure
 	 * and add it to the map */
 	tag.init(t, d, o, n);
-	this->tags.insert(make_pair<string, cmd_tag_t>(t, tag));
+	this->tags.insert(make_pair(t, tag));
 }
 		
 void cmd_args_t::add_required_file_type(const string& ext, int m,

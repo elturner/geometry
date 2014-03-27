@@ -10,14 +10,20 @@
  * This file defines the random_carver_t class, which is used
  * to create probabilistic models of the position of scan points,
  * and insert those models into an octree.
+ *
+ * This class requires the Eigen framework.
+ * This class requires the boost::threadpool framework.
  */
 
+#include <io/carve/chunk_io.h>
 #include <io/data/fss/fss_io.h>
 #include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
+#include <boost/threadpool.hpp>
 #include <string>
 #include <vector>
+#include <set>
 
 /**
  * The random_carver_t class builds an octree from range scans.
@@ -64,6 +70,11 @@ class random_carver_t
 		 * represented in the octree. */
 		double carving_buffer;
 
+		/* the number of threads to use when carving nodes from
+		 * chunks.  By default, this value is the number of hardware
+		 * cores detected. */
+		unsigned int num_threads;
+
 	/* functions */
 	public:
 
@@ -85,6 +96,7 @@ class random_carver_t
 		 * @param res       The carve resolution, in meters
 		 * @param dcu       The default clock uncertainty
 		 * @param carvebuf  The carving buffer, units of std. dev.
+		 * @param nt        The number of threads to use
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
@@ -92,7 +104,7 @@ class random_carver_t
 		         const std::string& confile,
 		         const std::string& tsfile,
 		         double res, double dcu,
-		         double carvebuf);
+		         double carvebuf, unsigned int nt);
 
 		/**
 		 * Finds and exports all chunks to disk
@@ -145,13 +157,17 @@ class random_carver_t
 		 * in the corresponding chunklist file.
 		 *
 		 * @param fss_files   A list of fss file streams
+		 * @param ts_uncerts  A list of sensor clock uncertainties
 		 * @param chunkfile   The chunkfile to parse
+		 * @param tp          The threadpool to use to carve fast
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int carve_chunk(
 			const std::vector<fss::reader_t*>& fss_files,
-			const std::string& chunkfile);
+			const std::vector<double>& ts_uncerts,
+			const std::string& chunkfile,
+			boost::threadpool::pool& tp);
 
 		/**
 		 * Carves all input scan points into the octree
@@ -208,6 +224,32 @@ class random_carver_t
 		 */
 		double get_clock_uncertainty_for_sensor(
 				const std::string& sensor_name) const;
+
+		/**
+		 * Will carve the given data into the given octnode
+		 *
+		 * This function will modify the given octnode based on
+		 * the data given.  Any scans from the referenced indices
+		 * will be attempted to be carved into the octnode.
+		 *
+		 * The inds structure will be copied, since that is
+		 * the only structure that is not likely to be persistant
+		 * between node calls.
+		 *
+		 * @param chunknode   The node to carve into
+		 * @param inds        The scan indices to use
+		 * @param fss_files   The scan files to use as input
+		 * @param ts_uncerts  Each sensor's timestamp uncertainty
+		 * @param path        The system path to use
+		 * @param maxdepth    The relative max depth to carve
+		 * @param carvebuf    The carving buffer parameter
+		 */
+		static void carve_node(octnode_t* chunknode,
+			std::set<chunk::point_index_t> inds,
+			const std::vector<fss::reader_t*>& fss_files,
+			const std::vector<double>& ts_uncerts,
+			const system_path_t& path,
+			unsigned int maxdepth, double carvebuf);
 };
 
 #endif

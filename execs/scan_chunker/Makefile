@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -g -O2 -W -Wall -Wextra -ansi
+CFLAGS = -g -O2 -W -Wall -Wextra -std=c++0x
 LFLAGS = -lm
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
@@ -105,11 +105,11 @@ simple:
 	$(CC) $(IFLAGS) $(CFLAGS) $(LFLAGS) $(PFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS) $(IFLAGS)
+	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS) $(IFLAGS) $(CFLAGS)
 
 $(BUILDDIR)/%.o : %.cpp
 	@mkdir -p $(shell dirname $@)		# ensure folder exists
-	@g++ -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
+	@g++ -std=c++0x -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
 # helper commands

@@ -10,6 +10,8 @@
  * This file contains classes used to read and write .fss files,
  * which are used to house synchronized and calibrated scans from
  * a given range, depth, or time-of-flight scanner.
+ *
+ * Make sure to compile with -std=c++0x to support C++11 standard.
  */
 
 #include <string>
@@ -17,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <mutex> /* this needs to use g++ flag: -std=c++0x */
 
 /**
  * Namespace for fss files.
@@ -374,6 +377,11 @@ namespace fss
 			bool auto_correct_for_bias;/* will subtract bias */
 			bool auto_convert_to_meters;/* converts to meters */
 
+			/* this mutex is locked when the functions get()
+			 * or get_nearest() are called, which allows these
+			 * functions to be threadsafe. */
+			std::mutex mtx;
+
 		/* functions */
 		public:
 
@@ -466,6 +474,8 @@ namespace fss
 			 * call will fail if i is out of bounds or if no
 			 * file has been opened.
 			 *
+			 * This function is thread-safe!
+			 *
 			 * @param frame   The frame object to populate
 			 * @param i       The frame index to read from
 			 *
@@ -480,6 +490,8 @@ namespace fss
 			 * Given a timestamp value, will populate the
 			 * given structure with the frame information that
 			 * is closest in time.
+			 *
+			 * This function is thread-safe!
 			 *
 			 * @param frame  The frame object to populate
 			 * @param ts     The timestamp to compare to

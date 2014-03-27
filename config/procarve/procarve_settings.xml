@@ -9,6 +9,13 @@
 	     Units: meters -->
 	<procarve_resolution>0.0625</procarve_resolution>
 
+	<!-- This value indicates the number of threads to use during
+	     carving when importing chunk data.
+	     
+	     If not specified, the value used will be the number of
+	     detected hardware cores. -->
+	<procarve_num_threads>8</procarve_num_threads>
+
 	<!-- This value indicates how far to carve past each scan point
 	     when performing volumetric analysis.  The volume just past
 	     the position of a point can be labeled as solid with some

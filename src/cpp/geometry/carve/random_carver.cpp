@@ -11,6 +11,8 @@
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
+#include <boost/threadpool.hpp>
+#include <boost/thread.hpp>
 #include <Eigen/Dense>
 #include <limits.h>
 #include <iostream>
@@ -39,11 +41,13 @@ random_carver_t::random_carver_t()
 {
 	/* default parameter values */
 	this->num_rooms = 0;
+	this->num_threads = 1;
 }
 
 int random_carver_t::init(const string& madfile, const string& confile,
                           const string& tsfile,
-                          double res, double dcu, double carvebuf)
+                          double res, double dcu, double carvebuf,
+			  unsigned int nt)
 {
 	int ret;
 
@@ -78,6 +82,7 @@ int random_carver_t::init(const string& madfile, const string& confile,
 	this->carving_buffer = carvebuf;
 	this->default_clock_uncertainty = dcu;
 	this->num_rooms = 0;
+	this->num_threads = nt;
 
 	/* success */
 	return 0;
@@ -234,6 +239,7 @@ int random_carver_t::carve_all_chunks(
 	Eigen::Vector3d treecenter;
 	vector<string> sensor_names;
 	vector<fss::reader_t*> fss_streams;
+	vector<double> ts_uncertainties;
 	chunk::chunklist_reader_t chunk_infile;
 	progress_bar_t progbar;
 	unsigned int i, j, num_sensors_in_file, num_sensors_given;
@@ -242,6 +248,9 @@ int random_carver_t::carve_all_chunks(
 	fss::reader_t* swap;
 	tictoc_t clk;
 	int ret;
+
+	/* initialize threadpool */
+	boost::threadpool::pool tp(this->num_threads);
 
 	/* attempt to parse the chunklist file */
 	tic(clk);
@@ -340,6 +349,14 @@ int random_carver_t::carve_all_chunks(
 			return PROPEGATE_ERROR(-3, ret);
 		}
 	}
+
+	/* record the timestamp uncertainties for each sensor */
+	ts_uncertainties.resize(num_sensors_given);
+	for(j = 0; j < num_sensors_given; j++)
+		ts_uncertainties[j] 
+			= this->get_clock_uncertainty_for_sensor(
+				fss_streams[j]->scanner_name());
+
 	toc(clk, "Parsing chunk list");
 
 	/* iterate over the chunks in this file */
@@ -365,7 +382,8 @@ int random_carver_t::carve_all_chunks(
 		}
 
 		/* process this chunk */
-		ret = this->carve_chunk(fss_streams, chunkfile); 
+		ret = this->carve_chunk(fss_streams, ts_uncertainties, 
+					chunkfile, tp); 
 		if(ret)
 		{
 			/* report error and continue */
@@ -377,8 +395,14 @@ int random_carver_t::carve_all_chunks(
 			     << endl << endl;
 			continue;
 		}
+
+		/* make sure thread pool isn't overfull */
+		tp.wait(this->num_threads + this->num_threads);
 	}
 
+	/* wait for all threads to finish */
+	tp.wait();
+	
 	/* clean up */
 	chunk_infile.close();
 	for(j = 0; j < num_sensors_given; j++)
@@ -395,20 +419,17 @@ int random_carver_t::carve_all_chunks(
 }
 
 int random_carver_t::carve_chunk(
-			const std::vector<fss::reader_t*>& fss_files,
-			const std::string& chunkfile)
+			const vector<fss::reader_t*>& fss_files,
+			const vector<double>& ts_uncerts,
+			const string& chunkfile,
+			boost::threadpool::pool& tp)
 {
 	Eigen::Vector3d chunkcenter;
-	fss::frame_t inframe;
 	set<chunk::point_index_t> inds;
-	set<chunk::point_index_t>::iterator it;
 	chunk::chunk_reader_t infile;
 	chunk::point_index_t pi;
 	octnode_t* chunknode;
-	frame_model_t curr_frame, next_frame;
-	scan_model_t model;
-	progress_bar_t progbar;
-	unsigned int i, n, si, fi, chunkdepth;
+	unsigned int i, n, chunkdepth;
 	int ret;
 
 	/* open this chunk file for reading */
@@ -442,131 +463,19 @@ int random_carver_t::carve_chunk(
 	chunkcenter << infile.center_x(),
 	               infile.center_y(),
 	               infile.center_z();
+	infile.close();
 	chunknode = this->tree.expand(chunkcenter, infile.halfwidth(),
 	                              chunkdepth);
 	if(chunknode == NULL)
 		return PROPEGATE_ERROR(-3, ret); /* tree not initialized */
 
-	/* iterate over the indices referenced in this chunk */
-	si = fi = UINT_MAX; /* set sensor and frame indices to invalid */
-	progbar.set_name("    Current chunk");
-	progbar.set_color(progress_bar_t::PURPLE);
-	i = 0;
-	for(it = inds.begin(); it != inds.end(); it++)
-	{
-		/* update user */
-		progbar.update(i++, n);
-
-		/* check if we need to update sensor */
-		if(it->sensor_index != si)
-		{
-			/* update index */
-			si = it->sensor_index;
-
-			/* update noise model for this sensor */
-			ret = model.set_sensor(
-				fss_files[si]->scanner_name(), 
-				this->get_clock_uncertainty_for_sensor(
-				fss_files[si]->scanner_name()), this->path);
-			if(ret)
-			{
-				/* not a recognized sensor */
-				infile.close();
-				return PROPEGATE_ERROR(-4, ret);
-			}
-			
-			/* if we updated the sensor, then we 
-			 * need to update the frame as well */
-			fi = UINT_MAX;
-		}
-
-		/* check if need to update frame referenced */
-		if(it->frame_index != fi)
-		{
-			/* check if we are going to the next
-			 * adjacent frame, in which case we can
-			 * swap current with next */
-			if(it->frame_index == fi-1
-					&& next_frame.get_num_points() > 0)
-			{
-				/* swap with next to keep using
-				 * this frame, since the next frame
-				 * is already populated, and what we
-				 * want for this frame anyway. */
-				curr_frame.swap(next_frame);
-			}
-			else
-			{
-				/* need to read in current frame from
-				 * scratch */
-				ret = fss_files[si]->get(inframe,
-						it->frame_index);
-				if(ret)
-				{
-					/* error occurred, abort! */
-					infile.close();
-					return PROPEGATE_ERROR(-5, ret);
-				}
-				
-				/* update model for current frame */
-				ret = curr_frame.init(inframe, model,
-				                      this->path);
-				if(ret)
-				{
-					/* error occurred! */
-					infile.close();
-					return PROPEGATE_ERROR(-6, ret);
-				}
-			}
-			
-			/* update index */
-			fi = it->frame_index;
-
-			/* get next frame, which must always be read
-			 * in from scratch */
-			ret = fss_files[si]->get(inframe, fi+1);
-			if(ret)
-			{
-				/* error occurred, which may likely be
-				 * caused by index overflow if
-				 * fi >= num frames.  But if that's
-				 * the case, then we want to still return
-				 * an error, since the chunk files shouldn't
-				 * have that. */
-				infile.close();
-				return PROPEGATE_ERROR(-7, ret);
-			}
-
-			/* update model for next frame */
-			ret = next_frame.init(inframe, model, this->path);
-			if(ret)
-			{
-				/* error occurred in statistical
-				 * calculations */
-				infile.close();
-				return PROPEGATE_ERROR(-8, ret);
-			}
-		}
-
-		// TODO planarity/edge info about scan?
-	
-		/* carve the referenced wedge */
-		ret = curr_frame.carve_single(chunknode, chunkdepth,
-			next_frame, this->carving_buffer, it->point_index);
-		if(ret)
-		{
-			/* error occurred during carving */
-			infile.close();
-			return PROPEGATE_ERROR(-9, ret);
-		}
-	}
-
-	/* simplify this chunk now that it is fully carved */
-	chunknode->simplify_recur();
+	/* process this node based on the input chunk data */
+	tp.schedule(boost::bind(random_carver_t::carve_node, chunknode,
+			inds, boost::cref(fss_files),
+			boost::cref(ts_uncerts), boost::cref(path),
+			chunkdepth, this->carving_buffer));
 
 	/* clean up */
-	progbar.clear();
-	infile.close();
 	return 0;
 }
 
@@ -634,8 +543,6 @@ int random_carver_t::carve_direct(const string& fssfile)
 			return ret;
 		}
 		
-		// TODO planarity/edge info about scan?
-
 		/* compute carving model for this frame */
 		ret = curr_frame.init(inframe, model, this->path);
 		if(ret)
@@ -757,4 +664,150 @@ double random_carver_t::get_clock_uncertainty_for_sensor(
 
 	/* return this sensor's specific uncertainty */
 	return clk.stddev;
+}
+		
+void random_carver_t::carve_node(octnode_t* chunknode,
+			set<chunk::point_index_t> inds,
+			const vector<fss::reader_t*>& fss_files,
+			const vector<double>& ts_uncerts,
+			const system_path_t& path,
+			unsigned int maxdepth, double carvebuf)
+{
+	frame_model_t curr_frame, next_frame;
+	set<chunk::point_index_t>::iterator it;
+	scan_model_t model;
+	fss::frame_t inframe;
+	unsigned int si, fi;
+	int ret;
+
+	/* iterate over the indices referenced in this chunk */
+	si = fi = UINT_MAX; /* set sensor and frame indices to invalid */
+	for(it = inds.begin(); it != inds.end(); it++)
+	{
+		/* check if we need to update sensor */
+		if(it->sensor_index != si)
+		{
+			/* update index */
+			si = it->sensor_index;
+
+			/* update noise model for this sensor */
+			ret = model.set_sensor(
+				fss_files[si]->scanner_name(), 
+				ts_uncerts[si], path);
+			if(ret)
+			{
+				/* not a recognized sensor */
+				cerr << "[carve_node]\tError " << ret << ":"
+				     << " Unrecognized sensor: "
+				     << fss_files[si]->scanner_name()
+				     << endl << endl;
+				return;
+			}
+			
+			/* if we updated the sensor, then we 
+			 * need to update the frame as well */
+			fi = UINT_MAX;
+		}
+
+		/* check if need to update frame referenced */
+		if(it->frame_index != fi)
+		{
+			/* check if we are going to the next
+			 * adjacent frame, in which case we can
+			 * swap current with next */
+			if(it->frame_index == fi-1
+					&& next_frame.get_num_points() > 0)
+			{
+				/* swap with next to keep using
+				 * this frame, since the next frame
+				 * is already populated, and what we
+				 * want for this frame anyway. */
+				curr_frame.swap(next_frame);
+			}
+			else
+			{
+				/* need to read in current frame from
+				 * scratch */
+				ret = fss_files[si]->get(inframe,
+						it->frame_index);
+				if(ret)
+				{
+					/* error occurred, abort! */
+					cerr << "[carve_node]\tError "
+					     << ret << ": Could not get "
+					     << "frame " << it->frame_index
+					     << " from sensor #" << si
+					     << endl << endl;
+					return;
+				}
+				
+				/* update model for current frame */
+				ret = curr_frame.init(inframe, model,
+				                      path);
+				if(ret)
+				{
+					/* error occurred! */
+					cerr << "[carve_node]\tError "
+					     << ret << ": Could not init "
+					     << "frame " << it->frame_index
+					     << " of sensor #" << si
+					     << endl << endl;
+					return;
+				}
+			}
+			
+			/* update index */
+			fi = it->frame_index;
+
+			/* get next frame, which must always be read
+			 * in from scratch */
+			ret = fss_files[si]->get(inframe, fi+1);
+			if(ret)
+			{
+				/* error occurred, which may likely be
+				 * caused by index overflow if
+				 * fi >= num frames.  But if that's
+				 * the case, then we want to still return
+				 * an error, since the chunk files shouldn't
+				 * have that. */
+				cerr << "[carve_node]\tError " << ret
+				     << ": Could not get nframe " << (fi+1)
+				     << " of sensor #" << si << endl
+				     << endl;
+				return;
+			}
+
+			/* update model for next frame */
+			ret = next_frame.init(inframe, model, path);
+			if(ret)
+			{
+				/* error occurred in statistical
+				 * calculations */
+				cerr << "[carve_node]\tError " << ret 
+				     << ": Could not init nframe "
+				     << (fi+1) << " of sensor #" << si
+				     << endl << endl;
+				return;
+			}
+		}
+
+		// TODO planarity/edge info about scan?
+	
+		/* carve the referenced wedge */
+		ret = curr_frame.carve_single(chunknode, maxdepth,
+			next_frame, carvebuf, it->point_index);
+		if(ret)
+		{
+			/* error occurred during carving */
+			cerr << "[carve_node]\tError " << ret << ": "
+			     << "Could not carve wedge #" << it->point_index
+			     << " when current frame is #" << fi
+			     << " and current sensor is #" << si
+			     << endl << endl;
+			return;
+		}
+	}
+
+	/* simplify this chunk now that it is fully carved */
+	chunknode->simplify_recur();
 }

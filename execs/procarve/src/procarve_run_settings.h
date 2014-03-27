@@ -81,6 +81,12 @@ class procarve_run_settings_t
 		 * to store the generated chunks to disk */
 
 		/**
+		 * This value indicates the number of threads to use
+		 * during the carving portion of procarve.
+		 */
+		unsigned int num_threads;
+
+		/**
 		 * The default clock uncertainty to use
 		 *
 		 * The clock uncertainty for a sensor can be computed

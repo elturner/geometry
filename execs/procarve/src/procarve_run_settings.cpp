@@ -3,6 +3,7 @@
 #include <util/cmd_args.h>
 #include <util/tictoc.h>
 #include <util/error_codes.h>
+#include <boost/thread.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -44,6 +45,7 @@ using namespace std;
 #define XML_RESOLUTION_TAG            "procarve_resolution"
 #define XML_CARVEBUF_TAG              "procarve_carvebuf"
 #define XML_CHUNKDIR_TAG              "procarve_chunkdir"
+#define XML_NUM_THREADS_TAG           "procarve_num_threads"
 
 /* function implementations */
 		
@@ -65,6 +67,7 @@ procarve_run_settings_t::procarve_run_settings_t()
 	this->default_clock_uncertainty = 0.001; /* units of seconds */
 	this->resolution = 0.01; /* units: meters */
 	this->carvebuf   = 2; /* two standard deviations */
+	this->num_threads = boost::thread::hardware_concurrency();
 }
 
 int procarve_run_settings_t::parse(int argc, char** argv)
@@ -159,6 +162,8 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_DEFAULT_CLOCK_UNCERTAINTY))
 		this->default_clock_uncertainty = settings.getAsDouble(
 			XML_DEFAULT_CLOCK_UNCERTAINTY);
+	if(settings.is_prop(XML_NUM_THREADS_TAG))
+		this->num_threads = settings.getAsUint(XML_NUM_THREADS_TAG);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
