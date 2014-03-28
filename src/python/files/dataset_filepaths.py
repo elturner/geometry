@@ -21,6 +21,16 @@ SCRIPT_LOCATION = os.path.dirname(__file__)
 sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'config'))
 import config
 
+#---------------- Generic file functions ------------------------
+
+##
+# Returns the body name of the given file
+#
+def get_file_body(f):
+	(head, tail) = os.path.split(f)
+	(body, ext) = os.path.splitext(tail)
+	return body
+
 #---------------- Files within a dataset ------------------------
 
 ##
@@ -81,18 +91,98 @@ def get_all_fss_files(dataset_dir):
 	# return the final list of fss files
 	return fssfiles
 
-#--------------- Files generated from processing --------------------
+#--------------- Files generated from pointcloud code --------------
+
+##
+# Returns the location of the models directory
+#
+def get_models_dir(dataset_dir):
+	return os.path.abspath(os.path.join(dataset_dir,"models"))
+
+##
+# Returns the location of the pointclouds directory
+#
+def get_pointcloud_dir(dataset_dir):
+	return os.path.join(get_models_dir(dataset_dir),"pointclouds")
+
+##
+# Returns the location of the pointcloud levels directory
+#
+def get_pc_levels_dir(dataset_dir):
+	return os.path.join(get_pointcloud_dir(dataset_dir),"levels")
+
+##
+# Returns a list of the pointcloud files in the levels directory
+#
+def get_pc_levels_list(dataset_dir):
+	# get the pointcloud levels directory
+	levdir = get_pc_levels_dir(dataset_dir)
+
+	# iterate through files in this directory
+	pcfiles = []
+	for f in os.listdir(levdir):
+		(body, ext) = os.path.splitext(f)
+		if ext == 'xyz':
+			pcfiles.append(f)
+
+	# return final list of pointcloud files
+	return pcfiles
+
+#--------------- Files generated from floorplan code ---------------
+
+##
+# Returns the location of the floorplan directory
+#
+def get_floorplan_dir(dataset_dir):
+	return os.path.join(get_models_dir(dataset_dir),"floorplan")
+
+##
+# Returns the location of the pseudo-texture directory 
+#
+def get_faketexture_dir(dataset_dir):
+	return os.path.join(get_floorplan_dir(dataset_dir),"texture")
+
+##
+# Returns the wall sampling file that corresponds with the given pointcloud
+#
+# @param dataset_dir   The location of the dataset directory
+# @param pc_file       The location of the pointcloud file
+#
+def get_dq_file(dataset_dir, pc_file):
+	return os.path.join(get_floorplan_dir(dataset_dir), \
+	                    get_file_body(pc_file) + ".dq")
+
+##
+# Returns the fp file that corresponds with the input dq file
+#
+def get_fp_file(dq_file):
+	(body, ext) = os.path.splitext(dq_file)
+	return (body + ".fp")
+
+##
+# Returns the floorplan mesh file, given the fp
+#
+def get_floorplan_obj_file(dataset_dir, fp_file):
+	return os.path.join(get_faketexture_dir(dataset_dir), \
+		get_file_body(fp_file) + ".obj")
+
+#--------------- Files generated from carving --------------------
+
+##
+# Returns the location of the carving directory
+#
+def get_carving_dir(dataset_dir):
+	return os.path.join(get_models_dir(dataset_dir),"carving")
 
 ##
 # Returns the expected location of the chunklist file
 #
 def get_chunklist(dataset_dir):
-	return os.path.abspath(os.path.join(dataset_dir, \
-		"models", "carving", "cache.chunklist"))
+	return os.path.join(get_carving_dir(dataset_dir),"cache.chunklist")
 ##
 # Returns the expected location of the carved octree file
 #
 def get_octree(dataset_dir):
-	return os.path.abspath(os.path.join(dataset_dir, \
-		"models", "carving", "carving.oct"))
+	return os.path.join(get_carving_dir(dataset_dir), "carving.oct")
+
 
