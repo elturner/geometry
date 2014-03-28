@@ -37,9 +37,9 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 		'procarve_settings.xml'))
 
 ##
-# The main function of this script, which is used to run scan_chunker
+# The main function of this script, which is used to run procarve
 #
-# This call will run the scan_chunker program, verifying inputs and
+# This call will run the procarve program, verifying inputs and
 # outputs.
 #
 # @param dataset_dir  The path to the dataset to process
@@ -67,7 +67,7 @@ def run(dataset_dir, path_file):
 		cwd=dataset_dir, stdout=None, stderr=None, \
 		stdin=None, shell=False)
 	if ret != 0:
-		print "chunker program returned error",ret
+		print "procarve program returned error",ret
 		return -1
 	
 	# success

@@ -122,8 +122,8 @@ def get_pc_levels_list(dataset_dir):
 	pcfiles = []
 	for f in os.listdir(levdir):
 		(body, ext) = os.path.splitext(f)
-		if ext == 'xyz':
-			pcfiles.append(f)
+		if ext == '.xyz':
+			pcfiles.append(os.path.join(levdir, f))
 
 	# return final list of pointcloud files
 	return pcfiles

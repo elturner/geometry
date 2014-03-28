@@ -36,6 +36,12 @@ FP2MODEL_EXE   = os.path.abspath(os.path.join(EXE_DIR,  "fp2model"))
 FP2MODEL_TEXTURE_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
                        "..","..","..","execs","fp2model","texture"))
 
+# compatibility for windows
+if sys.platform == 'win32':
+	XYZ2DQ_EXE         += '.exe'
+	FLOORPLAN_EXE      += '.exe'
+	FP2MODEL_EXE       += '.exe'
+
 ##
 # The main function of this script, which is used to run the pipeline
 #
