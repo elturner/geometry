@@ -11,7 +11,7 @@
 #include <math.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 /**
  * @file fisheye_camera.cpp

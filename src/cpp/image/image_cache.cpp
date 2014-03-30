@@ -3,7 +3,7 @@
 #include <list>
 #include <set>
 #include <string>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 using namespace std;
@@ -61,7 +61,7 @@ int image_cache_t::get(const string& path, Mat& m)
 		this->image_list.push_front(image_cache_element_t(path, m));
 
 		/* store reference in lookup map */
-		this->lookup.insert(make_pair<string, listptr_t>(
+		this->lookup.insert(pair<string, listptr_t>(
 		                    path, this->image_list.begin()));
 
 		/* ensure that the cache is not over-capacity */

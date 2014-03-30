@@ -18,7 +18,7 @@
 #include <list>
 #include <map>
 #include <string>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 /* the following classes are defined in this file */
 class image_cache_t;
