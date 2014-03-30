@@ -293,7 +293,7 @@ int random_carver_t::carve_all_chunks(
 			/* could not open given file */
 			cerr << "[random_carver_t::carve_all_chunks]\t"
 			     << "Unable to open fss file: "
-			     << fss_files[i] << endl;
+			     << fss_files[i] << endl << endl;
 			
 			/* clean up and return */
 			chunk_infile.close();
@@ -396,7 +396,10 @@ int random_carver_t::carve_all_chunks(
 			continue;
 		}
 
-		/* make sure thread pool isn't overfull */
+		/* make sure thread pool isn't overfull, just store
+		 * enough to be actively processing on all threads,
+		 * and have enough scheduled in the queue to refill
+		 * those threads. */
 		tp.wait(this->num_threads + this->num_threads);
 	}
 
@@ -459,6 +462,12 @@ int random_carver_t::carve_chunk(
 		inds.insert(pi);
 	}
 
+	/* check if file had duplicate indices */
+	if(inds.size() != n)
+		cerr << "[random_carver_t::carve_chunk]\tInfile had "
+		     << n << " points but only " << inds.size()
+		     << " were unique." << endl << endl;
+
 	/* prepare chunk location within tree */
 	chunkcenter << infile.center_x(),
 	               infile.center_y(),
@@ -470,10 +479,24 @@ int random_carver_t::carve_chunk(
 		return PROPEGATE_ERROR(-3, ret); /* tree not initialized */
 
 	/* process this node based on the input chunk data */
-	tp.schedule(boost::bind(random_carver_t::carve_node, chunknode,
-			inds, boost::cref(fss_files),
+	if(this->num_threads > 1)
+	{
+		/* the input settings say to multithread this
+		 * processing, so schedule the carving of this node
+		 * into the threadpool */
+		tp.schedule(boost::bind(random_carver_t::carve_node,
+			chunknode, inds, boost::cref(fss_files),
 			boost::cref(ts_uncerts), boost::cref(path),
 			chunkdepth, this->carving_buffer));
+	}
+	else
+	{
+		/* since we're not going to use multiple threads, don't
+		 * bother using the threadpool at all, and instead just
+		 * process the chunk using a direct function call */
+		random_carver_t::carve_node(chunknode, inds, fss_files,
+			ts_uncerts, path, chunkdepth, this->carving_buffer);
+	}
 
 	/* clean up */
 	return 0;
@@ -687,6 +710,10 @@ void random_carver_t::carve_node(octnode_t* chunknode,
 		/* check if we need to update sensor */
 		if(it->sensor_index != si)
 		{
+			// TODO only use one sensor
+			if(fss_files[it->sensor_index]->scanner_name().compare("H1214157"))
+				continue;
+
 			/* update index */
 			si = it->sensor_index;
 
@@ -715,7 +742,7 @@ void random_carver_t::carve_node(octnode_t* chunknode,
 			/* check if we are going to the next
 			 * adjacent frame, in which case we can
 			 * swap current with next */
-			if(it->frame_index == fi-1
+			if(fi != UINT_MAX && it->frame_index == fi+1
 					&& next_frame.get_num_points() > 0)
 			{
 				/* swap with next to keep using
@@ -792,7 +819,7 @@ void random_carver_t::carve_node(octnode_t* chunknode,
 		}
 
 		// TODO planarity/edge info about scan?
-	
+
 		/* carve the referenced wedge */
 		ret = curr_frame.carve_single(chunknode, maxdepth,
 			next_frame, carvebuf, it->point_index);

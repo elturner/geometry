@@ -101,6 +101,16 @@ class frame_model_t
 		inline unsigned int get_num_points() const
 		{ return this->num_points; };
 
+		/**
+		 * Retrieves the i'th point's carve map
+		 *
+		 * @param i  The index of the carve map to retrieve
+		 *
+		 * @return   Returns the pointer for the i'th point
+		 */
+		inline carve_map_t* get_scan(unsigned int i) const
+		{ return (this->map_list + i); };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/
@@ -148,6 +158,24 @@ class frame_model_t
 		 */
 		int carve(octree_t& tree, const frame_model_t& next,
 		          double buf) const;
+
+		/**
+		 * Will carve/insert this frame info into the given octnode
+		 *
+		 * Given an octnode and a next frame, will generate
+		 * carve shapes that represent the entirety of the volume
+		 * between this frame and the next frame, and will insert
+		 * those shapes into the octnode structure.
+		 *
+		 * @param node   The node to modify
+		 * @param depth  The maximum carve depth of this node
+		 * @param next   The next frame after this one
+		 * @param buf    The carve buffer paramter, units of stdev
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int carve(octnode_t* node, unsigned int depth,
+		          const frame_model_t& next, double buf) const;
 
 		/**
 		 * Will carve an individual wedge from this frame into tree

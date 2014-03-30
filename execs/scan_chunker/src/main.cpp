@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 	                  settings.timefile,
 	                  settings.chunk_size,
 	                  settings.default_clock_uncertainty,
-	                  settings.carvebuf);
+	                  settings.carvebuf, 1);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ":  "

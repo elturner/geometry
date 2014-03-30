@@ -56,7 +56,7 @@ chunk_exporter_t::~chunk_exporter_t()
 		/* Uh oh!  The user didn't call close! */
 		cerr << "[chunk_exporter_t::~chunk_exporter_t]\t"
 		     << "You forgot to call chunk_exporter_t::close()"
-		     << endl;
+		     << endl << endl;
 
 		/* call close with what info we have */
 		this->close(0,0,0,-1,names);
@@ -214,6 +214,7 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 			cerr << "[chunk_exporter_t::apply_to_leaf]\t"
 			     << "Found duplicate allocated pointers! "
 			     << "That's bad news!" << endl << endl;
+			return d;
 		}
 
 		/* keep the iterator */

@@ -152,6 +152,20 @@ class octree_t
 		int include_in_domain(const Eigen::Vector3d& p);
 
 		/**
+		 * Will increase domain of the octree so box is contained
+		 *
+		 * Given a point and a halfwidth, will expand the
+		 * domain of the octree to include the specified
+		 * axis-aligned cube.
+		 *
+		 * @param p   The center of the box in question
+		 * @param hw  The halfwidth of the box in question
+		 *
+		 * @return  Returns zero on success, non-zero on failure.
+		 */
+		int include_in_domain(const Eigen::Vector3d& p, double hw);
+
+		/**
 		 * Expands the structure of the tree at the given point
 		 *
 		 * Will grow the structure of the tree at the specified

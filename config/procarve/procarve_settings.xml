@@ -14,7 +14,7 @@
 	     
 	     If not specified, the value used will be the number of
 	     detected hardware cores. -->
-	<procarve_num_threads>8</procarve_num_threads>
+	<procarve_num_threads>4</procarve_num_threads>
 
 	<!-- This value indicates how far to carve past each scan point
 	     when performing volumetric analysis.  The volume just past

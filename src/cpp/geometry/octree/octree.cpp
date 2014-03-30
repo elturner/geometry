@@ -207,15 +207,45 @@ int octree_t::include_in_domain(const Eigen::Vector3d& p)
 	return 0;
 }
 		
+int octree_t::include_in_domain(const Eigen::Vector3d& p, double hw)
+{
+	Eigen::Vector3d x;
+	unsigned int i;
+	int ret;
+	int dirs[6][3] = { { 1, 0, 0},
+	                   {-1, 0, 0},
+	                   { 0, 1, 0},
+	                   { 0,-1, 0},
+	                   { 0, 0, 1},
+	                   { 0, 0,-1}};
+		
+	/* include all faces of box in domain */
+	for(i = 0; i < 6; i++)
+	{
+		/* get center of i'th face */
+		x << p(0)+hw*dirs[i][0],
+		     p(1)+hw*dirs[i][1],
+		     p(2)+hw*dirs[i][2];
+
+		/* make sure it is in domain */
+		ret = this->include_in_domain(x);
+		if(ret)
+			return PROPEGATE_ERROR(-(i+1), ret);
+	}
+
+	/* success */
+	return 0;
+}
+		
 octnode_t* octree_t::expand(const Eigen::Vector3d& p, double hw,
                             unsigned int& rd)
 {
 	int ret, d;
 
-	/* first, verify that this point is contained in the tree */
-	ret = this->include_in_domain(p);
+	/* first, verify that this box is contained in the tree */
+	ret = this->include_in_domain(p, hw);
 	if(ret)
-		return NULL; /* tree not initialized */
+		return NULL; /* unable to expand domain: tree not inited */
 
 	/* get the relative depth of the specified halfwidth */
 	d = GET_RELATIVE_DEPTH(this->root->halfwidth, hw);

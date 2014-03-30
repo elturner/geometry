@@ -32,7 +32,7 @@ namespace binary_search
 	 *          value is less than query
 	 */
 	template <typename T> unsigned int binary_search(
-	                                       std::vector<T>& inVect, 
+	                                       const std::vector<T>& inVect,
 	                                       T query)
 	{
 		unsigned int low, high, mid, last;
@@ -88,8 +88,10 @@ namespace binary_search
 	 *
 	 * @return  Returns the closest index in inVect to query 
 	 */
-	inline unsigned int get_closest_index(std::vector<double>& inVect, 
-		double query) {
+	inline unsigned int get_closest_index(
+			const std::vector<double>& inVect, 
+			double query)
+	{
 
 		unsigned int idx = binary_search<double>(inVect, query);
 		

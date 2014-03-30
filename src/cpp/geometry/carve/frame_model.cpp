@@ -195,6 +195,26 @@ int frame_model_t::carve(octree_t& tree, const frame_model_t& next,
 	return 0;
 }
 		
+int frame_model_t::carve(octnode_t* node, unsigned int depth,
+                         const frame_model_t& next, double buf) const
+{
+	unsigned int i, n;
+	int ret;
+
+	/* iterate over every edge in this scan */
+	n = this->num_points - 1;
+	for(i = 0; i < n; i++)
+	{
+		/* carve the i'th wedge */
+		ret = this->carve_single(node, depth, next, buf, i);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* success */
+	return 0;
+}
+		
 int frame_model_t::carve_single(octree_t& tree, const frame_model_t& next,
                                 double buf, unsigned int i) const
 {

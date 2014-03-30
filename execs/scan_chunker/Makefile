@@ -1,10 +1,10 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -std=c++0x
-LFLAGS = -lm
+LFLAGS = -lm -lboost_thread
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
-IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
+IFLAGS = -I$(SOURCEDIR) -I$(SOURCEDIR)include -I$(EIGENDIR)
 BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/scan_chunker
 
