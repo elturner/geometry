@@ -203,6 +203,13 @@ int pointcloud_writer_t::export_urg(const string& name,
 			return PROPEGATE_ERROR(-3, ret);
 		}
 
+		/* get synchronized timestamp */
+		ts = timefit.convert(scan.timestamp);
+
+		/* check if valid timestamp */
+		if(this->path.is_blacklisted(ts))
+			continue; /* don't import these scans */
+
 		/* rectify the points in this scan */
 		ret = pointcloud_writer_t::rectify_urg_scan(scan_points,
 					scan, coses, sines);
@@ -215,9 +222,6 @@ int pointcloud_writer_t::export_urg(const string& name,
 			return PROPEGATE_ERROR(-4, ret);
 		}
 		
-		/* get synchronized timestamp */
-		ts = timefit.convert(scan.timestamp);
-
 		/* get pose of system at this time */
 		ret = this->path.compute_transform_for(laser_pose,ts,name);
 		if(ret)
@@ -305,6 +309,13 @@ int pointcloud_writer_t::export_tof(const string& name,
 			return PROPEGATE_ERROR(-3, ret);
 		}
 
+		/* get synchronized timestamp */
+		ts = timefit.convert(frame.timestamp);
+		
+		/* check if valid timestamp */
+		if(this->path.is_blacklisted(ts))
+			continue; /* don't import these scans */
+
 		/* rectify the points in this scan */
 		ret=pointcloud_writer_t::convert_d_imager_scan(scan_points,
 					                       frame);
@@ -317,9 +328,6 @@ int pointcloud_writer_t::export_tof(const string& name,
 			return PROPEGATE_ERROR(-4, ret);
 		}
 		
-		/* get synchronized timestamp */
-		ts = timefit.convert(frame.timestamp);
-
 		/* get pose of system at this time */
 		ret = this->path.compute_transform_for(tof_pose,ts,name);
 		if(ret)
@@ -395,6 +403,10 @@ int pointcloud_writer_t::export_fss(const std::string& filename)
 			     << filename << endl;
 			return PROPEGATE_ERROR(-2, ret);
 		}
+		
+		/* check if valid timestamp */
+		if(this->path.is_blacklisted(frame.timestamp))
+			continue; /* don't import these scans */
 
 		/* rectify the points in this scan */
 		ret = pointcloud_writer_t::convert_fss_scan(scan_points,

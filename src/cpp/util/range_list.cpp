@@ -31,6 +31,12 @@ range_list_t::~range_list_t()
 	this->list.clear();
 }
 
+void range_list_t::clear()
+{	
+	/* clear list to remove values */
+	this->list.clear();
+}
+
 int range_list_t::parse(std::string& s)
 {
 	stringstream ss;
@@ -89,6 +95,14 @@ void range_list_t::add(const range_t& r)
 	}
 }
 
+void range_list_t::add(double a, double b)
+{
+	range_t range(a, b);
+
+	/* add this range to the list */
+	this->add(range);
+}
+
 bool range_list_t::contains(double v) const
 {
 	range_t r(v,v);
@@ -124,14 +138,14 @@ range_t::range_t(std::string& s)
 	int ret;
 
 	/* parse the string */
-	ret = sscanf_s(s.c_str(), "[%lf,%lf]",
+	ret = sscanf(s.c_str(), "[%lf,%lf]",
 		         &(this->min), &(this->max));
 	if(ret != 2)
 	{
 		/* unable to parse range */
 
 		/* try to parse as singleton value */
-		ret = sscanf_s(s.c_str(), "%lf", &(this->min));
+		ret = sscanf(s.c_str(), "%lf", &(this->min));
 		if(ret != 1)
 		{
 			/* unable to parse, set as invalid interval */

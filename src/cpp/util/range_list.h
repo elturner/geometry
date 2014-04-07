@@ -44,6 +44,11 @@ class range_list_t
 		~range_list_t();
 
 		/**
+		 * Clears all information from this list
+		 */
+		void clear();
+
+		/**
 		 * Parses the string as a range list
 		 *
 		 * The input string should be formatted as a
@@ -69,6 +74,20 @@ class range_list_t
 		 * @param r  The range to add to list
 		 */
 		void add(const range_t& r);
+
+		/**
+		 * Adds range to list
+		 *
+		 * Will add the specified range to this list, rearranging if
+		 * necessary to ensure the elements in the list are 
+		 * disjoint.
+		 *
+		 * Invalid ranges will be ignored
+		 *
+		 * @param a   The minimum value in this range
+		 * @param b   The maximum value in this range
+		 */
+		void add(double a, double b);
 
 		/**
 		 * Checks if value is contained in range list

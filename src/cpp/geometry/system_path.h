@@ -26,6 +26,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <geometry/transform.h>
+#include <util/range_list.h>
 
 /* the following classes are defined in this file */
 class system_path_t;
@@ -53,6 +54,11 @@ class system_path_t
 		/* the following map specifies the transforms from
 		 * sensor coordinate systems to system common coordinates */
 		std::map<std::string, transform_t*> transform_map;
+
+		/* the following represents a blacklist of timestamps
+		 * to ignore. If the path is imported from a .mad file,
+		 * this list will contain the imported Zupt intervals */
+		range_list_t timestamp_blacklist;
 
 	/*** functions ***/
 	public:
@@ -155,6 +161,21 @@ class system_path_t
 		 */
 		int compute_transform_for(transform_t& p, double t,
 		                     const std::string& s) const;
+
+		/**
+		 * Checks if the specified timestamp is blacklisted
+		 *
+		 * Will check the specified timestamp against any imported
+		 * blacklists (such as the zupt list in a .mad file), and
+		 * will return true iff this timestamp falls within the
+		 * blacklist.
+		 *
+		 * @param ts   The timestamp to check
+		 *
+		 * @return     Returns true iff ts is blacklisted.
+		 */
+		inline bool is_blacklisted(double ts) const
+		{ return this->timestamp_blacklist.contains(ts); };
 
 	/* helper functions */
 	protected:

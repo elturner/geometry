@@ -14,6 +14,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
+		$(SOURCEDIR)util/range_list.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
@@ -44,6 +45,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/endian.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/progress_bar.h \
+		$(SOURCEDIR)util/range_list.h \
 		$(SOURCEDIR)util/binary_search.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \

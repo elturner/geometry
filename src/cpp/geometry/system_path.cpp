@@ -15,6 +15,7 @@
 #include <config/cameraProp.h>
 #include <config/tofProp.h>
 #include <geometry/transform.h>
+#include <util/range_list.h>
 #include <util/error_codes.h>
 
 /* using both standard and eigen namespaces */
@@ -46,7 +47,7 @@ int system_path_t::readmad(const std::string& filename)
 {
 	ifstream infile;
 	unsigned int i, num_zupts, num_poses;
-	double t, x, y, z, roll, pitch, yaw;
+	double t, x, y, z, roll, pitch, yaw, zupt_beg, zupt_end;
 	pose_t p;
 
 	/* check arguments */
@@ -64,6 +65,11 @@ int system_path_t::readmad(const std::string& filename)
 		return -3;
 	}
 
+	/* prepare the pose list */
+	this->clear();
+	this->pl = new pose_t[num_poses];
+	this->pl_size = num_poses;
+
 	/* file assumed same endianness as system */
 	
 	/* read zupts header from file */
@@ -71,25 +77,29 @@ int system_path_t::readmad(const std::string& filename)
 	if(infile.fail())
 	{
 		infile.close();
+		this->clear();
 		return -4;
 	}
 
-	/* skip zupt info */
-	infile.seekg(num_zupts * ZUPT_ELEMENT_SIZE * sizeof(double), 
-	             ios_base::cur);
-	
+	/* iterate over the zupt info */
+	for(i = 0; i < num_zupts; i++)
+	{
+		/* parse the beginning and ending times for this zupt */
+		infile.read((char*) &zupt_beg, sizeof(zupt_beg));
+		infile.read((char*) &zupt_end, sizeof(zupt_end));
+		
+		/* add this range to the timestamp blacklist */
+		this->timestamp_blacklist.add(zupt_beg, zupt_end);
+	}
+
 	/* read number of poses */
 	infile.read((char*) (&num_poses), sizeof(num_poses)); 
 	if(infile.fail())
 	{
 		infile.close();
+		this->clear();
 		return -5;
 	}
-
-	/* prepare the pose list */
-	this->clear();
-	this->pl = new pose_t[num_poses];
-	this->pl_size = num_poses;
 
 	/* read all poses */
 	for(i = 0; i < num_poses && !(infile.eof()); i++)
@@ -107,6 +117,7 @@ int system_path_t::readmad(const std::string& filename)
 		if(infile.fail())
 		{
 			infile.close();
+			this->clear();
 			return -6;
 		}
 
@@ -129,6 +140,7 @@ int system_path_t::readmad(const std::string& filename)
 		if(i > 0 && pl[i-1].timestamp > p.timestamp)
 		{
 			infile.close();
+			this->clear();
 			return -7;
 		}
 		
@@ -269,6 +281,9 @@ void system_path_t::clear()
 		delete (it->second);
 	}
 	this->transform_map.clear();
+
+	/* clear any timestamp blacklist information */
+	this->timestamp_blacklist.clear();
 }
 
 /*** accessors ***/
@@ -366,7 +381,7 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 	/* success */
 	return 0;
 }
-
+		
 /*** helper functions ***/
 
 int system_path_t::closest_index(double t) const
