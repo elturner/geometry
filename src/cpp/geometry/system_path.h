@@ -174,8 +174,7 @@ class system_path_t
 		 *
 		 * @return     Returns true iff ts is blacklisted.
 		 */
-		inline bool is_blacklisted(double ts) const
-		{ return this->timestamp_blacklist.contains(ts); };
+		bool is_blacklisted(double ts) const;
 
 	/* helper functions */
 	protected:

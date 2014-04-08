@@ -98,6 +98,20 @@ class range_list_t
 		 * @return  Returns true iff specified value in range list
 		 */
 		bool contains(double v) const;
+		
+		/**
+		 * Checks if the specified range intersects this list
+		 *
+		 * If any ranges in this list intersect the given range,
+		 * then true will be returned.  False will be returned
+		 * iff the given range is disjoint from all other ranges
+		 * in the list.
+		 *
+		 * @param r   The range to test
+		 *
+		 * @return   Returns true iff some intersection occurs
+		 */
+		bool intersects(const range_t& r) const;
 };
 
 /* the following decalres the range_t class, which

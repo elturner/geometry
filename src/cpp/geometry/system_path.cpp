@@ -382,6 +382,22 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 	return 0;
 }
 		
+bool system_path_t::is_blacklisted(double ts) const
+{
+	int a, b;
+
+	/* get closest pose timestamps */
+	b = a = this->closest_index(ts);
+	if(a < 0)
+		return true; /* invalid poses, everything blacklisted */
+	if((unsigned int) (a+1) < this->pl_size)
+		b++; /* not at end of list, so we can go to next value */
+	
+	/* get range that timestamp requires to be valid */
+	range_t r(this->pl[a].timestamp, this->pl[b].timestamp);
+	return this->timestamp_blacklist.intersects(r);
+};
+		
 /*** helper functions ***/
 
 int system_path_t::closest_index(double t) const

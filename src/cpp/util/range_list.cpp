@@ -110,6 +110,14 @@ bool range_list_t::contains(double v) const
 	/* check if r clashes with any value in list */
 	return (this->list.find(r) != this->list.end());
 }
+		
+bool range_list_t::intersects(const range_t& r) const
+{
+	/* if this range intersects any existing ones, then
+	 * it will compare equal to those ranges in the set
+	 * and count will return a positive value */
+	return (this->list.count(r) > 0);
+}
 
 /*** range_t class function definitions ***/
 
