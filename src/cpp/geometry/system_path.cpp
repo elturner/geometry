@@ -65,12 +65,8 @@ int system_path_t::readmad(const std::string& filename)
 		return -3;
 	}
 
-	/* prepare the pose list */
-	this->clear();
-	this->pl = new pose_t[num_poses];
-	this->pl_size = num_poses;
-
 	/* file assumed same endianness as system */
+	this->clear();
 	
 	/* read zupts header from file */
 	infile.read((char*) (&num_zupts), sizeof(num_zupts)); 
@@ -100,7 +96,11 @@ int system_path_t::readmad(const std::string& filename)
 		this->clear();
 		return -5;
 	}
-
+	
+	/* prepare the pose list */
+	this->pl = new pose_t[num_poses];
+	this->pl_size = num_poses;
+	
 	/* read all poses */
 	for(i = 0; i < num_poses && !(infile.eof()); i++)
 	{
@@ -139,6 +139,13 @@ int system_path_t::readmad(const std::string& filename)
 		/* check that poses are given in order */
 		if(i > 0 && pl[i-1].timestamp > p.timestamp)
 		{
+			cerr << "[readmad]\tERROR! Poses out of order!" 
+			     << endl
+			     << "\ti = " << i << endl 
+			     << "\ttime[" << (i-1) << "] = "
+			     << pl[i-1].timestamp << endl
+			     << "\ttime[" << i << "] = " << p.timestamp
+			     << endl << endl;
 			infile.close();
 			this->clear();
 			return -7;

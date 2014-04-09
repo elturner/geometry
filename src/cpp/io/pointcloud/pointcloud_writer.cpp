@@ -198,7 +198,7 @@ int pointcloud_writer_t::export_urg(const string& name,
 		{
 			/* report error */
 			prog_bar.clear();
-			cerr << "Error!  Difficulty parsing urg data file: "
+			cerr << "Error! Difficulty parsing urg data file: "
 			     << datfile << endl;
 			return PROPEGATE_ERROR(-3, ret);
 		}
