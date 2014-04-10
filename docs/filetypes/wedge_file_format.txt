@@ -1,0 +1,73 @@
+
+*****************************************
+* Format Specification for .wedge Files *
+*****************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+March 18, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .wedge files, which are used
+to store lists of scan wedge computations. 
+
+Each wedge is the volume between four scan points from a scanner.  Two
+adjacent scan points in a frame, then the same two indices in the next
+frame make up this volume.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in binary, in little-endian ordering.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of scan point indices.
+
+The header is represented by the following:
+
+-------------------------------------------------------------------
+value     type                 size       description
+-------------------------------------------------------------------
+magic     string               6 bytes    The literal "wedge\0"
+num       size_t               8 bytes    Number of wedges in file
+-------------------------------------------------------------------
+
+Following the header is the list of wedge values.  Each wedge is
+represented with the following:
+
+	6 vertices in 3D space
+	4 carve maps
+
+Each vertex is represented with the following:
+
+-------------------------------------------------------------------
+value     type             size       description
+-------------------------------------------------------------------
+x-coord   double           8 bytes    The x-coordinate of the point
+y-coord   double           8 bytes    The y-coordinate of the point
+z-coord   double           8 bytes    The z-coordinate of the point
+-------------------------------------------------------------------
+
+Each carve map is represented with the following:
+
+(note that matrices are written out in row-major order)
+
+-------------------------------------------------------------------
+value            type             size          description
+-------------------------------------------------------------------
+sensor_mean      3 doubles        3*8 bytes     The x,y,z coords of mean
+sensor_cov       9 doubles        9*8 bytes     The 3x3 covariance mat
+scanpoint_mean   3 doubles        3*8 bytes     The x,y,z coords of mean
+scanpoint_cov    9 doubles        9*8 bytes     The 3x3 covariance mat
+-------------------------------------------------------------------
+	
+
