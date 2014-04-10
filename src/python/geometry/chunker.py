@@ -88,8 +88,8 @@ def run(dataset_dir, path_file):
 
 	# prepare the command-line arguments for the chunker code
 	args = [CHUNKER_EXE, '-c', config_xml, '-o', chunklist, \
-		'-p', path_file, '-s', SETTINGS_XML, '-t', timesync_xml] \
-		+ fssfiles
+		'-p', os.path.abspath(path_file), '-s', SETTINGS_XML, \
+		'-t', timesync_xml] + fssfiles
 
 	# run the chunker code
 	ret = subprocess.call(args, executable=CHUNKER_EXE, \

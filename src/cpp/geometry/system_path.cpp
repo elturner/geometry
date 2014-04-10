@@ -57,7 +57,11 @@ int system_path_t::readmad(const std::string& filename)
 	/* open file for reading -- binary */
 	infile.open(filename.c_str(), ifstream::binary);
 	if(!(infile.is_open()))
+	{
+		cerr << "[system_path_t::readmad]\tUnable to open file: "
+		     << filename << endl;
 		return -2; /* can't open file */
+	}
 	if(infile.eof())
 	{
 		/* empty file */
