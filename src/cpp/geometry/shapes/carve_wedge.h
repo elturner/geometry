@@ -222,6 +222,16 @@ class carve_wedge_t : public shape_t
 		 * @param os   The output stream to write to
 		 */
 		void writeobj(std::ostream& os) const;
+
+		/**
+		 * Will export this wedge to a XYZ file stream
+		 *
+		 * Will write out the vertices of this wedge to
+		 * a pointcloud file.
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void writexyz(std::ostream& os) const;
 };
 
 #endif

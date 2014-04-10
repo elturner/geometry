@@ -401,3 +401,21 @@ void carve_wedge_t::writeobj(std::ostream& os) const
 		   <<  " -" << (NUM_VERTICES_PER_WEDGE - tri_inds[i][2])
 		   << endl;
 }
+		
+void carve_wedge_t::writexyz(std::ostream& os) const
+{
+	Eigen::Vector3d p;
+	unsigned int i;
+
+	/* iterate over the maps */
+	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
+	{
+		/* print the points of this map */
+		this->maps[i]->get_sensor_mean(p);
+		os << p(0) << " " << p(1) << " " << p(2) 
+		   << " 255 0 0" << endl;
+		this->maps[i]->get_scanpoint_mean(p);
+		os << p(0) << " " << p(1) << " " << p(2) 
+		   << " 0 0 255" << endl;
+	}
+}
