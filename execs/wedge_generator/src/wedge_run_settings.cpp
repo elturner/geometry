@@ -69,7 +69,7 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 
 	/* populate args with what we expect on the command-line */
 	tic(clk);
-	args.set_program_description("This program generates chunk files"
+	args.set_program_description("This program generates a wedge file"
 			" from input scans to be used in the procarve "
 			"program.");
 	args.add(MADFILE_FLAG, "The localization output file that contains"
