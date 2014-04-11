@@ -20,6 +20,7 @@ import subprocess
 SCRIPT_LOCATION = os.path.dirname(__file__)
 
 # import local libraries
+import wedge_gen
 import chunker
 import procarve
 
@@ -32,15 +33,20 @@ import procarve
 # @return             Returns zero on success, non-zero on failure
 def run(dataset_dir, path_file):
 
-	# run the chunker program on the input data
+	# run the wedge generation program on input scans
+	ret = wedge_gen.run(dataset_dir, path_file)
+	if ret != 0:
+		return -1; # an error occurred
+
+	# run the chunker program on the resulting wedge file
 	ret = chunker.run(dataset_dir, path_file)
 	if ret != 0:
-		return -1 # an error occurred
+		return -2 # an error occurred
 
 	# run the procarve program on the output chunks
 	ret = procarve.run(dataset_dir, path_file)
 	if ret != 0:
-		return -2 # an error occurred
+		return -3 # an error occurred
 
 	# run the octsurf program to generate mesh
 	OCTSURF_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
@@ -50,7 +56,7 @@ def run(dataset_dir, path_file):
 		stdin=None, shell=False)
 	if ret != 0:
 		print "octsurf program returned error",ret
-		return -3
+		return -4
 
 	# success
 	return 0

@@ -30,50 +30,13 @@ class chunker_run_settings_t
 		 * this program */
 
 		/**
-		 * a .mad file represents the 3D path of the system
+		 * The wedge input file stores the probabilistic models
+		 * for all wedge objects used in this dataset
 		 */
-		std::string madfile;
-
-		/**
-		 * A hardware xml configuration file represents sensor
-		 * extrinsics.
-		 */
-		std::string confile;
-
-		/**
-		 * The time synchronization xml output file.  Used for
-		 * determining timestamping error.
-		 */
-		std::string timefile;
-
-		/**
-		 * The input scan files.
-		 *
-		 * These .fss files contain statistical information as
-		 * well as scan geometry from range sensors.
-		 */
-		std::vector<std::string> fssfiles;
+		std::string wedgefile;
 
 		/* the following parameters specify details about how
 		 * to store the generated chunks to disk */
-
-		/**
-		 * The default clock uncertainty to use
-		 *
-		 * The clock uncertainty for a sensor can be computed
-		 * based on how well a linear fit modeled its timestamp
-		 * synchronization, but if this value is unavailable, then
-		 * the following value is used instead.  It is measured
-		 * in units of seconds, and denotes a standard deviation
-		 * of the error.
-		 */
-		double default_clock_uncertainty;
-
-		/**
-		 * How far past scan points to carve, in units of
-		 * standard deviations.
-		 */
-		double carvebuf;
 
 		/**
 		 * The chunk size, in units of meters 

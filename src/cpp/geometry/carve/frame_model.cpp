@@ -124,8 +124,7 @@ void frame_model_t::swap(frame_model_t& other)
 /*----------*/
 
 int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
-                          double buf, unsigned int si, unsigned int fi,
-                          chunk_exporter_t& chunker) const
+                          double buf, chunk_exporter_t& chunker) const
 {
 	carve_wedge_t wedge;
 	vector<chunk::point_index_t> vals;
@@ -139,22 +138,24 @@ int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
 		/* get indices for this wedge */
 		this->find_wedge_indices(i, next, ta, tb, na, nb);
 
-		/* prepare point index vals
+		/* prepare wedge index vals
 		 *
 		 * If we wanted to store all point indices, we would use:
 		 * 	
 		 * 	vals.resize(4);
-		 * 	vals[0].set(si, fi,   ta);
-		 * 	vals[1].set(si, fi,   tb);
-		 * 	vals[2].set(si, fi+1, na);
-		 * 	vals[3].set(si, fi+1, nb);
+		 * 	vals[0].set(hash(si, fi,   ta));
+		 * 	vals[1].set(hash(si, fi,   tb));
+		 * 	vals[2].set(hash(si, fi+1, na));
+		 * 	vals[3].set(hash(si, fi+1, nb));
+		 *
+		 * For sensor index si, frame index fi, point index i
 		 *
 		 * But since we're interested in regenerating wedges
 		 * from these chunks, we want to store the wedge index,
 		 * not the point index.
 		 */
 		vals.resize(1);
-		vals[0].set(si, fi, i);
+		vals[0].set(i);
 
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */

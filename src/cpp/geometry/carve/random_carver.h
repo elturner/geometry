@@ -8,7 +8,7 @@
  * @section DESCRIPTION
  *
  * This file defines the random_carver_t class, which is used
- * to create probabilistic models of the position of scan points,
+ * to import probabilistic models of the position of scan points,
  * and insert those models into an octree.
  *
  * This class requires the Eigen framework.
@@ -16,9 +16,7 @@
  */
 
 #include <io/carve/chunk_io.h>
-#include <io/data/fss/fss_io.h>
-#include <timestamp/sync_xml.h>
-#include <geometry/system_path.h>
+#include <io/carve/wedge_io.h>
 #include <geometry/octree/octree.h>
 #include <boost/threadpool.hpp>
 #include <string>
@@ -26,7 +24,7 @@
 #include <set>
 
 /**
- * The random_carver_t class builds an octree from range scans.
+ * The random_carver_t class builds an octree using carve wedges.
  *
  * the random_carver_t class will populate an octree
  * in a probabilistic manner.  The parameters for our the probability
@@ -40,9 +38,6 @@ class random_carver_t
 	/* parameters */
 	private:
 
-		/* the path of the system through space. */
-		system_path_t path;
-
 		/* The octree holds the output representation of the
 		 * space carving */
 		octree_t tree;
@@ -51,24 +46,6 @@ class random_carver_t
 		unsigned int num_rooms;
 
 		/* algorithm parameters */
-
-		/* The clock error represents the uncertainty (std. dev.)
-		 * of the system clock when timestamping hardware sensors.
-		 * It is expressed in units of seconds. This error can
-		 * be different for different sensors, and is described
-		 * in the time synchronization output file. */
-		SyncXml timesync;
-
-		/* if unable to compute the timestamp uncertainty for a
-		 * particular sensor, use this value */
-		double default_clock_uncertainty;
-
-		/* the carving buffer, in units of standard deviations,
-		 * dictates how far past each point will be carved. A
-		 * non-zero buffer allows for the exterior-mapped portions
-		 * of the probability distributions to be explicity
-		 * represented in the octree. */
-		double carving_buffer;
 
 		/* the number of threads to use when carving nodes from
 		 * chunks.  By default, this value is the number of hardware
@@ -90,29 +67,19 @@ class random_carver_t
 		 * this function call will prepare this object to perform
 		 * probabilistic carving of the scanned volume.
 		 *
-		 * @param madfile   The path file for this dataset
-		 * @param confile   The xml hardware config file
-		 * @param tsfile    The time synchronization output xml file
 		 * @param res       The carve resolution, in meters
-		 * @param dcu       The default clock uncertainty
-		 * @param carvebuf  The carving buffer, units of std. dev.
 		 * @param nt        The number of threads to use
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int init(const std::string& madfile,
-		         const std::string& confile,
-		         const std::string& tsfile,
-		         double res, double dcu,
-		         double carvebuf, unsigned int nt);
+		void init(double res, unsigned int nt);
 
 		/**
 		 * Finds and exports all chunks to disk
 		 *
-		 * Given a list of scan files to process, will iterate
-		 * through all scans, find which scans intersects which
-		 * chunks of the world volume, and export corresponding
-		 * chunk files to the specified location on disk.
+		 * Given a wedge file with a list of wedges to process,
+		 * will iterate through all carve wedges, find which ones
+		 * intersects which chunks of the world volume, and export
+		 * corresponding chunk files to the specified location on 
+		 * disk.
 		 *
 		 * The size of the chunks is determined by the resolution
 		 * passed to the init() funciton, which should be called
@@ -121,13 +88,13 @@ class random_carver_t
 		 * NOTE: the chunk dir should be relative to the
 		 * directory that contains chunklist.
 		 *
-		 * @param fss_files   A list of scan filenames to use
+		 * @param wedgefile   The wedge file to parse for input
 		 * @param chunklist   File location to export chunklist
 		 * @param chunk_dir   The directory to export chunks
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		int export_chunks(const std::vector<std::string>& fss_files,
+		int export_chunks(const std::string& wedgefile,
 		                  const std::string& chunklist,
 		                  const std::string& chunk_dir);
 
@@ -136,52 +103,16 @@ class random_carver_t
 		 *
 		 * Will parse specified chunk list, and read in all
 		 * chunks from disk.  For each chunk, the referenced
-		 * scans will be carved into the tree, and that chunk
+		 * wedges will be carved into the tree, and that chunk
 		 * will be simplified before the next chunk is imported.
 		 *
-		 * @param fss_files    A list of the scan filenames to use
+		 * @param wedgefile    The reference wedge file for carving
 		 * @param chunklist    File location to import chunks
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		int carve_all_chunks(
-			const std::vector<std::string>& fss_files,
-			const std::string& chunklist);
-
-		/**
-		 * Carves a single chunk into the tree
-		 *
-		 * Will parse the specified chunk file, and carve it into
-		 * the tree.  It is assumed that the fss_files list
-		 * will be the same size and order as the sensors referenced
-		 * in the corresponding chunklist file.
-		 *
-		 * @param fss_files   A list of fss file streams
-		 * @param ts_uncerts  A list of sensor clock uncertainties
-		 * @param chunkfile   The chunkfile to parse
-		 * @param tp          The threadpool to use to carve fast
-		 *
-		 * @return   Returns zero on success, non-zero on failure.
-		 */
-		int carve_chunk(
-			const std::vector<fss::reader_t*>& fss_files,
-			const std::vector<double>& ts_uncerts,
-			const std::string& chunkfile,
-			boost::threadpool::pool& tp);
-
-		/**
-		 * Carves all input scan points into the octree
-		 *
-		 * Given the path to a .fss scan file, will parse this
-		 * file and import all scan points into the octree, using
-		 * each scan to define which portions of the volume are
-		 * interior and which are exterior.
-		 *
-		 * @param fssfile   The input scan file to parse and use
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int carve_direct(const std::string& fssfile);
+		int carve_all_chunks(const std::string& wedgefile,
+		                     const std::string& chunklist);
 
 		/**
 		 * Imports floor plan information into a carved tree
@@ -211,19 +142,24 @@ class random_carver_t
 
 	/* helper functions */
 	private:
-
+		
 		/**
-		 * Gets the timestamp uncertainty for a specific sensor
+		 * Carves a single chunk into the tree
 		 *
-		 * Given the sensor name, will look up the timestamp
-		 * uncertainty for that sensor, and return the desired
-		 * value.
+		 * Will parse the specified chunk file, and carve it into
+		 * the tree.  It is assumed that the fss_files list
+		 * will be the same size and order as the sensors referenced
+		 * in the corresponding chunklist file.
 		 *
-		 * @return   Returns the std. dev. of the clock error for
-		 *           the specified sensor.
+		 * @param wedges      The stream of wedges to use
+		 * @param chunkfile   The chunkfile to parse
+		 * @param tp          The threadpool to use to carve fast
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		double get_clock_uncertainty_for_sensor(
-				const std::string& sensor_name) const;
+		int carve_chunk(wedge::reader_t& wedges,
+		                const std::string& chunkfile,
+		                boost::threadpool::pool& tp);
 
 		/**
 		 * Will carve the given data into the given octnode
@@ -238,18 +174,16 @@ class random_carver_t
 		 *
 		 * @param chunknode   The node to carve into
 		 * @param inds        The scan indices to use
-		 * @param fss_files   The scan files to use as input
-		 * @param ts_uncerts  Each sensor's timestamp uncertainty
-		 * @param path        The system path to use
+		 * @param wedges      The referenced input carve wedges
 		 * @param maxdepth    The relative max depth to carve
-		 * @param carvebuf    The carving buffer parameter
+		 * @param verbose     If true, will print a progress bar
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		static void carve_node(octnode_t* chunknode,
+		static int carve_node(octnode_t* chunknode,
 			std::set<chunk::point_index_t> inds,
-			const std::vector<fss::reader_t*>& fss_files,
-			const std::vector<double>& ts_uncerts,
-			const system_path_t& path,
-			unsigned int maxdepth, double carvebuf);
+			wedge::reader_t& wedges,
+			unsigned int maxdepth, bool verbose);
 };
 
 #endif

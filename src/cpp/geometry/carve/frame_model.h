@@ -128,15 +128,12 @@ class frame_model_t
 		 * @param tree     The tree to use to generate chunks
 		 * @param next     The next frame in the sequence
 		 * @param buf      In units of std. devs., carving buffer
-		 * @param si       The index of the originating scanner
-		 * @param fi       The index of this frame
 		 * @param chunker  The chunk exporter to export chunks
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int export_chunks(octree_t& tree, const frame_model_t& next,
-		                  double buf, unsigned int si,
-		                  unsigned int fi, 
+		                  double buf,
 		                  chunk_exporter_t& chunker) const;
 
 		/**

@@ -25,11 +25,9 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define MADFILE_FLAG   "-p" /* localization output path file (.mad) */
-#define CONFILE_FLAG   "-c" /* hardware config file (.xml) */
-#define TIMEFILE_FLAG  "-t" /* time-sync output file (.xml) */
-#define SETTINGS_FLAG  "-s" /* program-specific settings (.xml) */
-#define CHUNKLIST_FLAG "-o" /* output chunklist file (.chunklist) */
+#define WEDGEFILE_FLAG  "-w" /* input wedge file (.wedge) */
+#define SETTINGS_FLAG   "-s" /* program-specific settings (.xml) */
+#define CHUNKLIST_FLAG  "-o" /* output chunklist file (.chunklist) */
 
 /* file extensions to check for */
 
@@ -38,8 +36,6 @@ using namespace std;
 
 /* xml tags to check for in settings file */
 
-#define XML_DEFAULT_CLOCK_UNCERTAINTY "procarve_default_clock_uncertainty"
-#define XML_CARVEBUF_TAG  "procarve_carvebuf"
 #define XML_CHUNKSIZE_TAG "procarve_chunksize"
 #define XML_CHUNKDIR_TAG  "procarve_chunkdir"
 
@@ -48,17 +44,12 @@ using namespace std;
 chunker_run_settings_t::chunker_run_settings_t()
 {
 	/* set default values for this program */
-	this->madfile  = "";
-	this->confile  = "";
-	this->timefile = "";
-	this->fssfiles.clear();
+	this->wedgefile = "";
 	this->chunklist_outfile = "";
 	
 	/* the following values are read from an input xml settings
 	 * file.  If that file does not have the setting listed, then
 	 * the following default settings will be used. */
-	this->default_clock_uncertainty = 0.001; /* units of seconds */
-	this->carvebuf  = 2; /* two standard deviations */
 	this->chunk_size = 2.0; /* default chunks: cube edge two meters */
 	this->chunkdir  = "chunks"; /* by default, put chunks in a subdir */
 }
@@ -76,15 +67,9 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 	args.set_program_description("This program generates chunk files"
 			" from input scans to be used in the procarve "
 			"program.");
-	args.add(MADFILE_FLAG, "The localization output file that contains"
-			" 3D path information.  Formatted as a .mad file",
-			false, 1);
-	args.add(CONFILE_FLAG, "The backpack hardware configuration file."
-			"  This stores the sensor-specific extrinsics and "
-			"settings.  Should be a .xml file.", false, 1);
-	args.add(TIMEFILE_FLAG, "The timestamp synchronization output file."
-			"  Used by this program for estimating error in "
-			"timestamp values.  Should be a .xml file.",
+	args.add(WEDGEFILE_FLAG, "The wedge input file, containing the"
+			" probabilistic models for carve wedges made from "
+			"the original scan files of this dataset.",
 			false, 1);
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
@@ -95,10 +80,6 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 			"  to disk.  The chunks themselves will be stored "
 			" in a directory relative to this file as specified"
 			" by the input settings file.", false, 1);
-	args.add_required_file_type(FSS_FILE_EXT, 1,
-			"These files are used as input scan files.  They"
-			" also contain statistical information about the "
-			"scanner that generated the data.");
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -115,12 +96,9 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-	this->madfile           = args.get_val(MADFILE_FLAG);
-	this->confile           = args.get_val(CONFILE_FLAG);
-	this->timefile          = args.get_val(TIMEFILE_FLAG);
+	this->wedgefile         = args.get_val(WEDGEFILE_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);
 	this->chunklist_outfile = args.get_val(CHUNKLIST_FLAG);
-	args.files_of_type(FSS_FILE_EXT, this->fssfiles);
 
 	/* attempt to open and parse the settings file */
 	if(!settings.read(settings_file))
@@ -137,15 +115,10 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 	/* read in settings from file.  If they are not in the given
 	 * file, then the default settings that were set in this
 	 * object's constructor will be used. */
-	if(settings.is_prop(XML_CARVEBUF_TAG))
-		this->carvebuf = settings.getAsDouble(XML_CARVEBUF_TAG);
 	if(settings.is_prop(XML_CHUNKSIZE_TAG))
 		this->chunk_size = settings.getAsDouble(XML_CHUNKSIZE_TAG);
 	if(settings.is_prop(XML_CHUNKDIR_TAG))
 		this->chunkdir = settings.get(XML_CHUNKDIR_TAG);
-	if(settings.is_prop(XML_DEFAULT_CLOCK_UNCERTAINTY))
-		this->default_clock_uncertainty = settings.getAsDouble(
-			XML_DEFAULT_CLOCK_UNCERTAINTY);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

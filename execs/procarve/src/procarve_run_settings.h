@@ -30,22 +30,10 @@ class procarve_run_settings_t
 		 * this program */
 
 		/**
-		 * a .mad file represents the 3D path of the system
+		 * The input .wedge file, which contains all scan info
 		 */
-		std::string madfile;
+		std::string wedgefile;
 
-		/**
-		 * A hardware xml configuration file represents sensor
-		 * extrinsics.
-		 */
-		std::string confile;
-
-		/**
-		 * The time synchronization xml output file.  Used for
-		 * determining timestamping error.
-		 */
-		std::string timefile;
-		
 		/**
 		 * The input .chunklist file
 		 */
@@ -57,14 +45,6 @@ class procarve_run_settings_t
 		 */
 		std::string chunkdir;
 		
-		/**
-		 * The input scan files.
-		 *
-		 * These .fss files contain statistical information as
-		 * well as scan geometry from range sensors.
-		 */
-		std::vector<std::string> fssfiles;
-
 		/**
 		 * The input floor plan files.
 		 *
@@ -87,30 +67,12 @@ class procarve_run_settings_t
 		unsigned int num_threads;
 
 		/**
-		 * The default clock uncertainty to use
-		 *
-		 * The clock uncertainty for a sensor can be computed
-		 * based on how well a linear fit modeled its timestamp
-		 * synchronization, but if this value is unavailable, then
-		 * the following value is used instead.  It is measured
-		 * in units of seconds, and denotes a standard deviation
-		 * of the error.
-		 */
-		double default_clock_uncertainty;
-
-		/**
 		 * The limit resolution for volumetric carving.
 		 *
 		 * The generated octree will not have leafs smaller
 		 * than this size.
 		 */
 		double resolution;
-
-		/**
-		 * How far past scan points to carve, in units of
-		 * standard deviations.
-		 */
-		double carvebuf;
 
 	/* functions */
 	public:

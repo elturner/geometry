@@ -48,7 +48,6 @@ namespace chunk
 	static const std::string HEADER_TAG_HALFWIDTH     = "halfwidth";
 	static const std::string HEADER_TAG_NUM_CHUNKS    = "num_chunks";
 	static const std::string HEADER_TAG_CHUNK_DIR     = "chunk_dir";
-	static const std::string HEADER_TAG_SENSOR        = "sensor";
 
 	/* the following are file extensions used by these classes */
 	static const std::string CHUNKFILE_EXTENSION      = ".chunk";
@@ -75,9 +74,6 @@ namespace chunk
 			std::string chunk_dir; /* location of chunk files,
 			                        * includes '/' at end */
 
-			/* sensor information */
-			std::vector<std::string> sensor_names;
-
 		/* functions */
 		public:
 
@@ -102,17 +98,6 @@ namespace chunk
 			void init(double cx, double cy, double cz, 
 			          double hw, const std::string& cd, 
 			          size_t nc);
-
-			/**
-			 * Adds a sensor name to this header.
-			 *
-			 * Names will be stored in the order they are
-			 * added.
-			 *
-			 * @param name   The name to add
-			 */
-			inline void add_sensor(const std::string& name)
-			{ sensor_names.push_back(name); };
 
 			/**
 			 * Parses the header from the given file stream
@@ -239,19 +224,6 @@ namespace chunk
 			{ return this->header.halfwidth; };
 
 			/**
-			 * Retrieves the list of references sensors
-			 *
-			 * Will populate the given vector with the names
-			 * of sensors referenced in this chunklist file.
-			 * The original contents of this vector will 
-			 * be deleted.
-			 *
-			 * @param sensor_names   Where to store sensor names
-			 */
-			void get_sensor_names(std::vector<std::string>&
-			                      sensor_names) const;
-
-			/**
 			 * Returns the number of chunks in the opened file
 			 */
 			size_t num_chunks() const;
@@ -328,19 +300,6 @@ namespace chunk
 			void init(double cx, double cy, double cz, 
 			          double hw, const std::string& cd, 
 			          size_t nc);
-
-			/**
-			 * Adds a sensor to write out to file
-			 *
-			 * This function should be called before the file
-			 * is opened.  It will add a sensor name to be
-			 * written to the file header.  Sensors are indexed
-			 * in the order in which they are added.
-			 *
-			 * @param name   The name of the sensor to add
-			 */
-			inline void add_sensor(const std::string& name)
-			{ this->header.add_sensor(name); };
 
 			/**
 			 * Opens file for writing
@@ -683,34 +642,15 @@ namespace chunk
 		/* parameters */
 		public:
 
-			/* the following values represent the
-			 * global index of a scan point */
-
 			/**
-			 * Denotes which sensor generated this point.
+			 * Denotes the global index of a scan wedge
 			 *
-			 * The sensor indices are determined
-			 * by how the sensor names are ordered in
-			 * the .chunklist file.
+			 * This index references a wedge's position
+			 * in a .wedge file, which should contain
+			 * all carve wedges that are used for geometry
+			 * processing, making this index globally unique
 			 */
-			unsigned int sensor_index;
-			
-			/**
-			 * Denotes which frame this point belongs to
-			 *
-			 * For a given sensor, denotes which scan frame
-			 * of that sensor generated this point.
-			 */
-			unsigned int frame_index;
-
-			/**
-			 * Denotes index within a frame
-			 *
-			 * For a specific frame of a specific sensor,
-			 * this value indices the index of this point
-			 * within that frame.
-			 */
-			unsigned int point_index;
+			size_t wedge_index;
 		
 		/* functions */
 		public:
@@ -725,31 +665,21 @@ namespace chunk
 			point_index_t();
 
 			/**
-			 * Constructs index based on input values
+			 * Constructs index based on input value
 			 *
-			 * @param si   The sensor index
-			 * @param fi   The frame index
-			 * @param pi   The point index
+			 * @param wi   The wedge index
 			 */
-			point_index_t(unsigned int si,
-			              unsigned int fi,
-			              unsigned int pi);
+			point_index_t(size_t wi);
 	
 			/**
-			 * Sets this object to the specified values
+			 * Sets this object to the specified value
 			 *
-			 * @param si   The sensor index
-			 * @param fi   The frame index
-			 * @param pi   The point index
+			 * @param wi   The wedge index
 			 */
-			inline void set(unsigned int si,
-			                unsigned int fi,
-			                unsigned int pi)
+			inline void set(size_t wi)
 			{
-				/* store the values */
-				this->sensor_index = si;
-				this->frame_index = fi;
-				this->point_index = pi;
+				/* store the value */
+				this->wedge_index = wi;
 			};
 
 			/*-----*/
@@ -788,12 +718,8 @@ namespace chunk
 			inline bool operator == (
 					const point_index_t& other) const
 			{
-				return ((this->sensor_index 
-						== other.sensor_index)
-					&& (this->frame_index
-						== other.frame_index)
-					&& (this->point_index
-						== other.point_index));
+				return (this->wedge_index 
+						== other.wedge_index);
 			};
 
 			/**
@@ -803,9 +729,7 @@ namespace chunk
 					const point_index_t& other)
 			{
 				/* set each parameter */
-				this->sensor_index = other.sensor_index;
-				this->frame_index = other.frame_index;
-				this->point_index = other.point_index;
+				this->wedge_index = other.wedge_index;
 
 				/* return the result */
 				return (*this);
@@ -818,16 +742,8 @@ namespace chunk
 					const point_index_t& other) const
 			{
 				/* check each parameter in order */
-				if(this->sensor_index < other.sensor_index)
-					return true;
-				if(this->sensor_index > other.sensor_index)
-					return false;
-				if(this->frame_index < other.frame_index)
-					return true;
-				if(this->frame_index > other.frame_index)
-					return false;
-				return (this->point_index 
-						< other.point_index);
+				return (this->wedge_index 
+						< other.wedge_index);
 			};
 	};
 }

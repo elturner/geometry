@@ -3,7 +3,6 @@
 #include <util/cmd_args.h>
 #include <util/tictoc.h>
 #include <util/error_codes.h>
-#include <boost/thread.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -26,24 +25,19 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define MADFILE_FLAG   "-p" /* localization output path file (.mad) */
-#define CONFILE_FLAG   "-c" /* hardware config file (.xml) */
-#define TIMEFILE_FLAG  "-t" /* time-sync output file (.xml) */
+#define WEDGEFILE_FLAG "-w" /* wedge probabilities file (.wedge) */
 #define SETTINGS_FLAG  "-s" /* program-specific settings (.xml) */
 #define CHUNKLIST_FLAG "-l" /* input chunklist file (.chunklist) */
 #define OCTFILE_FLAG   "-o" /* where to store the output octfile (.oct) */
 
 /* file extensions to check for */
 
-#define FSS_FILE_EXT       "fss"
 #define XML_FILE_EXT       "xml"
 #define FLOORPLAN_FILE_EXT "fp"
 
 /* xml tags to check for in settings file */
 
-#define XML_DEFAULT_CLOCK_UNCERTAINTY "procarve_default_clock_uncertainty"
 #define XML_RESOLUTION_TAG            "procarve_resolution"
-#define XML_CARVEBUF_TAG              "procarve_carvebuf"
 #define XML_CHUNKDIR_TAG              "procarve_chunkdir"
 #define XML_NUM_THREADS_TAG           "procarve_num_threads"
 
@@ -52,22 +46,17 @@ using namespace std;
 procarve_run_settings_t::procarve_run_settings_t()
 {
 	/* set default values for this program's input files */
-	this->madfile   = "";
-	this->confile   = "";
-	this->timefile  = "";
-	this->chunklist = "";
-	this->chunkdir  = "chunks"; /* by default, chunks in subdir */
-	this->fssfiles.clear();
+	this->wedgefile  = "";
+	this->chunklist  = "";
+	this->chunkdir   = "chunks"; /* by default, chunks in subdir */
 	this->fpfiles.clear();
-	this->octfile = "";
+	this->octfile    = "";
 
 	/* the following values are read from an input xml settings
 	 * file.  If that file does not have the setting listed, then
 	 * the following default settings will be used. */
-	this->default_clock_uncertainty = 0.001; /* units of seconds */
 	this->resolution = 0.01; /* units: meters */
-	this->carvebuf   = 2; /* two standard deviations */
-	this->num_threads = boost::thread::hardware_concurrency();
+	this->num_threads = 1; /* by default, don't use threading */
 }
 
 int procarve_run_settings_t::parse(int argc, char** argv)
@@ -83,15 +72,9 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	args.set_program_description("This program generates chunk files"
 			" from input scans to be used in the procarve "
 			"program.");
-	args.add(MADFILE_FLAG, "The localization output file that contains"
-			" 3D path information.  Formatted as a .mad file",
-			false, 1);
-	args.add(CONFILE_FLAG, "The backpack hardware configuration file."
-			"  This stores the sensor-specific extrinsics and "
-			"settings.  Should be a .xml file.", false, 1);
-	args.add(TIMEFILE_FLAG, "The timestamp synchronization output file."
-			"  Used by this program for estimating error in "
-			"timestamp values.  Should be a .xml file.",
+	args.add(WEDGEFILE_FLAG, "The scan wedge input file, which contains"
+			" probabilistic models of how the scans intersect"
+			" the environment volume.",
 			false, 1);
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
@@ -104,10 +87,6 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	args.add(OCTFILE_FLAG, "Where to store the output .oct file, which "
 			"represents the carved and labeled volume from the "
 			"input scans.", false, 1);
-	args.add_required_file_type(FSS_FILE_EXT, 1,
-			"These files are used as input scan files.  They"
-			" also contain statistical information about the "
-			"scanner that generated the data.");
 	args.add_required_file_type(FLOORPLAN_FILE_EXT, 0,
 			"These files represent reconstructed floor plans"
 			" of the environment with room label information."
@@ -129,13 +108,10 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-	this->madfile           = args.get_val(MADFILE_FLAG);
-	this->confile           = args.get_val(CONFILE_FLAG);
-	this->timefile          = args.get_val(TIMEFILE_FLAG);
+	this->wedgefile         = args.get_val(WEDGEFILE_FLAG);
 	this->chunklist         = args.get_val(CHUNKLIST_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);
 	this->octfile           = args.get_val(OCTFILE_FLAG);
-	args.files_of_type(FSS_FILE_EXT, this->fssfiles);
 	args.files_of_type(FLOORPLAN_FILE_EXT, this->fpfiles);
 
 	/* attempt to open and parse the settings file */
@@ -157,11 +133,6 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 		this->chunkdir = settings.get(XML_CHUNKDIR_TAG);
 	if(settings.is_prop(XML_RESOLUTION_TAG))
 		this->resolution = settings.getAsDouble(XML_RESOLUTION_TAG);
-	if(settings.is_prop(XML_CARVEBUF_TAG))
-		this->carvebuf = settings.getAsDouble(XML_CARVEBUF_TAG);
-	if(settings.is_prop(XML_DEFAULT_CLOCK_UNCERTAINTY))
-		this->default_clock_uncertainty = settings.getAsDouble(
-			XML_DEFAULT_CLOCK_UNCERTAINTY);
 	if(settings.is_prop(XML_NUM_THREADS_TAG))
 		this->num_threads = settings.getAsUint(XML_NUM_THREADS_TAG);
 

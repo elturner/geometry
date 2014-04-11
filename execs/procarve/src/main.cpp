@@ -38,25 +38,16 @@ int main(int argc, char** argv)
 	}
 
 	/* initialize */
-	ret = carver.init(settings.madfile, settings.confile,
-			settings.timefile, settings.resolution, 
-			settings.default_clock_uncertainty,
-			settings.carvebuf, settings.num_threads);
-	if(ret)
-	{
-		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to init carver." << endl;
-		return 2;
-	}
+	carver.init(settings.resolution, settings.num_threads);
 
 	/* process */
-	ret = carver.carve_all_chunks(settings.fssfiles,
+	ret = carver.carve_all_chunks(settings.wedgefile,
 	                              settings.chunklist);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to process chunks." << endl;
-		return 3;
+		return 2;
 	}
 
 	/* import some floorplans */
@@ -70,7 +61,7 @@ int main(int argc, char** argv)
 			cerr << "[main]\tError " << ret << ": "
 			     << "Unable to import floorplan "
 			     << settings.fpfiles[i] << endl;
-			return 4;
+			return 3;
 		}
 	}
 
@@ -81,7 +72,7 @@ int main(int argc, char** argv)
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to export tree to " 
 		     << settings.octfile << endl;
-		return 5;
+		return 4;
 	}
 
 	/* success */

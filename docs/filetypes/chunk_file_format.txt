@@ -54,21 +54,12 @@ num       unsigned int         4 bytes    Num. of scanpoint indices in file
 -------------------------------------------------------------------
 
 Following the header is the list of scanpoint indices.  Each scan point
-index is represented by three integers:
-
-	- the index of the sensor that originated the scan point
-	- the index of the scan frame of that sensor that contains the point
-	- the index of the point within that frame.
-
-The mapping of sensor names to sensor indices is stored within the
-corresponding .chunklist file that holds the metadata for all chunk files.
+index is represented by an eight-byte unsigned integer:
 
 -------------------------------------------------------------------
 value     type             size       description
 -------------------------------------------------------------------
-sensor    unsigned int     4 bytes    Index of sensor that originated scan
-frame     unsigned int     4 bytes    Index of frame of this sensor
-point     unsigned int     4 bytes    Index of point within frame
+wedge_idx size_t (x64)     8 bytes    Globally-unique index of wedge
 -------------------------------------------------------------------
 
 All indices are indexed from zero.

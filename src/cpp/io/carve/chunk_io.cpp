@@ -44,7 +44,6 @@ void chunklist_header_t::init(double cx, double cy, double cz,
 	this->halfwidth = hw;
 	this->chunk_dir = cd;
 	this->num_chunks = nc;
-	this->sensor_names.clear();
 }
 			
 int chunklist_header_t::parse(istream& infile)
@@ -108,12 +107,6 @@ int chunklist_header_t::parse(istream& infile)
 						!= FILE_SEPERATOR)
 				this->chunk_dir.push_back(FILE_SEPERATOR);
 		}
-		else if(!tag.compare(HEADER_TAG_SENSOR))
-		{
-			/* store a new sensor */
-			parser >> val;
-			this->sensor_names.push_back(val);
-		}
 		else
 		{
 			/* unknown tag */
@@ -148,13 +141,6 @@ int chunklist_header_t::parse(istream& infile)
 		     << endl;
 		return -6;
 	}
-	if(this->sensor_names.empty())
-	{
-		/* must have some sensors! */
-		cerr << "[chunk::chunklist_header_t::parse]\t"
-		     << "No sensors listed in header" << endl;
-		return -7;
-	}
 
 	/* success */
 	return 0;
@@ -162,8 +148,6 @@ int chunklist_header_t::parse(istream& infile)
 			
 void chunklist_header_t::print(ostream& outfile) const
 {
-	unsigned int i, n;
-
 	/* make sure to preserve precision when printing to ascii */
 	outfile.setf(ios::fixed , ios::floatfield);
 	outfile.precision(24);
@@ -180,12 +164,6 @@ void chunklist_header_t::print(ostream& outfile) const
 	   << this->num_chunks << endl
 	   << HEADER_TAG_CHUNK_DIR << " "
 	   << this->chunk_dir << endl;
-
-	/* print all sensors */
-	n = this->sensor_names.size();
-	for(i = 0; i < n; i++)
-		outfile << HEADER_TAG_SENSOR << " "
-		        << this->sensor_names[i] << endl;
 
 	/* close the header */
 	outfile << END_HEADER_STRING << endl;
@@ -258,16 +236,6 @@ int chunklist_reader_t::open(const std::string& filename)
 	return 0;
 }
 			
-void chunklist_reader_t::get_sensor_names(std::vector<std::string>&
-                                          sensor_names) const
-{
-	/* populate vector */
-	sensor_names.clear();
-	sensor_names.insert(sensor_names.begin(),
-			this->header.sensor_names.begin(),
-			this->header.sensor_names.end());
-}
-
 size_t chunklist_reader_t::num_chunks() const
 {
 	return this->header.num_chunks;
@@ -609,33 +577,23 @@ void chunk_writer_t::close()
 point_index_t::point_index_t()
 {
 	/* set default values */
-	this->sensor_index = 0;
-	this->frame_index  = 0;
-	this->point_index  = 0;
+	this->wedge_index = 0;
 }
 
-point_index_t::point_index_t(unsigned int si,
-                             unsigned int fi,
-                             unsigned int pi)
+point_index_t::point_index_t(size_t wi)
 {
 	/* set given values */
-	this->sensor_index = si;
-	this->frame_index = fi;
-	this->point_index = pi;
+	this->wedge_index = wi;
 }
 			
 void point_index_t::parse(std::istream& is)
 {
 	/* parse the given stream for points */
-	is.read((char*) &(this->sensor_index), sizeof(this->sensor_index));
-	is.read((char*) &(this->frame_index),  sizeof(this->frame_index ));
-	is.read((char*) &(this->point_index),  sizeof(this->point_index ));
+	is.read((char*) &(this->wedge_index), sizeof(this->wedge_index));
 }
 
 void point_index_t::print(std::ostream& os) const
 {
 	/* print the point info */
-	os.write((char*) &(this->sensor_index), sizeof(this->sensor_index));
-	os.write((char*) &(this->frame_index),  sizeof(this->frame_index ));
-	os.write((char*) &(this->point_index),  sizeof(this->point_index ));
+	os.write((char*) &(this->wedge_index), sizeof(this->wedge_index));
 }

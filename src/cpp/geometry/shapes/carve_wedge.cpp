@@ -303,8 +303,13 @@ int carve_wedge_t::parse(std::istream& is)
 	 * do this if the current map objects are null. */
 	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
 		if(this->maps[i] != NULL)
+		{
+			cerr << "[carve_wedge_t::parse]\tError!  "
+			     << "Cannot populate non-null maps in wedge"
+			     << endl << endl;
 			return -(i+1); /* cannot populate this */
-	
+		}
+
 	/* read in the vertices of this wedge */
 	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
 	{
@@ -322,12 +327,22 @@ int carve_wedge_t::parse(std::istream& is)
 		this->maps[i] = new carve_map_t();
 		ret = this->maps[i]->parse(is);
 		if(ret)
+		{
+			cerr << endl << endl
+			     << "[carve_wedge_t::parse]\tError! Unable to "
+			     << "retrieve map #" << i << endl << endl;
 			return PROPEGATE_ERROR(-NUM_MAPS_PER_WEDGE, ret);
+		}
 	}
 
 	/* check validity of stream */
 	if(is.bad())
+	{
+		cerr << endl << endl
+		     << "[carve_wedge_t::parse]\tError! "
+		     << "Bad istream!" << endl << endl;
 		return (-NUM_MAPS_PER_WEDGE-1);
+	}
 
 	/* success */
 	return 0;

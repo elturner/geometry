@@ -41,22 +41,18 @@ center <x> <y> <z>        // <x,y,z> position of volume center (meters)
 halfwidth <hw>            // denotes halfwidth of total volume (meters)
 num_chunks <num>          // denotes number of chunks
 chunk_dir <directory>     // relative path to where chunk files are stored
-sensor <name_of_sensor_0> // defines a sensor (multiple lines can appear)
-sensor <name_of_sensor_1> // defines another sensor (index = 1)
-sensor <name_of_sensor_2> // defines another sensor (index = 2)
 end_header		  // denotes end of header (must come last)
 
 Aside from the magic number and the 'end_header', the lines can appear
-in any order.  An arbitrary number of 'sensor' lines can appear
+in any order.
 
-The following is an example header, which uses only one sensor:
+The following is an example header:
 
 chunklist
 center 0.0 0.0 0.0
 halfwidth 100.0
 chunk_dir chunks/
 num_chunks 12312
-sensor H1234567
 end_header
 
 ***************

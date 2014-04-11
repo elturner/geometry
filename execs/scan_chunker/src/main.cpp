@@ -1,4 +1,5 @@
 #include "chunker_run_settings.h"
+#include <geometry/carve/wedge_generator.h>
 #include <geometry/carve/random_carver.h>
 #include <iostream>
 #include <string>
@@ -35,27 +36,17 @@ int main(int argc, char** argv)
 	}
 
 	/* initialize */
-	ret = carver.init(settings.madfile, settings.confile,
-	                  settings.timefile,
-	                  settings.chunk_size,
-	                  settings.default_clock_uncertainty,
-	                  settings.carvebuf, 1);
-	if(ret)
-	{
-		cerr << "[main]\tError " << ret << ":  "
-		     << "Unable to init carver" << endl;
-		return 2;
-	}
+	carver.init(settings.chunk_size, 1);
 
 	/* process */
-	ret = carver.export_chunks(settings.fssfiles,
+	ret = carver.export_chunks(settings.wedgefile,
 	                           settings.chunklist_outfile,
 	                           settings.chunkdir); 
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ":  "
 		     << "Unable to export chunks" << endl;
-		return 3;
+		return 2;
 	}
 
 	/* success */

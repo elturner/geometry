@@ -43,24 +43,20 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 # outputs.
 #
 # @param dataset_dir  The path to the dataset to process
-# @param path_file    The path to the 3D path file to use
 #
 # @return             Returns zero on success, non-zero on failure
-def run(dataset_dir, path_file):
+def run(dataset_dir):
 	
 	# determine the expected location of necessary files from
 	# within the dataset
-	config_xml = dataset_filepaths.get_hardware_config_xml(dataset_dir)
-	timesync_xml = dataset_filepaths.get_timesync_xml(dataset_dir)
+	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	chunklist = dataset_filepaths.get_chunklist(dataset_dir)
-	fssfiles = dataset_filepaths.get_all_fss_files(dataset_dir)
 	octree = dataset_filepaths.get_octree(dataset_dir)
 	fpfiles = [] # TODO retrieve all floorplans
 
 	# prepare the command-line arguments for the chunker code
-	args = [PROCARVE_EXE, '-c', config_xml, '-l', chunklist, \
-		'-o', octree, '-p', path_file, '-s', SETTINGS_XML, \
-		'-t', timesync_xml] + fssfiles + fpfiles
+	args = [PROCARVE_EXE, '-w', wedgefile, '-l', chunklist, \
+		'-o', octree, '-s', SETTINGS_XML] + fpfiles
 
 	# run the procarve code
 	ret = subprocess.call(args, executable=PROCARVE_EXE, \
@@ -81,17 +77,16 @@ def run(dataset_dir, path_file):
 def main():
 
 	# check command-line arguments
-	if len(sys.argv) != 3:
+	if len(sys.argv) != 2:
 		print ""
 		print " Usage:"
 		print ""
-		print "\t",sys.argv[0],"<path_to_dataset>",\
-			"<localization_file>"
+		print "\t",sys.argv[0],"<path_to_dataset>"
 		print ""
 		sys.exit(1)
 
 	# run this script with the given arguments
-	ret = run(sys.argv[1], sys.argv[2])
+	ret = run(sys.argv[1])
 	sys.exit(ret)
 
 ##

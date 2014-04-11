@@ -135,6 +135,8 @@ int reader_t::get(carve_wedge_t& w, unsigned int i)
 	/* check if the file is open */
 	if(!(this->infile.is_open()))
 	{
+		cerr << "[wedge::reader_t::get]\tOpen the file, dummy"
+		     << endl << endl;
 		this->mtx.unlock();
 		return -1;
 	}
@@ -142,6 +144,8 @@ int reader_t::get(carve_wedge_t& w, unsigned int i)
 	/* check if index is valid */
 	if(i >= this->header.num_wedges)
 	{
+		cerr << "[wedge::reader_t::get]\tIndex out of bounds: "
+		     << i << "/" << this->header.num_wedges << endl << endl;
 		this->mtx.unlock();
 		return -2;
 	}
@@ -154,8 +158,12 @@ int reader_t::get(carve_wedge_t& w, unsigned int i)
 	ret = w.parse(this->infile);
 	if(ret)
 	{
+		ret = PROPEGATE_ERROR(-3, ret);
+		cerr << "[wedge::reader_t::get]\tError " << ret
+		     << ": Could not parse wedge"
+		     << endl << endl;
 		this->mtx.unlock();
-		return PROPEGATE_ERROR(-3, ret);
+		return ret;
 	}
 
 	/* success */

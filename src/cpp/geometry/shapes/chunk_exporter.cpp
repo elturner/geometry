@@ -48,8 +48,6 @@ chunk_exporter_t::chunk_exporter_t()
 
 chunk_exporter_t::~chunk_exporter_t()
 {
-	vector<string> names;
-
 	/* check that everything has been properly closed */
 	if(!(this->chunk_map.empty()))
 	{
@@ -59,7 +57,7 @@ chunk_exporter_t::~chunk_exporter_t()
 		     << endl << endl;
 
 		/* call close with what info we have */
-		this->close(0,0,0,-1,names);
+		this->close(0,0,0,-1);
 	}
 }
 
@@ -103,8 +101,7 @@ void chunk_exporter_t::open(const string& clfile, const string& chunk_dir)
 	}
 }
 		
-int chunk_exporter_t::close(const octree_t& tree,
-                            const vector<string>& sensor_names)
+int chunk_exporter_t::close(const octree_t& tree)
 {
 	octnode_t* root;
 	int ret;
@@ -115,14 +112,14 @@ int chunk_exporter_t::close(const octree_t& tree,
 	/* call other version of this function */
 	if(root == NULL)
 	{
-		ret = this->close(0,0,0,0,sensor_names);
+		ret = this->close(0,0,0,0);
 		if(ret)
 			return PROPEGATE_ERROR(-1, ret);
 	}
 	else
 	{
 		ret = this->close(root->center(0), root->center(1),
-		            root->center(2), root->halfwidth, sensor_names);
+		            root->center(2), root->halfwidth);
 		if(ret)
 			return PROPEGATE_ERROR(-2, ret);
 	}
@@ -131,12 +128,10 @@ int chunk_exporter_t::close(const octree_t& tree,
 	return 0;
 }
 	
-int chunk_exporter_t::close(double cx, double cy, double cz, double hw,
-                            const vector<string>& sensor_names)
+int chunk_exporter_t::close(double cx, double cy, double cz, double hw)
 {
 	chunklist_writer_t outfile;
 	map<octdata_t*, chunk_writer_t*>::iterator mit;
-	vector<string>::const_iterator vit;
 	int ret;
 
 	/* close all open chunk files */
@@ -147,10 +142,6 @@ int chunk_exporter_t::close(double cx, double cy, double cz, double hw,
 	/* prepare the chunklist file for writing */
 	outfile.init(cx, cy, cz, hw, this->rel_chunk_dir,
 	             this->chunk_map.size());
-
-	/* add all sensors */
-	for(vit = sensor_names.begin(); vit != sensor_names.end(); vit++)
-		outfile.add_sensor(*vit);
 
 	/* open the file for writing */
 	ret = outfile.open(this->chunklist_filename);

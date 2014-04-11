@@ -43,29 +43,21 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 # outputs.
 #
 # @param dataset_dir  The path to the dataset to process
-# @param path_file    The path to the 3D path file to use
 #
 # @return             Returns zero on success, non-zero on failure
-def run(dataset_dir, path_file):
+def run(dataset_dir):
 	
 	# determine the expected location of necessary files from
 	# within the dataset
-	config_xml = dataset_filepaths.get_hardware_config_xml(dataset_dir)
-	timesync_xml = dataset_filepaths.get_timesync_xml(dataset_dir)
+	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	chunklist = dataset_filepaths.get_chunklist(dataset_dir)
-	fssfiles = dataset_filepaths.get_all_fss_files(dataset_dir)
-
-	# verify input is good
-	if fssfiles is None:
-		print "Error! Unable to determine fss files to use"
-		return -1
 
 	# parse the settings file to get the location of the output
 	# directory that will house the chunk files
 	settings = config.parse_settings_xml(SETTINGS_XML)
 	if settings is None:
 		print "Error!  Invalid settings file:",SETTINGS_XML
-		return -2
+		return -1
 	
 	# retrieve output directory for chunks
 	rel_chunkdir = settings["procarve_chunkdir"]
@@ -77,7 +69,7 @@ def run(dataset_dir, path_file):
 		os.makedirs(chunkdir)
 	elif not os.path.isdir(chunkdir):
 		print "Error! Output directory is not a directory:",chunkdir
-		return -3
+		return -2
 
 	# check that output directory is empty of any .chunk files
 	for f in os.listdir(chunkdir):	
@@ -87,9 +79,8 @@ def run(dataset_dir, path_file):
 			os.remove(os.path.join(chunkdir, f))
 
 	# prepare the command-line arguments for the chunker code
-	args = [CHUNKER_EXE, '-c', config_xml, '-o', chunklist, \
-		'-p', os.path.abspath(path_file), '-s', SETTINGS_XML, \
-		'-t', timesync_xml] + fssfiles
+	args = [CHUNKER_EXE, '-w', wedgefile, '-o', chunklist, \
+		'-s', SETTINGS_XML]
 
 	# run the chunker code
 	ret = subprocess.call(args, executable=CHUNKER_EXE, \
@@ -97,7 +88,7 @@ def run(dataset_dir, path_file):
 		stdin=None, shell=False)
 	if ret != 0:
 		print "chunker program returned error",ret
-		return -4
+		return -3
 	
 	# success
 	return 0
@@ -110,17 +101,16 @@ def run(dataset_dir, path_file):
 def main():
 
 	# check command-line arguments
-	if len(sys.argv) != 3:
+	if len(sys.argv) != 2:
 		print ""
 		print " Usage:"
 		print ""
-		print "\t",sys.argv[0],"<path_to_dataset>",\
-			"<localization_file>"
+		print "\t",sys.argv[0],"<path_to_dataset>"
 		print ""
 		sys.exit(1)
 
 	# run this script with the given arguments
-	ret = run(sys.argv[1], sys.argv[2])
+	ret = run(sys.argv[1])
 	sys.exit(ret)
 
 ##

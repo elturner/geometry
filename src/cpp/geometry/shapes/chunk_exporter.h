@@ -167,17 +167,13 @@ class chunk_exporter_t : public shape_t
 		 * to use this object again.
 		 *
 		 * Note that the tree provided as an argument must be
-		 * the same tree that was used for all inserts.  The
-		 * list of sensors must correspond with the sensors
-		 * used when calling the set() function.
+		 * the same tree that was used for all inserts.
 		 *
 		 * @param tree          The tree that has been chunked
-		 * @param sensor_names  The sensors that were used
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int close(const octree_t& tree,
-		          const std::vector<std::string>& sensor_names); 
+		int close(const octree_t& tree);
 
 		/**
 		 * Overloaded close() function.
@@ -186,12 +182,10 @@ class chunk_exporter_t : public shape_t
 		 * @param cy             The y-coordinate of tree center
 		 * @param cz             The z-coordinate of tree center
 		 * @param hw             The halfwidth of tree
-		 * @param sensor_names   The sensors that were used
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int close(double cx, double cy, double cz, double hw,
-		          const std::vector<std::string>& sensor_names);
+		int close(double cx, double cy, double cz, double hw);
 
 		/*----------------------------*/
 		/* overloaded shape functions */
