@@ -1,5 +1,6 @@
 #include "frame_model.h"
 #include <io/carve/chunk_io.h>
+#include <io/carve/wedge_io.h>
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
@@ -70,7 +71,7 @@ int frame_model_t::init(const fss::frame_t& frame,
 		/* allocate a map list */
 		this->num_points = frame.points.size();
 		this->map_list = new carve_map_t[this->num_points];
-		this->is_valid.resize(this->num_points, true);
+		this->is_valid.resize(this->num_points);
 	}
 
 	/* iterate over points in frame */
@@ -82,12 +83,11 @@ int frame_model_t::init(const fss::frame_t& frame,
 			  frame.points[i].z,
 			  frame.points[i].stddev,
 			  frame.points[i].width);
-		if(!point.has_finite_noise())
-		{
-			/* this point is not valid */
-			this->is_valid[i] = false;
+		
+		/* check if this point is valid or not */
+		this->is_valid[i] = point.has_finite_noise();
+		if(!(this->is_valid[i]))
 			continue;
-		}
 
 		/* model the combined statistics of this point */
 		model.set_point(point);
@@ -263,6 +263,35 @@ int frame_model_t::carve_single(octnode_t* node, unsigned int depth,
 
 	/* success */
 	return 0;
+}
+
+/*-----*/
+/* i/o */
+/*-----*/
+
+int frame_model_t::serialize_wedges(wedge::writer_t& os,
+				const frame_model_t& next, double buf) const
+{
+	carve_wedge_t wedge;
+	unsigned int i, n, ta, tb, na, nb;
+
+	/* iterate over the wedges between these frames */
+	n = this->num_points - 1; /* number of edges in scan frame */
+	for(i = 0; i < n; i++)
+	{
+		/* get the indices for this wedge */
+		this->find_wedge_indices(i, next, ta, tb, na, nb);
+
+		/* initialize the current wedge */
+		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
+	        	   &(next.map_list[na]), &(next.map_list[nb]), buf);
+	
+		/* export this wedge to file */
+		os.write(wedge);
+	}
+
+	/* return the number of wedges exported */
+	return n;
 }
 
 /*-----------*/

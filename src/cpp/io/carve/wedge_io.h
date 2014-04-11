@@ -247,6 +247,12 @@ namespace wedge
 			void write(const carve_wedge_t& w);
 
 			/**
+			 * Returns the number of wedges written so far
+			 */
+			inline size_t num_wedges_written() const
+			{ return this->header.num_wedges; };
+
+			/**
 			 * Closes this file, if it is open
 			 */
 			void close();

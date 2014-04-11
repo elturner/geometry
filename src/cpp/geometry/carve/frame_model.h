@@ -12,6 +12,7 @@
  */
 
 #include <io/data/fss/fss_io.h>
+#include <io/carve/wedge_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <geometry/carve/gaussian/scan_model.h>
@@ -213,6 +214,27 @@ class frame_model_t
 		int carve_single(octnode_t* node, unsigned int depth,
 		                 const frame_model_t& next, double buf,
 		                 unsigned int i) const;
+
+		/*-----*/
+		/* i/o */
+		/*-----*/
+
+		/**
+		 * Will export all wedges from this frame and next frame
+		 *
+		 * Given a populated next_frame structure, will compute
+		 * all wedges between the two frames, and write out
+		 * each one's serialization to the given file stream.
+		 *
+		 * @param os    The binary output stream to write to
+		 * @param next  The next frame from this frame
+		 * @param buf   In units of std. devs., carving buffer
+		 *
+		 * @return      Returns the number of wedges exported,
+		 *              returns negative value on error.
+		 */
+		int serialize_wedges(wedge::writer_t& os,
+			const frame_model_t& next, double buf) const;
 
 		/*-----------*/
 		/* debugging */

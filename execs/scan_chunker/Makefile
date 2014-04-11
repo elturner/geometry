@@ -14,6 +14,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
 		$(SOURCEDIR)util/randLib.cpp \
+		$(SOURCEDIR)util/range_list.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
@@ -29,6 +30,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)io/carve/chunk_io.cpp \
+		$(SOURCEDIR)io/carve/wedge_io.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
@@ -40,6 +42,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/shapes/carve_wedge.cpp \
 		$(SOURCEDIR)geometry/shapes/extruded_poly.cpp \
 		$(SOURCEDIR)geometry/shapes/chunk_exporter.cpp \
+		$(SOURCEDIR)geometry/carve/wedge_generator.cpp \
 		$(SOURCEDIR)geometry/carve/random_carver.cpp \
 		$(SOURCEDIR)geometry/carve/frame_model.cpp \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.cpp \
@@ -57,6 +60,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/endian.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/randLib.h \
+		$(SOURCEDIR)util/range_list.h \
 		$(SOURCEDIR)util/progress_bar.h \
 		$(SOURCEDIR)util/binary_search.h \
 		$(SOURCEDIR)config/backpackConfig.h \
@@ -72,6 +76,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)io/carve/chunk_io.h \
+		$(SOURCEDIR)io/carve/wedge_io.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
@@ -83,6 +88,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/shapes/carve_wedge.h \
 		$(SOURCEDIR)geometry/shapes/extruded_poly.h \
 		$(SOURCEDIR)geometry/shapes/chunk_exporter.h \
+		$(SOURCEDIR)geometry/carve/wedge_generator.h \
 		$(SOURCEDIR)geometry/carve/random_carver.h \
 		$(SOURCEDIR)geometry/carve/frame_model.h \
 		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.h \

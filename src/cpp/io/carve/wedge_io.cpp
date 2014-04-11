@@ -126,6 +126,7 @@ int reader_t::open(const string& filename)
 int reader_t::get(carve_wedge_t& w, unsigned int i)
 {
 	int ret;
+	streampos p;
 
 	/* prepare to access the stream, which requires locking
 	 * the mutex */
@@ -146,7 +147,8 @@ int reader_t::get(carve_wedge_t& w, unsigned int i)
 	}
 
 	/* move file stream to appropriate position */
-	this->infile.seekg(wedge::HEADER_SIZE + i*wedge::WEDGE_SIZE);
+	p = wedge::HEADER_SIZE + (((size_t) i) * wedge::WEDGE_SIZE);
+	this->infile.seekg(p);
 
 	/* parse the wedge from the stream */
 	ret = w.parse(this->infile);
