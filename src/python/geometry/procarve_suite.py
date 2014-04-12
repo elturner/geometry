@@ -39,12 +39,12 @@ def run(dataset_dir, path_file):
 		return -1; # an error occurred
 
 	# run the chunker program on the resulting wedge file
-	ret = chunker.run(dataset_dir, path_file)
+	ret = chunker.run(dataset_dir)
 	if ret != 0:
 		return -2 # an error occurred
 
 	# run the procarve program on the output chunks
-	ret = procarve.run(dataset_dir, path_file)
+	ret = procarve.run(dataset_dir)
 	if ret != 0:
 		return -3 # an error occurred
 

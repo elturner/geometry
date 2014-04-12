@@ -170,6 +170,13 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 
 	/* fractional position of x between sensor and scanpoint. */
 	f = -ms_dist / (mp_dist - ms_dist); /* 0 = sensor, 1 = scanpoint */
+	
+	/* restrict f to be between 0 and 1 */
+	if(f > 1)	f = 1;
+	else if(f < 0)	f = 0;
+
+	/* for weighted averaging purposes, it is also good to have
+	 * the weight on the sensor-side, which is (1-f) */
 	omf = (1-f); /* 0 = scanpoint, 1 = sensor */
 
 	/* compute blended distribution that occurs at this midpoint
@@ -204,6 +211,26 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 	p_total =   ( p_fl *     p_inrange) * PROBABILITY_INTERIOR
 	          + ( p_fl * (1-p_inrange)) * PROBABILITY_TOOFAR
 		  + ( 1 - p_fl )            * PROBABILITY_A_PRIORI;
+
+	/* error check this output value */
+	if(!isfinite(p_total))
+	{
+		/* export data for debugging purposes */
+		cerr << "[carve_map_t::compute]\tWARNING: found non-finite"
+		     << " output." << endl
+		     << "\tp_total = " << p_total << endl
+		     << "\tp_fl = " << p_fl << endl
+		     << "\tp_inrange = " << p_inrange << endl
+		     << "\tp_lat = " << p_lat << endl
+		     << "\tp_forward = " << p_forward << endl
+		     << "\tvarlat = " << varlat << endl
+		     << "\tlatdist = " << latdist << endl
+		     << "\tlat = " << lat.transpose() << endl
+		     << "\tf = " << f << endl
+		     << "\tmp_dist = " << mp_dist << endl
+		     << "\tms_dist = " << ms_dist << endl
+		     << endl;
+	}
 
 	/* return the final probability */
 	return p_total;

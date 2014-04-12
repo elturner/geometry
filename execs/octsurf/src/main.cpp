@@ -27,7 +27,7 @@ int main()
 	int ret;
 	
 	/* set input files */
-	string dataset = "/home/elturner/Desktop/data/20131204-16/";
+	string dataset = "/home/elturner/Documents/research/indoor_modeling/backpack/data/20131204-16/";
 	string octfile = dataset + "models/carving/carving.oct";
 	string objfile = "/home/elturner/Desktop/test.obj";
 
