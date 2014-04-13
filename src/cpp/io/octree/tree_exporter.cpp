@@ -39,7 +39,7 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 	unsigned int i, red, green, blue;
 	double p;
 
-	/* check if this node is a leaf (i.e. it has data)*/
+	/* check if this node is a leaf (i.e. it has data) */
 	if(node->data != NULL)
 	{
 		/* get characteristic to visualize */
@@ -50,9 +50,19 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 			p = 0;
 		
 		/* assign colors */
-		red = (unsigned int) (255 * (1-p));
-		green = (unsigned int) (255 * (1 - (2*fabs(p-0.5))));
-		blue = (unsigned int) (255 * p);
+		green = (unsigned int) (100 * (1 - (2*fabs(p-0.5))));
+		if(p > 0.5)
+		{
+			/* color as interior */
+			red = 0;
+			blue = (unsigned int) (255 * p);
+		}
+		else
+		{
+			/* color as exterior */
+			red = (unsigned int) (255 * (1-p));
+			blue = 0;
+		}
 
 		/* export this leaf */
 		os << "v " << node->center(0)
