@@ -51,8 +51,8 @@ def run(dataset_dir):
 	# within the dataset
 	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	chunklist = dataset_filepaths.get_chunklist(dataset_dir)
-	octree = dataset_filepaths.get_octree(dataset_dir)
-	fpfiles = [] # TODO retrieve all floorplans
+	octree    = dataset_filepaths.get_octree(dataset_dir)
+	fpfiles   = dataset_filepaths.get_all_floorplan_files(dataset_dir)
 
 	# prepare the command-line arguments for the chunker code
 	args = [PROCARVE_EXE, '-w', wedgefile, '-l', chunklist, \

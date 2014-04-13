@@ -13,7 +13,7 @@
 	     carving when importing chunk data.
 	    
 	     If not specified, the value used will be 1. -->
-	<procarve_num_threads>1</procarve_num_threads>
+	<procarve_num_threads>4</procarve_num_threads>
 
 	<!-- This value indicates how far to carve past each scan point
 	     when performing volumetric analysis.  The volume just past

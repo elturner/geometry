@@ -166,6 +166,18 @@ def get_floorplan_obj_file(dataset_dir, fp_file):
 	return os.path.join(get_faketexture_dir(dataset_dir), \
 		get_file_body(fp_file) + ".obj")
 
+##
+# Returns all floorplan files in the floorplans directory
+#
+def get_all_floorplan_files(dataset_dir):
+	
+	# get the floorplan directory
+	fpdir = get_floorplan_dir(dataset_dir)
+	
+	# get all fp files in this directory
+	fpfiles = [f for f in os.listdir(fpdir) if f.endswith(".fp")]
+	return fpfiles
+
 #--------------- Files generated from carving --------------------
 
 ##
