@@ -56,7 +56,9 @@ class pointcloud_writer_t
 	/* parameters */
 	private:
 
+		/*---------------------------------*/
 		/* data acquistion characteristics */
+		/*---------------------------------*/
 		
 		/**
 		 * The path of the system over time
@@ -74,7 +76,24 @@ class pointcloud_writer_t
 		 */
 		SyncXml time_sync;
 
+		/*-----------------------*/
+		/* processing parameters */
+		/*-----------------------*/
+
+		/**
+		 * Range limit.  If non-negative, will throw away far points
+		 *
+		 * An optional range limit.  If this value is non-negative,
+		 * then will throw away any points that are farther away
+		 * from their source scanner than this distance.
+		 *
+		 * Measured in meters.
+		 */
+		double max_range_limit;
+
+		/*------------------------*/
 		/* file export parameters */
+		/*------------------------*/
 	
 		/**
 		 * The output file stream.
@@ -134,6 +153,8 @@ class pointcloud_writer_t
 		 * @param conffile  The input hardware xml config file
 		 * @param u         The units to use for output
 		 * @param c         The coloring method to use
+		 * @param maxrange  Optional range limit.  Negative value
+		 *                  uses all points.
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
@@ -142,7 +163,8 @@ class pointcloud_writer_t
 		         const std::string& timefile,
 		         const std::string& conffile,
 			 double u,
-		         COLOR_METHOD c);
+		         COLOR_METHOD c,
+			 double maxrange);
 
 		/**
 		 * Adds a camera to this object for use of coloring
@@ -370,13 +392,16 @@ class pointcloud_writer_t
 		 * @param scan   The input scan frame
 		 * @param coses  The list of cosines for polar->rect calc
 		 * @param sines   The list of sins for polar->rect calc
+		 * @param rangelimit   If non-negative, will throw away
+		 *                     points farther than this limit
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		static int rectify_urg_scan(Eigen::MatrixXd& mat,
 		                          const urg_frame_t& scan,
 		                          const std::vector<double>& coses,
-                                          const std::vector<double>& sines);
+                                          const std::vector<double>& sines,
+					  double rangelimit);
 
 		/**
 		 * Converts a d-imager scan to Eigen matrix structure

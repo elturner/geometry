@@ -30,6 +30,7 @@ using namespace std;
 #define FISHEYE_CAMERA_FLAG       "-f"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
+#define RANGE_LIMIT_FLAG          "-r"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 #define COLOR_BY_NOISE_FLAG       "--color_by_noise"
 
@@ -131,6 +132,12 @@ void init_args(cmd_args_t& args)
 	               "Specifies the file location of where to export the "
                        "generated pointcloud file.  Valid file formats are "
                        "any of:  *.txt, *.xyz, *.obj, *.pts", false, 1);
+	args.add(RANGE_LIMIT_FLAG, /* optional range limit (in meters) */
+	               "Specifies a range limit in meters. If this value is"
+	               " non-negative, then any points that are farther "
+	               "away from their source scanner than this value will"
+	               " be discarded.  A negative value will keep all "
+	               "points.  By default, all points are kept.",true,1);
 	args.add(COLOR_BY_HEIGHT_FLAG, /* colors pointcloud by height */
 	               "If seen, will explicitly color the output points "
 	               "based on their height, allowing for the geometry "
@@ -163,7 +170,7 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	string pathfile, conffile, timefile, outfile;
 	vector<string> fisheye_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
-	double units;
+	double units, maxrange;
 	int ret, i, n;
 	tictoc_t clk;
 
@@ -184,6 +191,12 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	else
 		units = 1.0; /* default units of meters */
 
+	/* range limit */
+	if(args.tag_seen(RANGE_LIMIT_FLAG))
+		maxrange = args.get_val_as<double>(RANGE_LIMIT_FLAG);
+	else
+		maxrange = -1.0;
+
 	/* get coloring method */
 	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
 		/* use height of points to color */
@@ -201,7 +214,8 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 		c = pointcloud_writer_t::NO_COLOR;
 
 	/* attempt to open file */
-	ret = writer.open(outfile, pathfile, timefile, conffile, units, c);
+	ret = writer.open(outfile, pathfile, timefile, conffile,
+			units, c, maxrange);
 	if(ret)
 	{
 		/* unable to initialize writer */
