@@ -740,7 +740,7 @@ int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,
 		for(i = 0; i < n; i++)
 		{
 			/* check if we want to keep this point */
-			if(scan.range_values[i] > rangelimit)
+			if(MM2METERS(scan.range_values[i]) > rangelimit)
 				continue; /* bad point */
 
 			/* if got here, it's a good point */	
@@ -756,7 +756,7 @@ int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,
 	for(i = 0; i < n; i++)
 	{
 		/* check if we should skip this point */
-		if(scan.range_values[i] > rangelimit)
+		if(MM2METERS(scan.range_values[i]) > rangelimit)
 			continue;
 
 		/* convert this point */
