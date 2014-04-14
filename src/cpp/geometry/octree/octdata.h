@@ -163,7 +163,12 @@ class octdata_t
 		 * @return   Returns the probability stored in this object
 		 */
 		inline double get_probability() const
-		{ return (this->prob_sum / this->count); };
+		{
+			/* check that we have any observations */
+			if(this->count > 0)
+				return (this->prob_sum / this->count);
+			return 0.0; /* if unobserved, assume exterior */
+		};
 
 		/**
 		 * Returns best estimate of whether this node is interior
@@ -188,6 +193,12 @@ class octdata_t
 		 */
 		inline double get_uncertainty() const
 		{
+			/* check if we have observed any samples */
+			if(this->count == 0)
+				return 1.0; /* maximum uncertainty for
+				             * values that are restricted
+				             * to a range of [0,1] */
+
 			/* get mean estimate */
 			double p = this->get_probability();
 

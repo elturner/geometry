@@ -119,7 +119,7 @@ Vector3d extruded_poly_t::get_vertex(unsigned int i) const
 	v = this->verts.block(0, (i%this->verts.cols()), 3, 1);
 
 	/* modify it if it's on the ceiling */
-	if(isceil)  v(3,1) = this->ceiling_height;
+	if(isceil)  v(2) = this->ceiling_height;
 
 	/* return this vertex position */
 	return v;
@@ -199,9 +199,12 @@ octdata_t* extruded_poly_t::apply_to_leaf(const Vector3d& c,
 	c(0);
 	hw = hw;
 
-	/* check if leaf is non-null */
-	if(d != NULL)
-		d->set_fp_room(this->room_index); /* set room label */
+	/* check if leaf is null */
+	if(d == NULL)
+		d = new octdata_t();
+
+	/* set the room label */
+	d->set_fp_room(this->room_index); /* set room label */
 	return d;
 }
 		

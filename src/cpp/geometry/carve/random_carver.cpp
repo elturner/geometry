@@ -262,6 +262,7 @@ int random_carver_t::import_fp(const std::string& fpfile)
 {
 	fp::floorplan_t f;
 	extruded_poly_t poly;
+	progress_bar_t progbar;
 	tictoc_t clk;
 	unsigned int i, n;
 	int ret;
@@ -275,17 +276,32 @@ int random_carver_t::import_fp(const std::string& fpfile)
 	/* iterate over the rooms of this floorplan, and generate
 	 * a shape object for each room */
 	n = f.rooms.size();
+	progbar.set_name("Importing floor plan");
 	for(i = 0; i < n; i++)
 	{
+		/* show progress to user */
+		progbar.update(i, n);
+
 		/* create shape */
 		poly.init(f, this->num_rooms + i, i);
 	
 		/* import into tree */
-		this->tree.find(poly);
+		ret = this->tree.insert(poly);
+		if(ret)
+		{
+			/* an error occurred during insert */
+			progbar.clear();
+			return PROPEGATE_ERROR(-2, ret);
+		}
+
+		/* simplify tree, since inserting this room may
+		 * have carved additional nodes */
+		this->tree.get_root()->simplify_recur();
 	}
 
 	/* update number of rooms in building */
 	this->num_rooms += n;
+	progbar.clear();
 	toc(clk, "Importing floor plan");
 
 	/* success */

@@ -175,7 +175,9 @@ def get_all_floorplan_files(dataset_dir):
 	fpdir = get_floorplan_dir(dataset_dir)
 	
 	# get all fp files in this directory
-	fpfiles = [f for f in os.listdir(fpdir) if f.endswith(".fp")]
+	fpfiles = [os.path.join(fpdir, f) \
+			for f in os.listdir(fpdir) \
+				if f.endswith(".fp")]
 	return fpfiles
 
 #--------------- Files generated from carving --------------------

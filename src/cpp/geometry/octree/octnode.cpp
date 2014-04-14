@@ -180,10 +180,15 @@ int octnode_t::contains(const Vector3d& p) const
 bool octnode_t::simplify()
 {
 	unsigned int i;
-	bool thresh_met, t;
+	bool thresh_met, t, hascount, c;
+	int room, r;
 
+	/* arbitrary initial values */
+	thresh_met = true;
+	room = -1;
+	hascount = false;
+	
 	/* check if every child exists and has non-null data */
-	thresh_met = true; /* arbitrary initial value */
 	for(i = 0; i < CHILDREN_PER_NODE; i++)
 	{
 		/* check if child exists */
@@ -194,15 +199,20 @@ bool octnode_t::simplify()
 		if(this->children[i]->data == NULL)
 			return false; /* cannot be simplified */
 
-		/* check if child's data meets threshold requirements */
-		if(this->children[i]->data->get_count() == 0)
-			return false; /* not enough data */
-	
-		/* get label for child */
+		/* get labels for child, check if consistant with
+		 * other children of this node */
+		c = (this->children[i]->data->get_count() > 0);
 		t = this->children[i]->data->is_interior();
+		r = this->children[i]->data->get_fp_room();
 		if(i == 0)
-			thresh_met = t; /* no other children compared yet */
-		else if(t != thresh_met)
+		{
+			/* no other children compared yet, just save
+			 * the labels to be compared later */
+			thresh_met = t; /* consistant inside/outside */
+			room = r; /* consistant room labels */
+			hascount = c; /* consistant observation status */
+		}
+		else if(t != thresh_met || r != room || c != hascount)
 			return false; /* children disagree */
 	}
 
