@@ -60,7 +60,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
                               const  string& timefile,
                               const  string& conffile,
                               double u,
-                              COLOR_METHOD c)
+                              COLOR_METHOD c,
+			      double maxrange)
 {
 	int ret;
 
@@ -102,6 +103,7 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	/* record additional parameters */
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
+	this->max_range_limit = maxrange; /* range limit option */
 
 	/* get output file type */
 	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
@@ -212,7 +214,8 @@ int pointcloud_writer_t::export_urg(const string& name,
 
 		/* rectify the points in this scan */
 		ret = pointcloud_writer_t::rectify_urg_scan(scan_points,
-					scan, coses, sines);
+					scan, coses, sines,
+					this->max_range_limit);
 		if(ret)
 		{
 			/* report error */
@@ -717,26 +720,57 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,
                                           const urg_frame_t& scan,
                                           const vector<double>& coses,
-                                          const vector<double>& sines)
+                                          const vector<double>& sines,
+					  double rangelimit)
 {
-	size_t i, n;
+	size_t i, n, num_written, num_to_write;
 
 	/* verify LUT is correct */
 	n = scan.num_points;
 	if(n != coses.size() || n != sines.size())
 		return -1; /* invalid arguments */
 
+	/* check which points to keep */
+	if(rangelimit < 0)
+		num_to_write = n;
+	else
+	{
+		/* count number of good points */
+		num_to_write = 0;
+		for(i = 0; i < n; i++)
+		{
+			/* check if we want to keep this point */
+			if(scan.range_values[i] > rangelimit)
+				continue; /* bad point */
+
+			/* if got here, it's a good point */	
+			num_to_write++;
+		}
+	}
+
 	/* resize the matrix */
-	mat.resize(3, n);
+	mat.resize(3, num_to_write);
 
 	/* iterate over points */
+	num_written = 0;
 	for(i = 0; i < n; i++)
 	{
+		/* check if we should skip this point */
+		if(scan.range_values[i] > rangelimit)
+			continue;
+
 		/* convert this point */
-		mat(0, i) = MM2METERS(scan.range_values[i]*coses[i]);
-		mat(1, i) = MM2METERS(scan.range_values[i]*sines[i]);
-		mat(2, i) = 0;
+		mat(0, num_written) = MM2METERS(
+				scan.range_values[i]*coses[i]);
+		mat(1, num_written) = MM2METERS(
+				scan.range_values[i]*sines[i]);
+		mat(2, num_written) = 0;
+		num_written++;
 	}
+
+	/* verify we're consistent */
+	if(num_to_write != num_written)
+		return -2;
 
 	/* success */
 	return 0;
