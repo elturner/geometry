@@ -33,6 +33,7 @@ using namespace std;
 #define RANGE_LIMIT_FLAG          "-r"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 #define COLOR_BY_NOISE_FLAG       "--color_by_noise"
+#define COLOR_BY_TIME_FLAG        "--color_by_time"
 
 /* the following are helper functions for this program */
 void init_args(cmd_args_t& args);
@@ -151,6 +152,11 @@ void init_args(cmd_args_t& args)
 	               ".fss files.  This flag will override "
 	               "coloring from images, even if cameras are provided."
 	               );
+	args.add(COLOR_BY_TIME_FLAG, /* colors pointcloud by time */
+	               "If seen, will explicitly color the output points "
+	               "based on their timestamp values. This flag will "
+	               "override coloring from images, even if cameras are "
+	               "provided.");
 }
 
 /**
@@ -204,6 +210,10 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	else if(args.tag_seen(COLOR_BY_NOISE_FLAG))
 	{
 		c = pointcloud_writer_t::COLOR_BY_NOISE;
+	}
+	else if(args.tag_seen(COLOR_BY_TIME_FLAG))
+	{
+		c = pointcloud_writer_t::COLOR_BY_TIME;
 	}
 	else if(args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags))
 	{

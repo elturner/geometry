@@ -408,7 +408,21 @@ bool system_path_t::is_blacklisted(double ts) const
 	range_t r(this->pl[a].timestamp, this->pl[b].timestamp);
 	return this->timestamp_blacklist.intersects(r);
 };
-		
+	
+double system_path_t::starttime() const
+{
+	if(this->pl == NULL)
+		return 0.0;
+	return this->pl[0].timestamp;
+};
+
+double system_path_t::endtime() const
+{
+	if(this->pl == NULL)
+		return 0.0;
+	return this->pl[this->pl_size-1].timestamp;
+};
+
 /*** helper functions ***/
 
 int system_path_t::closest_index(double t) const

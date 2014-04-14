@@ -176,6 +176,16 @@ class system_path_t
 		 */
 		bool is_blacklisted(double ts) const;
 
+		/**
+		 * Will return the timestamp of the first pose
+		 */
+		double starttime() const;
+
+		/**
+		 * Will return the timestamp of the last pose
+		 */
+		double endtime() const;
+
 	/* helper functions */
 	protected:
 

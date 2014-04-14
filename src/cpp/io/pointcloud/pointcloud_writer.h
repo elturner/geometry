@@ -50,6 +50,7 @@ class pointcloud_writer_t
 			NO_COLOR, /* add no color information to output */
 			COLOR_BY_HEIGHT, /* color output by height */
 			COLOR_BY_NOISE, /* color output by noise level */
+			COLOR_BY_TIME, /* color output by timestamp */
 			NEAREST_IMAGE /* color points based on imagery */
 		};
 
@@ -353,7 +354,23 @@ class pointcloud_writer_t
 		 */
 		void noise_to_color(int& red, int& green, int& blue,
 		                    double n) const;
-		
+
+		/**
+		 * Generates a color based on a given timestamp
+		 *
+		 * Will generate a color as an (r,g,b) triplet
+		 * based on the provided timestamp.
+		 *
+		 * Color components will be in [0,255]
+		 *
+		 * @param red   The output red component
+		 * @param green The output green component
+		 * @param blue  The output blue component
+		 * @param n     The input noise component
+		 */
+		void time_to_color(int& red, int& green, int& blue,
+		                   double n) const;
+
 		/**
 		 * Generates a color for given point based on all cameras
 		 *

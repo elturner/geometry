@@ -524,6 +524,10 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 					this->noise_to_color(red, 
 						green, blue, noise[i]);
 				break;
+			case COLOR_BY_TIME:
+				/* color points by timestamp */
+				this->time_to_color(red, green, blue, ts);
+				break;
 		}
 		
 		/* write points to output file */
@@ -672,6 +676,27 @@ void pointcloud_writer_t::noise_to_color(int& red, int& green, int& blue,
 		red = (int)(255 * n / max_noise);
 		blue = (int)(255 * (max_noise - n) / max_noise);
 	}	
+}
+
+void pointcloud_writer_t::time_to_color(int& red, int& green, int& blue,
+		                   double ts) const
+{
+	double st, et, f;
+	
+	/* get timestamp as a fraction of total time of dataset */
+	st = this->path.starttime();
+	et = this->path.endtime();
+	f = (ts - st) / (et - st);
+
+	/* set values */
+	red = abs(255 * (1-f));
+	green = abs(100 * (1 - (2*abs(f-0.5))));
+	blue = abs(255 * f);
+
+	/* sanitize output */
+	if(red >= 256) red = 255;
+	if(green >= 256) green = 255;
+	if(blue >= 256) blue = 255;
 }
 		
 int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
