@@ -171,6 +171,34 @@ class color_image_reader_t
 		};
 
 		/**
+		 * Returns the reported quality of the referenced jpegs
+		 *
+		 * Will record the quality of the jpeg images referenced
+		 * in this file.  This quality is a value in the range of
+		 * [0, 100].
+		 *
+		 * @return   Returns the jpeg quality
+		 */
+		inline int get_jpeg_quality() const
+		{
+			return this->jpeg_quality;
+		};
+
+		/**
+		 * Returns the referenced image directory
+		 *
+		 * Will return the directory that contains the images
+		 * that are referenced in this file.  The directory path
+		 * will be relative to the root of the dataset directory.
+		 *
+		 * @return  Returns the output directory path
+		 */
+		inline std::string get_output_dir() const
+		{
+			return this->output_dir;
+		};
+
+		/**
 		 * Parses the next frame from the file
 		 *
 		 * Will read the next line in the file, and populate
@@ -199,6 +227,41 @@ class color_image_reader_t
 		 * resources of this class.
 		 */
 		void close();
+
+	/* static helper functions */
+	public:
+
+		/**
+		 * Will modify/copy a metadata file to another location
+		 *
+		 * Given the path to an existing metadata file and
+		 * desired header information, will parse the existing
+		 * file and write a copy of its contents, but with the
+		 * new header information, to the specified path.  The
+		 * image-specific information within the exported file
+		 * will be the same as the original, but the header
+		 * information may be changed.
+		 *
+		 * @param oldfile   The path to the existing file
+		 * @param newfile   The path to the file to create
+		 * @param camname   The camera name to write to the new
+		 *                  file (a blank string indicates to use
+		 *                  the old file's name)
+		 * @param quality   The jpeg quality to write to header
+		 *                  of new file (negative value indicates
+		 *                  to use old file's value)
+		 * @param outputdir The output directory to specify as
+		 *                  the location of the images in the new
+		 *                  metadata file (blank string indicates
+		 *                  to use the same output directory)
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		static int copy_file(const std::string& oldfile,
+		                     const std::string& newfile,
+		                     const std::string& camname,
+		                     int quality,
+		                     const std::string& outputdir);
 };
 
 #endif

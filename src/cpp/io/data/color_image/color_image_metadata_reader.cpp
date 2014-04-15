@@ -181,3 +181,71 @@ void color_image_reader_t::close()
 
 	/* no other resources need freeing */
 }
+
+/* static functions */
+
+int color_image_reader_t::copy_file(const std::string& oldfile,
+                                    const std::string& newfile,
+                                    const std::string& camname,
+                                    int quality,
+                                    const std::string& outputdir)
+{
+	color_image_reader_t infile;
+	ofstream outfile;
+	color_image_frame_t frame;
+	int i, ret;
+
+	/* open existing file for reading */
+	ret = infile.open(oldfile);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* attempt to open output file */
+	outfile.open(newfile.c_str());
+	if(!(outfile.is_open()))
+	{
+		infile.close();
+		return -2;
+	}
+
+	/* configure output file precision */
+	outfile.setf(ios::fixed, ios::floatfield);
+	outfile.precision(16);
+
+	/* write header information */
+	outfile << (camname.empty() ? infile.get_camera_name() : camname)
+	        << endl /* writes camera name to file */
+		<< infile.get_num_images() << endl /* number of images */
+		<< (quality < 0 ? infile.get_jpeg_quality() : quality)
+		<< endl /* writes jpeg quality value [0,100] */
+		<< (outputdir.empty() ? infile.get_output_dir() : outputdir)
+		<< endl /* writes the output directory for images */
+		<< endl; /* extra line between header and content */
+
+	/* iterate over images in file body */
+	for(i = 0; i < infile.get_num_images(); i++)
+	{
+		/* get current frame information */
+		ret = infile.next(frame);
+		if(ret)
+		{
+			/* could not read frame */
+			infile.close();
+			outfile.close();
+			return PROPEGATE_ERROR(-3, ret);
+		}
+
+		/* write metadata for this image */
+		outfile << frame.index << " "
+		        << frame.image_file << " "
+			<< frame.timestamp << " "
+			<< frame.exposure << " "
+			<< frame.gain << endl;
+	}
+
+	/* clean up */
+	infile.close();
+	outfile.close();
+	return 0;
+}
+
