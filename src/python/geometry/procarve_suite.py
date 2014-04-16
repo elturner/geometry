@@ -23,6 +23,9 @@ SCRIPT_LOCATION = os.path.dirname(__file__)
 import wedge_gen
 import chunker
 import procarve
+sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'files'))
+import dataset_filepaths
+
 
 ##
 # This function runs this script
@@ -33,6 +36,12 @@ import procarve
 # @return             Returns zero on success, non-zero on failure
 def run(dataset_dir, path_file):
 
+	# verify that carving directory exists, which will contain all
+	# intermediary and output files for this code
+	carvedir = dataset_filepaths.get_carving_dir(dataset_dir)
+	if not os.path.exists(carvedir):
+		os.makedirs(carvedir)
+	
 	# run the wedge generation program on input scans
 	ret = wedge_gen.run(dataset_dir, path_file)
 	if ret != 0:
