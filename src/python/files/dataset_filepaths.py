@@ -205,4 +205,9 @@ def get_chunklist(dataset_dir):
 def get_octree(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "carving.oct")
 
+##
+# Returns the expected location of the carved obj file
+#
+def get_carved_obj_file(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), "mesh.obj")
 

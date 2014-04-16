@@ -23,6 +23,7 @@ SCRIPT_LOCATION = os.path.dirname(__file__)
 import wedge_gen
 import chunker
 import procarve
+import octsurf
 sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'files'))
 import dataset_filepaths
 
@@ -58,14 +59,9 @@ def run(dataset_dir, path_file):
 		return -3 # an error occurred
 
 	# run the octsurf program to generate mesh
-	OCTSURF_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
-			'..', '..', '..', 'bin', 'octsurf'))
-	ret = subprocess.call([OCTSURF_EXE], executable=OCTSURF_EXE, \
-		cwd=dataset_dir, stdout=None, stderr=None, \
-		stdin=None, shell=False)
+	ret = octsurf.run(dataset_dir)
 	if ret != 0:
-		print "octsurf program returned error",ret
-		return -4
+		return -4 # an error occurred
 
 	# success
 	return 0
