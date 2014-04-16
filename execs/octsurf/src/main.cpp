@@ -1,3 +1,4 @@
+#include "octsurf_run_settings.h"
 #include <iostream>
 
 /**
@@ -21,33 +22,37 @@ using namespace std;
 /**
  * The main function for this program
  */
-int main()
+int main(int argc, char** argv)
 {
+	octsurf_run_settings_t args;
 	octree_t tree;
 	int ret;
-	
-	/* set input files */
-	string dataset = "/home/elturner/Documents/research/indoor_modeling/backpack/data/20131204-16/";
-	string octfile = dataset + "models/carving/carving.oct";
-	string objfile = "/home/elturner/Desktop/test.obj";
 
-	/* initialize */
-	ret = tree.parse(octfile);
+	/* parse the given parameters */
+	ret = args.parse(argc, argv);
 	if(ret)
 	{
-		cerr << "Unable to read octfile, error: " << ret << endl;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Could not parse parameters" << endl;
 		return 1;
 	}
 
-	cout << "input tree # nodes: " << tree.get_root()->get_num_nodes()
-	     << endl;
-
-	/* export */
-	ret = tree_exporter::export_leafs_to_obj(objfile, tree);
+	/* initialize */
+	ret = tree.parse(args.octfiles[0]);
 	if(ret)
 	{
-		cerr << "Unable to export to obj, error: " << ret << endl;
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to read octfile." << endl;
 		return 2;
+	}
+
+	/* export */
+	ret = tree_exporter::export_leafs_to_obj(args.outfile, tree);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to export to obj" << endl;
+		return 3;
 	}
 
 	/* success */
