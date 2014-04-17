@@ -17,6 +17,7 @@ using namespace std;
 /* function implementations */
 
 #include <io/octree/tree_exporter.h>
+#include <io/octree/vox_writer.h>
 #include <geometry/octree/octree.h>
 
 /**
@@ -47,11 +48,12 @@ int main(int argc, char** argv)
 	}
 
 	/* export */
-	ret = tree_exporter::export_leafs_to_obj(args.outfile, tree);
+	ret = vox_writer_t::write(args.outfile, tree);
+	//ret = tree_exporter::export_leafs_to_obj(args.outfile, tree);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to export to obj" << endl;
+		     << "Unable to export to vox" << endl;
 		return 3;
 	}
 

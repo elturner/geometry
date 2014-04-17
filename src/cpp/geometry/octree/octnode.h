@@ -107,7 +107,7 @@ class octnode_t
 		 *
 		 * @param p  The point to test
 		 *
-		 * @return  Returns true if point is in this node
+		 * @return  Returns negative iff p not contained in node
 		 */
 		int contains(const Eigen::Vector3d& p) const;
 
