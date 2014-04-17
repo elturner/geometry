@@ -17,10 +17,6 @@ function data = read_color_image_metadata(filename)
 	%		                images (range [1-100])
 	%		output_dir   -  The directory to which images
 	%		                were written
-	%
-	%		calibration  -	A struct that contains all
-	%		                fisheye intrinsic calibration info
-	%
 	%		img_indices  - A Nx1 array of image indices
 	%		img_files    - A Nx1 cell array of image filenames
 	%		img_times    - A Nx1 array of timestamps
@@ -40,25 +36,6 @@ function data = read_color_image_metadata(filename)
 	data.num_images   = str2num(fgetl(fid));
 	data.jpeg_quality = str2num(fgetl(fid));
 	data.output_dir   = fgetl(fid);
-
-	% read calibration info
-	pol = sscanf(fgetl(fid), '%f', Inf);
-	data.calibration.poly = pol(2:end);
-	if(length(pol) ~= 1 + pol(1))
-		fclose(fid);
-		error('polynomial coefficients for fisheye invalid');
-	end
-
-	invpol = sscanf(fgetl(fid), '%f', Inf);
-	data.calibration.invpoly = invpol(2:end);
-	if(length(invpol) ~= 1 + invpol(1))
-		fclose(fid);
-		error('inv polynomial coefficients for fisheye invalid');
-	end
-	
-	data.calibration.center = sscanf(fgetl(fid), '%f %f');
-	data.calibration.skew = sscanf(fgetl(fid), '%f %f %f');
-	data.calibration.size = sscanf(fgetl(fid), '%d %d');
 
 	% initialize lists
 	data.img_indices  = [];
