@@ -1,0 +1,70 @@
+***************************************
+* Format Specification for .vox Files *
+***************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+April 17, 2014
+
+***********
+* Purpose *
+***********
+
+This file format specifies the location of occupied voxels in for carving-based reconstruction techniques.  It explicitly only stores boundary voxels, which are voxels labeled "exterior", but border one or more "interior" voxels.  It also stores which faces of these boundary voxels are shared with interior voxels.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in ASCII.
+
+**********
+* Format *
+**********
+
+Voxel files have the following ASCII format:
+
+	<vs>
+	<x1> <y1> <z1> <s1>
+	<x2> <y2> <z2> <s2>
+	...
+	...
+
+Where:
+
+	<vs> is the voxel size, as a double, in meters
+
+	<xi>, <yi>, <zi> represent integer grid positions of the voxel.
+	The voxel value 0,0,0 is positioned so that its min-corner is at
+	the origin in space. Voxel value 0,0,1 is positioned directly above
+	this voxel, where its min corner is at (0,0,vs).
+
+	<si> specifies the state of the voxel.  The state indicates which
+	faces are shared with interior neighboring voxels.  This value is
+	constructed 
+
+The state value specifies which faces border inside voxels by bit-flipping.  The value of the i'th bit is 1 iff the i'th face borders an interior voxel.  The following indicate the indices of each face:
+
+        7 ________ 6           _____6__      ^      ________
+        /|       /|         7/|       /|     |    /|       /|
+      /  |     /  |        /  |     /5 |     |  /  5     /  |
+  4 /_______ /    |      /__4____ /    10    |/_______2/    |
+   |     |  |5    |     |    11  |     |     |     |  |   1 |
+   |    3|__|_____|2    |     |__|__2__|     | 3   |__|_____|
+   |    /   |    /      8   3/   9    /      |    /   |    /
+   |  /     |  /        |  /     |  /1       |  /     4  /
+   |/_______|/          |/___0___|/          |/_0_____|/________> x
+  0          1                 
+
+VOXEL_FACE_YMINUS 0
+VOXEL_FACE_XPLUS  1
+VOXEL_FACE_YPLUS  2
+VOXEL_FACE_XMINUS 3
+VOXEL_FACE_ZMINUS 4
+VOXEL_FACE_ZPLUS  5
+
+So as an example, a state value of 19 would be 0b00010011, which indicates
+that the 0th, 1st, and 4th faces are bordering interior voxels.
+
