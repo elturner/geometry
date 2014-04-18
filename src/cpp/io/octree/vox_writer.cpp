@@ -207,17 +207,6 @@ voxel_state_t vox_writer_t::retrieve_state(const octree_t& tree,
 		/* get position of neighboring voxel */
 		neigh_p = p + r*get_face_direction(i);
 
-		/* for improved performance, first check if this
-		 * neighboring point is still contained in the same
-		 * leaf node.  If this is the case, then we know that
-		 * the neighboring point must also be exterior. */
-		if(leaf != NULL && leaf->contains(neigh_p) >= 0)
-		{
-			/* point is exterior, since its in the same leaf */
-			VOXEL_SET_FACE_BIT_OUTWARD(s,i);
-			continue;
-		}
-
 		/* check if this neighbor is interior */
 		neigh = root->retrieve(neigh_p);
 		if(neigh == NULL)
