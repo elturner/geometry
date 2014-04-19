@@ -48,13 +48,34 @@ int main(int argc, char** argv)
 	}
 
 	/* export */
-	ret = vox_writer_t::write(args.outfile, tree);
-	//ret = tree_exporter::export_leafs_to_obj(args.outfile, tree);
-	if(ret)
+	switch(args.output_format)
 	{
-		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to export to vox" << endl;
-		return 3;
+		default:
+			/* unable to export to this file format */
+			cerr << "[main]\tUnknown file extension provided"
+			     << " for output file: " << args.outfile
+			     << endl;
+			break;
+		case FORMAT_VOX:
+			/* export tree as vox file */
+			ret = vox_writer_t::write(args.outfile, tree);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to vox" << endl;
+				return 3;
+			}
+			break;
+		case FORMAT_OBJ:
+			ret = tree_exporter::export_leafs_to_obj(
+					args.outfile, tree);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to obj" << endl;
+				return 4;
+			}
+			break;
 	}
 
 	/* success */

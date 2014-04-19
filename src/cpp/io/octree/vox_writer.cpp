@@ -2,6 +2,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <Eigen/Dense>
@@ -123,6 +124,7 @@ int vox_writer_t::write(const string& voxfile, const octree_t& tree)
 	tictoc_t clk;
 	Vector3d c;
 	voxel_state_t s;
+	progress_bar_t progbar;
 	int xi, yi, zi, min_x, max_x, min_y, max_y, min_z, max_z;
 	double res, hw;
 
@@ -151,7 +153,13 @@ int vox_writer_t::write(const string& voxfile, const octree_t& tree)
 
 	/* iterate through potential voxel positions */
 	tic(clk);
+	progbar.set_name("Exporting vox");
 	for(xi = min_x; xi <= max_x; xi++)
+	{
+		/* update user */
+		progbar.update(xi-min_x, max_x-min_x);
+
+		/* process */
 		for(yi = min_y; yi <= max_y; yi++)
 			for(zi = min_z; zi <= max_z; zi++)
 			{
@@ -171,9 +179,11 @@ int vox_writer_t::write(const string& voxfile, const octree_t& tree)
 					<< zi << " "
 					<< ((int)s) << endl;
 			}
+	}
 
 	/* clean up */
 	outfile.close();
+	progbar.clear();
 	toc(clk, "Exporting vox file");
 	return 0;
 }

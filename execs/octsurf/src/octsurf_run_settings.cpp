@@ -31,6 +31,8 @@ using namespace std;
 /* file extensions to check for */
 
 #define OCT_FILE_EXT   "oct"
+#define VOX_FILE_EXT   "vox"
+#define OBJ_FILE_EXT   "obj"
 
 /* function implementations */
 		
@@ -39,6 +41,7 @@ octsurf_run_settings_t::octsurf_run_settings_t()
 	/* set default values for this program's files */
 	this->octfiles.clear();
 	this->outfile = "";
+	this->output_format = FORMAT_UNKNOWN;
 }
 
 int octsurf_run_settings_t::parse(int argc, char** argv)
@@ -58,7 +61,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
 			"to generate chunks and where to store them on "
-			"disk.", false, 1);
+			"disk.", true, 1);
 	args.add(OUTPUT_FLAG, "Where to store the output file, which "
 			"represents the meshed surface of the volume "
 			"described by the input .oct files.  This program "
@@ -84,29 +87,58 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-	settings_file           = args.get_val(SETTINGS_FLAG);
-	this->outfile           = args.get_val(OUTPUT_FLAG);
+	this->outfile = args.get_val(OUTPUT_FLAG);
+	this->output_format 
+		= octsurf_run_settings_t::get_format(this->outfile);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);
 
-	/* attempt to open and parse the settings file */
-	if(!settings.read(settings_file))
+	/* check if a settings xml file was specified */
+	if(args.tag_seen(SETTINGS_FLAG))
 	{
-		/* unable to open or parse settings file.  Inform
-		 * user and quit. */
-		ret = PROPEGATE_ERROR(-2, ret);
-		cerr << "[chunk_run_settings_t::parse]\t"
-		     << "Error " << ret << ":  Unable to parse "
-		     << "settings file: " << settings_file << endl;
-		return ret;
-	}
+		/* retrieve the specified file */
+		settings_file = args.get_val(SETTINGS_FLAG);
 	
-	/* read in settings from file.  If they are not in the given
-	 * file, then the default settings that were set in this
-	 * object's constructor will be used. */
+		/* attempt to open and parse the settings file */
+		if(!settings.read(settings_file))
+		{
+			/* unable to open or parse settings file.  Inform
+			 * user and quit. */
+			ret = PROPEGATE_ERROR(-2, ret);
+			cerr << "[chunk_run_settings_t::parse]\t"
+			     << "Error " << ret << ":  Unable to parse "
+			     << "settings file: " << settings_file << endl;
+			return ret;
+		}
+	
+		/* read in settings from file.  If they are not in the given
+		 * file, then the default settings that were set in this
+		 * object's constructor will be used. */
 
-	// No settings needed
+		// No settings needed
+	}
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
 	return 0;
+}
+		
+OUTPUT_FILE_FORMAT octsurf_run_settings_t::get_format(const std::string& fn)
+{
+	string ext;
+	size_t dotpos;
+
+	/* find the position of the file extension */
+	dotpos = fn.find_last_of('.');
+	if(dotpos == string::npos)
+		return FORMAT_UNKNOWN;
+	
+	/* get extension as string */
+	ext = fn.substr(dotpos+1);
+
+	/* determine format */
+	if(!ext.compare(VOX_FILE_EXT))
+		return FORMAT_VOX;
+	if(!ext.compare(OBJ_FILE_EXT))
+		return FORMAT_OBJ;
+	return FORMAT_UNKNOWN; /* unknown file format */
 }

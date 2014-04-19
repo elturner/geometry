@@ -18,6 +18,14 @@
 #include <string>
 #include <vector>
 
+/* the following specifies output file format */
+enum OUTPUT_FILE_FORMAT
+{
+	FORMAT_VOX, /* .vox file for back-compatability with old carving */
+	FORMAT_OBJ, /* Wavefront OBJ file format */
+	FORMAT_UNKNOWN /* unknown file format */
+};
+
 /**
  * This class is used to store run settings for the octsurf program
  */
@@ -43,6 +51,10 @@ class octsurf_run_settings_t
 		 */
 		std::string outfile;
 
+		/* the following specifies the output mode by parsing
+		 * the extension of the outfile. */
+		OUTPUT_FILE_FORMAT output_format;
+
 	/* functions */
 	public:
 
@@ -65,6 +77,21 @@ class octsurf_run_settings_t
 		 * @return      Returns zero on success, non-zero on failure
 		 */
 		int parse(int argc, char** argv);
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Determine extension of output file name
+		 *
+		 * Given a file name, will determine which format
+		 * is being represented.
+		 *
+		 * @param fn   The filename to analyze
+		 *
+		 * @return     The parsed format
+		 */
+		static OUTPUT_FILE_FORMAT get_format(const std::string& fn);
 };
 
 #endif
