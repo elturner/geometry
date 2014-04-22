@@ -106,10 +106,16 @@ hardware_config_xml     = os.path.join("config","backpack_config.xml")
 time_sync_xml           = os.path.join("time","time_sync.xml")
 
 # These are sensor-specific files and values
-geom_scanner_name       = "H1214157"
-geom_scanner_datafile   = os.path.join("data", "urg", geom_scanner_name, \
-                                       "urg_" + geom_scanner_name \
+up_geom_scanner_name       = "H1214157"
+up_geom_scanner_datafile   = os.path.join("data","urg", \
+					up_geom_scanner_name, \
+                                       "urg_" + up_geom_scanner_name \
                                        + "_scandata.dat")
+down_geom_scanner_name     = "H1311822"
+down_geom_scanner_name     = os.path.join("data","urg", \
+					down_geom_scanner_name, \
+					"urg_" + down_geom_scanner_name \
+					+ "_scandata.dat")
 left_camera_dir         = os.path.join("data", "dalsa", "left_camera", \
                                        "color")
 left_camera_metadata    = os.path.join("data", "dalsa", "left_camera", \
@@ -176,7 +182,10 @@ ret = subprocess.call([POINTCLOUD_EXE, \
                             right_camera_dir, \
                       "-f", back_camera_metadata, back_camera_calib, \
                             back_camera_dir, \
-                      "-l", geom_scanner_name, geom_scanner_datafile, \
+                      "-l", up_geom_scanner_name, \
+		      		up_geom_scanner_datafile, \
+                      "-l", down_geom_scanner_name, \
+		      		down_geom_scanner_datafile, \
                       "-o", xyz_file, \
                       "-p", LOCALIZATION_FILE, \
                       "-t", time_sync_xml, \
