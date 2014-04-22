@@ -112,7 +112,7 @@ up_geom_scanner_datafile   = os.path.join("data","urg", \
                                        "urg_" + up_geom_scanner_name \
                                        + "_scandata.dat")
 down_geom_scanner_name     = "H1311822"
-down_geom_scanner_name     = os.path.join("data","urg", \
+down_geom_scanner_datafile = os.path.join("data","urg", \
 					down_geom_scanner_name, \
 					"urg_" + down_geom_scanner_name \
 					+ "_scandata.dat")
