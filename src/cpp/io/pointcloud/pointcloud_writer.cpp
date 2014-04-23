@@ -37,7 +37,7 @@ using namespace Eigen;
 #define HEIGHT_COLORING_PERIOD 2.0  /* period of height coloring, meters */
 
 /* the following defines the default grayscale color of points */
-#define DEFAULT_POINT_COLOR 100
+#define DEFAULT_POINT_COLOR 0
 
 /* function implementations */
 
@@ -711,7 +711,7 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	q_best = 0;
 
 	/* start with default color */
-	r = g = b = DEFAULT_POINT_COLOR;
+	red = green = blue = r = g = b = DEFAULT_POINT_COLOR;
 
 	/* iterate over cameras */
 	n = this->fisheye_cameras.size();
