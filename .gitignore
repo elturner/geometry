@@ -2,6 +2,7 @@
 *~
 *.swp
 **/.metadata/**
+**/.DS_Store
 
 #Ignore visual studio files
 *.sdf
