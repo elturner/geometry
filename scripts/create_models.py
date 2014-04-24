@@ -51,7 +51,7 @@ if len(sys.argv) != 3:
 	sys.exit(1)
 
 # Get the dataset directory from command-line
-DATASET_DIR = sys.argv[1]
+DATASET_DIR = os.path.abspath(sys.argv[1])
 
 # verify this is a valid folder
 if not os.path.exists(DATASET_DIR):
@@ -59,7 +59,7 @@ if not os.path.exists(DATASET_DIR):
 	sys.exit(2)
 
 # Get the output file from localization
-LOCALIZATION_FILE = sys.argv[2]
+LOCALIZATION_FILE = os.path.abspath(sys.argv[2])
 if not os.path.exists(LOCALIZATION_FILE):
 	print "Error! This is not a valid file:",LOCALIZATION_FILE
 	sys.exit(3)
