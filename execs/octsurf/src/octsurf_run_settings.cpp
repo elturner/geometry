@@ -33,6 +33,7 @@ using namespace std;
 #define OCT_FILE_EXT   "oct"
 #define VOX_FILE_EXT   "vox"
 #define OBJ_FILE_EXT   "obj"
+#define TXT_FILE_EXT   "txt"
 
 /* function implementations */
 		
@@ -140,5 +141,7 @@ OUTPUT_FILE_FORMAT octsurf_run_settings_t::get_format(const std::string& fn)
 		return FORMAT_VOX;
 	if(!ext.compare(OBJ_FILE_EXT))
 		return FORMAT_OBJ;
+	if(!ext.compare(TXT_FILE_EXT))
+		return FORMAT_TXT;
 	return FORMAT_UNKNOWN; /* unknown file format */
 }

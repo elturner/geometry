@@ -171,18 +171,6 @@ class octdata_t
 		};
 
 		/**
-		 * Returns best estimate of whether this node is interior
-		 *
-		 * Will use the recorded probability to judge if the
-		 * node that contains these data should be identified
-		 * as interior or exterior.
-		 *
-		 * @return  Returns true iff data indicates interior label
-		 */
-		inline bool is_interior() const
-		{ return (this->get_probability() > 0.5); };
-
-		/**
 		 * Returns the uncertainty of the probability estimate
 		 *
 		 * Will return the variance of the samples collected
@@ -207,6 +195,18 @@ class octdata_t
 			 * Var[x] = E[x^2] - E[x]^2 */
 			return ((this->prob_sum_sq/this->count) - (p*p));
 		};
+		
+		/**
+		 * Returns best estimate of whether this node is interior
+		 *
+		 * Will use the recorded probability to judge if the
+		 * node that contains these data should be identified
+		 * as interior or exterior.
+		 *
+		 * @return  Returns true iff data indicates interior label
+		 */
+		inline bool is_interior() const
+		{ return (this->get_probability() > 0.5); };
 
 		/**
 		 * Gets the floor plan room number of this data object.

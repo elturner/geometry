@@ -50,6 +50,27 @@ namespace tree_exporter
 	 */
 	int export_exterior_cubes_to_obj(const std::string& filename,
 	                                 const octree_t& tree);
+
+	/**
+	 * Will export a text file with statistical information about leafs
+	 *
+	 * The text file will have one line for each leaf in the tree. Each
+	 * line will contain two values, separated by whitespace, denoting
+	 * the probability value of that leaf, and the uncertainty value
+	 * of that leaf:
+	 *
+	 * 	p1 c1
+	 * 	p2 c2
+	 * 	p3 c3
+	 * 	...
+	 *
+	 * @param filename   The path to the .txt file to write
+	 * @param tree       The tree to export
+	 *
+	 * @return           Returns zero on success, non-zero on failure.
+	 */
+	int export_stats_to_txt(const std::string& filename,
+	                        const octree_t& tree);
 }
 
 #endif

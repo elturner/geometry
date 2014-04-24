@@ -184,3 +184,55 @@ int tree_exporter::export_exterior_cubes_to_obj(const string& filename,
 	outfile.close();
 	return 0;
 }
+
+/**
+ * This helper function is used to recursively go through the tree
+ *
+ * This function is called by the export_stats_to_txt() function,
+ * and is in charge of writing each leaf to the stream.
+ */
+void export_stats_to_txt_recur(ostream& os, const octnode_t* node)
+{
+	unsigned int i;
+	double p, uc;
+
+	/* check if this node is a leaf (i.e. it has data) */
+	if(node->data != NULL)
+	{
+		/* get characteristic to visualize */
+		p = node->data->get_probability();
+		if(p > 1)
+			p = 1;
+		if(p < 0)
+			p = 0;
+		
+		/* get uncertainty */
+		uc = node->data->get_uncertainty();
+
+		/* export this leaf */
+		os << p << " " << uc << endl;
+	}
+
+	/* recurse through the node's children */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+		if(node->children[i] != NULL)
+			export_stats_to_txt_recur(os, node->children[i]);
+}
+
+int tree_exporter::export_stats_to_txt(const std::string& filename,
+                                       const octree_t& tree)
+{
+	ofstream outfile;
+	
+	/* open file for writing */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return -1; /* could not open file */
+	
+	/* recursively export nodes */
+	export_stats_to_txt_recur(outfile, tree.get_root());
+
+	/* clean up */
+	outfile.close();
+	return 0;
+}

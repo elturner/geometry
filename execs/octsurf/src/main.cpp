@@ -67,6 +67,7 @@ int main(int argc, char** argv)
 			}
 			break;
 		case FORMAT_OBJ:
+			/* export basic obj file */
 			ret = tree_exporter::export_leafs_to_obj(
 					args.outfile, tree);
 			if(ret)
@@ -74,6 +75,17 @@ int main(int argc, char** argv)
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to obj" << endl;
 				return 4;
+			}
+			break;
+		case FORMAT_TXT:
+			/* export useful stats to txt */
+			ret = tree_exporter::export_stats_to_txt(
+					args.outfile, tree);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to txt" << endl;
+				return 5;
 			}
 			break;
 	}
