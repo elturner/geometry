@@ -553,13 +553,14 @@ namespace chunk
 		private:
 
 			/* the output stream to write to */
+			std::string outfilename;
 			std::ofstream outfile;
 
 			/* the header information to use */
 			chunk_header_t header;
 
-			/* the number of points written so far */
-			unsigned int num_written_so_far;
+			/* the points written so far */
+			std::vector<point_index_t> pts;
 
 		/* functions */
 		public:

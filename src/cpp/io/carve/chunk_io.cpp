@@ -506,7 +506,8 @@ void chunk_reader_t::close()
 chunk_writer_t::chunk_writer_t()
 {
 	/* set defaults */
-	this->num_written_so_far = 0;
+	this->pts.clear();
+	this->outfilename = ""; 
 }
 			
 chunk_writer_t::~chunk_writer_t()
@@ -527,7 +528,7 @@ int chunk_writer_t::open(const std::string& filename)
 {
 	/* close streams if necessary */
 	this->close();
-	this->num_written_so_far = 0;
+	this->outfilename = filename;
 
 	/* attempt to open this binary file for writing */
 	this->outfile.open(filename.c_str(),
@@ -544,6 +545,9 @@ int chunk_writer_t::open(const std::string& filename)
 	/* attempt to write header information (as a place-holder) */
 	this->header.print(this->outfile);
 
+	/* close filestream for now */
+	this->outfile.close();
+
 	/* success */
 	return 0;
 }
@@ -551,23 +555,42 @@ int chunk_writer_t::open(const std::string& filename)
 void chunk_writer_t::write(const point_index_t& i)
 {
 	/* write the given point */
-	i.print(this->outfile);
-	this->num_written_so_far++;
+	this->pts.push_back(i);
 }
 			
 void chunk_writer_t::close()
 {
-	/* check if stream is even open */
-	if(!(this->outfile.is_open()))
-		return; /* don't need to do anything */
+	size_t i, n;
 
-	/* since this stream is open, we should update the
-	 * number of points written */
+	/* check if stream is even open */
+	if(this->outfilename.empty())
+		return; /* don't need to do anything, already closed */
+
+	/* open output stream, in order to update count of elements
+	 * in the header info */
+	this->outfile.open(this->outfilename.c_str(), 
+			ios_base::out | ios_base::binary);
+	if(!(this->outfile.is_open()))
+	{
+		cerr << "[chunk_writer_t::close]\tCould not close file: "
+		     << this->outfilename << endl;
+		return;
+	}
+
+	/* we should update the number of points written as
+	 * specified in the header*/
 	this->header.write_num_points(this->outfile,
-	                              this->num_written_so_far);
+	                              this->pts.size());
+
+	/* write all these points */
+	n = this->pts.size();
+	for(i = 0; i < n; i++)
+		this->pts[i].print(this->outfile);
 
 	/* close the file */
 	this->outfile.close();
+	this->outfilename = "";
+	this->pts.clear();
 }
 
 /*-------------------------*/
