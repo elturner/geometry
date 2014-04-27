@@ -14,6 +14,10 @@ function [] = render_mesh(verts, tris, tri_colors)
 	xs = verts(:,1);
 	ys = verts(:,2);
 
+    if(size(verts,2) >= 3)
+        zs = verts(:,3);
+    end
+    
 	% check for optional args
 	N = size(verts, 1);
 	M = size(tris, 1);
@@ -29,7 +33,11 @@ function [] = render_mesh(verts, tris, tri_colors)
 		t = tris(ti,:);
 
 		% draw triangle
-		patch(xs(t), ys(t), tri_colors(ti));
+        if(size(verts,2) >= 3)
+            patch(xs(t), ys(t), zs(t), tri_colors(ti), 'FaceAlpha', 0.5);
+        else
+            patch(xs(t), ys(t), tri_colors(ti));
+        end
 	end
 	set(gcf, 'renderer', 'opengl');
 end
