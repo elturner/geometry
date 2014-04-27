@@ -12,6 +12,7 @@
  * intervals.
  */
 
+#include <vector>
 #include <string>
 #include <set>
 
@@ -76,6 +77,13 @@ class range_list_t
 		void add(const range_t& r);
 
 		/**
+		 * Adds a unit-length range representing an integer value
+		 *
+		 * @param i   The integer to add
+		 */
+		void add_int(int i);
+
+		/**
 		 * Adds range to list
 		 *
 		 * Will add the specified range to this list, rearranging if
@@ -112,6 +120,17 @@ class range_list_t
 		 * @return   Returns true iff some intersection occurs
 		 */
 		bool intersects(const range_t& r) const;
+
+		/**
+		 * Retrieves the integer values covered by list
+		 *
+		 * Will find all the integer values that are contained
+		 * within this list.  Any values contained in this list
+		 * before the call will be removed.
+		 *
+		 * @param is   Where to store the contained integers
+		 */
+		void get_ints(std::vector<int>& is) const;
 };
 
 /* the following decalres the range_t class, which

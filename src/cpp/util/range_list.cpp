@@ -2,6 +2,7 @@
 #include <string>
 #include <set>
 #include <sstream>
+#include <cmath>
 #include <stdio.h>
 
 /**
@@ -94,6 +95,18 @@ void range_list_t::add(const range_t& r)
 		this->list.erase(ret.first);
 	}
 }
+		
+void range_list_t::add_int(int i)
+{
+	range_t r;
+
+	/* create the range */
+	r.min = i - 0.51;
+	r.max = i + 0.51;
+
+	/* add to list */
+	this->add(r);
+}
 
 void range_list_t::add(double a, double b)
 {
@@ -117,6 +130,21 @@ bool range_list_t::intersects(const range_t& r) const
 	 * it will compare equal to those ranges in the set
 	 * and count will return a positive value */
 	return (this->list.count(r) > 0);
+}
+		
+void range_list_t::get_ints(vector<int>& is) const
+{
+	set<range_t>::iterator it;
+	int i;
+
+	/* first, clear the input list */
+	is.clear();
+
+	/* iterate through the ranges in this list */
+	for(it = this->list.begin(); it != this->list.end(); it++)
+		/* find the integers within this range */
+		for(i = ((int) ceil(it->min)); i < it->max; i++)
+			is.push_back(i); /* i is within range, add it */
 }
 
 /*** range_t class function definitions ***/
