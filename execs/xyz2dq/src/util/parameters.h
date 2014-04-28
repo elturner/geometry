@@ -35,7 +35,7 @@
 #define NUM_DIMS 2
 #define CHILDREN_PER_NODE 4
 
-#define DEFAULT_MIN_WALL_HEIGHT 2.0 /* meters */
+#define DEFAULT_MIN_WALL_HEIGHT 2.5 /* meters */
 #define VERTICAL_BIN_SIZE 0.1 /* meters */
 #define DEFAULT_MIN_NUM_POINTS_PER_WALL_SAMPLE 50
 
