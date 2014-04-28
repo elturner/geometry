@@ -35,6 +35,7 @@ using namespace Eigen;
 
 /* the following definitions are settings for output */
 #define HEIGHT_COLORING_PERIOD 2.0  /* period of height coloring, meters */
+#define MIN_URG_RANGE_VALUE    0.5  /* units: meters */
 
 /* the following defines the default grayscale color of points */
 #define DEFAULT_POINT_COLOR 0
@@ -749,28 +750,25 @@ int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,
 					  double rangelimit)
 {
 	size_t i, n, num_written, num_to_write;
+	double r;
 
 	/* verify LUT is correct */
 	n = scan.num_points;
 	if(n != coses.size() || n != sines.size())
 		return -1; /* invalid arguments */
 
-	/* check which points to keep */
-	if(rangelimit < 0)
-		num_to_write = n;
-	else
+	/* count number of good points */
+	num_to_write = 0;
+	for(i = 0; i < n; i++)
 	{
-		/* count number of good points */
-		num_to_write = 0;
-		for(i = 0; i < n; i++)
-		{
-			/* check if we want to keep this point */
-			if(MM2METERS(scan.range_values[i]) > rangelimit)
-				continue; /* bad point */
+		/* check if we want to keep this point */
+		r = MM2METERS(scan.range_values[i]);
+		if((rangelimit >= 0 && r > rangelimit) 
+				|| r < MIN_URG_RANGE_VALUE)
+			continue; /* bad point */
 
-			/* if got here, it's a good point */	
-			num_to_write++;
-		}
+		/* if got here, it's a good point */	
+		num_to_write++;
 	}
 
 	/* resize the matrix */
@@ -781,8 +779,9 @@ int pointcloud_writer_t::rectify_urg_scan(MatrixXd& mat,
 	for(i = 0; i < n; i++)
 	{
 		/* check if we should skip this point */
-		if(rangelimit >= 0
-			&& MM2METERS(scan.range_values[i]) > rangelimit)
+		r = MM2METERS(scan.range_values[i]);
+		if((rangelimit >= 0 && r > rangelimit)
+				|| r < MIN_URG_RANGE_VALUE)
 			continue;
 
 		/* convert this point */
