@@ -87,7 +87,7 @@ todo:
 	grep -n --color=auto "TODO" $(SOURCES) $(HEADERS)
 
 grep:
-	grep -n --color=auto "p, q" $(SOURCES) $(HEADERS)
+	grep -n --color=auto "$(SEARCH)" $(SOURCES) $(HEADERS)
 
 size:
 	wc $(SOURCES) $(HEADERS)

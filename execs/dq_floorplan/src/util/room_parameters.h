@@ -27,9 +27,19 @@
 #define MIN_ROOM_PERIMETER (ADA_PASSING_SPACE + ADA_PASSING_SPACE \
 				+ ADA_PASSING_SPACE + ADA_PASSING_SPACE )
 
+/* The minimum valid column in a building should have at least this
+ * perimeter
+ *
+ * http://books.google.com/books?id=92PwXW0f81QC&lpg=PA266&ots=3BWptrM8xp&dq=building%20codes%20minimum%20column&pg=PA266#v=onepage&q=building%20codes%20minimum%20column&f=false
+ * */
+#define MIN_COLUMN_PERIMETER 1.016 /* units: m (4 sides * 10 inches/side) */
+
 /* the following denotes the smallest circumradius a triangle
- * can have and still be considered a seed for room classification */
-#define MIN_LOCAL_MAX_CIRCUMRADIUS (ADA_PASSING_SPACE/2)
+ * can have and still be considered a seed for room classification
+ *
+ * This assumes the local max circumcircle will be at least half the
+ * size of the smallest valid room. */
+#define MIN_LOCAL_MAX_CIRCUMRADIUS (ADA_PASSING_SPACE/4)
 
 /* the following denotes the maximum width of a door.  Any boundary
  * between two rooms that is longer than this denotes that the rooms

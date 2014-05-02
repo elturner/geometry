@@ -322,7 +322,7 @@ int tri_rep_t::fill_polygonal_hole(vector<int>& vs, const triple_t& root)
 		{
 			PRINT_WARNING("[tri_rep_t::fill_polygonal_hole]"
 					"\tear-clipping aborted");
-			LOGI("\t\tpoly size = %d\n", vs.size());
+			LOGI("\t\tpoly size = %d\n", (int) vs.size());
 			return -2;
 		}
 

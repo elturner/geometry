@@ -91,7 +91,7 @@ def run(dataset_dir, path_file, xyz_file):
 	
 	# generate wall samples
 	print "##### generating wall samples from pointcloud data #####"
-	ret = subprocess.call([XYZ2DQ_EXE, xyz_file, dq_file, path_file], \
+	ret = subprocess.call([XYZ2DQ_EXE, "-H", "1.5", xyz_file, dq_file, path_file], \
 			executable=XYZ2DQ_EXE, cwd=dataset_dir, \
 			stdout=None, stderr=None, stdin=None, shell=False)
 	if ret != 0:
