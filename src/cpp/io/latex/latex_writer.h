@@ -31,6 +31,9 @@ class latex_writer_t
 		/* the output stream for this file */
 		std::ofstream outfile;
 
+		/* number of floors that have been exported so far */
+		unsigned int fp_counter;
+
 	/* functions */
 	public:
 

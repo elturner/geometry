@@ -30,6 +30,7 @@ using namespace std;
 latex_writer_t::latex_writer_t()
 {
 	/* do nothing here */
+	this->fp_counter = 0;
 }
 		
 latex_writer_t::~latex_writer_t()
@@ -126,9 +127,11 @@ void latex_writer_t::write_floorplan_info(const fp::floorplan_t& fp)
 
 	/* compute stats */
 	a = fp.compute_total_area();
+	this->fp_counter++;
 
 	/* print results */
-	this->outfile << "\\section*{Floor Info}\n\n"
+	this->outfile << "\\section*{Floor " << (this->fp_counter) 
+	              << " Info}\n\n"
 	              << "\\paragraph*{} Number of rooms: " 
 		      << fp.rooms.size() << "\n\n"
 		      << "\\paragraph*{} Area: " 
@@ -147,4 +150,5 @@ void latex_writer_t::close()
 	
 	/* close the stream */
 	this->outfile.close();
+	this->fp_counter = 0;
 }
