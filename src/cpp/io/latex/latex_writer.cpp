@@ -8,6 +8,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 /**
@@ -75,7 +76,8 @@ int latex_writer_t::open(const std::string& filename)
 		<< "\n"
 		<< "\\begin{document}\n"
 		<< "\n"
-		<< "\\title{Indoor Modeling Dataset " << name << "}\n"
+		<< "\\title{Indoor Modeling Dataset $" 
+		<< latex_writer_t::sanitize(name) << "$}\n"
 		<< "\\author{UC Berkeley VIP Lab}\n"
 		<< "\\maketitle\n"
 		<< "\n";
@@ -151,4 +153,40 @@ void latex_writer_t::close()
 	/* close the stream */
 	this->outfile.close();
 	this->fp_counter = 0;
+}
+
+/*------------------*/
+/* helper functions */
+/*------------------*/
+
+string latex_writer_t::sanitize(const string& s)
+{
+	stringstream out;
+	size_t i, n;
+
+	/* iterate over input string */
+	n = s.size();
+	for(i = 0; i < n; i++)
+	{
+		/* check for special characters */
+		switch(s[i])
+		{
+			case ' ':
+				out << "/,"; /* specifies a space */
+				break;
+			case '_':
+				out << "\\_"; /* specifies underscore */
+				break;
+			case '^':
+				out << "\\^"; /* specifies carat */
+				break;
+			default:
+				/* just write the character as-is */
+				out << s[i];
+				break;
+		}
+	}
+
+	/* return the sanitized string */
+	return out.str();
 }

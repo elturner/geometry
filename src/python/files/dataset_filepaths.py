@@ -91,6 +91,19 @@ def get_all_fss_files(dataset_dir):
 	# return the final list of fss files
 	return fssfiles
 
+#--------------- Interfacing with Localization Output --------------
+
+##
+# Returns location of the final .mad file given dataset name
+#
+# @param dataset_dir   The location of the root of this dataset
+# @param dataset_name  The human-readable name of this dataset
+#
+def get_madfile_from_name(dataset_dir, dataset_name):
+	return os.path.abspath(os.path.join(dataset_dir,"localization", \
+			dataset_name, "optimization", \
+			(dataset_name + "_opt.mad")))
+
 #--------------- Files generated from pointcloud code --------------
 
 ##
@@ -179,6 +192,24 @@ def get_all_floorplan_files(dataset_dir):
 			for f in os.listdir(fpdir) \
 				if f.endswith(".fp")]
 	return fpfiles
+
+#----------- Files generated for LaTeX info file -----------------
+
+##
+# Returns the location of the docs directory for a dataset
+#
+def get_docs_dir(dataset_dir):
+	return os.path.abspath(os.path.join(dataset_dir, "docs"))
+
+##
+# Returns the path to the .tex file in the docs directory
+#
+# @param dataset_dir    The root folder of the dataset
+# @param dataset_name   The human-readable name of this dataset
+#
+def get_tex_file(dataset_dir, dataset_name):
+	return os.path.join(get_docs_dir(dataset_dir), \
+			(dataset_name + ".tex"))
 
 #--------------- Files generated from carving --------------------
 

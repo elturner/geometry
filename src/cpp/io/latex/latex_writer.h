@@ -91,6 +91,18 @@ class latex_writer_t
 		 * stream is not open, then no action is performed.
 		 */
 		void close();
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Will sanitize a string for LaTeX
+		 *
+		 * @param s   The input string to sanitize
+		 *
+		 * @return    Returns the modified string
+		 */
+		static std::string sanitize(const std::string& s);
 };
 
 #endif
