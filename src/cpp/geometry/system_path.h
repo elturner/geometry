@@ -186,6 +186,13 @@ class system_path_t
 		 */
 		double endtime() const;
 
+		/**
+		 * Will return the total distance traveled along path
+		 *
+		 * The returned value will be in units of meters.
+		 */
+		double total_distance() const;
+
 	/* helper functions */
 	protected:
 

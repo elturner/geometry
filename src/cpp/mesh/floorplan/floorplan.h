@@ -225,6 +225,29 @@ namespace fp
 			 */
 			void compute_bounds(double& min_x, double& min_y,
 			             double& max_x, double& max_y) const;
+	
+			/**
+			 * Computes the area (in square meters) of a room
+			 *
+			 * Given the room index, will return the floorspace
+			 * area of that room.
+			 *
+			 * @param i   The room index to analyze
+			 *
+			 * @return    Returns the area in square meters
+			 */
+			double compute_room_area(unsigned int i) const;
+
+			/**
+			 * Computes area of full floorplan
+			 *
+			 * This will compute the area of all rooms and
+			 * return the sum.  The value returned will be
+			 * in units of square meters.
+			 *
+			 * @return   Returns the total area of the floorplan
+			 */
+			double compute_total_area() const;
 	};
 
 	/**

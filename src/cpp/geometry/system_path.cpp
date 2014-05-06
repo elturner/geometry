@@ -422,6 +422,30 @@ double system_path_t::endtime() const
 		return 0.0;
 	return this->pl[this->pl_size-1].timestamp;
 };
+		
+double system_path_t::total_distance() const
+{
+	Vector3d inc;
+	unsigned int i;
+	double dist;
+
+	/* verify this path */
+	dist = 0;
+	if(this->pl == NULL)
+		return dist;
+	
+	/* iterate over poses */
+	for(i = 1; i < this->pl_size; i++)
+	{
+		/* get the incremental distance between poses
+		 * (i-1) and (i) */
+		inc = this->pl[i].T - this->pl[i-1].T;
+		dist += inc.norm();
+	}
+
+	/* return total distance */
+	return dist;
+}
 
 /*** helper functions ***/
 

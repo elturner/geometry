@@ -121,6 +121,63 @@ void floorplan_t::compute_bounds(double& min_x, double& min_y,
 			max_y = this->verts[i].y;
 	}
 }
+			
+double floorplan_t::compute_room_area(unsigned int i) const
+{
+	set<int>::iterator it;
+	size_t ti;
+	int p, q, r;
+	double area, ux, uy, vx, vy;
+
+	/* verify valid room index */
+	if(i >= this->rooms.size())
+		return 0.0; /* non-existant rooms have no area */
+
+	/* iterate over the triangles in this room */
+	area = 0.0; /* initialize area to be zero */
+	for(it = this->rooms[i].tris.begin(); 
+			it != this->rooms[i].tris.end(); it++)
+	{
+		/* get the index of this triangle */
+		ti = *it;
+
+		/* get the vertices of this triangle */
+		p = this->tris[ti].verts[0];
+		q = this->tris[ti].verts[1];
+		r = this->tris[ti].verts[2];
+		
+		/* compute the area of this triangle by
+		 * taking half the cross-product of two
+		 * edges. */
+
+		/* get vectors */
+		ux = this->verts[p].x - this->verts[r].x;
+		uy = this->verts[p].y - this->verts[r].y;
+		vx = this->verts[q].x - this->verts[r].x;
+		vy = this->verts[q].y - this->verts[r].y;
+
+		/* compute half of cross product */
+		area += (ux*vy - uy*vx)/2;
+	}
+
+	/* return the total area for the room */
+	return area;
+}
+			
+double floorplan_t::compute_total_area() const
+{
+	size_t ri, num_rooms;
+	double area;
+
+	/* iterate over the rooms in this model */
+	area = 0.0;
+	num_rooms = this->rooms.size();
+	for(ri = 0; ri < num_rooms; ri++)
+		area += this->compute_room_area(ri);
+	
+	/* return the total area of all rooms */
+	return area;
+}
 
 /********* VERTEX_T FUNCTIONS ****************/
 	
