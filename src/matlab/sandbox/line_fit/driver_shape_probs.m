@@ -20,7 +20,7 @@ for i = 1:n
 	hold all;
 	axis equal;
 	scatter(sample_scans(i).pts(1,:), sample_scans(i).pts(2,:), ...
-			10, cl);
+			10, pl);
 	title(['Scan timestamp: ', num2str(sample_scans(i).timestamp)],...
 			'FontSize', 18);
 	colorbar;
