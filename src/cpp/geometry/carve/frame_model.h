@@ -36,6 +36,11 @@ class frame_model_t
 		/* this bool list indicates which carve maps are valid */
 		std::vector<bool> is_valid;
 
+		/* the following lists store the results of planar
+		 * and corner detection on this scan frame. */
+		std::vector<double> planar_prob;
+		std::vector<double> corner_prob;
+
 	/* functions */
 	public:
 
@@ -66,13 +71,16 @@ class frame_model_t
 		 * functions appropriately.
 		 *
 		 * @param frame   The input frame to model
+		 * @param ang     Angular spacing between points in frame
+		 * @param linefit The line-fit distance parameter
 		 * @param model   The model object for the sensor
 		 * @param path    The path of the system
 		 *
 		 * @return     Returns zero on success, non-zero on failure
 		 */
-		int init(const fss::frame_t& frame,
-		         scan_model_t& model, const system_path_t& path);
+		int init(const fss::frame_t& frame, double ang,
+		         double linefit, scan_model_t& model,
+		         const system_path_t& path);
 
 		/**
 		 * Swaps information with the other frame
@@ -272,6 +280,26 @@ class frame_model_t
 		                        unsigned int& tb,
 		                        unsigned int& na,
 		                        unsigned int& nb) const;
+
+		/**
+		 * Will compute the probability that each point is planar
+		 *
+		 * For each scan point within this frame,
+		 * will analyze the neighbors of this point to determine
+		 * the likelihood that the point is part of a planar
+		 * region.  This process requires a distance value that
+		 * indicates how far away a neighbor can be to still have
+		 * an effect on this processing.
+		 *
+		 * The results will be stored in this->planar_probs
+		 *
+		 * @param dist  Distance that defines neighborhood of point
+		 * @param ang   The expected angular spacing (in radians)
+		 *              between successive scanpoints.
+		 *
+		 * @return      Returns zero on success, non-zero on failure
+		 */
+		int compute_planar_probs(double dist, double ang);
 };
 
 #endif

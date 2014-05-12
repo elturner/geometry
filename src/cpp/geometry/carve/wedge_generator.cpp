@@ -32,7 +32,7 @@ using namespace std;
 int wedge_generator_t::init(const string& madfile,
                             const string& confile,
                             const string& tsfile,
-                            double dcu, double carvebuf)
+                            double dcu, double carvebuf, double lf_dist)
 {
 	int ret;
 
@@ -65,6 +65,7 @@ int wedge_generator_t::init(const string& madfile,
 	/* initialize octree and algorithm parameters */
 	this->carving_buffer = carvebuf;
 	this->default_clock_uncertainty = dcu;
+	this->linefit_dist = lf_dist;
 
 	/* success */
 	return 0;
@@ -163,7 +164,9 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 			}
 		
 			/* compute carving model for this frame */
-			ret = curr_frame.init(inframe, model, this->path);
+			ret = curr_frame.init(inframe, infile.angle(),
+			                      this->linefit_dist,
+			                      model, this->path);
 			if(ret)
 			{
 				/* error occurred computing 

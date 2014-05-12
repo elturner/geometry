@@ -39,7 +39,8 @@ using namespace std;
 /* xml tags to check for in settings file */
 
 #define XML_DEFAULT_CLOCK_UNCERTAINTY "procarve_default_clock_uncertainty"
-#define XML_CARVEBUF_TAG  "procarve_carvebuf"
+#define XML_CARVEBUF_TAG              "procarve_carvebuf"
+#define XML_LINEFIT_DIST_TAG          "procarve_linefit_dist"
 
 /* function implementations */
 		
@@ -57,6 +58,7 @@ wedge_run_settings_t::wedge_run_settings_t()
 	 * the following default settings will be used. */
 	this->default_clock_uncertainty = 0.001; /* units of seconds */
 	this->carvebuf  = 2; /* two standard deviations */
+	this->linefit_dist = 0.2; /* 20 cm default */
 }
 
 int wedge_run_settings_t::parse(int argc, char** argv)
@@ -138,6 +140,9 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_DEFAULT_CLOCK_UNCERTAINTY))
 		this->default_clock_uncertainty = settings.getAsDouble(
 			XML_DEFAULT_CLOCK_UNCERTAINTY);
+	if(settings.is_prop(XML_LINEFIT_DIST_TAG))
+		this->linefit_dist = settings.getAsDouble(
+			XML_LINEFIT_DIST_TAG);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

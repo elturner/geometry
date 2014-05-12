@@ -78,4 +78,14 @@
 		0.005
 	</procarve_default_clock_uncertainty>
 
+	<!-- This value represents the line-fit distance parameter.  Line
+	     fitting occurs when looking for planarity elements within
+	     the scan frames.  A large value will allow this fitting to
+	     be robust to noise, but will ignore small line segments.  A
+	     small value will be less robust to noise, but will capture
+	     the local linearity of small line segments within a scan.
+
+	     Units: meters -->
+	<procarve_linefit_dist>0.2</procarve_linefit_dist>
+
 </settings>

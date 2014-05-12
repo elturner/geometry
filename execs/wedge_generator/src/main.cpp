@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 	wedge_run_settings_t settings;
 	wedge_generator_t wedgen;
 	int ret;
-	
+
 	/* get command-line arguments */
 	ret = settings.parse(argc, argv);
 	if(ret)
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 	ret = wedgen.init(settings.madfile, settings.confile,
 			settings.timefile,
 			settings.default_clock_uncertainty,
-			settings.carvebuf);
+			settings.carvebuf, settings.linefit_dist);
 	if(ret)
 	{
 		/* an error occurred */

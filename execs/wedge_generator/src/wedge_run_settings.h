@@ -83,6 +83,18 @@ class wedge_run_settings_t
 		 */
 		double carvebuf;
 
+		/**
+		 * The line-fitting distance parameter.  This value
+		 * indicates how far away neighbors can be from a point
+		 * in a scan frame when checking the planarity
+		 * characteristics of that point.  A small value will allow
+		 * for smaller lines within the scan, but a larger value
+		 * will allow for robustness against noise.
+		 *
+		 * Units: meters
+		 */
+		double linefit_dist;
+
 	/* functions */
 	public:
 

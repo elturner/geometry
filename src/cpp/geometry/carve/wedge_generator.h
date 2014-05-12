@@ -47,7 +47,14 @@ class wedge_generator_t
 		 * of the probability distributions to be explicity
 		 * represented in the octree. */
 		double carving_buffer;
-	
+
+		/* the line-fit distance indiates how far away neighbors
+		 * can be within a scan to still be considered for line-
+		 * fit parameters.  Making this smaller will allow for
+		 * smaller lines, but making it larger will allow the
+		 * line-fit results to be less noisy and more robust. */
+		double linefit_dist;
+
 	/* functions */
 	public:
 		
@@ -63,13 +70,14 @@ class wedge_generator_t
 		 * @param tsfile    The time synchronization output xml file
 		 * @param dcu       The default clock uncertainty
 		 * @param carvebuf  The carving buffer, units of std. dev.
+		 * @param lf_dist   The line-fit distance, units of meters
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int init(const std::string& madfile,
 		         const std::string& confile,
 		         const std::string& tsfile,
-		         double dcu, double carvebuf);
+		         double dcu, double carvebuf, double lf_dist);
 
 		/**
 		 * Computes and exports all wedges

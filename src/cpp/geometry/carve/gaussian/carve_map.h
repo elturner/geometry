@@ -49,6 +49,7 @@ class carve_map_t
 
 		/* unit vector along mean of ray */
 		Eigen::Vector3d ray;
+		double range; /* mean distance between scanner and point */
 
 		/* each end of the ray is modeled partly with a
 		 * plane in line with one of the dominant axes of
@@ -109,10 +110,10 @@ class carve_map_t
 		          const Eigen::Vector3d& p_mean,
 		          const Eigen::Matrix3d& p_cov);
 
-		/*-------------*/
-		/* computation */
-		/*-------------*/
-	
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
 		/**
 		 * Copies sensor mean position into given structure
 		 *
@@ -123,6 +124,12 @@ class carve_map_t
 		 */
 		inline void get_sensor_mean(Eigen::Vector3d& s) const
 		{ s = this->sensor_mean; };
+
+		/**
+		 * Returns pointer to the sensor mean vector
+		 */
+		const Eigen::Vector3d* get_sensor_mean_ptr() const
+		{ return &(this->sensor_mean); };
 
 		/**
 		 * Copies sensor covariance into given structure
@@ -145,7 +152,13 @@ class carve_map_t
 		 */
 		inline void get_scanpoint_mean(Eigen::Vector3d& p) const
 		{ p = this->scanpoint_mean; };
-		
+	
+		/**
+		 * Returns pointer to the scanpoint mean vector
+		 */
+		const Eigen::Vector3d* get_scanpoint_mean_ptr() const
+		{ return &(this->scanpoint_mean); };
+
 		/**
 		 * Copies scanpoint covariance into given structure
 		 *
@@ -169,6 +182,16 @@ class carve_map_t
 		inline double get_scanpoint_var() const
 		{ return this->scanpoint_var; };
 
+		/**
+		 * Returns the mean range between scanpoint and sensor
+		 */
+		inline double get_range() const
+		{ return this->range; };
+
+		/*-------------*/
+		/* computation */
+		/*-------------*/
+	
 		/**
 		 * Computes the value of this carve map at the given loc
 		 *

@@ -72,6 +72,7 @@ carve_map_t::carve_map_t()
 
 	/* the following are cached parameters */
 	this->ray                        = Vector3d::Zero();
+	this->range                      = 0.0;
 	this->sensor_norm                = Vector3d::Zero();
 	this->sensor_dot                 = 0.0;
 	this->sensor_var                 = 0.0;
@@ -106,7 +107,8 @@ void carve_map_t::init(const Vector3d& s_mean,
 
 	/* compute cached values about ray */
 	this->ray = p_mean - s_mean;
-	this->ray.normalize(); /* unit vector of ray of scan */
+	this->range = this->ray.norm(); /* mean distance between ends */
+	this->ray /= this->range; /* unit vector of ray of scan */
 
 	/* in order to compute the plane modeled for each endpoint
 	 * of the ray, we need to find the principal components

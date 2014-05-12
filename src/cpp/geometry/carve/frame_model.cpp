@@ -9,9 +9,11 @@
 #include <geometry/carve/gaussian/noisy_scanpoint.h>
 #include <geometry/carve/gaussian/scan_model.h>
 #include <geometry/carve/gaussian/carve_map.h>
+#include <geometry/pca/line_fit.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <stdlib.h>
+#include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -38,6 +40,8 @@ frame_model_t::frame_model_t()
 	this->num_points = 0;
 	this->map_list = NULL;
 	this->is_valid.clear();
+	this->planar_prob.clear();
+	this->corner_prob.clear();
 }
 		
 frame_model_t::~frame_model_t()
@@ -47,10 +51,13 @@ frame_model_t::~frame_model_t()
 		delete[] (this->map_list);
 	this->map_list = NULL;
 	this->is_valid.clear();
+	this->planar_prob.clear();
+	this->corner_prob.clear();
 }
 		
-int frame_model_t::init(const fss::frame_t& frame,
-                        scan_model_t& model, const system_path_t& path)
+int frame_model_t::init(const fss::frame_t& frame, double ang,
+                        double linefit, scan_model_t& model,
+                        const system_path_t& path)
 {
 	noisy_scanpoint_t point;
 	unsigned int i;
@@ -95,6 +102,11 @@ int frame_model_t::init(const fss::frame_t& frame,
 		/* generate a carve map from statistical model */
 		model.populate(this->map_list[i]);
 	}
+
+	/* analyze planar and corner features within frame */
+	ret = this->compute_planar_probs(linefit, ang);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
 
 	/* success */
 	return 0;
@@ -344,4 +356,102 @@ void frame_model_t::find_wedge_indices(unsigned int i,
 		na--;
 	while(!next.is_valid[nb] && nb < nn)
 		nb++;
+}
+		
+int frame_model_t::compute_planar_probs(double dist, double ang)
+{
+	double r, d2, e, s;
+	line_fit_t line_model;
+	Vector3d disp, neigh_pos;
+	const Vector3d* imp, *jmp;
+	vector<const Vector3d*> neighs; 
+	unsigned int i;
+	int j, j_min, j_max, m;
+
+	/* verify that we have a valid scan frame */
+	if(this->num_points == 0 || this->map_list == NULL)
+		return -1;
+
+	/* first, prepare the output vector to receive the 
+	 * computed results */
+	this->planar_prob.resize(this->num_points);
+
+	/* iterate over the points */
+	d2 = dist * dist;
+	for(i = 0; i < this->num_points; i++)
+	{
+		/* get the range of the current scanpoint from its sensor */
+		r = this->map_list[i].get_range(); 
+
+		/* get the neighborhood of points that can contribute
+		 * to the planarity estimate of the i'th point */
+		
+		/* because the points are assumed to be spaced equally
+		 * angularly, then we only need to check points within
+		 * this index range to see if they fall within dist of
+		 * the current point. */
+		m = (int) floor(atan(dist/r)/ang);
+		j_min = i-m;
+		if(j_min < 0)
+			j_min = 0;
+		j_max = i+m;
+		if(j_max >= (int) this->num_points) 
+			j_max = this->num_points-1;
+		
+		/* check points to see if they are within dist of i */
+		neighs.clear();
+		imp = this->map_list[i].get_scanpoint_mean_ptr();
+		for(j = j_min; j <= j_max; j++)
+		{
+			/* get displacement bewtween points */
+			jmp = this->map_list[j].get_scanpoint_mean_ptr();
+			disp = (*imp) - (*jmp);
+			if(disp.squaredNorm() <= d2)
+				neighs.push_back(jmp);
+		}
+
+		/* fit a line to the neighborhood */
+		line_model.fit(neighs);
+	
+		/* iterate over neighbors, compute normalized error
+		 * of each neighbor point to line.  The normalized error
+		 * is computed as the distance to the line divided by
+		 * the isotropic std. dev. of the point */
+		e = 0;
+		for(j = j_min; j <= j_max; j++)
+		{
+			/* get isotropic std. dev of point */
+			s = sqrt(this->map_list[j].get_scanpoint_var());
+
+			/* compute normalized error */
+			this->map_list[j].get_scanpoint_mean(neigh_pos);
+			e += line_model.distance(neigh_pos) / s;
+		}
+		e /= (1 + j_max - j_min);
+
+		/* store the probability in object structure
+		 *
+		 *
+		 * if we treat e as a sample from a unit gaussian, then 
+		 * we can express the probability of the line fit as the
+		 * probability mass greater than e (that is, if the points
+		 * are likely to be at least as far out as the line, then 
+		 * the line is a good fit)
+		 *
+		 *                           |   |   |                   
+		 *                           | --|-- |                      
+		 *                           |/  |  \|                    
+		 *                          _/   |   \_                     
+		 *              _______-----#|   |   |#-----________   
+		 *              #############|   |   |##############   
+		 * --------------------------------------------------------
+		 *                          -e       e   
+		 *
+		 * p = 2 * cdf(-e) = erf(-e)+1
+		 */
+		this->planar_prob[i] = erf(-e)+1;
+	}
+
+	/* success */
+	return 0;
 }
