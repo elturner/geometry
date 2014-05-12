@@ -130,6 +130,11 @@ SPATIAL_UNITS reader_t::units() const
 	return (this->header.units); /* return the units of the file */
 }
 
+double reader_t::angle() const
+{
+	return (this->header.angle);
+}
+
 int reader_t::get(frame_t& frame, unsigned int i)
 {
 	unsigned int j;
@@ -213,10 +218,10 @@ writer_t::~writer_t()
 }
 
 void writer_t::init(const string& name, const string& type,
-                    size_t num_s, size_t num_p, SPATIAL_UNITS u)
+                    size_t num_s, size_t num_p, SPATIAL_UNITS u, double ang)
 {
 	/* initialize values to default */
-	this->header.init(name, type, num_s, num_p, u);
+	this->header.init(name, type, num_s, num_p, u, ang);
 }
 			
 int writer_t::open(const string& filename)
@@ -576,10 +581,11 @@ header_t::header_t()
 	this->units = UNITS_UNKNOWN;
 	this->num_scans = 0;
 	this->num_points_per_scan = 0;
+	this->angle = DEFAULT_ANGULAR_SPACING;
 }
 			
 void header_t::init(const string& name, const string& type,
-                    size_t num_s, size_t num_p, SPATIAL_UNITS u)
+                    size_t num_s, size_t num_p, SPATIAL_UNITS u, double ang)
 {
 	/* set all values in the header to either default values or
 	 * to the provided values */
@@ -590,6 +596,7 @@ void header_t::init(const string& name, const string& type,
 	this->units = u;
 	this->num_scans = num_s;
 	this->num_points_per_scan = num_p;
+	this->angle = ang;
 }
 			
 int header_t::parse(istream& infile)
@@ -680,6 +687,11 @@ int header_t::parse(istream& infile)
 				return -4;
 			}
 		}
+		else if(!tag.compare(HEADER_TAG_ANGLE))
+		{
+			/* get the value of the angular spacing */
+			parser >> (this->angle);
+		}
 		else
 		{
 			/* unknown tag */
@@ -758,6 +770,10 @@ void header_t::print(ostream& outfile) const
 	if(!(this->scanner_type.empty()))
 		outfile << HEADER_TAG_SCANNER_TYPE << " " 
 		        << this->scanner_type << endl;
+	
+	/* the angle tag is also optional */
+	if(this->angle > 0)
+		outfile << HEADER_TAG_ANGLE << " " << this->angle << endl;
 
 	/* the remainder of the tags are required */
 	outfile << HEADER_TAG_NUM_SCANS << " " << this->num_scans << endl

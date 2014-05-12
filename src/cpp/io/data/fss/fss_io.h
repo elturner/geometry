@@ -39,7 +39,7 @@ namespace fss
 
 	/* the following definitions are used for .fss file i/o */
 	static const int         EARLIEST_SUPPORTED_VERSION = 1;
-	static const int         LATEST_SUPPORTED_VERSION   = 1;
+	static const int         LATEST_SUPPORTED_VERSION   = 2;
 	static const std::string MAGIC_NUMBER               = "fss";
 	static const std::string END_HEADER_STRING          = "end_header"; 
 
@@ -52,6 +52,13 @@ namespace fss
 	static const std::string HEADER_TAG_NUM_POINTS_PER_SCAN
 	                                 = "num_points_per_scan";
 	static const std::string HEADER_TAG_UNITS        = "units";
+	static const std::string HEADER_TAG_ANGLE        = "angle";
+
+	/* default values */
+
+	/* the default angular spacing is the angular spacing (in radians)
+	 * of a hokuyo scanner, which is expressed as (3*pi/2) / 1080 */
+	static const double DEFAULT_ANGULAR_SPACING      = 0.0043633;
 
 	/**
 	 * This enum dictates the valid formats for data in .fss files
@@ -287,6 +294,7 @@ namespace fss
 			SPATIAL_UNITS units; /* units of point positions */
 			size_t num_scans; /* number of frames */
 			size_t num_points_per_scan;
+			double angle; /* angular spacing between points */
 
 		/* functions */
 		public:
@@ -308,12 +316,14 @@ namespace fss
 			 * @param num_s     Number of scan frames in file
 			 * @param num_p     Number of points per scan frame
 			 * @param u         The units of the points
+			 * @param ang       The specified angular spacing
 			 */
 			void init(const std::string& name, 
 			          const std::string& type, 
 			          size_t num_s,
 			          size_t num_p,
-				  SPATIAL_UNITS u);
+				  SPATIAL_UNITS u,
+			          double ang=DEFAULT_ANGULAR_SPACING);
 
 			/**
 			 * Parses the header from the given file stream
@@ -467,6 +477,11 @@ namespace fss
 			SPATIAL_UNITS units() const;
 
 			/**
+			 * Returns the angular spacing of retrieved points
+			 */
+			double angle() const;
+
+			/**
 			 * Retrieves the i'th frame
 			 *
 			 * Will populate the given structure with the data
@@ -548,11 +563,13 @@ namespace fss
 			 * @param num_s  Number of scan frames to store
 			 * @param num_p  Number of points per scan frame
 			 * @param u      The units of the points
+			 * @param ang    The specified angular spacing
 			 */
 			void init(const std::string& name,
 			          const std::string& type,
 			          size_t num_s, size_t num_p,
-			          SPATIAL_UNITS u=UNITS_METERS);
+			          SPATIAL_UNITS u=UNITS_METERS,
+			          double ang=DEFAULT_ANGULAR_SPACING);
 
 			/**
 			 * Opens file for writing
