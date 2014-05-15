@@ -43,6 +43,10 @@ class carve_map_t
 		Eigen::Vector3d scanpoint_mean;
 		Eigen::Matrix3d scanpoint_cov;
 
+		/* the curvature estimates for this scan point */
+		double planar_prob; /* value [0,1] indicating planarity */
+		double corner_prob; /* value [0,1] indicating right-angle */
+
 		/*-------------------*/
 		/* cached parameters */
 		/*-------------------*/
@@ -187,6 +191,34 @@ class carve_map_t
 		 */
 		inline double get_range() const
 		{ return this->range; };
+
+		/**
+		 * Retrieves the planar probability of this scan point
+		 */
+		inline double get_planar_prob() const
+		{ return this->planar_prob; };
+
+		/**
+		 * Sets the planar probability of this scan point
+		 *
+		 * @param p   The value [0,1] to set to
+		 */
+		inline void set_planar_prob(double p)
+		{ this->planar_prob = p; };
+
+		/**
+		 * Retrieves the corner probability of this scan point
+		 */
+		inline double get_corner_prob() const
+		{ return this->corner_prob; };
+
+		/**
+		 * Sets the corner probability of this scan point
+		 *
+		 * @param c   The value [0,1] to set to
+		 */
+		inline void set_corner_prob(double c)
+		{ this->corner_prob = c; };
 
 		/*-------------*/
 		/* computation */

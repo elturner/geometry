@@ -69,6 +69,8 @@ carve_map_t::carve_map_t()
 	this->sensor_cov             = Matrix3d::Zero();
 	this->scanpoint_mean         = Vector3d::Zero();
 	this->scanpoint_cov          = Matrix3d::Zero();
+	this->planar_prob            = 0.0;
+	this->corner_prob            = 0.0;
 
 	/* the following are cached parameters */
 	this->ray                        = Vector3d::Zero();
@@ -104,6 +106,8 @@ void carve_map_t::init(const Vector3d& s_mean,
 	this->sensor_cov     = s_cov;
 	this->scanpoint_mean = p_mean;
 	this->scanpoint_cov  = p_cov;
+	this->planar_prob    = 0.0;
+	this->corner_prob    = 0.0;
 
 	/* compute cached values about ray */
 	this->ray = p_mean - s_mean;

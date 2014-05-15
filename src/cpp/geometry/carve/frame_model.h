@@ -36,11 +36,6 @@ class frame_model_t
 		/* this bool list indicates which carve maps are valid */
 		std::vector<bool> is_valid;
 
-		/* the following lists store the results of planar
-		 * and corner detection on this scan frame. */
-		std::vector<double> planar_prob;
-		std::vector<double> corner_prob;
-
 	/* functions */
 	public:
 

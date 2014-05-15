@@ -40,8 +40,6 @@ frame_model_t::frame_model_t()
 	this->num_points = 0;
 	this->map_list = NULL;
 	this->is_valid.clear();
-	this->planar_prob.clear();
-	this->corner_prob.clear();
 }
 		
 frame_model_t::~frame_model_t()
@@ -51,8 +49,6 @@ frame_model_t::~frame_model_t()
 		delete[] (this->map_list);
 	this->map_list = NULL;
 	this->is_valid.clear();
-	this->planar_prob.clear();
-	this->corner_prob.clear();
 }
 		
 int frame_model_t::init(const fss::frame_t& frame, double ang,
@@ -107,6 +103,8 @@ int frame_model_t::init(const fss::frame_t& frame, double ang,
 	ret = this->compute_planar_probs(linefit, ang);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
+
+	// TODO do corner features
 
 	/* success */
 	return 0;
@@ -372,10 +370,6 @@ int frame_model_t::compute_planar_probs(double dist, double ang)
 	if(this->num_points == 0 || this->map_list == NULL)
 		return -1;
 
-	/* first, prepare the output vector to receive the 
-	 * computed results */
-	this->planar_prob.resize(this->num_points);
-
 	/* iterate over the points */
 	d2 = dist * dist;
 	for(i = 0; i < this->num_points; i++)
@@ -449,7 +443,7 @@ int frame_model_t::compute_planar_probs(double dist, double ang)
 		 *
 		 * p = 2 * cdf(-e) = erf(-e)+1
 		 */
-		this->planar_prob[i] = erf(-e)+1;
+		this->map_list[i].set_planar_prob(erf(-e)+1);
 	}
 
 	/* success */

@@ -31,6 +31,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)io/carve/wedge_io.cpp \
 		$(SOURCEDIR)io/carve/chunk_io.cpp \
+		$(SOURCEDIR)io/carve/carve_map_io.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
@@ -73,6 +74,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)io/carve/wedge_io.h \
 		$(SOURCEDIR)io/carve/chunk_io.h \
+		$(SOURCEDIR)io/carve/carve_map_io.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
