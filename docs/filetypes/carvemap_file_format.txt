@@ -1,0 +1,78 @@
+*****************************************
+* Format Specification for .wedge Files *
+*****************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+May 13, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .carvemap files, which are used
+to store global 3D gaussian distributions for the input scan points and
+sensor positions.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in binary, in little-endian ordering.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of scan frames.
+
+The header is represented by the following:
+
+-------------------------------------------------------------------
+value        type                 size       description
+-------------------------------------------------------------------
+magic        string               8 bytes    The literal "carvmap\0"
+num_frames   uint64               8 bytes    Number of frames in file
+-------------------------------------------------------------------
+
+After the header is a list of scan frames.  Each scan frame has the
+following values:
+
+-------------------------------------------------------------------
+value                type         size       description
+-------------------------------------------------------------------
+num_pts              uint64        8 bytes   Number of points in this frame
+sensor_dist          GAUSS_DIST   72 bytes   Distribution of sensor position
+scanpoint[0]         GAUSS_DIST   72 bytes   Distribution of #0 point
+planar_prob[0]       double        8 bytes   Value [0,1] of planarity #0
+corner_prob[0]       double        8 bytes   Value [0,1] of corner #0
+scanpoint[1]         GAUSS_DIST   72 bytes   Distribution of #1 point
+planar_prob[1]       double        8 bytes   Value [0,1] of planarity #1
+corner_prob[1]       double        8 bytes   Value [0,1] of corner #1
+...
+...
+...
+scanpoint[n-1]       GAUSS_DIST   72 bytes   Distribution of #(n-1) point
+planar_prob[n-1]     double        8 bytes   Value [0,1] of planarity #(n-1)
+corner_prob[n-1]     double        8 bytes   Value [0,1] of corner #(n-1)
+-------------------------------------------------------------------
+
+Where a GAUSS_DIST structure has the following values:
+
+-------------------------------------------------------------------
+value        type                 size       description
+-------------------------------------------------------------------
+mean_x       double               8 bytes    X-coordinate of mean pos
+mean_y       double               8 bytes    Y-coordinate of mean pos
+mean_z       double               8 bytes    Z-coordinate of mean pos
+cov_xx       double               8 bytes    Covariance of X coord with X
+cov_xy       double               8 bytes    Covariance of X coord with Y
+cov_xz       double               8 bytes    Covariance of X coord with Z
+cov_yy       double               8 bytes    Covariance of Y coord with Y
+cov_yz       double               8 bytes    Covariance of Y coord with Z
+cov_zz       double               8 bytes    Covariance of Z coord with Z
+-------------------------------------------------------------------
+total size = 9*8 = 72 bytes
+
