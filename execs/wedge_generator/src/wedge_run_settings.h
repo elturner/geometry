@@ -55,10 +55,21 @@ class wedge_run_settings_t
 		std::vector<std::string> fssfiles;
 
 		/**
+		 * The output carvemap file
+		 *
+		 * This .carvemap file stores the probabilistic
+		 * distributions for each scan point, along with results
+		 * of curvature analysis for each point.
+		 */
+		std::string carvemapfile;
+
+		/**
 		 * The output wedge file
 		 *
-		 * This .wedge file stores the probabilistic distributions
-		 * for each wedge generated in this program.
+		 * This .wedge file stores the list of wedges, where each
+		 * wedge is represented by four carvemap points.  The
+		 * indices referenced in this file are relative to the
+		 * carvemaps stored in carvemapfile.
 		 */
 		std::string wedgefile;
 

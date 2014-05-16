@@ -13,6 +13,7 @@
 
 #include <io/data/fss/fss_io.h>
 #include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <geometry/carve/gaussian/scan_model.h>
@@ -220,21 +221,26 @@ class frame_model_t
 		/*-----*/
 
 		/**
-		 * Will export all wedges from this frame and next frame
+		 * Will export all carvemaps and wedges from these frames
 		 *
 		 * Given a populated next_frame structure, will compute
 		 * all wedges between the two frames, and write out
-		 * each one's serialization to the given file stream.
+		 * each one's serialization to the given file streams,
+		 * along with the carvemaps themselves to the carvemap
+		 * output stream.
 		 *
-		 * @param os    The binary output stream to write to
-		 * @param next  The next frame from this frame
-		 * @param buf   In units of std. devs., carving buffer
+		 * @param cos         The carvemap output stream to write to
+		 * @param wos         The wedge output stream to write to
+		 * @param curr_index  The index of this frame
+		 * @param next        The next frame from this frame
 		 *
 		 * @return      Returns the number of wedges exported,
 		 *              returns negative value on error.
 		 */
-		int serialize_wedges(wedge::writer_t& os,
-			const frame_model_t& next, double buf) const;
+		int serialize_wedges(cm_io::writer_t& cos,
+			wedge::writer_t& wos,
+			unsigned int curr_index, 
+			const frame_model_t& next) const;
 
 		/*-----------*/
 		/* debugging */

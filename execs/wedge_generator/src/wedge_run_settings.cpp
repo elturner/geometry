@@ -25,11 +25,12 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define MADFILE_FLAG   "-p" /* localization output path file (.mad) */
-#define CONFILE_FLAG   "-c" /* hardware config file (.xml) */
-#define TIMEFILE_FLAG  "-t" /* time-sync output file (.xml) */
-#define SETTINGS_FLAG  "-s" /* program-specific settings (.xml) */
-#define WEDGEFILE_FLAG "-w" /* output wedge file (.wedge) */
+#define MADFILE_FLAG      "-p" /* localization output path file (.mad) */
+#define CONFILE_FLAG      "-c" /* hardware config file (.xml) */
+#define TIMEFILE_FLAG     "-t" /* time-sync output file (.xml) */
+#define SETTINGS_FLAG     "-s" /* program-specific settings (.xml) */
+#define CARVEMAPFILE_FLAG "-m" /* output carvemap file (.carvemap) */
+#define WEDGEFILE_FLAG    "-w" /* output wedge file (.wedge) */
 
 /* file extensions to check for */
 
@@ -88,11 +89,18 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 			"This file should contain run parameters for how "
 			"to generate chunks and where to store them on "
 			"disk.", false, 1);
+	args.add(CARVEMAPFILE_FLAG, "Where to store the output .carvemap "
+			"file.  This file contains probability "
+			"distributions for each input scan point, along "
+			"with curvature analysis for each of these points.",
+			false, 1);
 	args.add(WEDGEFILE_FLAG, "Where to store the output wedge file."
 			"  This file contains a list of all wedges written"
-			"  to disk.  The wedges contain probabilistic "
-			"models for all input scans for volumetric "
-			"analysis.", false, 1);
+			" to disk.  The wedges are defined by the indices "
+			"of four carve maps, which reference four points "
+			"across two scan frames.  The indices listed in "
+			"this output file are relative to the carvemaps "
+			"found in the output .carvemap file", false, 1);
 	args.add_required_file_type(FSS_FILE_EXT, 1,
 			"These files are used as input scan files.  They"
 			" also contain statistical information about the "
@@ -117,6 +125,7 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 	this->confile           = args.get_val(CONFILE_FLAG);
 	this->timefile          = args.get_val(TIMEFILE_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);
+	this->carvemapfile      = args.get_val(CARVEMAPFILE_FLAG);
 	this->wedgefile         = args.get_val(WEDGEFILE_FLAG);
 	args.files_of_type(FSS_FILE_EXT, this->fssfiles);
 

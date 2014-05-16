@@ -1,6 +1,7 @@
 #include "frame_model.h"
 #include <io/carve/chunk_io.h>
 #include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
 #include <io/data/fss/fss_io.h>
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
@@ -280,11 +281,19 @@ int frame_model_t::carve_single(octnode_t* node, unsigned int depth,
 /* i/o */
 /*-----*/
 
-int frame_model_t::serialize_wedges(wedge::writer_t& os,
-				const frame_model_t& next, double buf) const
+int frame_model_t::serialize_wedges(cm_io::writer_t& cos, 
+				wedge::writer_t& wos,
+				unsigned int curr_index,
+				const frame_model_t& next) const 
 {
 	carve_wedge_t wedge;
 	unsigned int i, n, ta, tb, na, nb;
+	int ret;
+
+	/* write the carve maps from this frame to file */
+	ret = cos.write_frame(this->map_list, this->num_points);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
 
 	/* iterate over the wedges between these frames */
 	n = this->num_points - 1; /* number of edges in scan frame */
@@ -293,12 +302,8 @@ int frame_model_t::serialize_wedges(wedge::writer_t& os,
 		/* get the indices for this wedge */
 		this->find_wedge_indices(i, next, ta, tb, na, nb);
 
-		/* initialize the current wedge */
-		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
-	        	   &(next.map_list[na]), &(next.map_list[nb]), buf);
-	
 		/* export this wedge to file */
-		os.write(wedge);
+		wos.write(curr_index, ta, tb, curr_index+1, na, nb);
 	}
 
 	/* return the number of wedges exported */

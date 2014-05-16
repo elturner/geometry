@@ -87,11 +87,13 @@ class wedge_generator_t
 		 * and will export these wedge distributions to disk.
 		 *
 		 * @param fssfiles     The list of fss files to analyze
+		 * @param cmfile       Where to write the carvemap file
 		 * @param wedgefile    Where to write the wedge file
 		 *
 		 * @return    Returns zero on success, non-zero on failure
 		 */
 		int process(const std::vector<std::string>& fssfiles,
+		            const std::string& cmfile,
 		            const std::string& wedgefile) const;
 	
 	/* helper functions */

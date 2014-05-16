@@ -1,6 +1,7 @@
 #include "wedge_generator.h"
 #include <io/data/fss/fss_io.h>
 #include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
 #include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/carve/frame_model.h>
@@ -72,10 +73,12 @@ int wedge_generator_t::init(const string& madfile,
 }
 		
 int wedge_generator_t::process(const vector<string>& fssfiles,
+                               const string& cmfile,
                                const string& wedgefile) const
 {
 	progress_bar_t progbar;
-	wedge::writer_t outfile;
+	wedge::writer_t wedge_outfile;
+	cm_io::writer_t cm_outfile;
 	fss::reader_t infile;
 	fss::frame_t inframe;
 	scan_model_t model;
@@ -85,11 +88,24 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 	size_t i, si, n, num_sensors;
 	int ret;
 
-	/* prepare output file */
-	ret = outfile.open(wedgefile);
+	/* prepare output files */
+
+	/* prepare carvemap file */
+	ret = cm_outfile.open(cmfile);
 	if(ret)
 	{
 		ret = PROPEGATE_ERROR(-1, ret);
+		cerr << "[wedge_generator_t::process]\tError " << ret
+		     << ": Could not open output carvemap file for writing:"
+		     << " " << cmfile << endl << endl;
+		return ret;
+	}
+	
+	/* prepare wedge file */
+	ret = wedge_outfile.open(wedgefile);
+	if(ret)
+	{
+		ret = PROPEGATE_ERROR(-2, ret);
 		cerr << "[wedge_generator_t::process]\tERROR " << ret
 		     << ": Could not open output file for writing:"
 		     << wedgefile << endl << endl;
@@ -108,9 +124,10 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 		if(ret)
 		{
 			/* unable to parse, report to user */
-			ret = PROPEGATE_ERROR(-2, ret);
+			ret = PROPEGATE_ERROR(-3, ret);
 			infile.close();
-			outfile.close();
+			cm_outfile.close();
+			wedge_outfile.close();
 			cerr << "[wedge_generator_t::process]\t"
 			     << "Error " << ret
 			     << ": Unable to parse input scan file "
@@ -125,9 +142,10 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 		if(ret)
 		{
 			/* not a recognized sensor */
-			ret = PROPEGATE_ERROR(-3, ret);
+			ret = PROPEGATE_ERROR(-4, ret);
 			infile.close();
-			outfile.close();
+			cm_outfile.close();
+			wedge_outfile.close();
 			cerr << "[wedge_generator_t::process]\t"
 			     << "Error " << ret
 			     << ": Unable to recognize sensor \""
@@ -154,8 +172,9 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 				 * inform user */
 				progbar.clear();
 				infile.close();
-				outfile.close();
-				ret = PROPEGATE_ERROR(-4, ret);
+				cm_outfile.close();
+				wedge_outfile.close();
+				ret = PROPEGATE_ERROR(-5, ret);
 				cerr << "[wedge_generator_t::process]\t"
 				     << "Unable to parse frame #"
 				     << i << ", Error "
@@ -173,8 +192,9 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 				 * frame parameters */
 				progbar.clear();
 				infile.close();
-				outfile.close();
-				ret = PROPEGATE_ERROR(-5, ret);
+				cm_outfile.close();
+				wedge_outfile.close();
+				ret = PROPEGATE_ERROR(-6, ret);
 				cerr << "[wedge_generator_t::process]\t"
 				     << "Unable to compute frame #" 
 				     << i << ", Error "
@@ -194,15 +214,16 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 			}
 
 			/* export all this frame's wedges to file */
-			ret = prev_frame.serialize_wedges(outfile,
-					curr_frame, this->carving_buffer);
+			ret = prev_frame.serialize_wedges(cm_outfile,
+					wedge_outfile, i-1, curr_frame);
 			if(ret <= 0)
 			{
 				/* an error occurred */
 				progbar.clear();
 				infile.close();
-				outfile.close();
-				ret = PROPEGATE_ERROR(-6, ret);
+				cm_outfile.close();
+				wedge_outfile.close();
+				ret = PROPEGATE_ERROR(-7, ret);
 				cerr << "[wedge_generator_t::process]\t"
 				     << "Error " << ret << ": Unable to "
 				     << "serialize frame #" << (i-1)
@@ -222,7 +243,8 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 	}
 
 	/* clean up */
-	outfile.close();
+	cm_outfile.close();
+	wedge_outfile.close();
 
 	/* success */
 	return 0;

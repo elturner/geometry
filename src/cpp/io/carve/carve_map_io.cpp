@@ -117,6 +117,7 @@ void reader_t::close()
 	{
 		/* free this memory */
 		delete[] (this->frames);
+		this->frames = NULL;
 	}
 }
 			
@@ -146,7 +147,8 @@ int reader_t::read(carve_map_t& cm, size_t f, size_t i)
 	/* populate carve map with appropriate values */
 	cm.init(this->frames[f].sensor_pos.mean,
 	        this->frames[f].sensor_pos.cov, dist.mean, dist.cov);
-	// TODO export planar_prob and corner_prob
+	cm.set_planar_prob(planar_prob);
+	cm.set_corner_prob(corner_prob);
 
 	/* success */
 	return 0;
@@ -161,10 +163,8 @@ writer_t::~writer_t()
 	this->close();
 }
 
-int writer_t::open(const string& filename, size_t num_frames)
+int writer_t::open(const string& filename)
 {
-	header_t header;
-
 	/* close any open file streams */
 	this->close();
 
@@ -180,8 +180,8 @@ int writer_t::open(const string& filename, size_t num_frames)
 	}
 
 	/* writer header info */
-	header.num_frames = num_frames;
-	header.print(this->outfile);
+	this->header.num_frames = 0; /* populated by end of writing */
+	this->header.print(this->outfile);
 
 	/* success */
 	return 0;
@@ -191,7 +191,14 @@ void writer_t::close()
 {
 	/* check if stream is open */
 	if(this->outfile.is_open())
-		this->outfile.close(); /* close it */
+	{
+		/* rewrite header with correct number of frames */
+		this->outfile.seekp(0);
+		this->header.print(this->outfile);
+
+		/* close the stream */
+		this->outfile.close();
+	}
 }
 			
 int writer_t::write_frame(const carve_map_t* cm_arr, size_t num)
@@ -231,6 +238,7 @@ int writer_t::write_frame(const carve_map_t* cm_arr, size_t num)
 	}
 
 	/* success */
+	this->header.num_frames++;
 	return 0;
 }
 

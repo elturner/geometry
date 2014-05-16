@@ -411,6 +411,16 @@ void carve_map_t::writeobj(ostream& out) const
 	    << "f -6 -3 -1" << endl;
 }
 
+void carve_map_t::writexyz(ostream& out) const
+{
+	out << this->scanpoint_mean(0) << " "
+	    << this->scanpoint_mean(1) << " "
+	    << this->scanpoint_mean(2) << " "
+	    << ((unsigned int) (255*this->planar_prob)) << " "
+	    << ((unsigned int) (255*this->corner_prob)) << " "
+	    << ((unsigned int) (255*(1-this->planar_prob))) << endl;
+}
+
 /* helper functions */
 
 double carve_map_t::find_aligned_eig(Eigen::Vector3d& eig,

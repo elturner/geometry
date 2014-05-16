@@ -48,7 +48,8 @@ int main(int argc, char** argv)
 
 	/* generate probabilistic wedge structures for all input scans,
 	 * and export these wedges to file */
-	ret = wedgen.process(settings.fssfiles, settings.wedgefile);
+	ret = wedgen.process(settings.fssfiles,
+	                     settings.carvemapfile, settings.wedgefile);
 	if(ret)
 	{
 		/* an error occurred */

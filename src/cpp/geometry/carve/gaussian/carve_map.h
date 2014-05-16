@@ -312,7 +312,19 @@ class carve_map_t
 		 * @param out   The output stream to write to
 		 */
 		void writeobj(std::ostream& out) const;
-	
+
+		/**
+		 * Will export the mean scanpoint position to XYZ file
+		 *
+		 * Will export the mean position of the scanpoint
+		 * distribution as described by this carvemap, in .xyz
+		 * format, to the specified stream.  This will be colored
+		 * using the planarity and corner features of this point.
+		 *
+		 * @param out   The output stream to write to
+		 */
+		void writexyz(std::ostream& out) const;
+
 	/* helper functions */
 	private:
 

@@ -371,6 +371,9 @@ namespace cm_io
 			/* the output file stream */
 			std::ofstream outfile;
 
+			/* the header information for this file */
+			header_t header;
+
 		/* functions */
 		public:
 
@@ -387,13 +390,11 @@ namespace cm_io
 			 * information to the file.
 			 *
 			 * @param filename     The file path to write to
-			 * @param num_frames   The number of frames in file
 			 *
 			 * @return   Returns zero on success, non-zero
 			 *           on failure.
 			 */
-			int open(const std::string& filename,
-			         size_t num_frames);
+			int open(const std::string& filename);
 	
 			/**
 			 * Closes any open streams
