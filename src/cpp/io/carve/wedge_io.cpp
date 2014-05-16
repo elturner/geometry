@@ -49,6 +49,7 @@ int header_t::parse(istream& is)
 	/* parse the input binary stream,
 	 * all values are assumed to be in little-endian ordering */
 	is.read((char*) &(this->num_wedges), sizeof(this->num_wedges));
+	is.read((char*) &(this->buf), sizeof(this->buf));
 
 	/* check file stream */
 	if(is.bad())
@@ -70,6 +71,7 @@ void header_t::print(ostream& os) const
 
 	/* write values */
 	os.write((char*) &(this->num_wedges), sizeof(this->num_wedges));
+	os.write((char*) &(this->buf), sizeof(this->buf));
 }
 
 /*-----------------------------------*/
@@ -123,9 +125,11 @@ int reader_t::open(const string& filename)
 	return 0;
 }
 
-int reader_t::get(carve_wedge_t& w, unsigned int i)
+int reader_t::get(unsigned int& a,  unsigned int& a1,
+		unsigned int& a2, unsigned int& b,
+		unsigned int& b1, unsigned int& b2,
+		unsigned int i)
 {
-	int ret;
 	streampos p;
 
 	/* prepare to access the stream, which requires locking
@@ -154,17 +158,13 @@ int reader_t::get(carve_wedge_t& w, unsigned int i)
 	p = wedge::HEADER_SIZE + (((size_t) i) * wedge::WEDGE_SIZE);
 	this->infile.seekg(p);
 
-	/* parse the wedge from the stream */
-	ret = w.parse(this->infile);
-	if(ret)
-	{
-		ret = PROPEGATE_ERROR(-3, ret);
-		cerr << "[wedge::reader_t::get]\tError " << ret
-		     << ": Could not parse wedge"
-		     << endl << endl;
-		this->mtx.unlock();
-		return ret;
-	}
+	/* parse the wedge indices from the stream */
+	this->infile.read((char*) &a,  sizeof(a));
+	this->infile.read((char*) &a1, sizeof(a1));
+	this->infile.read((char*) &a2, sizeof(a2));
+	this->infile.read((char*) &b,  sizeof(b));
+	this->infile.read((char*) &b1, sizeof(b1));
+	this->infile.read((char*) &b2, sizeof(b2));
 
 	/* success */
 	this->mtx.unlock();
@@ -215,10 +215,16 @@ int writer_t::open(const std::string& filename)
 	return 0;
 }
 			
-void writer_t::write(const carve_wedge_t& w)
+void writer_t::write(unsigned int a, unsigned int a1, unsigned int a2,
+		unsigned int b, unsigned int b1, unsigned int b2)
 {	
 	/* write the given wedge */
-	w.serialize(this->outfile);
+	this->outfile.write((char*) &a,  sizeof(a) );
+	this->outfile.write((char*) &a1, sizeof(a1));
+	this->outfile.write((char*) &a2, sizeof(a2));
+	this->outfile.write((char*) &b,  sizeof(b) );
+	this->outfile.write((char*) &b1, sizeof(b1));
+	this->outfile.write((char*) &b2, sizeof(b2));
 	this->header.num_wedges++;
 }
 

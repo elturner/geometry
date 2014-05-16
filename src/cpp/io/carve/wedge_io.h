@@ -51,46 +51,15 @@ namespace wedge
 	 * The header consists of the magic number and an 8-byte
 	 * integer used to represent the number of wedges in file.
 	 */
-	static const size_t HEADER_SIZE = (MAGIC_NUMBER_SIZE + 8);
-
-	/**
-	 * The size of a vertex stored in the file
-	 *
-	 * A vertex is three 8-byte doubles, for a total of 24 bytes.
-	 */
-	static const size_t VERTEX_SIZE = (3*sizeof(double));
-	
-	/**
-	 * The size of a covariance matrix in file
-	 *
-	 * A covariance matrix is represented as a 3x3 matrix in row-major
-	 * order, and is used to represent the uncertainty component
-	 * of a probability distribution.
-	 */
-	static const size_t COV_MAT_SIZE = (9*sizeof(double));
-
-	/**
-	 * The size of a multi-variate gaussian distribution in file
-	 *
-	 * A gaussian distribution is represented by a mean location
-	 * (a vertex) and a covariance matrix.
-	 */
-	static const size_t GAUSS_DIST_SIZE = (VERTEX_SIZE + COV_MAT_SIZE);
-
-	/**
-	 * The size of a carve-map stored in file
-	 *
-	 * A carve map is represented by two multivariate gaussian 
-	 * distributions
-	 */
-	static const size_t CARVE_MAP_SIZE = (2*GAUSS_DIST_SIZE);
+	static const size_t HEADER_SIZE = (MAGIC_NUMBER_SIZE 
+				+ sizeof(size_t) + sizeof(double));
 
 	/**
 	 * The size of a wedge as stored in the file
 	 *
 	 * A wedge is represented by 6 vertices and 4 carve maps
 	 */
-	static const size_t WEDGE_SIZE = (6*VERTEX_SIZE + 4*CARVE_MAP_SIZE);
+	static const size_t WEDGE_SIZE = (6*sizeof(unsigned int));
 
 	/**
 	 * The header_t class is used to represent the header of a 
@@ -107,6 +76,11 @@ namespace wedge
 
 			/* the number of wedges defined in this file */
 			size_t num_wedges;
+			
+			/* the carve buffer represents the number of
+			 * standard deviations of a point's position its
+			 * wedge vertex should be placed past its mean */
+			double buf;
 
 		/* functions */
 		public:
@@ -180,13 +154,21 @@ namespace wedge
 			 * Will read the information for the i'th wedge
 			 * specified in this file.
 			 *
-			 * @param w   Where to store the wedge information
-			 * @param i   The index of the wedge to retrive
+			 * @param a   Where to store index of first frame
+			 * @param a1  Where to store 1st frame's 1st point
+			 * @param a2  Where to store 1st frame's 2nd point
+			 * @param b   Where to store index of second frame
+			 * @param b1  Where to store 2nd frame's 1st point
+			 * @param b2  Where to store 2nd frame's 2nd point
+			 * @param i   The index of the wedge to retrieve
 			 *
 			 * @return    Returns zero on success, non-zero on
 			 *            failure.
 			 */
-			int get(carve_wedge_t& w, unsigned int i);
+			int get(unsigned int& a,  unsigned int& a1,
+				unsigned int& a2, unsigned int& b,
+				unsigned int& b1, unsigned int& b2,
+				unsigned int i);
 	
 			/**
 			 * Retrieves the number of wedges in this file
@@ -240,11 +222,21 @@ namespace wedge
 			 * Writes a wedge to the file
 			 *
 			 * Will export this wedge's information to the
-			 * opened file stream.
+			 * opened file stream.  The provided values 
+			 * indicate the index of the carve maps that 
+			 * compose this wedge.
 			 *
-			 * @param w   The wedge to export
+			 * @param a   Index of first frame
+			 * @param a1  Index of first frame's first point
+			 * @param a2  Index of first frame's second point
+			 * @param b   Index of second frame
+			 * @param b1  Index of second frame's first point
+			 * @param b2  Index of second frame's second point
 			 */
-			void write(const carve_wedge_t& w);
+			void write(unsigned int a,
+				unsigned int a1, unsigned int a2,
+				unsigned int b, 
+				unsigned int b1, unsigned int b2);
 
 			/**
 			 * Returns the number of wedges written so far
