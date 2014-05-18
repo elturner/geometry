@@ -209,6 +209,26 @@ class octdata_t
 		{ return (this->get_probability() > 0.5); };
 
 		/**
+		 * Returns the average planar probability observation
+		 */
+		inline double get_planar_prob() const
+		{
+			if(this->count == 0)
+				return 0;
+			return ((this->planar_sum) / this->count);
+		};
+
+		/**
+		 * Returns the average corner probability observation
+		 */
+		inline double get_corner_prob() const
+		{
+			if(this->count == 0)
+				return 0;
+			return ((this->corner_sum) / this->count);
+		};
+
+		/**
 		 * Gets the floor plan room number of this data object.
 		 *
 		 * If no room index has been assigned, the value will
