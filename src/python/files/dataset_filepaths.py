@@ -220,10 +220,18 @@ def get_carving_dir(dataset_dir):
 	return os.path.join(get_models_dir(dataset_dir),"carving")
 
 ##
+# Returns the location of the carvemap file in a dataset
+#
+def get_carvemap_file(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), \
+			"scandists.carvemap")
+
+##
 # Returns the location of the wedge file in a dataset
 #
 def get_wedgefile(dataset_dir):
-	return os.path.join(get_carving_dir(dataset_dir),"scandists.wedge")
+	return os.path.join(get_carving_dir(dataset_dir), \
+			"scandists.wedge")
 
 ##
 # Returns the expected location of the chunklist file

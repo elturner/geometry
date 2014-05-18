@@ -49,6 +49,7 @@ def run(dataset_dir):
 	
 	# determine the expected location of necessary files from
 	# within the dataset
+	cmfile    = dataset_filepaths.get_carvemap_file(dataset_dir)
 	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	chunklist = dataset_filepaths.get_chunklist(dataset_dir)
 
@@ -79,8 +80,8 @@ def run(dataset_dir):
 			os.remove(os.path.join(chunkdir, f))
 
 	# prepare the command-line arguments for the chunker code
-	args = [CHUNKER_EXE, '-w', wedgefile, '-o', chunklist, \
-		'-s', SETTINGS_XML]
+	args = [CHUNKER_EXE, '-m', cmfile, '-w', wedgefile, \
+		'-o', chunklist, '-s', SETTINGS_XML]
 
 	# run the chunker code
 	ret = subprocess.call(args, executable=CHUNKER_EXE, \

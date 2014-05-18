@@ -52,6 +52,7 @@ def run(dataset_dir, path_file):
 	# within the dataset
 	config_xml = dataset_filepaths.get_hardware_config_xml(dataset_dir)
 	timesync_xml = dataset_filepaths.get_timesync_xml(dataset_dir)
+	cmfile = dataset_filepaths.get_carvemap_file(dataset_dir)
 	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	fssfiles = dataset_filepaths.get_all_fss_files(dataset_dir)
 
@@ -61,9 +62,9 @@ def run(dataset_dir, path_file):
 		return -1
 
 	# prepare the command-line arguments for the wedge_gen code
-	args = [WEDGE_GEN_EXE, '-c', config_xml, '-w', wedgefile, \
-		'-p', os.path.abspath(path_file), '-s', SETTINGS_XML, \
-		'-t', timesync_xml] + fssfiles
+	args = [WEDGE_GEN_EXE, '-c', config_xml, '-m', cmfile, \
+		'-w', wedgefile, '-p', os.path.abspath(path_file), \
+		'-s', SETTINGS_XML, '-t', timesync_xml] + fssfiles
 
 	# run the wedge_gen code
 	ret = subprocess.call(args, executable=WEDGE_GEN_EXE, \
