@@ -179,6 +179,18 @@ namespace wedge
 			{ return header.num_wedges; };
 
 			/**
+			 * Retrieves the carve buffer value from file.
+			 *
+			 * This value indicates the number of standard
+			 * deviations past the mean position of a scanpoint
+			 * that a wedge's geometry will be defined.
+			 *
+			 * @return   Returns the carving buffer parameter
+			 */
+			inline double carving_buf() const
+			{ return header.buf; };
+
+			/**
 			 * Closes this file if it is open
 			 *
 			 * Closes all file handles.

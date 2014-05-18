@@ -221,7 +221,21 @@ class frame_model_t
 		/*-----*/
 
 		/**
-		 * Will export all carvemaps and wedges from these frames
+		 * Will export only the carvemaps from this frame
+		 *
+		 * Will export the carvemaps to the given file stream.
+		 * Note that if serialize_wedges() is called, this function
+		 * should also be called in order to make sure the
+		 * proper carvemaps exist in the file to be refernced.
+		 *
+		 * @param cos     The carvemap output stream to write to
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int serialize_carvemaps(cm_io::writer_t& cos) const;
+
+		/**
+		 * Will export all wedges from these frames
 		 *
 		 * Given a populated next_frame structure, will compute
 		 * all wedges between the two frames, and write out
@@ -229,7 +243,6 @@ class frame_model_t
 		 * along with the carvemaps themselves to the carvemap
 		 * output stream.
 		 *
-		 * @param cos         The carvemap output stream to write to
 		 * @param wos         The wedge output stream to write to
 		 * @param curr_index  The index of this frame
 		 * @param next        The next frame from this frame
@@ -237,8 +250,7 @@ class frame_model_t
 		 * @return      Returns the number of wedges exported,
 		 *              returns negative value on error.
 		 */
-		int serialize_wedges(cm_io::writer_t& cos,
-			wedge::writer_t& wos,
+		int serialize_wedges(wedge::writer_t& wos,
 			unsigned int curr_index, 
 			const frame_model_t& next) const;
 

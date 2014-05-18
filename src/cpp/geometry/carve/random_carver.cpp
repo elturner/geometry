@@ -8,6 +8,7 @@
 #include <geometry/octree/octree.h>
 #include <io/carve/chunk_io.h>
 #include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -52,14 +53,19 @@ void random_carver_t::init(double res, unsigned int nt)
 	this->num_threads = nt;
 }
 		
-int random_carver_t::export_chunks(const string& wedgefile,
+int random_carver_t::export_chunks(const string& cmfile,
+                                   const string& wedgefile,
                                    const string& chunklist,
                                    const string& chunk_dir)
 {
 	vector<chunk::point_index_t> vals;
-	chunk_exporter_t chunker;
-	wedge::reader_t infile;
-	carve_wedge_t w;
+	chunk_exporter_t chunker; /* output */
+	cm_io::reader_t cm_infile; /* input */
+	wedge::reader_t wedge_infile; /* input */
+	unsigned int ia, ib; /* frame indices */
+	unsigned int ia1, ia2, ib1, ib2; /* indices of imported carvemaps */
+	carve_map_t a1, a2, b1, b2; /* imported carve maps */
+	carve_wedge_t w; /* imported wedge, references carve maps */
 	progress_bar_t progbar;
 	tictoc_t clk;
 	size_t i, num_wedges;
@@ -68,43 +74,123 @@ int random_carver_t::export_chunks(const string& wedgefile,
 	/* open chunk exporter */
 	chunker.open(chunklist, chunk_dir);
 
-	/* open wedge reader */
-	ret = infile.open(wedgefile);
+	/* open carve map file */
+	ret = cm_infile.open(cmfile);
 	if(ret)
 	{
 		/* an error occurred */
 		ret = PROPEGATE_ERROR(-1, ret);
 		cerr << "[random_carver_t::export_chunks]\tError "
+		     << ret << ": Unable to open carve map file: "
+		     << cmfile << endl << endl;
+		chunker.close(this->tree);
+		return ret;
+	}
+
+	/* open wedge reader */
+	ret = wedge_infile.open(wedgefile);
+	if(ret)
+	{
+		/* an error occurred */
+		ret = PROPEGATE_ERROR(-2, ret);
+		cerr << "[random_carver_t::export_chunks]\tError "
 		     << ret << ": Unable to open wedge file: "
 		     << wedgefile << endl;
 		chunker.close(this->tree);
+		cm_infile.close();
 		return ret;
 	}
 
 	/* iterate over input wedges */
 	tic(clk);
 	progbar.set_name("chunking wedges");
-	num_wedges = infile.num_wedges();
+	num_wedges = wedge_infile.num_wedges();
 	for(i = 0; i < num_wedges; i++)
 	{
 		/* inform user of progress */
 		progbar.update(i, num_wedges);
 		
 		/* parse current wedge */
-		ret = infile.get(w, i);
+		ret = wedge_infile.get(ia, ia1, ia2, ib, ib1, ib2, i);
 		if(ret)
 		{
 			/* error occurred reading wedge,  inform user */
 			progbar.clear();
-			infile.close();
+			cm_infile.close();
+			wedge_infile.close();
 			chunker.close(this->tree);
-			ret = PROPEGATE_ERROR(-2, ret);
+			ret = PROPEGATE_ERROR(-3, ret);
 			cerr << "[random_carver_t::export_chunks]\t"
 			     << "Unable to parse wedge #"
 			     << i << ", Error " << ret << endl;
 			return ret;
 		}
+
+		/* prepare the carve maps to be used for this wedge */
+		ret = cm_infile.read(a1, ia, ia1);
+		if(ret)
+		{
+			/* error occurred */
+			progbar.clear();
+			cm_infile.close();
+			wedge_infile.close();
+			chunker.close(this->tree);
+			ret = PROPEGATE_ERROR(-4, ret);
+			cerr << "[random_carver_t::export_chunks]\tError "
+			     << ret << ": Could not parse carvemap #("
+			     << ia << ", " << ia1 << ") for "
+			     << "wedge #" << i << endl << endl;
+			return ret;
+		}
+		ret = cm_infile.read(a2, ia, ia2);
+		if(ret)
+		{
+			/* error occurred */
+			progbar.clear();
+			cm_infile.close();
+			wedge_infile.close();
+			chunker.close(this->tree);
+			ret = PROPEGATE_ERROR(-5, ret);
+			cerr << "[random_carver_t::export_chunks]\tError "
+			     << ret << ": Could not parse carvemap #("
+			     << ia << ", " << ia2 << ") for "
+			     << "wedge #" << i << endl << endl;
+			return ret;
+		}
+		ret = cm_infile.read(b1, ib, ib1);
+		if(ret)
+		{
+			/* error occurred */
+			progbar.clear();
+			cm_infile.close();
+			wedge_infile.close();
+			chunker.close(this->tree);
+			ret = PROPEGATE_ERROR(-6, ret);
+			cerr << "[random_carver_t::export_chunks]\tError "
+			     << ret << ": Could not parse carvemap #("
+			     << ib << ", " << ib1 << ") for "
+			     << "wedge #" << i << endl << endl;
+			return ret;
+		}
+		ret = cm_infile.read(b2, ib, ib2);
+		if(ret)
+		{
+			/* error occurred */
+			progbar.clear();
+			cm_infile.close();
+			wedge_infile.close();
+			chunker.close(this->tree);
+			ret = PROPEGATE_ERROR(-7, ret);
+			cerr << "[random_carver_t::export_chunks]\tError "
+			     << ret << ": Could not parse carvemap #("
+			     << ib << ", " << ib2 << ") for "
+			     << "wedge #" << i << endl << endl;
+			return ret;
+		}
 		
+		/* prepare wedge information */
+		w.init(&a1, &a2, &b1, &b2, wedge_infile.carving_buf()); 
+
 		/* prepare the chunker with the info for this wedge */
 		vals.resize(1);
 		vals[0].set(i);
@@ -116,23 +202,21 @@ int random_carver_t::export_chunks(const string& wedgefile,
 		{
 			/* error occurred during tree growth */
 			progbar.clear();
-			infile.close();
+			cm_infile.close();
+			wedge_infile.close();
 			chunker.close(this->tree);
-			w.free_maps();
-			ret = PROPEGATE_ERROR(-3, ret);
+			ret = PROPEGATE_ERROR(-8, ret);
 			cerr << "[random_carver_t::export_chunks]\t"
 			     << "Unable to carve wedge #" << i << " into "
 			     << "the tree, Error " << ret << endl;
 			return ret;
 		}
-
-		/* free wedge information */
-		w.free_maps();
 	}
 
 	/* inform user that processing is finished */
 	progbar.clear();
-	infile.close();
+	cm_infile.close();
+	wedge_infile.close();
 	toc(clk, "Chunking wedges");
 
 	/* close this chunker, which will finish exporting all files */
@@ -144,11 +228,13 @@ int random_carver_t::export_chunks(const string& wedgefile,
 	return 0;
 }
 		
-int random_carver_t::carve_all_chunks(const string& wedgefile,
+int random_carver_t::carve_all_chunks(const string& cmfile,
+                                      const string& wedgefile,
                                       const string& chunklist)
 {
 	Eigen::Vector3d treecenter;
 	chunk::chunklist_reader_t chunk_infile;
+	cm_io::reader_t cm_infile;
 	wedge::reader_t wedge_infile;
 	progress_bar_t progbar;
 	size_t i, num_chunks;
@@ -180,6 +266,18 @@ int random_carver_t::carve_all_chunks(const string& wedgefile,
 	this->tree.set(treecenter, chunk_infile.halfwidth(),
 	               this->tree.get_resolution());
 
+	/* open the carve map file for reading */
+	ret = cm_infile.open(cmfile);
+	if(ret)
+	{
+		chunk_infile.close();
+		ret = PROPEGATE_ERROR(-2, ret);
+		cerr << "[random_carver_t::carve_all_chunks]\tError "
+		     << ret << ": Unable to read carvemap file: "
+		     << cmfile << endl << endl;
+		return ret;
+	}
+
 	/* open the wedge file for reading.  The indices in the chunk
 	 * file should reference the wedges in this wedge file. */
 	ret = wedge_infile.open(wedgefile);
@@ -187,7 +285,8 @@ int random_carver_t::carve_all_chunks(const string& wedgefile,
 	{
 		/* unable to parse */
 		chunk_infile.close();
-		ret = PROPEGATE_ERROR(-2, ret);
+		cm_infile.close();
+		ret = PROPEGATE_ERROR(-3, ret);
 		cerr << "[random_carver_t::carve_all_chunks]\tError "
 		     << ret << ": Unable to read wedge file: "
 		     << wedgefile << endl;
@@ -209,9 +308,10 @@ int random_carver_t::carve_all_chunks(const string& wedgefile,
 		if(ret)
 		{
 			/* report error to user and continue */
-			ret = PROPEGATE_ERROR(-3, ret);
+			ret = PROPEGATE_ERROR(-4, ret);
 			progbar.clear();
 			chunk_infile.close();
+			cm_infile.close();
 			wedge_infile.close();
 			cerr << "[random_carver_t::carve_all_chunks]\t"
 			     << "Unable to get uuid for chunk #" << i
@@ -220,13 +320,15 @@ int random_carver_t::carve_all_chunks(const string& wedgefile,
 		}
 
 		/* process this chunk */
-		ret = this->carve_chunk(wedge_infile, chunkfile, tp); 
+		ret = this->carve_chunk(cm_infile, wedge_infile,
+					chunkfile, tp); 
 		if(ret)
 		{
 			/* report error and continue */
-			ret = PROPEGATE_ERROR(-4, ret);
+			ret = PROPEGATE_ERROR(-5, ret);
 			progbar.clear();
 			chunk_infile.close();
+			cm_infile.close();
 			wedge_infile.close();
 			cerr << "[random_carver_t::carve_all_chunks]\t"
 			     << "Error " << ret << ": Unable to process "
@@ -250,6 +352,7 @@ int random_carver_t::carve_all_chunks(const string& wedgefile,
 	
 	/* clean up */
 	chunk_infile.close();
+	cm_infile.close();
 	wedge_infile.close();
 	progbar.clear();
 	toc(clk, "Processing all chunks");
@@ -331,7 +434,8 @@ int random_carver_t::serialize(const string& octfile) const
 	return 0;
 }
 		
-int random_carver_t::carve_chunk(wedge::reader_t& wedges,
+int random_carver_t::carve_chunk(cm_io::reader_t& carvemaps,
+			wedge::reader_t& wedges,
 			const string& chunkfile,
 			boost::threadpool::pool& tp)
 {
@@ -393,7 +497,8 @@ int random_carver_t::carve_chunk(wedge::reader_t& wedges,
 		 * processing, so schedule the carving of this node
 		 * into the threadpool */
 		tp.schedule(boost::bind(random_carver_t::carve_node,
-			chunknode, inds, boost::ref(wedges),
+			chunknode, inds, boost::ref(carvemaps),
+			boost::ref(wedges),
 			chunkdepth, false));
 	}
 	else
@@ -401,8 +506,8 @@ int random_carver_t::carve_chunk(wedge::reader_t& wedges,
 		/* since we're not going to use multiple threads, don't
 		 * bother using the threadpool at all, and instead just
 		 * process the chunk using a direct function call */
-		ret = random_carver_t::carve_node(chunknode, inds, wedges, 
-				chunkdepth, true);
+		ret = random_carver_t::carve_node(chunknode, inds,
+				carvemaps, wedges, chunkdepth, true);
 		if(ret)
 		{
 			/* error occurred */
@@ -420,10 +525,14 @@ int random_carver_t::carve_chunk(wedge::reader_t& wedges,
 		
 int random_carver_t::carve_node(octnode_t* chunknode,
 			set<chunk::point_index_t> inds,
+			cm_io::reader_t& carvemaps,
 			wedge::reader_t& wedges,
 			unsigned int maxdepth, bool verbose)
 {
 	set<chunk::point_index_t>::iterator it;
+	unsigned int ia, ib; /* frame indices */
+	unsigned int ia1, ia2, ib1, ib2; /* indices of imported carvemaps */
+	carve_map_t a1, a2, b1, b2; /* imported carve maps */
 	carve_wedge_t w;
 	unsigned int i, n;
 	progress_bar_t progbar;
@@ -448,13 +557,13 @@ int random_carver_t::carve_node(octnode_t* chunknode,
 		if(verbose)
 			progbar.update(i++, n);
 
-		/* get the current wedge */
-		ret = wedges.get(w, it->wedge_index);
+		/* parse current wedge */
+		ret = wedges.get(ia, ia1, ia2, ib, ib1, ib2,
+				it->wedge_index);
 		if(ret)
 		{
 			/* invalid index */
 			ret = PROPEGATE_ERROR(-1, ret);
-			w.free_maps();
 			cerr << "[random_carver_t::carve_node]\tError "
 			     << ret << ": Unable to get wedge #"
 			     << it->wedge_index << " from wedge file"
@@ -462,14 +571,58 @@ int random_carver_t::carve_node(octnode_t* chunknode,
 			return ret;
 		}
 
-		// TODO planarity/edge info about scan?
+		/* prepare the carve maps to be used for this wedge */
+		ret = carvemaps.read(a1, ia, ia1);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-2, ret);
+			cerr << "[random_carver_t::carve_node]\tError "
+			     << ret << ": Could not parse carvemap for "
+			     << "wedge #" << it->wedge_index 
+			     << endl << endl;
+			return ret;
+		}
+		ret = carvemaps.read(a2, ia, ia2);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-3, ret);
+			cerr << "[random_carver_t::carve_node]\tError "
+			     << ret << ": Could not parse carvemap for "
+			     << "wedge #" << it->wedge_index 
+			     << endl << endl;
+			return ret;
+		}
+		ret = carvemaps.read(b1, ib, ib1);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-4, ret);
+			cerr << "[random_carver_t::carve_node]\tError "
+			     << ret << ": Could not parse carvemap for "
+			     << "wedge #" << it->wedge_index 
+			     << endl << endl;
+			return ret;
+		}
+		ret = carvemaps.read(b2, ib, ib2);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-5, ret);
+			cerr << "[random_carver_t::carve_node]\tError "
+			     << ret << ": Could not parse carvemap for "
+			     << "wedge #" << it->wedge_index 
+			     << endl << endl;
+			return ret;
+		}
+		
+		/* prepare wedge information */
+		w.init(&a1, &a2, &b1, &b2, wedges.carving_buf()); 
 
 		/* carve the referenced wedge only in the domain of the
 		 * given node */
 		chunknode->insert(w, maxdepth);
-	
-		/* clean up wedge for next index */
-		w.free_maps();
 	}
 
 	/* simplify this chunk now that it is fully carved */

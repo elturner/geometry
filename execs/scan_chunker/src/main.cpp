@@ -39,7 +39,8 @@ int main(int argc, char** argv)
 	carver.init(settings.chunk_size, 1);
 
 	/* process */
-	ret = carver.export_chunks(settings.wedgefile,
+	ret = carver.export_chunks(settings.carvemapfile,
+	                           settings.wedgefile,
 	                           settings.chunklist_outfile,
 	                           settings.chunkdir); 
 	if(ret)

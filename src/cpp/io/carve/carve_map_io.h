@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <ios>
+#include <mutex> /* this needs to use g++ flag: -std=c++0x */
 
 /**
  * This namespace houses all i/o classes for .carvemap files
@@ -279,6 +280,11 @@ namespace cm_io
 			 * be appropriately freed on deconstruction */
 			frame_t* frames;
 
+			/* This mutex will lock each time the get() function
+			 * is called, to allow this reader to be threadsafe
+			 */
+			std::mutex mtx;
+
 		/* functions */
 		public:
 
@@ -413,12 +419,17 @@ namespace cm_io
 			 * 
 			 * @param cm_arr   Pointer to an array of carve maps
 			 * @param num      Length of cm_arr
+			 * @param is_valid This list indicates which indices
+			 *                 to write to file.  If list is
+			 *                 empty, then all elements will
+			 *                 be written.
 			 *
 			 * @return    Returns zero on success, non-zero
 			 *            on failure.
 			 */
 			int write_frame(const carve_map_t* cm_arr,
-			                size_t num);
+					size_t num,
+					const std::vector<bool>& is_valid);
 	};
 }
 

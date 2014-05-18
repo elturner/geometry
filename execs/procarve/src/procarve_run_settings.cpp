@@ -25,10 +25,11 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define WEDGEFILE_FLAG "-w" /* wedge probabilities file (.wedge) */
-#define SETTINGS_FLAG  "-s" /* program-specific settings (.xml) */
-#define CHUNKLIST_FLAG "-l" /* input chunklist file (.chunklist) */
-#define OCTFILE_FLAG   "-o" /* where to store the output octfile (.oct) */
+#define CARVEMAP_FILE_FLAG "-m" /* carve map file (.carvemap) */
+#define WEDGEFILE_FLAG     "-w" /* wedge list file (.wedge) */
+#define SETTINGS_FLAG      "-s" /* program-specific settings (.xml) */
+#define CHUNKLIST_FLAG     "-l" /* input chunklist file (.chunklist) */
+#define OCTFILE_FLAG       "-o" /* where to store output octfile (.oct) */
 
 /* file extensions to check for */
 
@@ -46,11 +47,12 @@ using namespace std;
 procarve_run_settings_t::procarve_run_settings_t()
 {
 	/* set default values for this program's input files */
-	this->wedgefile  = "";
-	this->chunklist  = "";
-	this->chunkdir   = "chunks"; /* by default, chunks in subdir */
+	this->carvemapfile = "";
+	this->wedgefile    = "";
+	this->chunklist    = "";
+	this->chunkdir     = "chunks"; /* by default, chunks in subdir */
 	this->fpfiles.clear();
-	this->octfile    = "";
+	this->octfile      = "";
 
 	/* the following values are read from an input xml settings
 	 * file.  If that file does not have the setting listed, then
@@ -72,10 +74,14 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	args.set_program_description("This program generates chunk files"
 			" from input scans to be used in the procarve "
 			"program.");
+	args.add(CARVEMAP_FILE_FLAG, "The carve map file (.carvemap) is "
+			"an input file that contains all probability "
+			"distributions for the scan points recovered in "
+			"this dataset.", false, 1);
 	args.add(WEDGEFILE_FLAG, "The scan wedge input file, which contains"
-			" probabilistic models of how the scans intersect"
-			" the environment volume.",
-			false, 1);
+			" lists of wedges that reference indices in the "
+			"corresponding .carvemap file the environment "
+			"volume.", false, 1);
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
 			"to generate chunks and where to store them on "
@@ -108,6 +114,7 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
+	this->carvemapfile      = args.get_val(CARVEMAP_FILE_FLAG);
 	this->wedgefile         = args.get_val(WEDGEFILE_FLAG);
 	this->chunklist         = args.get_val(CHUNKLIST_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);

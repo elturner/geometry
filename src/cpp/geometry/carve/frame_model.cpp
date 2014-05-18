@@ -281,19 +281,55 @@ int frame_model_t::carve_single(octnode_t* node, unsigned int depth,
 /* i/o */
 /*-----*/
 
-int frame_model_t::serialize_wedges(cm_io::writer_t& cos, 
-				wedge::writer_t& wos,
+int frame_model_t::serialize_carvemaps(cm_io::writer_t& cos) const
+{
+	int ret;
+
+	/* write the carve maps from this frame to file */
+	ret = cos.write_frame(this->map_list, this->num_points,
+			this->is_valid);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* success */
+	return 0;
+}
+
+int frame_model_t::serialize_wedges(wedge::writer_t& wos,
 				unsigned int curr_index,
 				const frame_model_t& next) const 
 {
 	carve_wedge_t wedge;
-	unsigned int i, n, ta, tb, na, nb;
-	int ret;
+	vector<int> my_index_map, next_index_map;
+	unsigned int i, n, num_valid, ta, tb, na, nb;
 
-	/* write the carve maps from this frame to file */
-	ret = cos.write_frame(this->map_list, this->num_points);
-	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
+	/* determine the new set of indices for just the valid points */
+	n = this->num_points;
+	my_index_map.resize(n);
+	num_valid = 0;
+	for(i = 0; i < n; i++)
+	{
+		/* set to current count of valid indices */
+		my_index_map[i] = num_valid;
+		
+		/* only increment if this too is valid */
+		if(this->is_valid[i])
+			num_valid++;
+	}
+	
+	/* determine index mapping for next frame as well */
+	n = next.num_points;
+	next_index_map.resize(n);
+	num_valid = 0;
+	for(i = 0; i < n; i++)
+	{
+		/* set to current count of valid indices */
+		next_index_map[i] = num_valid;
+
+		/* only increment if this too is valid */
+		if(next.is_valid[i])
+			num_valid++; /* inc. valids */
+	}
 
 	/* iterate over the wedges between these frames */
 	n = this->num_points - 1; /* number of edges in scan frame */
@@ -301,9 +337,14 @@ int frame_model_t::serialize_wedges(cm_io::writer_t& cos,
 	{
 		/* get the indices for this wedge */
 		this->find_wedge_indices(i, next, ta, tb, na, nb);
-
-		/* export this wedge to file */
-		wos.write(curr_index, ta, tb, curr_index+1, na, nb);
+		
+		/* export this wedge to file, using the new indices
+		 * of just the valid carve maps */
+		ta = my_index_map[ta];
+		tb = my_index_map[tb];
+		na = next_index_map[na];
+		nb = next_index_map[nb];
+		wos.write(curr_index, ta, tb, curr_index+1, na, nb);	
 	}
 
 	/* return the number of wedges exported */
@@ -344,21 +385,38 @@ void frame_model_t::find_wedge_indices(unsigned int i,
 	unsigned int tn = this->num_points - 1;
 	unsigned int nn = next.num_points - 1;
 
+	/* each of the following perturbs the positions of the
+	 * given indices so that they reside on valid points.  They
+	 * must be perturbed in both directions in order to account
+	 * for the edge case of the very first or very last points
+	 * being invalid.  For the example of the first N points being
+	 * invalid, an input of N-1 will iterate backwards until it
+	 * finds that all previous points are invalid, then it will
+	 * iterate forwards until finding a valid point. */
+
 	/* get the scanpoints to use from each frame, checking
 	 * for and avoiding bad scan points */
 	ta = na = i;
 	tb = nb = i+1;
 	while(!this->is_valid[ta] && ta > 0)
 		ta--;
+	while(!this->is_valid[ta] && ta < tn)
+		ta++;
 	while(!this->is_valid[tb] && tb < tn)
 		tb++;
+	while(!this->is_valid[tb] && tb > 0)
+		tb--;
 
 	/* do the same thing for the next frame, checking for
 	 * bad scan points */
 	while(!next.is_valid[na] && na > 0)
 		na--;
+	while(!next.is_valid[na] && na < nn)
+		na++;
 	while(!next.is_valid[nb] && nb < nn)
 		nb++;
+	while(!next.is_valid[nb] && nb > 0)
+		nb--;
 }
 		
 int frame_model_t::compute_planar_probs(double dist, double ang)

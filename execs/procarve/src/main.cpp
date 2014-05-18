@@ -41,7 +41,8 @@ int main(int argc, char** argv)
 	carver.init(settings.resolution, settings.num_threads);
 
 	/* process */
-	ret = carver.carve_all_chunks(settings.wedgefile,
+	ret = carver.carve_all_chunks(settings.carvemapfile,
+	                              settings.wedgefile,
 	                              settings.chunklist);
 	if(ret)
 	{

@@ -30,8 +30,17 @@ class chunker_run_settings_t
 		 * this program */
 
 		/**
-		 * The wedge input file stores the probabilistic models
-		 * for all wedge objects used in this dataset
+		 * The carvemap input file stores the probabilistic models
+		 * for all scan points in this dataset
+		 */
+		std::string carvemapfile;
+
+		/**
+		 * The wedge file contains a list of wedge objects, which
+		 * are composed of indices into the carvemapfile.  Each
+		 * wedge references for scan points in the carve map
+		 * file in order to be able to interpolate across scan
+		 * points during volumetric analysis.
 		 */
 		std::string wedgefile;
 

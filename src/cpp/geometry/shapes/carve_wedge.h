@@ -150,58 +150,6 @@ class carve_wedge_t : public shape_t
 		octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
 		                         double hw, octdata_t* d);
 
-		/*-----*/
-		/* i/o */
-		/*-----*/
-
-		/**
-		 * Exports this wedge object to binary stream
-		 *
-		 * Will export the contents of this wedge to the
-		 * given binary stream.  Reading this stream using the
-		 * parse() function will allow this wedge object to
-		 * be reconstructed, and in the same state is it at
-		 * the time of this function call.
-		 *
-		 * @param os    The output binary stream to write to
-		 */
-		void serialize(std::ostream& os) const;
-
-		/**
-		 * Imports a wedge object from the binary stream
-		 *
-		 * Given a binary stream, will attempt to parse
-		 * the current position as a wedge object, and store
-		 * it in this structure.  The stream should have been
-		 * created by calling serialize() on a wedge object.
-		 * 
-		 * On parsing, the carve maps will be allocated for
-		 * this structure.  IF A CARVE_WEDGE_T WAS
-		 * POPULATED BY CALLING parse(), YOU MUST CALL free_maps()
-		 * TO FREE ALLOCATED MEMORY.  IF parse() IS CALLED MULTIPLE
-		 * TIMES ON THE SAME OBJECT, free_maps() MUST BE CALLED
-		 * AFTER FINISHING WITH EACH SET.
-		 *
-		 * @param is   The input binary stream to read from
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int parse(std::istream& is);
-
-		/**
-		 * Frees memory allocated for the maps
-		 *
-		 * This should only be called on carve wedges after
-		 * parse() has been called.  Typically, carve_wedge_t
-		 * are not responsible for the allocation of the
-		 * map pointers they store, but if parse is called,
-		 * then these pointers are internally allocated,
-		 * and must be freed with this function call.
-		 *
-		 * THIS MUST BE CALLED AFTER EACH CALL TO parse()
-		 */
-		void free_maps();
-
 		/*-----------*/
 		/* debugging */
 		/*-----------*/

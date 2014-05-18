@@ -17,6 +17,7 @@
 
 #include <io/carve/chunk_io.h>
 #include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
 #include <geometry/octree/octree.h>
 #include <boost/threadpool.hpp>
 #include <string>
@@ -88,13 +89,15 @@ class random_carver_t
 		 * NOTE: the chunk dir should be relative to the
 		 * directory that contains chunklist.
 		 *
+		 * @param cmfile      The carvemap file to parse for input
 		 * @param wedgefile   The wedge file to parse for input
 		 * @param chunklist   File location to export chunklist
 		 * @param chunk_dir   The directory to export chunks
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		int export_chunks(const std::string& wedgefile,
+		int export_chunks(const std::string& cmfile,
+		                  const std::string& wedgefile,
 		                  const std::string& chunklist,
 		                  const std::string& chunk_dir);
 
@@ -106,12 +109,14 @@ class random_carver_t
 		 * wedges will be carved into the tree, and that chunk
 		 * will be simplified before the next chunk is imported.
 		 *
+		 * @param cmfile       The input carve map file for carving
 		 * @param wedgefile    The reference wedge file for carving
 		 * @param chunklist    File location to import chunks
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		int carve_all_chunks(const std::string& wedgefile,
+		int carve_all_chunks(const std::string& cmfile,
+		                     const std::string& wedgefile,
 		                     const std::string& chunklist);
 
 		/**
@@ -151,13 +156,15 @@ class random_carver_t
 		 * will be the same size and order as the sensors referenced
 		 * in the corresponding chunklist file.
 		 *
+		 * @param carvemaps   The stream of carvemaps to use
 		 * @param wedges      The stream of wedges to use
 		 * @param chunkfile   The chunkfile to parse
 		 * @param tp          The threadpool to use to carve fast
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
-		int carve_chunk(wedge::reader_t& wedges,
+		int carve_chunk(cm_io::reader_t& carvemaps,
+		                wedge::reader_t& wedges,
 		                const std::string& chunkfile,
 		                boost::threadpool::pool& tp);
 
@@ -174,6 +181,7 @@ class random_carver_t
 		 *
 		 * @param chunknode   The node to carve into
 		 * @param inds        The scan indices to use
+		 * @param carvemaps   The referenced input carve maps
 		 * @param wedges      The referenced input carve wedges
 		 * @param maxdepth    The relative max depth to carve
 		 * @param verbose     If true, will print a progress bar
@@ -182,6 +190,7 @@ class random_carver_t
 		 */
 		static int carve_node(octnode_t* chunknode,
 			std::set<chunk::point_index_t> inds,
+			cm_io::reader_t& carvemaps,
 			wedge::reader_t& wedges,
 			unsigned int maxdepth, bool verbose);
 };

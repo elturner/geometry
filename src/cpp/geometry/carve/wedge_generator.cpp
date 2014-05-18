@@ -85,7 +85,7 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 	frame_model_t curr_frame, prev_frame;
 	string label;
 	tictoc_t clk;
-	size_t i, si, n, num_sensors;
+	size_t i, si, n, num_sensors, total_num_frames;
 	int ret;
 
 	/* prepare output files */
@@ -114,6 +114,7 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 
 	/* iterate over scan files */
 	num_sensors = fssfiles.size();
+	total_num_frames = 0;
 	for(si = 0; si < num_sensors; si++)
 	{
 		/* read in scan file */
@@ -159,7 +160,7 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 		tic(clk);
 		progbar.set_name(infile.scanner_name());
 		n = infile.num_frames();
-		for(i = 0; i < n; i++)
+		for(i = 0; i < n; i++, total_num_frames++)
 		{
 			/* inform user of progress */
 			progbar.update(i, n);
@@ -202,6 +203,23 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 				return ret;
 			}
 
+			/* export the carve maps for this frame */
+			ret = curr_frame.serialize_carvemaps(cm_outfile);
+			if(ret)
+			{
+				/* error occurred */
+				progbar.clear();
+				infile.close();
+				cm_outfile.close();
+				wedge_outfile.close();
+				ret = PROPEGATE_ERROR(-7, ret);
+				cerr << "[wedge_generator_t::process]\t"
+				     << "Error " << ret << ": Unable to "
+				     << "export carve maps for frame "
+				     << i << endl << endl;
+				return ret;
+			}
+
 			/* only proceed from here if we have two frame's
 			 * worth of data, so we can interpolate the
 			 * distributions between them and carve the
@@ -214,8 +232,8 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 			}
 
 			/* export all this frame's wedges to file */
-			ret = prev_frame.serialize_wedges(cm_outfile,
-					wedge_outfile, i-1, curr_frame);
+			ret = prev_frame.serialize_wedges(wedge_outfile,
+					total_num_frames-1, curr_frame);
 			if(ret <= 0)
 			{
 				/* an error occurred */
@@ -223,7 +241,7 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 				infile.close();
 				cm_outfile.close();
 				wedge_outfile.close();
-				ret = PROPEGATE_ERROR(-7, ret);
+				ret = PROPEGATE_ERROR(-8, ret);
 				cerr << "[wedge_generator_t::process]\t"
 				     << "Error " << ret << ": Unable to "
 				     << "serialize frame #" << (i-1)

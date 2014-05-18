@@ -247,17 +247,27 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
                                         double hw, octdata_t* d)
 {
-	double val, xsize;
+	double val, corner, planar, xsize;
 	unsigned int i;
 
 	/* sample the originating carve maps at this location */
 	val = 0;
+	corner = 0;
+	planar = 0;
 	xsize = 2*hw;
 	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
-		val += this->maps[i]->compute(c, xsize);
+	{
+		/* interpolate between the original carve maps
+		 * to get value at this position */
+		val    += this->maps[i]->compute(c, xsize);
+		corner += this->maps[i]->get_corner_prob();
+		planar += this->maps[i]->get_planar_prob();
+	}
 
 	/* use the average of this sample */
-	val /= NUM_MAPS_PER_WEDGE;
+	val    /= NUM_MAPS_PER_WEDGE;
+	corner /= NUM_MAPS_PER_WEDGE;
+	planar /= NUM_MAPS_PER_WEDGE;
 
 	/* check if data already exist for this spot */
 	if(d == NULL)
@@ -267,99 +277,8 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 	}
 		
 	/* add to data */
-	d->add_sample(val);
+	d->add_sample(val, corner, planar);
 	return d;
-}
-
-/*-----*/
-/* i/o */
-/*-----*/
-
-void carve_wedge_t::serialize(std::ostream& os) const
-{
-	unsigned int i, j, n;
-
-	/* export the vertices of this wedge */
-	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
-	{
-		/* export current vertex position */
-		n = this->verts[i].rows();
-		for(j = 0; j < n; j++)
-			os.write((char*) &(this->verts[i](j)),
-			         sizeof(this->verts[i](j)));
-	}
-
-	/* export the carve maps of this wedge */
-	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
-		this->maps[i]->serialize(os);
-}
-
-int carve_wedge_t::parse(std::istream& is)
-{
-	unsigned int i, j, n;
-	int ret;
-
-	/* must allocate new map objects to populate.  Only
-	 * do this if the current map objects are null. */
-	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
-		if(this->maps[i] != NULL)
-		{
-			cerr << "[carve_wedge_t::parse]\tError!  "
-			     << "Cannot populate non-null maps in wedge"
-			     << endl << endl;
-			return -(i+1); /* cannot populate this */
-		}
-
-	/* read in the vertices of this wedge */
-	for(i = 0; i < NUM_VERTICES_PER_WEDGE; i++)
-	{
-		/* import current vertex */
-		n = this->verts[i].rows();
-		for(j = 0; j < n; j++)
-			is.read((char*) &(this->verts[i](j)),
-			        sizeof(this->verts[i](j)));
-	}
-
-	/* create a map and populate it for each map in the file */
-	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
-	{
-		/* parse map from stream */
-		this->maps[i] = new carve_map_t();
-		ret = this->maps[i]->parse(is);
-		if(ret)
-		{
-			cerr << endl << endl
-			     << "[carve_wedge_t::parse]\tError! Unable to "
-			     << "retrieve map #" << i << endl << endl;
-			return PROPEGATE_ERROR(-NUM_MAPS_PER_WEDGE, ret);
-		}
-	}
-
-	/* check validity of stream */
-	if(is.bad())
-	{
-		cerr << endl << endl
-		     << "[carve_wedge_t::parse]\tError! "
-		     << "Bad istream!" << endl << endl;
-		return (-NUM_MAPS_PER_WEDGE-1);
-	}
-
-	/* success */
-	return 0;
-}
-		
-void carve_wedge_t::free_maps()
-{
-	unsigned int i;
-
-	/* free each map pointer */
-	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
-		if(this->maps[i] != NULL)
-		{
-			/* free this map if not null */
-			delete (this->maps[i]);
-			this->maps[i] = NULL;
-		}
 }
 
 /*-----------*/

@@ -30,6 +30,13 @@ class procarve_run_settings_t
 		 * this program */
 
 		/**
+		 * The input .carvemap file, which contains all
+		 * probability distributions for each scanpoint in
+		 * the dataset.
+		 */
+		std::string carvemapfile;
+
+		/**
 		 * The input .wedge file, which contains all scan info
 		 */
 		std::string wedgefile;

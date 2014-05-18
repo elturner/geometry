@@ -25,9 +25,10 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define WEDGEFILE_FLAG  "-w" /* input wedge file (.wedge) */
-#define SETTINGS_FLAG   "-s" /* program-specific settings (.xml) */
-#define CHUNKLIST_FLAG  "-o" /* output chunklist file (.chunklist) */
+#define CARVEMAP_FILE_FLAG "-m" /* input carvemap file (.carvemap) */
+#define WEDGEFILE_FLAG     "-w" /* input wedge file (.wedge) */
+#define SETTINGS_FLAG      "-s" /* program-specific settings (.xml) */
+#define CHUNKLIST_FLAG     "-o" /* output chunklist file (.chunklist) */
 
 /* file extensions to check for */
 
@@ -44,6 +45,7 @@ using namespace std;
 chunker_run_settings_t::chunker_run_settings_t()
 {
 	/* set default values for this program */
+	this->carvemapfile = "";
 	this->wedgefile = "";
 	this->chunklist_outfile = "";
 	
@@ -67,9 +69,13 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 	args.set_program_description("This program generates chunk files"
 			" from input scans to be used in the procarve "
 			"program.");
-	args.add(WEDGEFILE_FLAG, "The wedge input file, containing the"
-			" probabilistic models for carve wedges made from "
-			"the original scan files of this dataset.",
+	args.add(CARVEMAP_FILE_FLAG, "The carvemap file (.carvemap) is an "
+			"input file that contains probabilistic models for "
+			"all the scan points in this dataset.", false, 1);
+	args.add(WEDGEFILE_FLAG, "The wedge input file (.wedge) contains "
+			"a list of wedges.  Each wedge is a set of four "
+			"carve map objects.  This file indexes into the "
+			"carvemaps in the corresponding .carvemap file.",
 			false, 1);
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
@@ -96,6 +102,7 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
+	this->carvemapfile      = args.get_val(CARVEMAP_FILE_FLAG);
 	this->wedgefile         = args.get_val(WEDGEFILE_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);
 	this->chunklist_outfile = args.get_val(CHUNKLIST_FLAG);

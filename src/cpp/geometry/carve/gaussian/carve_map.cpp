@@ -234,8 +234,9 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 		     << "\tlat = " << lat.transpose() << endl
 		     << "\tf = " << f << endl
 		     << "\tmp_dist = " << mp_dist << endl
-		     << "\tms_dist = " << ms_dist << endl
-		     << endl;
+		     << "\tms_dist = " << ms_dist << endl;
+		this->print_params(cerr);
+		cerr << endl;
 	}
 
 	/* return the final probability */

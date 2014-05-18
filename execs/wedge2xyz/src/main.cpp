@@ -30,6 +30,10 @@ using namespace std;
 #define CARVEMAP_FILE_EXT "carvemap"
 #define XYZ_FILE_EXT      "xyz"
 
+/* parameters for output */
+
+#define MIN_RANGE 0.5 /* units: meters */
+
 /* function implementations */
 
 int main(int argc, char** argv)
@@ -51,7 +55,7 @@ int main(int argc, char** argv)
 	args.add_required_file_type(CARVEMAP_FILE_EXT, 1,
 			"The input files that contain probability models "
 			"for each scan point.");
-	args.add_required_file_type(WEDGE_FILE_EXT, 0,
+	args.add_required_file_type(WEDGE_FILE_EXT, 1,
 			"The input files that contain the indices of which "
 			"carve map objects are used by each wedge object. "
 			"Wedges allow for interpolating between scans "
@@ -122,6 +126,10 @@ int main(int argc, char** argv)
 					outfile.close();
 					return 4;
 				}
+
+				/* only display points in a valid range */
+				if(cm.get_range() < MIN_RANGE)
+					continue;
 
 				/* export to outfile */
 				cm.writexyz(outfile);

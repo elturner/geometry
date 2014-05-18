@@ -2,6 +2,7 @@
 #include <geometry/carve/gaussian/carve_map.h>
 #include <util/error_codes.h>
 #include <Eigen/Dense>
+#include <vector>
 #include <fstream>
 #include <string>
 #include <string.h>
@@ -51,6 +52,9 @@ int reader_t::open(const std::string& filename)
 	/* close any open files */
 	this->close();
 
+	/* lock the mutex, since we're going to edit the stream */
+	this->mtx.lock();
+	
 	/* attempt to open this file */
 	this->infile.open(filename.c_str(),
 			ios_base::in | ios_base::binary);
@@ -59,6 +63,7 @@ int reader_t::open(const std::string& filename)
 		/* report error to user */
 		cerr << "[cm_io::reader_t::open]\tUnable to open file: "
 		     << filename << endl << endl;
+		this->mtx.unlock();
 		return -1;
 	}
 
@@ -72,6 +77,7 @@ int reader_t::open(const std::string& filename)
 		     << "Could not parse header from " << filename << ".  "
 		     << "Are you sure this is the right file?"
 		     << endl << endl;
+		this->mtx.unlock();
 		return ret;
 	}
 
@@ -91,6 +97,7 @@ int reader_t::open(const std::string& filename)
 			cerr << "[cm_io::reader_t::open]\tError " << ret
 			     << ": Unable to parse frame #" << f
 			     << endl << endl;
+			this->mtx.unlock();
 			return ret;
 		}
 
@@ -100,6 +107,7 @@ int reader_t::open(const std::string& filename)
 	}
 
 	/* success */
+	this->mtx.unlock();
 	return 0;
 }
 			
@@ -130,6 +138,10 @@ int reader_t::read(carve_map_t& cm, size_t f, size_t i)
 	/* verify input */
 	if(this->frames == NULL || this->num_frames() <= f)
 		return -1;
+	
+	/* prepare to access the stream, which requires locking
+	 * the mutex */
+	this->mtx.lock();
 
 	/* move the stream to the appropriate position for the
 	 * given frame and point*/
@@ -140,7 +152,10 @@ int reader_t::read(carve_map_t& cm, size_t f, size_t i)
 	/* read the scanpoint distribution from file */
 	ret = dist.parse(this->infile);
 	if(ret)
+	{
+		this->mtx.unlock();
 		return PROPEGATE_ERROR(-1, ret);
+	}
 	this->infile.read((char*) &planar_prob, sizeof(planar_prob));
 	this->infile.read((char*) &corner_prob, sizeof(corner_prob));
 
@@ -151,6 +166,7 @@ int reader_t::read(carve_map_t& cm, size_t f, size_t i)
 	cm.set_corner_prob(corner_prob);
 
 	/* success */
+	this->mtx.unlock();
 	return 0;
 }
 
@@ -201,21 +217,31 @@ void writer_t::close()
 	}
 }
 			
-int writer_t::write_frame(const carve_map_t* cm_arr, size_t num)
+int writer_t::write_frame(const carve_map_t* cm_arr, size_t num,
+			const vector<bool>& is_valid)
 {
 	frame_t frame;
 	gauss_dist_t dist;
 	double p, c;
-	size_t i;
+	size_t i, num_valid;
 
 	/* verify the input */
 	if(cm_arr == NULL || num == 0)
 		return -1;
 
-	/* prepare the frame information */
-	frame.num_points = num;
-	cm_arr[0].get_sensor_mean(frame.sensor_pos.mean);
-	cm_arr[0].get_sensor_cov(frame.sensor_pos.cov);
+	/* determine the number of valid indices */
+	num_valid = 0;
+	for(i = 0; i < num; i++)
+		if(is_valid.empty() || is_valid[i])
+			num_valid++;
+
+	/* prepare the frame information,
+	 * get the sensor distribution from the first
+	 * valid carvemap in this frame */
+	frame.num_points = num_valid;
+	for(i = 0; !is_valid.empty() && i < (num-1) && !is_valid[i]; i++);
+	cm_arr[i].get_sensor_mean(frame.sensor_pos.mean);
+	cm_arr[i].get_sensor_cov(frame.sensor_pos.cov);
 
 	/* write the frame information */
 	frame.serialize(this->outfile);
@@ -223,6 +249,10 @@ int writer_t::write_frame(const carve_map_t* cm_arr, size_t num)
 	/* write each point's info */
 	for(i = 0; i < num; i++)
 	{
+		/* check if we should skip this index */
+		if(!is_valid.empty() && !is_valid[i])
+			continue;
+
 		/* get distribution info */
 		cm_arr[i].get_scanpoint_mean(dist.mean);
 		cm_arr[i].get_scanpoint_cov(dist.cov);
@@ -352,12 +382,12 @@ void gauss_dist_t::serialize(ostream& os) const
 			
 int gauss_dist_t::parse(istream& is)
 {
-	/* export mean position */
+	/* import mean position */
 	is.read((char*) &(this->mean(0)), sizeof(this->mean(0)));
 	is.read((char*) &(this->mean(1)), sizeof(this->mean(1)));
 	is.read((char*) &(this->mean(2)), sizeof(this->mean(2)));
-	
-	/* export covariance (upper triangle) */
+
+	/* import covariance (upper triangle) */
 	is.read((char*) &(this->cov(0,0)), sizeof(this->cov(0,0)));
 	is.read((char*) &(this->cov(0,1)), sizeof(this->cov(0,1)));
 	is.read((char*) &(this->cov(0,2)), sizeof(this->cov(0,2)));
