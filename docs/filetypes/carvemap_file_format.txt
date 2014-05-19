@@ -1,6 +1,6 @@
-*****************************************
-* Format Specification for .wedge Files *
-*****************************************
+********************************************
+* Format Specification for .carvemap Files *
+********************************************
 
 Written by Eric Turner
 elturner@eecs.berkeley.edu

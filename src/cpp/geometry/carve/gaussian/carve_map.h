@@ -245,33 +245,6 @@ class carve_map_t
 		 */
 		double compute(const Eigen::Vector3d& x,double xsize) const;
 
-		/*-----*/
-		/* i/o */
-		/*-----*/
-
-		/**
-		 * Serializes this object to the given binary stream
-		 *
-		 * Will export this carve map's parameters to the given
-		 * binary output stream.
-		 *
-		 * @param os  The binary output stream to write to
-		 */
-		void serialize(std::ostream& os) const;
-
-		/**
-		 * Parses serialized information from the given stream
-		 *
-		 * Will parse the given input stream as a serialized
-		 * carve map, and stores the found information in this
-		 * object.
-		 *
-		 * @param is  The binary input stream to read from
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int parse(std::istream& is);
-
 		/*-----------*/
 		/* debugging */
 		/*-----------*/
