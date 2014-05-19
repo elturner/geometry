@@ -19,8 +19,18 @@ sensor positions.
 ***************
 
 All distances and positions are in units of meters.
-
 All values are stored in binary, in little-endian ordering.
+
+*********
+* Notes *
+*********
+
+This file is likely to be one of the larger files generated when 
+processing a dataset.  For a typical dataset (with four urg scanners), 
+the size of the file is about 1 GB per minute of scanning.
+
+Since this file is an intermediary data product, once models are generated
+for the dataset, this file can be deleted for storage space.
 
 **********
 * Format *
