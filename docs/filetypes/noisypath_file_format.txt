@@ -1,0 +1,90 @@
+*********************************************
+* Format Specification for .noisypath Files *
+*********************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+May 18, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .noisypath binary files.  These
+files are meant to represent the probability distributions of each system
+pose recovered from the localization process.
+
+The distributions of each pose is represented as a joint gaussian in 6D
+space (x, y, z, roll, pitch, yaw)
+
+This file contains a superset of the information contained within an
+original path file (.mad), and is meant to be able to be used in place
+of the .mad file.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+All angles are in units of radians.
+All temporal values are in units of seconds via the synchronized clock
+All values are stored in binary, in little-endian ordering.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of pose distributions.
+
+The header is represented by the following:
+
+-------------------------------------------------------------------
+value        type                 size       description
+-------------------------------------------------------------------
+magic        string              10 bytes    The literal "noisypath\0"
+num_zupts    uint32               4 bytes    Number of zupts in file
+num_poses    uint32               4 bytes    Number of poses in file
+-------------------------------------------------------------------
+
+After the header is a list of zupts (Zero-velocity interUPTS).  Each
+zupt is represented by the start and end timestamps of the duration
+of the zupt interval.  Here is the format for each zupt:
+
+-------------------------------------------------------------------
+value                type         size       description
+-------------------------------------------------------------------
+begin_time           double       8 bytes    Start time of zupt (sec)
+end_time             double       8 bytes    End time of zupt (sec)
+-------------------------------------------------------------------
+total size = 2*8 = 16 bytes
+
+After the list of zupts is the list of poses.  Each pose contains
+probabilistic information that represents the mean and covariance matrix
+of the six dimensions of the pose.  Note that only the upper-triangle of
+the covariance matrix is stored, since the matrix should be symmetric.
+
+-------------------------------------------------------------------
+value        type                 size       description
+-------------------------------------------------------------------
+timestamp    double               8 bytes    Timestamp of pose (in seconds)
+mean_x       double               8 bytes    X-coord. of mean position (m)
+mean_y       double               8 bytes    Y-coord. of mean position (m)
+mean_z       double               8 bytes    Z-coord. of mean position (m)
+cov_xx       double               8 bytes    Covariance of X coord with X
+cov_xy       double               8 bytes    Covariance of X coord with Y
+cov_xz       double               8 bytes    Covariance of X coord with Z
+cov_yy       double               8 bytes    Covariance of Y coord with Y
+cov_yz       double               8 bytes    Covariance of Y coord with Z
+cov_zz       double               8 bytes    Covariance of Z coord with Z
+mean_roll    double               8 bytes    Mean roll angle (radians)
+mean_pitch   double               8 bytes    Mean pitch angle (radians)
+mean_yaw     double               8 bytes    Mean yaw angle (radians)
+cov_rr       double               8 bytes    Covariance of roll with roll
+cov_rp       double               8 bytes    Covariance of roll with pitch
+cov_ry       double               8 bytes    Covariance of roll with yaw
+cov_pp       double               8 bytes    Covariance of pitch with pitch
+cov_py       double               8 bytes    Covariance of pitch with yaw
+cov_yy       double               8 bytes    Covariance of yaw with yaw
+-------------------------------------------------------------------
+total size = 19*8 = 152 bytes
+
