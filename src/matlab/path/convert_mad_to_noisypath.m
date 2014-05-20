@@ -61,14 +61,11 @@ function [] = convert_mad_to_noisypath(madfile, noisypathfile, err_T, err_R)
 		fwrite(fid, var_T, 'double'); % Cov(Y,Y)
 		fwrite(fid, 0,     'double'); % Cov(Y,Z)
 		fwrite(fid, var_T, 'double'); % Cov(Z,Z)
-
-		% the mad file has rotations in NED coordiantes, but
-		% the noisypath file has rotations in ENU coordinates
-		[roll,pitch,yaw] = decomposeRotationMatrix(...
-				convert_NED_to_mat(poses(4:6,i)));
-		fwrite(fid, roll,  'double');
-		fwrite(fid, pitch, 'double');
-		fwrite(fid, yaw,   'double');
+		
+		% write rotation angles (still in NED coordinates)
+		fwrite(fid, poses(4,i), 'double'); % roll
+		fwrite(fid, poses(5,i), 'double'); % pitch
+		fwrite(fid, poses(6,i), 'double'); % yaw
 
 		% the covariance matrices for the rotations are also
 		% 'made up' in this context.

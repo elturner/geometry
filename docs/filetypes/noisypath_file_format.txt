@@ -26,7 +26,7 @@ of the .mad file.
 ***************
 
 All distances and positions are in units of meters.
-All angles are in units of radians and are in ENU coordinates.
+All angles are in units of radians and are in NED coordinates.
 All temporal values are in units of seconds via the synchronized clock
 All values are stored in binary, in little-endian ordering.
 

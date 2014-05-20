@@ -215,7 +215,7 @@ int system_path_t::readnoisypath(const std::string& filename)
 		this->pl[i].timestamp = p.timestamp;
 		this->pl[i].T         = p.position.mean;
 		this->pl[i].T_cov     = p.position.cov;
-		this->pl[i].compute_transform_ENU(
+		this->pl[i].compute_transform_NED(
 				p.rotation.mean(0),
 				p.rotation.mean(1),
 				p.rotation.mean(2));
