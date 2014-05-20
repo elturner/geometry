@@ -64,6 +64,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
                               COLOR_METHOD c,
 			      double maxrange)
 {
+	string file_ext;
+	size_t p;
 	int ret;
 
 	/* attempt to parse time sync file */
@@ -74,13 +76,42 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		return -1; /* unable to parse */
 	}
 
-	/* attempt to parse path */
-	ret = this->path.readmad(pathfile);
-	if(ret)
+	/* get the filetype of the path file */
+	p = pathfile.find_last_of('.');
+	if(p == string::npos)
+		file_ext = "";
+	else
+		file_ext = pathfile.substr(p+1);
+	
+	/* attempt to parse path based on file format */
+	if(!file_ext.compare("mad"))
 	{
-		cerr << "Error!  Unable to parse path file: "
-		     << pathfile << endl;
-		return PROPEGATE_ERROR(-2, ret);
+		/* attempt to parse the mad file */
+		ret = this->path.readmad(pathfile);
+		if(ret)
+		{
+			cerr << "Error!  Unable to parse path file: "
+			     << pathfile << endl;
+			return PROPEGATE_ERROR(-2, ret);
+		}
+	}
+	else if(!file_ext.compare("noisypath"))
+	{
+		/* attempt to parse the noisypath file */
+		ret = this->path.readnoisypath(pathfile);
+		if(ret)
+		{
+			cerr << "Error!  Unable to parse path file: "
+			     << pathfile << endl;
+			return PROPEGATE_ERROR(-3, ret);
+		}
+	}
+	else
+	{
+		/* unable to parse this file format */
+		cerr << "[pointcloud_writer_t::open]\tError!  Unrecognized "
+		     << "path file format: " << file_ext << endl;
+		return -4;
 	}
 
 	/* attempt to parse hardware configuration */
@@ -89,7 +120,7 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	{
 		cerr << "Error!  Unable to parse hardware config file: "
 		     << conffile << endl;
-		return PROPEGATE_ERROR(-3, ret);
+		return PROPEGATE_ERROR(-5, ret);
 	}
 
 	/* attempt to open output file for writing */
@@ -98,7 +129,7 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	{
 		cerr << "Error!  Unable to open output file: "
 		     << pcfile << endl;
-		return -4;
+		return -6;
 	}
 
 	/* record additional parameters */
@@ -113,7 +144,7 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		cerr << "Error!  Unknown output file format specified: "
 		     << pcfile << endl;
 		this->outfile.close();
-		return -5;
+		return -7;
 	}
 
 	/* success */

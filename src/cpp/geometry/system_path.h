@@ -85,9 +85,21 @@ class system_path_t
 		 *
 		 * @param filename    Local path to file to parse.
 		 *
-		 * @return      Returns 0 on success, non-zero on failure.
+		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int readmad(const std::string& filename);
+
+		/**
+		 * Reads *.noisypath file and stores results.
+		 *
+		 * This function will destroy any pose information
+		 * currently in this object.
+		 *
+		 * @param filename   The path to the .noisypath file
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int readnoisypath(const std::string& filename);
 
 		/**
 		 * Reads in hardware transformations for each sensor
@@ -237,13 +249,33 @@ class pose_t
 		 * in units of meters.
 		 */
 		Eigen::Vector3d T;
-		
+
+		/**
+		 * Covariance matrix for translation of pose
+		 *
+		 * If uncertainty values for the pose are provided, the
+		 * covariance matrix of the fitted distribution of the
+		 * translation is stored here.  If no such values are
+		 * provided, then this matrix is Zero.
+		 */
+		Eigen::Matrix3d T_cov;
+
 		/**
 		 * Specifies the orientation of the system.
 		 *
 		 * A rotation from system coordinates to 
 		 * world coordinates */
 		Eigen::Quaternion<double> R;
+
+		/**
+		 * Covariance matrix for the rotation of pose
+		 *
+		 * If uncertainty values for the pose are provided,
+		 * the covariance matrix of the rotation angles
+		 * (roll, pitch, yaw) is stored here.  If no such
+		 * values are provided, then this matrix is Zero.
+		 */
+		Eigen::Matrix3d R_cov;
 
 		/**
 		 * The linear velocity of the system at this pose.
@@ -336,7 +368,21 @@ class pose_t
 		 */
 		void compute_transform_NED(double roll, double pitch,
 		                           double yaw);
-		
+
+		/**
+		 * Computes rotation quaternion from ENU roll, pitch, yaw
+		 *
+		 * Assumes roll, pitch, yaw are in ENU coordinates in
+		 * units of radians.  The resulting quaternion will
+		 * be stored in this->R.
+		 *
+		 * @param roll   The roll value  (rotation about +x)
+		 * @param pitch  The pitch value (rotation about +y)
+		 * @param yaw    The yaw value   (rotation about +z)
+		 */
+		void compute_transform_ENU(double roll, double pitch,
+		                           double yaw);
+
 		/**
 		 * Computes the linear and angular velocity at this pose
 		 *

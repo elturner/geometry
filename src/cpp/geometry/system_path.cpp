@@ -8,6 +8,7 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <io/carve/noisypath_io.h>
 #include <config/backpackConfig.h>
 #include <config/sensorProp.h>
 #include <config/imuProp.h>
@@ -165,6 +166,68 @@ int system_path_t::readmad(const std::string& filename)
 	/* final pass-over of poses to compute additional values,
 	 * such as linear and rotational velocity */
 	for(i = 1; i < num_poses; i++)
+		this->pl[i-1].compute_velocity(this->pl[i]);
+
+	/* success */
+	return 0;
+}
+		
+int system_path_t::readnoisypath(const std::string& filename)
+{
+	noisypath_io::reader_t infile;
+	noisypath_io::pose_t p;
+	vector<noisypath_io::zupt_t> zupts;
+	unsigned int i, n;
+	int ret;
+
+	/* attempt to open file */
+	ret = infile.open(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	
+	/* clear any existing data */
+	this->clear();
+	
+	/* incorporate zupts */
+	infile.get_zupts(zupts);	
+	n = zupts.size();
+	for(i = 0; i < n; i++)
+	{
+		/* add this range to the timestamp blacklist */
+		this->timestamp_blacklist.add(zupts[i].start_time,
+		                              zupts[i].end_time);
+	}
+	
+	/* prepare the pose list */
+	n = infile.num_poses();
+	this->pl = new pose_t[n];
+	this->pl_size = n;
+	
+	/* iterate through poses in file */
+	for(i = 0; i < n; i++)
+	{
+		/* get the next pose */
+		ret = infile.read(p, i);
+		if(ret)
+			return PROPEGATE_ERROR(-2, ret);
+
+		/* store in this structure */
+		this->pl[i].timestamp = p.timestamp;
+		this->pl[i].T         = p.position.mean;
+		this->pl[i].T_cov     = p.position.cov;
+		this->pl[i].compute_transform_ENU(
+				p.rotation.mean(0),
+				p.rotation.mean(1),
+				p.rotation.mean(2));
+		this->pl[i].R_cov     = p.rotation.cov;
+	}
+
+	/* clean up */
+	infile.close();
+	
+	/* final pass-over of poses to compute additional values,
+	 * such as linear and rotational velocity */
+	for(i = 1; i < n; i++)
 		this->pl[i-1].compute_velocity(this->pl[i]);
 
 	/* success */
@@ -562,6 +625,86 @@ void pose_t::compute_transform_NED(double roll, double pitch, double yaw)
 	A11 = cp*sy; A12 = cr*cy+sp*sr*sy; A13 = cr*sp*sy-cy*sr;
 	A21 = cp*cy; A22 = cy*sp*sr-cr*sy; A23 = cr*cy*sp+sr*sy;
 	A31 = sp;    A32 = -cp*sr;         A33 = -cp*cr;
+
+	/* compute elements for quaternion based on rotation matrix
+	 *
+	 * see:
+	 *	http://en.wikipedia.org/wiki/
+	 *	Rotation_formalisms_in_three_dimensions
+	 *	#Conversion_formulae_between_formalisms
+	 */
+	q4 = 0.5 * sqrt(1 + A11 + A22 + A33);
+	q1 = 0.5 * sqrt(1 + A11 - A22 - A33);
+	if(abs(q1) > abs(q4))
+	{
+		/* compute other values based on q1, to avoid
+		 * dividing by a small value */
+		coef = 0.25 / q1;
+		q2 = coef * (A12 + A21);
+		q3 = coef * (A13 + A31);
+		q4 = coef * (A32 - A23);
+	}
+	else
+	{
+		/* compute other values based on q4, to avoid
+		 * dividing by a small value */
+		coef = 0.25 / q4;
+		q1 = coef * (A32 - A23);
+		q2 = coef * (A13 - A31);
+		q3 = coef * (A21 - A12);
+	}
+
+	/* populate quaternion 
+	 *
+	 * See:
+	 * 	http://en.wikipedia.org/wiki/
+	 * 	Conversion_between_quaternions_and_Euler_angles
+	 *
+	 * Note that wikipedia assumes that the real component is the
+	 * last value, whereas Eigen assumes the real value is the first
+	 * component.  Hence why q4 is listed first below.
+	 */
+	this->R = Quaternion<double>(q4, q1, q2, q3);
+}
+		
+void pose_t::compute_transform_ENU(double roll, double pitch,
+                                   double yaw)
+{
+	double cr, sr, cp, sp, cy, sy;
+	double A11, A12, A13, A21, A22, A23, A31, A32, A33;
+	double q1, q2, q3, q4;
+	double coef;
+
+	/* compute trig values */
+	cr = cos(roll);
+	sr = sin(roll);
+	cp = cos(pitch);
+	sp = sin(pitch);
+	cy = cos(yaw);
+	sy = sin(yaw);
+
+	/* Compute elements for rotation matrix
+	 *
+	 * this quaternion represents the following rotation matrix:
+	 *
+	 *	Rz * Ry * Rx = 
+	 *
+	 *	cp*cy   cy*sp*sr - cr*sy        cr*cy*sp + sr*sy;
+	 *	cp*sy   sp*sr*sy + cr*cy        cr*cp*sy - cy*sr;
+	 *	-sp     cp*sr                   cp*cr;
+	 *
+	 * where:
+	 *
+	 * 	cr = cos(roll)
+	 * 	sr = sin(roll)
+	 * 	cp = cos(pitch)
+	 * 	sp = sin(pitch)
+	 * 	cy = cos(yaw)
+	 * 	sy = sin(yaw)
+	 */
+	A11 = cp*cy; A12 = cy*sp*sr-cr*sy; A13 = cr*cy*sp+sr*sy;
+	A21 = cp*sy; A22 = sp*sr*sy+cr*cy; A23 = cr*cp*sy-cy*sr;
+	A31 = -sp;   A32 = cp*sr;          A33 = cp*cr;
 
 	/* compute elements for quaternion based on rotation matrix
 	 *
