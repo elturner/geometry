@@ -1,23 +1,43 @@
+**************************************
+* Format Specification for .fp Files *
+**************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+Last updated: May 21, 2014
+
+***********
+* Purpose *
+***********
+
 The .fp file format is used to house information about
 floorplan geometry.  This is formatted as an ASCII file,
 with the following information:
 
- *
- * File Format for .fp (all units in meters)
- * -----------------------------------------
+***************
+* Conventions *
+***************
+
+The file is formatted in space-separated ASCII.
+All distance and position units are in meters.
+All indices are referenced starting at 0.
+
+**********
+* Format *
+**********
+
  *
  * 	<resolution>		// the resolution of model, in meters
  *	<num_verts>
  *	<num_tris>
  *	<num_rooms>
- *	<x1> <y1>		// first vertex position (two doubles)
+ *	<x0> <y0>		// first vertex position (two doubles)
  *	...
- *	<xn> <yn>		// n'th vertex position (two doubles)
- *	<i1> <j1> <k1>		// first triangle (three ints)
+ *	<xn> <yn>		// (n+1)'th vertex position (two doubles)
+ *	<i0> <j0> <k0>		// first triangle (three ints)
  *	...
- *	<im> <jm> <km>		// m'th triangle (three ints)
- *	<z1_min> <z1_max> <num_tris> <t_1> <t_2> ... <t_k1>	// room 1
+ *	<im> <jm> <km>		// (m+1)'th triangle (three ints)
+ *	<z0_min> <z0_max> <num_tris> <t_0> <t_1> ... <t_k1>	// room 0
  *	...
- *	<zr_min> <zr_max> <num_tris> <t_1> <t_2> ... <t_kr>	// room r
- *
+ *	<zr_min> <zr_max> <num_tris> <t_0> <t_1> ... <t_kr>	// room r+1
  *

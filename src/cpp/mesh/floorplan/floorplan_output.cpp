@@ -99,3 +99,61 @@ int floorplan_t::export_to_obj(const string& filename) const
 	outfile.close();
 	return 0;
 }
+			
+int floorplan_t::export_to_fp(const string& filename) const
+{
+	ofstream outfile;
+	set<int> it;
+	size_t i, n;
+
+	/* attempt to open output stream */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return -1; /* unable to open file for writing */
+
+	/* export header information */
+	outfile << (this->res)          << endl
+	        << (this->verts.size()) << endl
+	        << (this->tris.size())  << endl
+	        << (this->rooms.size()) << endl;
+
+	/* write each vertex to file */
+	n = this->verts.size();
+	for(i = 0; i < n; i++)
+	{
+		/* export this vertex */
+		outfile << (this->verts[i].x) << " "
+		        << (this->verts[i].y) << endl;
+	}
+
+	/* write each triangle to file */
+	n = this->tris.size();	
+	for(i = 0; i < n; i++)
+	{
+		/* export vertex indices defining this triangle */
+		outfile << (this->tris[i].verts[0]) << " "
+		        << (this->tris[i].verts[1]) << " "
+		        << (this->tris[i].verts[2]) << endl;
+	}
+
+	/* write each room to file */
+	n = this->rooms.size();
+	for(i = 0; i < n; i++)
+	{
+		/* export room:  floor_height ceil_height num_tris ... */
+		outfile << (this->rooms[i].min_z) << " "
+		        << (this->rooms[i].max_z) << " "
+		        << (this->rooms[i].tris.size());
+		for(it = this->rooms[i].tris.begin();
+				it != this->rooms[i].tris.end(); it++)
+		{
+			/* write the triangle indices that are a part of
+			 * this room */
+			outfile << " " << (*it);
+		}
+	}
+
+	/* clean up */
+	outfile.close();
+	return 0;
+}

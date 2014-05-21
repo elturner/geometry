@@ -176,6 +176,18 @@ namespace fp
 			int export_to_obj(
 				const std::string& filename) const;
 
+			/**
+			 * Will export the defined floorplan to a .fp file
+			 *
+			 * Implemented in floorplan_output.cpp
+			 *
+			 * @param filename     Where to write the floorplan
+			 *
+			 * @return         Returns zero on success, non-zero
+			 *                 on failure.
+			 */
+			int export_to_fp(const std::string& filename) const;
+
 			/*----------*/
 			/* geometry */
 			/*----------*/
