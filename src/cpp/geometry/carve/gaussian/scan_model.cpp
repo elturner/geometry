@@ -106,8 +106,8 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	this->twwt = w * w.transpose();
 	
 	/* get noise distribution of input data */
-	input_C_pose = 0.0001*Matrix3d::Identity(); // TODO system xyz cov
-	input_C_rpy = 0.017*Matrix3d::Identity(); // TODO system rpy cov
+	input_C_pose = this->pose.T_cov;
+	input_C_rpy  = this->pose.R_cov;
 
 	/* compute intermediary terms */
 	T_l2s_cross << 0, -this->sensor_calib.T(2), this->sensor_calib.T(1),

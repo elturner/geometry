@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	}
 
 	/* initialize the generator */
-	ret = wedgen.init(settings.madfile, settings.confile,
+	ret = wedgen.init(settings.pathfile, settings.confile,
 			settings.timefile,
 			settings.default_clock_uncertainty,
 			settings.carvebuf, settings.linefit_dist);

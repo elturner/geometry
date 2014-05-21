@@ -30,9 +30,9 @@ class wedge_run_settings_t
 		 * this program */
 
 		/**
-		 * a .mad file represents the 3D path of the system
+		 * a .noisypath file represents the 3D path of the system
 		 */
-		std::string madfile;
+		std::string pathfile;
 
 		/**
 		 * A hardware xml configuration file represents sensor

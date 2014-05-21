@@ -25,7 +25,7 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define MADFILE_FLAG      "-p" /* localization output path file (.mad) */
+#define PATHFILE_FLAG     "-p" /* localization path file (.noisypath) */
 #define CONFILE_FLAG      "-c" /* hardware config file (.xml) */
 #define TIMEFILE_FLAG     "-t" /* time-sync output file (.xml) */
 #define SETTINGS_FLAG     "-s" /* program-specific settings (.xml) */
@@ -48,7 +48,7 @@ using namespace std;
 wedge_run_settings_t::wedge_run_settings_t()
 {
 	/* set default values for this program */
-	this->madfile  = "";
+	this->pathfile  = "";
 	this->confile  = "";
 	this->timefile = "";
 	this->fssfiles.clear();
@@ -75,9 +75,9 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 	args.set_program_description("This program generates a wedge file"
 			" from input scans to be used in the procarve "
 			"program.");
-	args.add(MADFILE_FLAG, "The localization output file that contains"
-			" 3D path information.  Formatted as a .mad file",
-			false, 1);
+	args.add(PATHFILE_FLAG, "The localization output file that contains"
+			" 3D path information.  Formatted as a .noisypath "
+			"file", false, 1);
 	args.add(CONFILE_FLAG, "The backpack hardware configuration file."
 			"  This stores the sensor-specific extrinsics and "
 			"settings.  Should be a .xml file.", false, 1);
@@ -121,7 +121,7 @@ int wedge_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-	this->madfile           = args.get_val(MADFILE_FLAG);
+	this->pathfile          = args.get_val(PATHFILE_FLAG);
 	this->confile           = args.get_val(CONFILE_FLAG);
 	this->timefile          = args.get_val(TIMEFILE_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);

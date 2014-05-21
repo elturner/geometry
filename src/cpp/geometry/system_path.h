@@ -318,10 +318,12 @@ class pose_t
 		{
 			/* copy params */
 			this->timestamp = rhs.timestamp;
-			this->T = rhs.T;
-			this->R = rhs.R;
-			this->v = rhs.v;
-			this->w = rhs.w;
+			this->T         = rhs.T;
+			this->T_cov     = rhs.T_cov;
+			this->R         = rhs.R;
+			this->R_cov     = rhs.R_cov;
+			this->v         = rhs.v;
+			this->w         = rhs.w;
 
 			/* return the value of this point */
 			return (*this);

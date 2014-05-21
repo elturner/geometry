@@ -65,7 +65,7 @@ class wedge_generator_t
 		 * this function call will prepare this object to perform
 		 * compute probability distributions for each scan frame.
 		 *
-		 * @param madfile   The path file for this dataset
+		 * @param pathfile  The .noisypath file for this dataset
 		 * @param confile   The xml hardware config file
 		 * @param tsfile    The time synchronization output xml file
 		 * @param dcu       The default clock uncertainty
@@ -74,7 +74,7 @@ class wedge_generator_t
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int init(const std::string& madfile,
+		int init(const std::string& pathfile,
 		         const std::string& confile,
 		         const std::string& tsfile,
 		         double dcu, double carvebuf, double lf_dist);

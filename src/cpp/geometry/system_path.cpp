@@ -404,6 +404,12 @@ int system_path_t::compute_pose_at(pose_t& p, double t) const
 	p.v = this->pl[i].v; /* velocity is assumed constant for edge */
 	p.w = this->pl[i].w; /* ang. vel. also assumed piece-wise const. */
 	
+	/* uncertainty matices can also just be averaged */
+	p.T_cov = ((1 - weight) * this->pl[i].T_cov)
+		+ (weight * (this->pl[i+1].T_cov));
+	p.R_cov = ((1 - weight) * this->pl[i].R_cov)
+		+ (weight * (this->pl[i+1].R_cov));
+	
 	/* success */
 	return 0;
 }

@@ -30,7 +30,7 @@ using namespace std;
 
 /* function implementations */
 
-int wedge_generator_t::init(const string& madfile,
+int wedge_generator_t::init(const string& pathfile,
                             const string& confile,
                             const string& tsfile,
                             double dcu, double carvebuf, double lf_dist)
@@ -38,7 +38,7 @@ int wedge_generator_t::init(const string& madfile,
 	int ret;
 
 	/* initialize the structures */
-	ret = this->path.readmad(madfile);
+	ret = this->path.readnoisypath(pathfile);
 	if(ret)
 	{
 		/* report error to user */
