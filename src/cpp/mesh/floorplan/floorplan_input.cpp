@@ -60,6 +60,9 @@ int floorplan_t::import_from_fp(const string& filename)
 	stringstream ss;
 	int i, j, ti, ret, num_verts, num_tris, num_rooms;
 
+	/* clear any existing info */
+	this->clear();
+
 	/* attempt to open file */
 	infile.open(filename.c_str());
 	if(!(infile.is_open()))

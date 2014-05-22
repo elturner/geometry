@@ -103,7 +103,7 @@ int floorplan_t::export_to_obj(const string& filename) const
 int floorplan_t::export_to_fp(const string& filename) const
 {
 	ofstream outfile;
-	set<int> it;
+	set<int>::const_iterator it;
 	size_t i, n;
 
 	/* attempt to open output stream */
