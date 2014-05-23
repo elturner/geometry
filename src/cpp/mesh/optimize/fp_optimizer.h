@@ -141,6 +141,39 @@ class fp_optimizer_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int optimize();
+
+		/**
+		 * Will run a single iteration of the wall optimization
+		 *
+		 * This function is called by optimize().  This will
+		 * run a single iteration of the floorplan optimization
+		 * process, which will modify the vertices slightly to
+		 * align to the carved octree.  Several calls to this
+		 * function may be required.
+		 *
+		 * This iteration will only modify the wall positions,
+		 * which means only the (x,y) positions of the vertices
+		 * will be changed, and the elevation (z) of the vertices
+		 * will be unmodified.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int run_iteration_walls();
+
+		/**
+		 * Will run a single iteration of the height optimization
+		 *
+		 * This function is called by optimize().  This will
+		 * run a single iteration of the floorplan optimization.
+		 *
+		 * This will only modify the heights (z) of vertices to
+		 * attempt to align the floor and ceiling positions to the
+		 * information stored in the octree.  The horizontal (x,y)
+		 * positions of the vertices will remain unchanged.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int run_iteration_heights();
 };
 
 #endif

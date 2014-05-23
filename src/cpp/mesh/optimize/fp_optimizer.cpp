@@ -1,8 +1,12 @@
 #include "fp_optimizer.h"
 #include <mesh/floorplan/floorplan.h>
+#include <mesh/optimize/shapes/fp_wall.h>
 #include <geometry/octree/octree.h>
 #include <util/error_codes.h>
+#include <Eigen/Dense>
+#include <Eigen/StdVector>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 
@@ -19,6 +23,7 @@
  */
 
 using namespace std;
+using namespace Eigen;
 
 /* function implementations */
 
@@ -226,5 +231,58 @@ int fp_optimizer_t::export_fp(const string& filename) const
 
 int fp_optimizer_t::optimize()
 {
-	return -1;// TODO
+	// TODO multiple iterations until convergence
+	// TODO run walls and heights
+	return this->run_iteration_walls();
+}
+		
+int fp_optimizer_t::run_iteration_walls()
+{
+	vector<Vector2d,aligned_allocator<Vector2d> > net_forces;
+	vector<fp::edge_t> edges; /* walls in floorplan */
+	fp_wall_t wall;
+	Vector2d f0, f1;
+	double r;
+	size_t i, n;
+
+	/* prepare force vectors for each wall */
+	net_forces.resize(this->floorplan.verts.size());
+
+	/* iterate over the walls */
+	this->floorplan.compute_edges(edges);
+	n = edges.size();
+	r = sqrt(2) * this->tree.get_resolution();
+	for(i = 0; i < n; i++)
+	{
+		/* compute geometry for the i'th wall */
+		wall.init(r, this->floorplan, edges[i]);
+
+		/* get the scalar field intersected by the i'th wall */
+		wall.toggle_offset(false);
+		this->tree.find(wall);
+		wall.toggle_offset(true);
+		this->tree.find(wall);
+
+		/* add the computed forces to our net sum */
+		wall.compute_forces(f0, f1);
+		net_forces[edges[i].verts[0]] += f0;
+		net_forces[edges[i].verts[1]] += f1;
+	}
+
+	// TODO debugging
+	ofstream debug;
+	debug.open("/home/elturner/Desktop/fpvects.txt");
+	for(i = 0; i < net_forces.size(); i++)
+		debug << net_forces[i].transpose() << endl;
+	debug.close();
+
+	// TODO perturb vertex positions
+	
+	/* success */
+	return 0;
+}
+		
+int fp_optimizer_t::run_iteration_heights()
+{
+	return -1; // TODO
 }

@@ -48,7 +48,7 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 			p = 1;
 		if(p < 0)
 			p = 0;
-		
+	
 		/* assign colors */
 		green = (unsigned int) (100 * (1 - (2*fabs(p-0.5))));
 		if(p > 0.5)
