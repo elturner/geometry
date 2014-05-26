@@ -101,27 +101,15 @@ class fp_wall_t : public shape_t
 
 		/**
 		 * The sum of all scalar values that intersected the
-		 * non-offset (original) wall surface.
+		 * wall surfaces.
 		 */
-		double scalar_sum_orig[fp::NUM_VERTS_PER_EDGE];
+		double scalar_sum[fp::NUM_VERTS_PER_EDGE];
 
 		/**
 		 * Number of nodes that contributed to analysis
-		 * of the non-offset (original) surface.
+		 * of the surface.
 		 */
-		unsigned int num_nodes_orig;
-
-		/**
-		 * The sum of all scalar values that intersected the
-		 * offset wall surface.
-		 */
-		double scalar_sum_offset[fp::NUM_VERTS_PER_EDGE];
-
-		/**
-		 * Number of nodes that contributed to analysis
-		 * of the offset surface.
-		 */
-		unsigned int num_nodes_offset;
+		unsigned int num_nodes;
 
 	/* functions */
 	public:

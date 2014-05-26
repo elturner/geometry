@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 
@@ -231,18 +231,30 @@ int fp_optimizer_t::export_fp(const string& filename) const
 
 int fp_optimizer_t::optimize()
 {
-	// TODO multiple iterations until convergence
+	size_t i, num_iters;
+
+	num_iters = 200; // TODO get convergence parameter
+	for(i = 0; i < num_iters; i++)
+	{
+		this->run_iteration_walls();
+		stringstream ss;
+		ss << "/home/elturner/Desktop/test/fp_iter_" << i << ".fp";
+		this->export_fp(ss.str());
+	}
+	
 	// TODO run walls and heights
-	return this->run_iteration_walls();
+
+	/* success */
+	return 0; 
 }
-		
+
 int fp_optimizer_t::run_iteration_walls()
 {
 	vector<Vector2d,aligned_allocator<Vector2d> > net_forces;
 	vector<fp::edge_t> edges; /* walls in floorplan */
 	fp_wall_t wall;
 	Vector2d f0, f1;
-	double r;
+	double r, stepsize, norm;
 	size_t i, n;
 
 	/* prepare force vectors for each wall */
@@ -251,7 +263,7 @@ int fp_optimizer_t::run_iteration_walls()
 	/* iterate over the walls */
 	this->floorplan.compute_edges(edges);
 	n = edges.size();
-	r = sqrt(2) * this->tree.get_resolution();
+	r = sqrt(2) * this->tree.get_resolution(); // TODO
 	for(i = 0; i < n; i++)
 	{
 		/* compute geometry for the i'th wall */
@@ -269,14 +281,23 @@ int fp_optimizer_t::run_iteration_walls()
 		net_forces[edges[i].verts[1]] += f1;
 	}
 
-	// TODO debugging
-	ofstream debug;
-	debug.open("/home/elturner/Desktop/fpvects.txt");
-	for(i = 0; i < net_forces.size(); i++)
-		debug << net_forces[i].transpose() << endl;
-	debug.close();
+	/* normalize the force vectors */
+	norm = 0;
+	stepsize = 0.5 * this->tree.get_resolution(); // TODO
+	n = net_forces.size();
+	for(i = 0; i < n; i++)
+		norm += net_forces[i].squaredNorm();
+	norm = stepsize / sqrt(norm); /* L2 norm across all forces */
+	for(i = 0; i < n; i++)
+		net_forces[i] *= norm;
 
-	// TODO perturb vertex positions
+	/* perturb vertex positions */
+	for(i = 0; i < n; i++)
+	{
+		/* add vector to vertex position for incremental update */
+		this->floorplan.verts[i].x += net_forces[i](0);
+		this->floorplan.verts[i].y += net_forces[i](1);
+	}
 	
 	/* success */
 	return 0;

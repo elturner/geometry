@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 /**
  * @file   fp_wall.h
@@ -79,40 +80,26 @@ void fp_wall_t::init(double r, const floorplan_t& f,
 	                  f.verts[e.verts[1]].max_z);
 
 	/* initialize forces to zero */
+	this->num_nodes = 0;
 	for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
-	{
-		this->scalar_sum_orig[i]   = 0.0;
-		this->scalar_sum_offset[i] = 0.0;
-	}
-	this->num_nodes_orig   = 0;
-	this->num_nodes_offset = 0;
+		this->scalar_sum[i]   = 0.0;
 }
 		
 void fp_wall_t::compute_forces(Eigen::Vector2d& f0, 
                                Eigen::Vector2d& f1)
 {
-	double scale;
-
 	/* cannot produce valid vectors if not enough observations
 	 * have occurred */
-	if(this->num_nodes_orig == 0 || this->num_nodes_offset == 0)
+	if(this->num_nodes == 0)
 	{
 		f0(0) = 0; f0(1) = 0;
 		f1(0) = 0; f1(1) = 0;
 		return;
 	}
 
-	/* we want to scale each of the sums so that they have the
-	 * same number of equivalent observations */
-	scale = ((double) this->num_nodes_orig) / this->num_nodes_offset;
-
-	/* compute force for vertex #0 */
-	f0 = this->norm * ( scale*this->scalar_sum_offset[0]
-			- this->scalar_sum_orig[0] );
-	
-	/* compute force for vertex #0 */
-	f1 = this->norm * ( scale*this->scalar_sum_offset[1]
-			- this->scalar_sum_orig[1] );
+	/* compute force for vertices */
+	f0 = this->norm * this->scalar_sum[0];
+	f1 = this->norm * this->scalar_sum[1];
 }
 		
 Vector3d fp_wall_t::get_vertex(unsigned int i) const
@@ -234,43 +221,26 @@ octdata_t* fp_wall_t::apply_to_leaf(const Vector3d& c, double hw,
 					octdata_t* d)
 {
 	Vector2d p;
-	double s, dist;
+	double prob, s, dist;
 
 	/* check if there exist data here */
 	if(d == NULL)
 		return d;
 
 	/* get the scalar function at this position */
-	s = (2*d->get_probability() - 1);
-	s = s*s*(d->get_planar_prob())*hw*hw;
+	prob = d->get_probability();
+	s = d->is_interior() ? (prob-1) : prob; 
+	s *= (d->get_planar_prob())*hw*hw;
 
-	/* get projection of c onto this wall (in 2D) */
-	p(0) = c(0); p(1) = c(1);
-
-	/* in order to project onto surface, we need to know
-	 * which surface to use */
-	if(!(this->use_offset))
-	{
-		/* original wall surface */
-		dist = this->tangent.dot(p - this->edge_pos[0]) 
-			/ this->length;
+	/* get distance along surface of wall, to properly divide
+	 * force between the two vertices */
+	p(0) = c(0); p(1) = c(1);	
+	dist = this->tangent.dot(p - this->edge_pos[0]) / this->length;
 	
-		/* add to accumulation of forces */
-		this->num_nodes_orig++;
-		this->scalar_sum_orig[0] = (1-dist)*s;
-		this->scalar_sum_orig[1] = dist*s;
-	}
-	else
-	{
-		/* offset surface */
-		dist = this->tangent.dot(p - this->offset_edge_pos[0])
-			/ this->length;
-	
-		/* add to accumulation of forces */
-		this->num_nodes_offset++;
-		this->scalar_sum_offset[0] = (1-dist)*s;
-		this->scalar_sum_offset[1] = dist*s;
-	}
+	/* add to accumulation of forces */
+	this->num_nodes++;
+	this->scalar_sum[0] += (1-dist)*s;
+	this->scalar_sum[1] += dist*s;
 
 	/* return the same data as given */
 	return d;
