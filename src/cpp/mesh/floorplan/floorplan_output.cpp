@@ -151,6 +151,7 @@ int floorplan_t::export_to_fp(const string& filename) const
 			 * this room */
 			outfile << " " << (*it);
 		}
+		outfile << endl;
 	}
 
 	/* clean up */
