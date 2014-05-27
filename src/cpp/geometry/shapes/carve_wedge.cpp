@@ -247,11 +247,12 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
                                         double hw, octdata_t* d)
 {
-	double val, corner, planar, xsize;
+	double val, surf, corner, planar, xsize;
 	unsigned int i;
 
 	/* sample the originating carve maps at this location */
 	val = 0;
+	surf = 0;
 	corner = 0;
 	planar = 0;
 	xsize = 2*hw;
@@ -260,12 +261,14 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 		/* interpolate between the original carve maps
 		 * to get value at this position */
 		val    += this->maps[i]->compute(c, xsize);
+		surf   += this->maps[i]->get_surface_prob(c, xsize);
 		corner += this->maps[i]->get_corner_prob();
 		planar += this->maps[i]->get_planar_prob();
 	}
 
 	/* use the average of this sample */
 	val    /= NUM_MAPS_PER_WEDGE;
+	surf   /= NUM_MAPS_PER_WEDGE;
 	corner /= NUM_MAPS_PER_WEDGE;
 	planar /= NUM_MAPS_PER_WEDGE;
 
@@ -277,7 +280,7 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 	}
 		
 	/* add to data */
-	d->add_sample(val, corner, planar);
+	d->add_sample(val, surf, corner, planar);
 	return d;
 }
 

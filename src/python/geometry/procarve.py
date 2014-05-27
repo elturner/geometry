@@ -55,7 +55,7 @@ def run(dataset_dir):
 	octree    = dataset_filepaths.get_octree(dataset_dir)
 	fpfiles   = dataset_filepaths.get_all_floorplan_files(dataset_dir)
 
-	# prepare the command-line arguments for the chunker code
+	# prepare the command-line arguments for the procarve code
 	args = [PROCARVE_EXE, '-m', cmfile, '-w', wedgefile, \
 		'-l', chunklist, '-o', octree, \
 		'-s', SETTINGS_XML] + fpfiles

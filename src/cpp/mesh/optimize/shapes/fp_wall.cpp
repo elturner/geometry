@@ -229,8 +229,8 @@ octdata_t* fp_wall_t::apply_to_leaf(const Vector3d& c, double hw,
 
 	/* get the scalar function at this position */
 	prob = d->get_probability();
-	s = d->is_interior() ? (prob-1) : prob; 
-	s *= (d->get_planar_prob())*hw*hw;
+	s = d->is_interior() ? -1 : 1; /* if interior, push out */ 
+	s *= (d->get_planar_prob())*(d->get_surface_prob())*hw*hw;
 
 	/* get distance along surface of wall, to properly divide
 	 * force between the two vertices */

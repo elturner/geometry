@@ -72,6 +72,7 @@ Variable        Type           Size
 count           unsigned int   4 bytes
 prob_sum        double         8 bytes
 prob_sum_sq     double         8 bytes
+surface_sum     double         8 bytes
 corner_sum      double         8 bytes
 planar_sum      double         8 bytes
 fp_room         int            4 bytes

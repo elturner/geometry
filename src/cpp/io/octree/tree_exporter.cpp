@@ -2,6 +2,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
+#include <util/tictoc.h>
 #include <stdlib.h>
 #include <cmath>
 #include <string>
@@ -85,7 +86,11 @@ int tree_exporter::export_leafs_to_obj(const string& filename,
                                        const octree_t& tree)
 {
 	ofstream outfile;
+	tictoc_t clk;
 	
+	/* time this action */
+	tic(clk);
+
 	/* open file for writing */
 	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
@@ -104,6 +109,7 @@ int tree_exporter::export_leafs_to_obj(const string& filename,
 
 	/* clean up */
 	outfile.close();
+	toc(clk, "Exporting octree leafs to OBJ");
 	return 0;
 }
 	

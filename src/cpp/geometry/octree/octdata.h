@@ -30,6 +30,7 @@ class octdata_t
 		/* the following values are used to estimate geometric
 		 * properties of this voxel, such as flatness, curviture,
 		 * or corner detection */
+		double surface_sum; /* sum of surface prob. observations */
 		double corner_sum; /* sum of corner estimates for node */
 		double planar_sum; /* sum of flatness estimates for node */
 
@@ -64,8 +65,8 @@ class octdata_t
 		/**
 		 * Initializes octdata object with a single sample
 		 */
-		octdata_t(double prob_samp, double corner_samp=0.0,
-		          double planar_samp=0.0);
+		octdata_t(double prob_samp, double surface_samp=0.0,
+		          double corner_samp=0.0, double planar_samp=0.0);
 
 		/**
 		 * Frees all memory and resources
@@ -139,11 +140,12 @@ class octdata_t
 		 * the appropriate sums based on this observation.
 		 *
 		 * @param prob     The observed carved probability
+		 * @param surf     The observed surface probability
 		 * @param corner   The observed corner coefficient
 		 * @param planar   The observed planarity coefficient
 		 */
-		void add_sample(double prob, double corner=0.0, 
-		                double planar=0.0);
+		void add_sample(double prob, double surf=0.0,
+		                double corner=0.0, double planar=0.0);
 
 		/**
 		 * Returns the count of number of observations seen
@@ -207,6 +209,16 @@ class octdata_t
 		 */
 		inline bool is_interior() const
 		{ return (this->get_probability() > 0.5); };
+
+		/**
+		 * Returns the average surface probability observation
+		 */
+		inline double get_surface_prob() const
+		{
+			if(this->count == 0)
+				return 0;
+			return ((this->surface_sum) / this->count);
+		};
 
 		/**
 		 * Returns the average planar probability observation

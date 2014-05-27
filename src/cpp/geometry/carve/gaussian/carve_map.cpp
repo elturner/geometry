@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <Eigen/LU>
 #include <cmath>
 
 /**
@@ -137,6 +138,22 @@ void carve_map_t::init(const Vector3d& s_mean,
 	/* initialize cached parameters that depend on the variance */
 	this->sensor_neg_inv_sqrt_2v = (-1/sqrt(2*this->sensor_var));
 	this->scanpoint_neg_inv_sqrt_2v = (-1/sqrt(2*this->scanpoint_var));
+
+	/* compute cached values that are used to perform computations
+	 * with the scanpoint's 3D pdf.  This is a multivariate gaussian,
+	 * which means we can cache the normalization factor and
+	 * the inverse covariance matrix:
+	 *
+	 * pdf(x) = (2*pi)^(-3/2)*det(cov)^(-1/2)
+	 * 		*exp(-0.5*(x-mu)'*inv(cov)*(x-mu))
+	 */
+	
+	/* (2*pi)^(-3/2)*det(scanpoint_cov)^(-1/2) */
+	this->scanpoint_pdf_coef = 0.06349363593 
+			* pow(this->scanpoint_cov.determinant(), -0.5);
+	
+	/* -0.5 * inv(cov) */
+	this->mh_scanpoint_inv_cov = -0.5 * this->scanpoint_cov.inverse();
 }
 
 double carve_map_t::compute(const Vector3d& x, double xsize) const
@@ -241,6 +258,28 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 
 	/* return the final probability */
 	return p_total;
+}
+		
+double carve_map_t::get_surface_prob(const Vector3d& x, double xsize) const
+{
+	Vector3d m;
+	double p, v, e;
+
+	/* compute relative position of x with respect to the
+	 * mean of this distribution */
+	m = x - this->scanpoint_mean;
+
+	/* compute probability density at x */
+	e = m.transpose() * mh_scanpoint_inv_cov * m;
+	p = this->scanpoint_pdf_coef * exp(e);
+
+	/* compute volume around x */
+	v = xsize*xsize*xsize; /* assume a cube */
+
+	/* approximate probility as constant for this volume.  This
+	 * is not strictly correct, but works well if the standard
+	 * deviation of the pdf is larger than xsize */
+	return v*p; 
 }
 
 /* debugging functions */

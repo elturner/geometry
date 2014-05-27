@@ -68,6 +68,13 @@ class carve_map_t
 		double scanpoint_var; /* marginalized variance of point */
 		double scanpoint_neg_inv_sqrt_2v; /* 1 / sqrt(2*var) */
 
+		/* the following values are cached to help perform
+		 * computations of the PDF of the scanpoint distribution
+		 * in 3D space. */
+		double scanpoint_pdf_coef; /* (2*pi)^(-3/2)
+		                            * *det(scanpoint_cov)^(-1/2) */
+		Eigen::Matrix3d mh_scanpoint_inv_cov; /* -0.5 * inv(cov) */
+
 	/* functions */
 	public:
 
@@ -244,6 +251,23 @@ class carve_map_t
 		 * @return   Returns probability that volume is interior
 		 */
 		double compute(const Eigen::Vector3d& x,double xsize) const;
+
+		/**
+		 * Computes probability the given location is on surface
+		 *
+		 * Using this scanpoint, will determine the probability
+		 * that the specified location and size is on the surface
+		 * described by this point.  This will return the integral
+		 * of the PDF over the volume described by this location
+		 * and size.
+		 *
+		 * @param x      The volume center in 3D space to analyze
+		 * @param xsize  The feature length of volume at x
+		 *
+		 * @return   Returns probability scanpoint is at location x
+		 */
+		double get_surface_prob(const Eigen::Vector3d& x,
+		                        double xsize) const;
 
 		/*-----------*/
 		/* debugging */
