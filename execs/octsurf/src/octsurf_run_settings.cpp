@@ -105,7 +105,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			/* unable to open or parse settings file.  Inform
 			 * user and quit. */
 			ret = PROPEGATE_ERROR(-2, ret);
-			cerr << "[chunk_run_settings_t::parse]\t"
+			cerr << "[octsurf_run_settings_t::parse]\t"
 			     << "Error " << ret << ":  Unable to parse "
 			     << "settings file: " << settings_file << endl;
 			return ret;

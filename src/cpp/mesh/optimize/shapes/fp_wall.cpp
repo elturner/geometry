@@ -221,14 +221,13 @@ octdata_t* fp_wall_t::apply_to_leaf(const Vector3d& c, double hw,
 					octdata_t* d)
 {
 	Vector2d p;
-	double prob, s, dist;
+	double s, dist;
 
 	/* check if there exist data here */
 	if(d == NULL)
 		return d;
 
 	/* get the scalar function at this position */
-	prob = d->get_probability();
 	s = d->is_interior() ? -1 : 1; /* if interior, push out */ 
 	s *= (d->get_planar_prob())*(d->get_surface_prob())*hw*hw;
 

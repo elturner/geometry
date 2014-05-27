@@ -252,7 +252,7 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 
 	/* sample the originating carve maps at this location */
 	val = 0;
-	surf = 0;
+	surf = 1;
 	corner = 0;
 	planar = 0;
 	xsize = 2*hw;
@@ -261,14 +261,14 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 		/* interpolate between the original carve maps
 		 * to get value at this position */
 		val    += this->maps[i]->compute(c, xsize);
-		surf   += this->maps[i]->get_surface_prob(c, xsize);
+		surf   *= (1-this->maps[i]->get_surface_prob(c, xsize));
 		corner += this->maps[i]->get_corner_prob();
 		planar += this->maps[i]->get_planar_prob();
 	}
 
 	/* use the average of this sample */
 	val    /= NUM_MAPS_PER_WEDGE;
-	surf   /= NUM_MAPS_PER_WEDGE;
+	surf    = 1 - surf; /* 1 - Prob(no map on surface) */
 	corner /= NUM_MAPS_PER_WEDGE;
 	planar /= NUM_MAPS_PER_WEDGE;
 
