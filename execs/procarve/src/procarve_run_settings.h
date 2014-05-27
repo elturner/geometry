@@ -53,13 +53,6 @@ class procarve_run_settings_t
 		std::string chunkdir;
 		
 		/**
-		 * The input floor plan files.
-		 *
-		 * These .fp files contain floor plan information.
-		 */
-		std::vector<std::string> fpfiles;
-
-		/**
 		 * Where to store the output .oct file
 		 */
 		std::string octfile;

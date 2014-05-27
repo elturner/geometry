@@ -25,7 +25,6 @@ int main(int argc, char** argv)
 {
 	procarve_run_settings_t settings;
 	random_carver_t carver;
-	unsigned int i, n;
 	int ret;
 	
 	/* set input files */
@@ -51,21 +50,6 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
-	/* import some floorplans */
-	n = settings.fpfiles.size();
-	for(i = 0; i < n; i++)
-	{
-		/* import current floorplan */
-		ret = carver.import_fp(settings.fpfiles[i]);
-		if(ret)
-		{
-			cerr << "[main]\tError " << ret << ": "
-			     << "Unable to import floorplan "
-			     << settings.fpfiles[i] << endl;
-			return 3;
-		}
-	}
-
 	/* export */
 	ret = carver.serialize(settings.octfile);
 	if(ret)
@@ -73,7 +57,7 @@ int main(int argc, char** argv)
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to export tree to " 
 		     << settings.octfile << endl;
-		return 4;
+		return 3;
 	}
 
 	/* success */

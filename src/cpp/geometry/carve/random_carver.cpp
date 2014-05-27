@@ -1,6 +1,4 @@
 #include "random_carver.h"
-#include <mesh/floorplan/floorplan.h>
-#include <geometry/shapes/extruded_poly.h>
 #include <geometry/shapes/chunk_exporter.h>
 #include <geometry/shapes/carve_wedge.h>
 #include <geometry/carve/gaussian/scan_model.h>
@@ -41,7 +39,6 @@ using namespace std;
 random_carver_t::random_carver_t()
 {
 	/* default parameter values */
-	this->num_rooms = 0;
 	this->num_threads = 1;
 }
 
@@ -49,7 +46,6 @@ void random_carver_t::init(double res, unsigned int nt)
 {
 	/* initialize octree and algorithm parameters */
 	this->tree.set_resolution(res);
-	this->num_rooms = 0;
 	this->num_threads = nt;
 }
 		
@@ -356,56 +352,6 @@ int random_carver_t::carve_all_chunks(const string& cmfile,
 	wedge_infile.close();
 	progbar.clear();
 	toc(clk, "Processing all chunks");
-
-	/* success */
-	return 0;
-}
-
-int random_carver_t::import_fp(const std::string& fpfile)
-{
-	fp::floorplan_t f;
-	extruded_poly_t poly;
-	progress_bar_t progbar;
-	tictoc_t clk;
-	unsigned int i, n;
-	int ret;
-
-	/* read in floor plan */
-	tic(clk);
-	ret = f.import_from_fp(fpfile);
-	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
-
-	/* iterate over the rooms of this floorplan, and generate
-	 * a shape object for each room */
-	n = f.rooms.size();
-	progbar.set_name("Importing floor plan");
-	for(i = 0; i < n; i++)
-	{
-		/* show progress to user */
-		progbar.update(i, n);
-
-		/* create shape */
-		poly.init(f, this->num_rooms + i, i);
-	
-		/* import into tree */
-		ret = this->tree.insert(poly);
-		if(ret)
-		{
-			/* an error occurred during insert */
-			progbar.clear();
-			return PROPEGATE_ERROR(-2, ret);
-		}
-
-		/* simplify tree, since inserting this room may
-		 * have carved additional nodes */
-		this->tree.get_root()->simplify_recur();
-	}
-
-	/* update number of rooms in building */
-	this->num_rooms += n;
-	progbar.clear();
-	toc(clk, "Importing floor plan");
 
 	/* success */
 	return 0;

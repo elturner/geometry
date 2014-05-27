@@ -53,12 +53,11 @@ def run(dataset_dir):
 	wedgefile = dataset_filepaths.get_wedgefile(dataset_dir)
 	chunklist = dataset_filepaths.get_chunklist(dataset_dir)
 	octree    = dataset_filepaths.get_octree(dataset_dir)
-	fpfiles   = dataset_filepaths.get_all_floorplan_files(dataset_dir)
 
 	# prepare the command-line arguments for the procarve code
 	args = [PROCARVE_EXE, '-m', cmfile, '-w', wedgefile, \
 		'-l', chunklist, '-o', octree, \
-		'-s', SETTINGS_XML] + fpfiles
+		'-s', SETTINGS_XML]
 
 	# run the procarve code
 	ret = subprocess.call(args, executable=PROCARVE_EXE, \

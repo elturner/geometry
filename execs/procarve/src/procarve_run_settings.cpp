@@ -34,7 +34,6 @@ using namespace std;
 /* file extensions to check for */
 
 #define XML_FILE_EXT       "xml"
-#define FLOORPLAN_FILE_EXT "fp"
 
 /* xml tags to check for in settings file */
 
@@ -51,7 +50,6 @@ procarve_run_settings_t::procarve_run_settings_t()
 	this->wedgefile    = "";
 	this->chunklist    = "";
 	this->chunkdir     = "chunks"; /* by default, chunks in subdir */
-	this->fpfiles.clear();
 	this->octfile      = "";
 
 	/* the following values are read from an input xml settings
@@ -93,11 +91,6 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	args.add(OCTFILE_FLAG, "Where to store the output .oct file, which "
 			"represents the carved and labeled volume from the "
 			"input scans.", false, 1);
-	args.add_required_file_type(FLOORPLAN_FILE_EXT, 0,
-			"These files represent reconstructed floor plans"
-			" of the environment with room label information."
-			"  Any floorplan files given will be merged into "
-			"the carved model.");
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -119,7 +112,6 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 	this->chunklist         = args.get_val(CHUNKLIST_FLAG);
 	settings_file           = args.get_val(SETTINGS_FLAG);
 	this->octfile           = args.get_val(OCTFILE_FLAG);
-	args.files_of_type(FLOORPLAN_FILE_EXT, this->fpfiles);
 
 	/* attempt to open and parse the settings file */
 	if(!settings.read(settings_file))
@@ -127,7 +119,7 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 		/* unable to open or parse settings file.  Inform
 		 * user and quit. */
 		ret = PROPEGATE_ERROR(-2, ret);
-		cerr << "[chunk_run_settings_t::parse]\t"
+		cerr << "[procarve_run_settings_t::parse]\t"
 		     << "Error " << ret << ":  Unable to parse "
 		     << "settings file: " << settings_file << endl;
 		return ret;

@@ -43,11 +43,6 @@ class random_carver_t
 		 * space carving */
 		octree_t tree;
 
-		/* total number of rooms imported into this tree */
-		unsigned int num_rooms;
-
-		/* algorithm parameters */
-
 		/* the number of threads to use when carving nodes from
 		 * chunks.  By default, this value is the number of hardware
 		 * cores detected. */
@@ -118,19 +113,6 @@ class random_carver_t
 		int carve_all_chunks(const std::string& cmfile,
 		                     const std::string& wedgefile,
 		                     const std::string& chunklist);
-
-		/**
-		 * Imports floor plan information into a carved tree
-		 *
-		 * After carving, calling this function will parse
-		 * a floorplan and import its room information into
-		 * the tree.
-		 *
-		 * @param fpfile   The input .fp file to parse and use
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int import_fp(const std::string& fpfile);
 
 		/**
 		 * Exports the stored octree to a .oct file
