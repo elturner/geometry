@@ -2,5 +2,4 @@ geometry
 ========
 
 Geometry Code for UC Berkeley VIP Lab's Indoor Modeling Backpack
-
-Eric's Geometry Code Lives Here
+This repository is maintained by Eric Turner <elturner@eecs.berkeley.edu>
