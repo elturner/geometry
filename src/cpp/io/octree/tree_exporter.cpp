@@ -49,7 +49,7 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 			p = 1;
 		if(p < 0)
 			p = 0;
-	
+
 		/* assign colors */
 		green = (unsigned int) (100 * (1 - (2*fabs(p-0.5))));
 		if(p > 0.5)
@@ -137,7 +137,8 @@ void export_exterior_cubes_to_obj_recur(ostream& os, const octnode_t* node)
 			{-1, 1,-1}	};
 
 	/* check if this node is a leaf (i.e. it has data) */
-	if(node->data != NULL && !(node->data->is_interior()))
+	if(node->data != NULL && !(node->data->is_interior()) 
+			&& node->data->get_fp_room() >= 0)
 	{
 		/* export cube of this leaf */
 	
