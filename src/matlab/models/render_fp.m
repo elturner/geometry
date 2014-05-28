@@ -10,6 +10,10 @@ function [] = render_fp(floorplan, color_by_room, c)
 	%	color_by_room -	OPTIONAL. If true, will color each room
 	%			separately. Default is false.
 	%
+	%	c -		OPTIONAL. Default color to use. Can specify
+	%			[r g b] where each component is in [0,1],
+	%			or can also specify optional [r g b alpha]
+	%
 
 	hold all;
 	axis equal;
@@ -20,14 +24,17 @@ function [] = render_fp(floorplan, color_by_room, c)
 		color_by_room = false;
 	end
 	if(~exist('c', 'var'))
-		c = [0.8 0.8 1];
+		c = [0.8 0.8 1 1];
+	end
+	if(length(c) < 4)
+		c = [c, ones(1,4-length(c))];
 	end
 
 	% make a color for each room
 	if(color_by_room)
 		colors = 0.25 + 0.5*rand(floorplan.num_rooms, 3);
 	else
-		colors = ones(floorplan.num_rooms, 1) * c;
+		colors = ones(floorplan.num_rooms, 1) * c(1:3);
 	end
 
 	% plot triangles
@@ -35,6 +42,7 @@ function [] = render_fp(floorplan, color_by_room, c)
 		fill(floorplan.verts(floorplan.tris(i,:),1), ...
 			floorplan.verts(floorplan.tris(i,:),2), ...
 			colors(floorplan.room_inds(i),:), ...
+			'FaceAlpha', c(4), ...
 			'EdgeColor', 'none');
 	end
 
