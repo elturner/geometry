@@ -47,7 +47,7 @@ void fp_horizontal_t::init(const fp::floorplan_t& f, unsigned int ri,
 	/* copy position information from floorplan about this surface */
 	this->norm_up = isfloor;
 	this->z = isfloor ? f.rooms[ri].min_z : f.rooms[ri].max_z;
-	h = this->z + this->offset_gap;
+	h = this->z + this->get_norm()*this->offset_gap;
 	this->shape.init(f, ri, ri, h, h);
 }
 		
