@@ -29,6 +29,12 @@ using namespace std;
 #define OCTFILE_FLAG    "-o" /* location of input octree file (.oct) */
 #define FPFILE_FLAG     "-f" /* input and output floorplan files */
 
+/* xml configuration file parameters to import */
+
+#define XML_CONF_NUM_ITERS "fp_opt_iterations"
+#define XML_CONF_SEARCH    "fp_opt_search_range"
+#define XML_CONF_STEP      "fp_opt_offset_step_coeff"
+
 /* function implementations */
 		
 fpopt_run_settings_t::fpopt_run_settings_t()
@@ -55,7 +61,7 @@ int fpopt_run_settings_t::parse(int argc, char** argv)
 			"described in the given octree file.");
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
-			"to adjust the optimization algorithm.", true, 1);
+			"to adjust the optimization algorithm.", false, 1);
 	args.add(OCTFILE_FLAG, "The input octree (.oct) file to parse.  "
 			"This file represents the probabilistic carving "
 			"of the dataset in the form of an octree.",false,1);
@@ -97,30 +103,33 @@ int fpopt_run_settings_t::parse(int argc, char** argv)
 		this->output_fpfiles.push_back( fpfiles[i+1] );
 	}
 
-	/* check if a settings xml file was specified */
-	if(args.tag_seen(SETTINGS_FLAG))
+	/* retrieve the specified settings file */
+	settings_file = args.get_val(SETTINGS_FLAG);
+	
+	/* attempt to open and parse the settings file */
+	if(!settings.read(settings_file))
 	{
-		/* retrieve the specified file */
-		settings_file = args.get_val(SETTINGS_FLAG);
-	
-		/* attempt to open and parse the settings file */
-		if(!settings.read(settings_file))
-		{
-			/* unable to open or parse settings file.  Inform
-			 * user and quit. */
-			ret = PROPEGATE_ERROR(-2, ret);
-			cerr << "[fpopt_run_settings_t::parse]\t"
-			     << "Error " << ret << ":  Unable to parse "
-			     << "settings file: " << settings_file << endl;
-			return ret;
-		}
-	
-		/* read in settings from file.  If they are not in the given
-		 * file, then the default settings that were set in this
-		 * object's constructor will be used. */
-
-		// No settings needed
+		/* unable to open or parse settings file.  Inform
+		 * user and quit. */
+		ret = PROPEGATE_ERROR(-2, ret);
+		cerr << "[fpopt_run_settings_t::parse]\t"
+		     << "Error " << ret << ":  Unable to parse "
+		     << "settings file: " << settings_file << endl;
+		return ret;
 	}
+	
+	/* read in settings from file.  If they are not in the given
+	 * file, then the default settings that were set in this
+	 * object's constructor will be used. */
+	if(settings.is_prop(XML_CONF_NUM_ITERS))
+		this->num_iterations = settings.getAsUint(
+				XML_CONF_NUM_ITERS);
+	if(settings.is_prop(XML_CONF_SEARCH))
+		this->search_range = settings.getAsDouble(
+				XML_CONF_SEARCH);
+	if(settings.is_prop(XML_CONF_STEP))
+		this->offset_step_coeff = settings.getAsDouble(
+				XML_CONF_STEP);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

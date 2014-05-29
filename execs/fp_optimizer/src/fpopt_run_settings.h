@@ -44,6 +44,35 @@ class fpopt_run_settings_t
 		 */
 		std::vector<std::string> output_fpfiles;
 
+		/**
+		 * The number of iterations to run
+		 *
+		 * This vlaue represents the number of iterations
+		 * to perform when attempting to align the floorplan
+		 * to the carving via gradient descent.
+		 */
+		unsigned int num_iterations;
+
+		/**
+		 * The search range for moving a floorplan surface
+		 *
+		 * This value indicates the distance, in meters,
+		 * that a floorplan surface can be perturbed in a
+		 * single iteration of the optimization process.
+		 */
+		double search_range;
+
+		/**
+		 * Indicates the step siuze of the offset alignment
+		 *
+		 * This value indicates the step size, in units of
+		 * tree.get_resolution(), of how to iterate over the
+		 * different possible offsets for a given surface of
+		 * the floorplan.  This value is typically less than
+		 * 1, but not extremely so.
+		 */
+		double offset_step_coeff;
+
 	/* functions */
 	public:
 

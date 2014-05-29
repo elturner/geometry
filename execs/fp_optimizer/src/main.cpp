@@ -35,6 +35,10 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	/* initialize the optimizer */
+	opt.init(args.num_iterations, args.search_range,
+	         args.offset_step_coeff);
+
 	/* optimize all given floorplans using the specified octree */
 	ret = opt.process_all(args.octfile, 
 	                      args.input_fpfiles, args.output_fpfiles);

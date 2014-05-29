@@ -233,18 +233,15 @@ int fp_optimizer_t::export_fp(const string& filename) const
 
 int fp_optimizer_t::optimize()
 {
-	unsigned int i, num_iters; 
+	unsigned int i; 
 
-	/* retrieve desired number of iterations */
-	num_iters = 5;// TODO
-	
 	/* optimize positions of walls, floors, and ceilings */
-	for(i = 0; i < num_iters; i++)
+	for(i = 0; i < this->num_iterations; i++)
 	{
 		/* perform a single iteration of optimization
 		 * on this floorplan */
 		this->run_iteration_walls();
-		// TODO do floors and ceilings
+		this->run_iteration_height();
 	}
 	
 	/* success */
@@ -266,9 +263,9 @@ void fp_optimizer_t::run_iteration_walls()
 	net_offset.resize(this->floorplan.verts.size());
 
 	/* prepare parameters */
-	r_max = 0.05; // TODO
+	r_max = this->search_range; 
 	r_min = -r_max;
-	r_step = 0.25 * this->tree.get_resolution(); // TODO
+	r_step = this->offset_step_coeff * this->tree.get_resolution();
 
 	/* iterate over the walls */
 	this->floorplan.compute_edges(edges);
@@ -327,4 +324,9 @@ void fp_optimizer_t::run_iteration_walls()
 		this->floorplan.verts[i].x += net_offset[i](0);
 		this->floorplan.verts[i].y += net_offset[i](1);
 	}
+}
+		
+void fp_optimizer_t::run_iteration_height()
+{
+	// TODO
 }

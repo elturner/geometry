@@ -39,8 +39,70 @@ class fp_optimizer_t
 		 */
 		fp::floorplan_t floorplan;
 
+		/* the following are algorithm parameters */
+
+		/**
+		 * Indicates the number of iterations to run
+		 *
+		 * This value represents the number of iterations to
+		 * perform when attempting to align the floorplan to
+		 * the carving via gradient descent.
+		 */
+		unsigned int num_iterations;
+
+		/**
+		 * Indicates the search range for moving a floorplan surface
+		 *
+		 * This value indicates the distance, in meters, that 
+		 * a floorplan surface can be perturbed in a single
+		 * iteration of the optimization process.
+		 */
+		double search_range;
+
+		/**
+		 * Indicates the step size of the offset alignment
+		 *
+		 * This value indicates the step size, in units of
+		 * tree.get_resolution(), of how to iterate over the
+		 * different possible offsets for a given surface
+		 * of the floorplan.  This value is typically less
+		 * than 1, but not extremely small.
+		 */
+		double offset_step_coeff;
+
 	/* functions */
 	public:
+
+		/*------*/
+		/* init */
+		/*------*/
+
+		/**
+		 * Constructs this object with default parameters
+		 */
+		fp_optimizer_t()
+		{
+			this->init(5, 0.05, 0.25);
+		};
+
+		/**
+		 * Initialize algorithm parameters
+		 *
+		 * This function will initialize algorithm parameters
+		 * to use during process.
+		 *
+		 * @param num_iters   Number of iterations to run
+		 * @param search      The max range for each iter. (meters)
+		 * @param step_coef   The offset step coefficient
+		 */
+		inline void init(unsigned int num_iters, double search,
+		                 double step_coef)
+		{
+			/* set values */
+			this->num_iterations = num_iters;
+			this->search_range = search;
+			this->offset_step_coeff = step_coef;
+		};
 
 		/*------------*/
 		/* processing */
@@ -155,10 +217,22 @@ class fp_optimizer_t
 		 * which means only the (x,y) positions of the vertices
 		 * will be changed, and the elevation (z) of the vertices
 		 * will be unmodified.
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		void run_iteration_walls();
+
+		/**
+		 * Will run a single iteration of height gradient descent
+		 *
+		 * This function is called by optimize().  This will
+		 * run a single iteration of the floorplan optimization
+		 * process, which will modify the vertical position of
+		 * vertices to align with the carved octree.
+		 *
+		 * This iteration only modifies floor and ceiling heights
+		 * in the floorplan, the (x,y) position of vertices will
+		 * remain unchanged.
+		 */
+		void run_iteration_height();
 };
 
 #endif

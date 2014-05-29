@@ -1,0 +1,40 @@
+<settings>
+<!-- This file contains run settings for the fp_optimizer program -->
+
+	<!-- This value indicates the number of iterations to run
+	     when attempting to optimize the floorplan's alignment
+	     with the carved octree.  This alignment process will be
+	     performed using gradient descent.  A larger value here will
+	     allow for more aggressive alignment, but will take a longer
+	     time.
+
+	     units:  number of alignment cycles -->
+	<fp_opt_iterations>5</fp_opt_iterations>
+
+	<!-- This value indicates the maximum search range for a floorplan
+	     surface to be moved within a single iteration when attempting
+	     to align it to the octree carving.  This value should express
+	     the expected error of a floorplan surface position. Since the
+	     alignment process is used to find furniture and other objects
+	     in the carving, this value should be smaller than the feature
+	     length of any desired object in the environment.
+
+	     units: meters -->
+	<fp_opt_search_range>0.05</fp_opt_search_range>
+
+	<!-- This value indicates the offset step size when searching
+	     for the optimal wall position within an optimization
+	     iteration.  This value is in units of the resolution of
+	     the octree.  So, for example, if the value was 1, then
+	     the wall offset would be moved by one tree resolution at
+	     each step.
+	     
+	     Note that a preferred value should be less than one, to
+	     account for non-axis-aligned walls, but does not need to
+	     be significantly less than one, since it is still searching
+	     on a discretized volume.
+
+	     Units:   number of tree resolutions -->
+	<fp_opt_offset_step_coeff>0.25</fp_opt_offset_step_coeff>
+
+</settings>
