@@ -1,6 +1,7 @@
 #include "fp_optimizer.h"
 #include <mesh/floorplan/floorplan.h>
 #include <mesh/optimize/shapes/fp_wall.h>
+#include <mesh/optimize/shapes/fp_horizontal.h>
 #include <geometry/octree/octree.h>
 #include <util/error_codes.h>
 #include <Eigen/Dense>
@@ -9,7 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <iomanip>
+#include <set>
 #include <float.h>
 
 /**
@@ -250,17 +251,17 @@ int fp_optimizer_t::optimize()
 
 void fp_optimizer_t::run_iteration_walls()
 {
-	vector<Vector2d,aligned_allocator<Vector2d> > net_offset;
+	vector<Vector2d, aligned_allocator<Vector2d> > net_offset;
 	vector<double> total_cost;
 	vector<fp::edge_t> edges; /* walls in floorplan */
 	fp_wall_t wall;
-	Vector2d v_unit, curr_offset;
+	Vector2d curr_offset;
 	double r, r_min, r_max, r_step, r_best, c, c_best;
 	size_t i, j, n;
 
 	/* prepare offset vectors for each wall */
 	total_cost.resize(this->floorplan.verts.size(), 0);
-	net_offset.resize(this->floorplan.verts.size());
+	net_offset.resize(this->floorplan.verts.size(), Vector2d::Zero());
 
 	/* prepare parameters */
 	r_max = this->search_range; 
@@ -319,7 +320,7 @@ void fp_optimizer_t::run_iteration_walls()
 		/* normalize the offsets */
 		if(total_cost[i] > 0)
 			net_offset[i] /= total_cost[i];
-	
+
 		/* add vector to vertex position for incremental update */
 		this->floorplan.verts[i].x += net_offset[i](0);
 		this->floorplan.verts[i].y += net_offset[i](1);
@@ -328,5 +329,78 @@ void fp_optimizer_t::run_iteration_walls()
 		
 void fp_optimizer_t::run_iteration_height()
 {
-	// TODO
+	set<int>::iterator tit;
+	fp_horizontal_t floor, ceil;
+	double r, r_min, r_max, r_step;
+	double floor_r_best, ceil_r_best, c, floor_c_best, ceil_c_best;
+	size_t i, num_rooms, vi, vii;
+
+	/* prepare parameters */
+	num_rooms = this->floorplan.rooms.size();
+	r_max = this->search_range; 
+	r_min = -r_max;
+	r_step = this->offset_step_coeff * this->tree.get_resolution();
+
+	/* iterate over the rooms of this floorplan */
+	for(i = 0; i < num_rooms; i++)
+	{
+		/* find the best offset for this wall */
+		floor_c_best = ceil_c_best = DBL_MAX; /* initialize cost */
+		floor_r_best = ceil_r_best = 0;
+		for(r = r_min; r <= r_max; r += r_step)
+		{
+			/* compute geometry for the i'th room's floor
+			 * and ceil */
+			floor.init(this->floorplan, i, true, r);
+			ceil.init(this->floorplan, i, false, r);
+
+			/* compute the cost at this offset */
+			this->tree.find(floor);
+			this->tree.find(ceil);
+
+			/* compare to best cost so far */
+			c = floor.get_offset_cost();
+			if(c < floor_c_best)
+			{
+				/* update values for best-so-far */
+				floor_c_best = c;
+				floor_r_best = r;
+			}
+			c = ceil.get_offset_cost();
+			if(c < ceil_c_best)
+			{
+				/* update values for best-so-far */
+				ceil_c_best = c;
+				ceil_r_best = r;
+			}
+		}
+
+		/* compute the offset vector due to the best offset dist,
+		 * and update the position of the floor and ceiling for
+		 * this room to coincide with these values */
+		this->floorplan.rooms[i].min_z += floor_r_best
+						* floor.get_norm(); 
+		this->floorplan.rooms[i].max_z += ceil_r_best
+						* ceil.get_norm(); 
+
+		/* update the vertex positions in this floorplan to match
+		 * the room floor and height positions */
+		for(tit = this->floorplan.rooms[i].tris.begin();
+				tit != this->floorplan.rooms[i].tris.end();
+					tit++)
+		{
+			/* iterate over the vertices of this triangle */
+			for(vii = 0; vii < fp::NUM_VERTS_PER_TRI; vii++)
+			{
+				/* get index of vertex */
+				vi = this->floorplan.tris[*tit].verts[vii];
+
+				/* update heights */
+				this->floorplan.verts[vi].min_z
+					= this->floorplan.rooms[i].min_z;
+				this->floorplan.verts[vi].max_z
+					= this->floorplan.rooms[i].max_z;
+			}
+		}
+	}
 }

@@ -21,9 +21,11 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)mesh/optimize/fp_optimizer.cpp \
 		$(SOURCEDIR)mesh/optimize/shapes/fp_wall.cpp \
+		$(SOURCEDIR)mesh/optimize/shapes/fp_horizontal.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
+		$(SOURCEDIR)geometry/shapes/extruded_poly.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
@@ -41,7 +43,9 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)mesh/optimize/fp_optimizer.h \
 		$(SOURCEDIR)mesh/optimize/shapes/fp_wall.h \
+		$(SOURCEDIR)mesh/optimize/shapes/fp_horizontal.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
+		$(SOURCEDIR)geometry/shapes/extruded_poly.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \

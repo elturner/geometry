@@ -3,13 +3,14 @@
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
 #include <geometry/poly_intersect/poly2d.h>
+#include <util/error_codes.h>
 #include <Eigen/Dense>
 #include <algorithm>
 #include <iostream>
 #include <cmath>
 
 /**
- * @file   fp_wall.h
+ * @file   fp_wall.cpp
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  * @brief  This file defines the fp_wall_t class, describes fp geometry
  *
@@ -174,33 +175,34 @@ octdata_t* fp_wall_t::apply_to_leaf(const Vector3d& c, double hw,
 					octdata_t* d)
 {
 	double p;
-
-	/* check if there exist data here */
-	if(d == NULL)
-		return d;
+	MARK_USED(c);
 
 	/* the cost of a particular offset is based on how much
-	 * of the wall it intersects.  Ideally, this would be zero
-	 * at just the 'interior' side of the surface described by
-	 * the octree, so that the fp wall gets as close to the boundary
-	 * of the room as possible without intersecting any exterior nodes.
+	 * of the surface this shape intersects in the carving.  Ideally, 
+	 * this would be zero at just the 'interior' side of the surface 
+	 * described by the octree, so that the fp floor or ceiling gets
+	 * as close to the boundary of the room as possible without 
+	 * intersecting any exterior nodes.
 	 *
 	 * The weighting shown below is meant to enforce this approach,
 	 * so that higher cost is given to intersected nodes that are
 	 * exterior and planar.  There is also an additive term meant
-	 * to increase the cost as the wall gets farther from its original
-	 * position.
+	 * to increase the cost as the horizontal gets farther from 
+	 * its original position.
 	 */
 
-	/* no cost for an interior node */
-	if(!(d->is_interior()))
-	{
-		/* the cost should grow as the node gets more exterior,
-		 * more planar, or if the wall is offset by a large
-		 * distance from its original position */
-		p = (1 - d->get_probability())*hw*hw*(d->get_planar_prob());
-		this->offset_cost += p;
-	}
+	/* get probability of the current node being exterior */
+	if(d == NULL)
+		p = 0.5; /* null node has no observation */
+	else if(!(d->is_interior()))
+		p = (1 - d->get_probability()); /* prob. of exterior node */
+	else
+		p = 0; /* interior nodes get no cost */
+
+	/* the cost should grow as the node gets more exterior,
+	 * more planar, or if the horizontal is offset by a large
+	 * distance from its original position */
+	this->offset_cost += p*hw*hw*(d->get_planar_prob());
 
 	/* return the same data as given */
 	return d;

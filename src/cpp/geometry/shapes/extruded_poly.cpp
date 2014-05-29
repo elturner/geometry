@@ -29,9 +29,17 @@ extruded_poly_t::extruded_poly_t()
 	/* set default values */
 	this->room_index = -1;
 }
-		
+
 void extruded_poly_t::init(const fp::floorplan_t& f,
 		           unsigned int gi, unsigned int ri)
+{
+	/* initialize with room's default heights */
+	this->init(f, gi, ri, f.rooms[ri].min_z, f.rooms[ri].max_z);
+}
+
+void extruded_poly_t::init(const fp::floorplan_t& f,
+		           unsigned int gi, unsigned int ri,
+                           double fh, double ch)
 {
 	map<int, unsigned int> vert_map;
 	map<int, unsigned int>::iterator vmit;
@@ -45,8 +53,8 @@ void extruded_poly_t::init(const fp::floorplan_t& f,
 	this->room_index = gi;
 
 	/* save height information about this room */
-	this->floor_height = f.rooms[ri].min_z;
-	this->ceiling_height = f.rooms[ri].max_z;
+	this->floor_height = fh;
+	this->ceiling_height = ch;
 
 	/* copy over vertex positions, and generate a mapping
 	 * between vertex indices in the floor plan, and vertex

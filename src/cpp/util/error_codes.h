@@ -17,4 +17,7 @@
  * so that the source of an error is easy to trace. */
 #define PROPEGATE_ERROR(curr, prev) ( (curr) + 100*(prev) )
 
+/* Will suppress "unused parameter" warning */
+#define MARK_USED(X)  ((void)(&(X)))
+
 #endif

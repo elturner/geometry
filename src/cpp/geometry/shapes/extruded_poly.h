@@ -87,6 +87,23 @@ class extruded_poly_t : public shape_t
 		 */
 		void init(const fp::floorplan_t& f,
 		          unsigned int gi, unsigned int ri);
+		
+		/**
+		 * Initialize shape from floorplan with manual heights
+		 *
+		 * Will perform the same action as init(f,gi,ri), but
+		 * will force the generate shape to have floor height
+		 * of fh and ceiling height of ch.
+		 *
+		 * @param f     The floorplan to reference
+		 * @param gi    The global index of room
+		 * @param ri    The room index to use
+		 * @param fh    The floor height to use
+		 * @param ch    The ceiling height to use
+		 */
+		void init(const fp::floorplan_t& f,
+		          unsigned int gi, unsigned int ri,
+		          double fh, double ch);
 
 		/*-----------*/
 		/* accessors */
