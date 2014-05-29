@@ -143,7 +143,7 @@ class fp_optimizer_t
 		int optimize();
 
 		/**
-		 * Will run a single iteration of the wall optimization
+		 * Will run a single iteration of the wall gradient descent
 		 *
 		 * This function is called by optimize().  This will
 		 * run a single iteration of the floorplan optimization
@@ -158,22 +158,7 @@ class fp_optimizer_t
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int run_iteration_walls();
-
-		/**
-		 * Will run a single iteration of the height optimization
-		 *
-		 * This function is called by optimize().  This will
-		 * run a single iteration of the floorplan optimization.
-		 *
-		 * This will only modify the heights (z) of vertices to
-		 * attempt to align the floor and ceiling positions to the
-		 * information stored in the octree.  The horizontal (x,y)
-		 * positions of the vertices will remain unchanged.
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int run_iteration_heights();
+		void run_iteration_walls();
 };
 
 #endif

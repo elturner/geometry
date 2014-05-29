@@ -33,15 +33,13 @@ using namespace poly2d;
 
 /* function implementations */
 
-void fp_wall_t::init(double r, const floorplan_t& f,
-                     const edge_t& e)
+void fp_wall_t::init(const floorplan_t& f, const edge_t& e)
 {
 	unsigned int i;
 
 	/* initialize structure elements */
-	this->offset_gap = r;
-	this->use_offset = false;
-	
+	this->offset_gap = 0;
+
 	/* copy position information from floorplan about this wall */
 	this->edge = e;
 	for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
@@ -49,6 +47,7 @@ void fp_wall_t::init(double r, const floorplan_t& f,
 		/* copy position of this vertex */
 		this->edge_pos[i](0) = f.verts[e.verts[i]].x;
 		this->edge_pos[i](1) = f.verts[e.verts[i]].y;
+		this->offset_edge_pos[i] = this->edge_pos[i];
 	}
 
 	/* compute normal direction of edge
@@ -58,15 +57,7 @@ void fp_wall_t::init(double r, const floorplan_t& f,
 	 */
 	this->norm(0) = this->edge_pos[0](1) - this->edge_pos[1](1);
 	this->norm(1) = this->edge_pos[1](0) - this->edge_pos[0](0); 
-
-	/* set position of corresponding offset surface vertex by
-	 * using the normal vector.  This offset surface should be
-	 * 'behind' the wall, since intersections are computed inclusively,
-	 * and the normal vector points inward, so the gap between
-	 * the offset and the wall should represent the actual interface
-	 * between the inside and outside. */
-	for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
-		this->offset_edge_pos[i] = this->edge_pos[i] - r*this->norm;
+	this->norm.normalize();
 
 	/* compute length and tangent */
 	this->tangent = this->edge_pos[1] - this->edge_pos[0];
@@ -79,87 +70,62 @@ void fp_wall_t::init(double r, const floorplan_t& f,
 	this->max_z = max(f.verts[e.verts[0]].max_z,
 	                  f.verts[e.verts[1]].max_z);
 
-	/* initialize forces to zero */
-	this->num_nodes = 0;
-	for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
-		this->scalar_sum[i]   = 0.0;
+	/* initialize cost to zero */
+	this->offset_cost = 0;
 }
 		
-void fp_wall_t::compute_forces(Eigen::Vector2d& f0, 
-                               Eigen::Vector2d& f1)
+void fp_wall_t::set_offset(double off)
 {
-	/* cannot produce valid vectors if not enough observations
-	 * have occurred */
-	if(this->num_nodes == 0)
-	{
-		f0(0) = 0; f0(1) = 0;
-		f1(0) = 0; f1(1) = 0;
-		return;
-	}
+	unsigned int i;
 
-	/* compute force for vertices */
-	f0 = this->norm * this->scalar_sum[0];
-	f1 = this->norm * this->scalar_sum[1];
+	/* store the specified offset gap distance */
+	this->offset_gap = off;
+	this->offset_cost = 0; /* with a new offset, reset the cost */
+
+	/* populate the offset surface vertices to be at this distance */
+	for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
+		this->offset_edge_pos[i] = this->edge_pos[i] 
+						+ off*this->norm;
 }
 		
+double fp_wall_t::get_offset_cost() const
+{
+	/* return the computed offset cost, along with an additive
+	 * rigitity term that is mean to prevent the wall from
+	 * drifting too far */
+	return (this->offset_cost);
+}
+
+/*-----------------------------------*/
+/* overloaded functions from shape_t */
+/*-----------------------------------*/
+
 Vector3d fp_wall_t::get_vertex(unsigned int i) const
 {
 	Vector3d v;
 
-	/* change the value of i if we want to use the offset
-	 * position of this wall */
-	if(this->use_offset)
-		i += NUM_VERTS_PER_RECT;
-
 	/* construct the vertex based on given index */
 	switch(i)
 	{
-		/* main surface */
 		case 0:
-			/* upper-right corner */
-			v(0) = this->edge_pos[0](0);
-			v(1) = this->edge_pos[0](1);
-			v(2) = this->max_z;
-			break;
-		case 1:
-			/* upper-left corner */
-			v(0) = this->edge_pos[1](0);
-			v(1) = this->edge_pos[1](1);
-			v(2) = this->max_z;
-			break;
-		case 2:
-			/* lower-left corner */
-			v(0) = this->edge_pos[1](0);
-			v(1) = this->edge_pos[1](1);
-			v(2) = this->min_z;
-			break;
-		case 3:
-			/* lower-right corner */
-			v(0) = this->edge_pos[0](0);
-			v(1) = this->edge_pos[0](1);
-			v(2) = this->min_z;
-			break;
-
-		/* secondary surface for gradient calculations */
-		case 4:
 			/* upper-right corner */
 			v(0) = this->offset_edge_pos[0](0);
 			v(1) = this->offset_edge_pos[0](1);
 			v(2) = this->max_z;
 			break;
-		case 5:
+		case 1:
 			/* upper-left corner */
 			v(0) = this->offset_edge_pos[1](0);
 			v(1) = this->offset_edge_pos[1](1);
 			v(2) = this->max_z;
 			break;
-		case 6:
+		case 2:
 			/* lower-left corner */
 			v(0) = this->offset_edge_pos[1](0);
 			v(1) = this->offset_edge_pos[1](1);
 			v(2) = this->min_z;
 			break;
-		case 7:
+		case 3:
 			/* lower-right corner */
 			v(0) = this->offset_edge_pos[0](0);
 			v(1) = this->offset_edge_pos[0](1);
@@ -192,26 +158,13 @@ bool fp_wall_t::intersects(const Vector3d& c, double hw) const
 	bounds_y[0] = c(1) - hw;
 	bounds_y[1] = c(1) + hw;
 	
-	/* determine which surface to use */
-	if(!(this->use_offset))
-	{
-		/* check if this node intersects the main surface, 
-		 * which only needs to check a 2D intersection */
-		if(line_in_aabb(this->edge_pos[0](0), this->edge_pos[0](1),
-				this->edge_pos[1](0), this->edge_pos[1](1),
-				bounds_x, bounds_y))
-			return true; /* intersects surface */
-	}
-	else
-	{
-		/* check if this node intersects the offset surface */
-		if(line_in_aabb(this->offset_edge_pos[0](0),
-				this->offset_edge_pos[0](1),
-				this->offset_edge_pos[1](0),
-				this->offset_edge_pos[1](1),
-				bounds_x, bounds_y))
-			return true; /* intersects surface */
-	}
+	/* check if this node intersects the offset surface */
+	if(line_in_aabb(this->offset_edge_pos[0](0),
+			this->offset_edge_pos[0](1),
+			this->offset_edge_pos[1](0),
+			this->offset_edge_pos[1](1),
+			bounds_x, bounds_y))
+		return true; /* intersects surface */
 
 	/* no intersection found */
 	return false;
@@ -220,26 +173,34 @@ bool fp_wall_t::intersects(const Vector3d& c, double hw) const
 octdata_t* fp_wall_t::apply_to_leaf(const Vector3d& c, double hw,
 					octdata_t* d)
 {
-	Vector2d p;
-	double s, dist;
+	double p;
 
 	/* check if there exist data here */
 	if(d == NULL)
 		return d;
 
-	/* get the scalar function at this position */
-	s = d->is_interior() ? -1 : 1; /* if interior, push out */ 
-	s *= (d->get_planar_prob())*(d->get_surface_prob())*hw*hw;
+	/* the cost of a particular offset is based on how much
+	 * of the wall it intersects.  Ideally, this would be zero
+	 * at just the 'interior' side of the surface described by
+	 * the octree, so that the fp wall gets as close to the boundary
+	 * of the room as possible without intersecting any exterior nodes.
+	 *
+	 * The weighting shown below is meant to enforce this approach,
+	 * so that higher cost is given to intersected nodes that are
+	 * exterior and planar.  There is also an additive term meant
+	 * to increase the cost as the wall gets farther from its original
+	 * position.
+	 */
 
-	/* get distance along surface of wall, to properly divide
-	 * force between the two vertices */
-	p(0) = c(0); p(1) = c(1);	
-	dist = this->tangent.dot(p - this->edge_pos[0]) / this->length;
-	
-	/* add to accumulation of forces */
-	this->num_nodes++;
-	this->scalar_sum[0] += (1-dist)*s;
-	this->scalar_sum[1] += dist*s;
+	/* no cost for an interior node */
+	if(!(d->is_interior()))
+	{
+		/* the cost should grow as the node gets more exterior,
+		 * more planar, or if the wall is offset by a large
+		 * distance from its original position */
+		p = (1 - d->get_probability())*hw*hw*(d->get_planar_prob());
+		this->offset_cost += p;
+	}
 
 	/* return the same data as given */
 	return d;

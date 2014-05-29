@@ -9,6 +9,8 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <iomanip>
+#include <float.h>
 
 /**
  * @file fp_optimizer.cpp
@@ -231,79 +233,98 @@ int fp_optimizer_t::export_fp(const string& filename) const
 
 int fp_optimizer_t::optimize()
 {
-	size_t i, num_iters;
+	unsigned int i, num_iters; 
 
-	num_iters = 200; // TODO get convergence parameter
+	/* retrieve desired number of iterations */
+	num_iters = 5;// TODO
+	
+	/* optimize positions of walls, floors, and ceilings */
 	for(i = 0; i < num_iters; i++)
 	{
+		/* perform a single iteration of optimization
+		 * on this floorplan */
 		this->run_iteration_walls();
-		stringstream ss;
-		ss << "/home/elturner/Desktop/test/fp_iter_" << i << ".fp";
-		this->export_fp(ss.str());
+		// TODO do floors and ceilings
 	}
 	
-	// TODO run walls and heights
-
 	/* success */
 	return 0; 
 }
 
-int fp_optimizer_t::run_iteration_walls()
+void fp_optimizer_t::run_iteration_walls()
 {
-	vector<Vector2d,aligned_allocator<Vector2d> > net_forces;
+	vector<Vector2d,aligned_allocator<Vector2d> > net_offset;
+	vector<double> total_cost;
 	vector<fp::edge_t> edges; /* walls in floorplan */
 	fp_wall_t wall;
-	Vector2d f0, f1;
-	double r, stepsize, norm;
-	size_t i, n;
+	Vector2d v_unit, curr_offset;
+	double r, r_min, r_max, r_step, r_best, c, c_best;
+	size_t i, j, n;
 
-	/* prepare force vectors for each wall */
-	net_forces.resize(this->floorplan.verts.size());
+	/* prepare offset vectors for each wall */
+	total_cost.resize(this->floorplan.verts.size(), 0);
+	net_offset.resize(this->floorplan.verts.size());
+
+	/* prepare parameters */
+	r_max = 0.05; // TODO
+	r_min = -r_max;
+	r_step = 0.25 * this->tree.get_resolution(); // TODO
 
 	/* iterate over the walls */
 	this->floorplan.compute_edges(edges);
 	n = edges.size();
-	r = sqrt(2) * this->tree.get_resolution(); // TODO
 	for(i = 0; i < n; i++)
 	{
 		/* compute geometry for the i'th wall */
-		wall.init(r, this->floorplan, edges[i]);
+		wall.init(this->floorplan, edges[i]);
 
-		/* get the scalar field intersected by the i'th wall */
-		wall.toggle_offset(false);
-		this->tree.find(wall);
-		wall.toggle_offset(true);
-		this->tree.find(wall);
+		/* find the best offset for this wall */
+		c_best = DBL_MAX; /* initialize cost */
+		r_best = 0;
+		for(r = r_min; r <= r_max; r += r_step)
+		{
+			/* set the current wall to this offset */
+			wall.set_offset(r);
 
-		/* add the computed forces to our net sum */
-		wall.compute_forces(f0, f1);
-		net_forces[edges[i].verts[0]] += f0;
-		net_forces[edges[i].verts[1]] += f1;
+			/* compute the cost at this offset */
+			this->tree.find(wall);
+
+			/* compare to best cost so far */
+			c = wall.get_offset_cost();
+			if(c < c_best)
+			{
+				/* update values for best-so-far */
+				c_best = c;
+				r_best = r;
+			}
+		}
+
+		/* compute the offset vector due to the best offset dist */
+		curr_offset = r_best * wall.get_norm(); 
+
+		/* with the best offset distance, update the offset
+		 * vector for the vertices of this edge */
+		for(j = 0; j < fp::NUM_VERTS_PER_EDGE; j++)
+		{
+			/* since multiple walls can affect the position
+			 * of each vertex, the net offset will be a
+			 * weighted average of the offsets from each wall,
+			 * based on the cost given */
+			total_cost[edges[i].verts[j]] += c_best;
+			net_offset[edges[i].verts[j]] += c_best*curr_offset;
+		}
 	}
-
-	/* normalize the force vectors */
-	norm = 0;
-	stepsize = 0.5 * this->tree.get_resolution(); // TODO
-	n = net_forces.size();
-	for(i = 0; i < n; i++)
-		norm += net_forces[i].squaredNorm();
-	norm = stepsize / sqrt(norm); /* L2 norm across all forces */
-	for(i = 0; i < n; i++)
-		net_forces[i] *= norm;
 
 	/* perturb vertex positions */
+	n = total_cost.size();
 	for(i = 0; i < n; i++)
 	{
-		/* add vector to vertex position for incremental update */
-		this->floorplan.verts[i].x += net_forces[i](0);
-		this->floorplan.verts[i].y += net_forces[i](1);
-	}
+		/* normalize the offsets */
+		if(total_cost[i] > 0)
+			net_offset[i] /= total_cost[i];
 	
-	/* success */
-	return 0;
-}
-		
-int fp_optimizer_t::run_iteration_heights()
-{
-	return -1; // TODO
+		/* add vector to vertex position for incremental update */
+		this->floorplan.verts[i].x += net_offset[i](0);
+		this->floorplan.verts[i].y += net_offset[i](1);
+	}
 }

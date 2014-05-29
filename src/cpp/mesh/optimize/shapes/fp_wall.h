@@ -36,8 +36,8 @@ class fp_wall_t : public shape_t
 	private:
 
 		/**
-		 * The offset gap to use to compute gradient
-		 * should be roughly sqrt(2) * resolution
+		 * The distance between the offset surface and the original
+		 * surface of this wall.
 		 */
 		double offset_gap; 
 
@@ -47,23 +47,15 @@ class fp_wall_t : public shape_t
 		fp::edge_t edge;
 
 		/**
-		 * This flag indicates whether this shape represents the
-		 * original position of the wall or an offset position
-		 * for gradient-computation purposes.
-		 */
-		bool use_offset;
-
-		/**
-		 * The line segment that defines the projection of this
-		 * wall onto the xy-plane.
+		 * The line segment that defines the projection of the
+		 * original wall surface onto the xy-plane.
 		 */
 		Eigen::Vector2d edge_pos[fp::NUM_VERTS_PER_EDGE];
 
 		/**
 		 * The line segment that defines the project of the
 		 * offset version of this wall.  The offset is used to
-		 * represent a surface parallel to the wall in order
-		 * to compute gradient values.
+		 * represent a surface parallel to the wall.
 		 */
 		Eigen::Vector2d offset_edge_pos[fp::NUM_VERTS_PER_EDGE];
 
@@ -100,16 +92,11 @@ class fp_wall_t : public shape_t
 		double max_z;
 
 		/**
-		 * The sum of all scalar values that intersected the
-		 * wall surfaces.
+		 * The cost value of the wall at the current offset
+		 * position.  This value is computed based on how many
+		 * exterior nodes the wall intersected.
 		 */
-		double scalar_sum[fp::NUM_VERTS_PER_EDGE];
-
-		/**
-		 * Number of nodes that contributed to analysis
-		 * of the surface.
-		 */
-		unsigned int num_nodes;
+		double offset_cost;
 
 	/* functions */
 	public:
@@ -124,54 +111,39 @@ class fp_wall_t : public shape_t
 		 * Given a floorplan and an edge within that floorplan,
 		 * will define the geometry of this wall shape in 3D space.
 		 *
-		 * @param r    The offset gap to use (units: meters)
 		 * @param f    The floorplan to use
 		 * @param e    The edge of this floorplan to use as a wall
 		 */
-		void init(double r, const fp::floorplan_t& f,
-		          const fp::edge_t& e);
+		void init(const fp::floorplan_t& f, const fp::edge_t& e);
 
 		/*------------*/
 		/* processing */
 		/*------------*/
 
 		/**
-		 * Sets the flag whether or not to use the offset surface
+		 * Sets the offset position of this surface
 		 *
-		 * By default, this geometry is defined to use the wall
-		 * surface.  However, we also need to insert the geometry
-		 * of a slight offset surface, in order to compute
-		 * the portion of the gradient along the normal vector
-		 * of the wall.  This call will set which of these two
-		 * surfaces to use
+		 * This call will reset the geometry associated with
+		 * the offset of this surface and any stored information
+		 * about previous offsets.
 		 *
-		 * @param f  If true, calls to octree.find() use original
-		 *           surface.  If false, calls to octree.find()
-		 *           use offset surface.
+		 * @param off   The offset gap to use (units: meters)
 		 */
-		inline void toggle_offset(bool f)
-		{ this->use_offset = f; };
+		void set_offset(double off);
 
 		/**
-		 * Computes force vector this wall exerts on each vertex
+		 * Retrieves the final cost of the latest offset
 		 *
-		 * This function should be called after this shape was
-		 * inserted twice into the octree (once with offset=true,
-		 * and once with offset=false).
-		 *
-		 * This will yield the force vectors exerted on the vertices
-		 * by this wall based on the carved probabilities of the
-		 * octree that was used.
-		 *
-		 * Note that no step size has been included in this
-		 * computation, so the force vector may need to be scaled
-		 * accordingly.
-		 *
-		 * @param f0   Where to store force vector for vertex #0
-		 * @param f1   Where to store force vector for vertex #1
+		 * @return   Returns the computed cost after the last
+		 *           call to octree.find(this)
 		 */
-		void compute_forces(Eigen::Vector2d& f0, 
-		                    Eigen::Vector2d& f1);
+		double get_offset_cost() const;
+
+		/**
+		 * Retrieves the normal vector of this wall
+		 */
+		inline Eigen::Vector2d get_norm() const
+		{ return this->norm; };
 
 		/*----------------------*/
 		/* overloaded functions */

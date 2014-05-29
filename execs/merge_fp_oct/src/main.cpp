@@ -59,10 +59,11 @@ int main(int argc, char** argv)
 	toc(clk, "Importing octree");
 
 	/* clear any floorplan info */
+	tic(clk);
 	clear_fp(tree);
+	toc(clk, "Clearing octree room info");
 
 	/* apply the provided floorplan info to this tree */
-	tic(clk);
 	num_fps = args.fpfiles.size();
 	num_rooms = 0;
 	for(i = 0; i < num_fps; i++)
@@ -76,7 +77,6 @@ int main(int argc, char** argv)
 			return 3;
 		}
 	}
-	toc(clk, "Importing floor plans");
 
 	/* export the octree to destination */
 	tic(clk);
@@ -117,18 +117,22 @@ int import_fp(const std::string& fpfile, octree_t& tree,
 	fp::floorplan_t f;
 	extruded_poly_t poly;
 	progress_bar_t progbar;
+	tictoc_t clk;
 	unsigned int i, n;
 	int ret;
 
 	/* read in floor plan */
+	tic(clk);
 	ret = f.import_from_fp(fpfile);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Reading floor plan file");
 
 	/* iterate over the rooms of this floorplan, and generate
 	 * a shape object for each room */
+	tic(clk);
 	n = f.rooms.size();
-	progbar.set_name("Importing floor plan");
+	progbar.set_name("Merging floor plan");
 	for(i = 0; i < n; i++)
 	{
 		/* show progress to user */
@@ -154,6 +158,7 @@ int import_fp(const std::string& fpfile, octree_t& tree,
 	/* update number of rooms in building */
 	num_rooms += n;
 	progbar.clear();
+	toc(clk, "Merging floor plans");
 
 	/* success */
 	return 0;
