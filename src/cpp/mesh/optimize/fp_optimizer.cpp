@@ -4,6 +4,7 @@
 #include <mesh/optimize/shapes/fp_horizontal.h>
 #include <geometry/octree/octree.h>
 #include <util/error_codes.h>
+#include <util/tictoc.h>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <iostream>
@@ -170,9 +171,11 @@ int fp_optimizer_t::process(const string& octfile,
 
 int fp_optimizer_t::load_oct(const string& filename)
 {
+	tictoc_t clk;
 	int ret;
 
 	/* load the octree */
+	tic(clk);
 	ret = this->tree.parse(filename);
 	if(ret)
 	{
@@ -185,14 +188,17 @@ int fp_optimizer_t::load_oct(const string& filename)
 	}
 
 	/* success */
+	toc(clk, "Loading octree");
 	return 0;
 }
 
 int fp_optimizer_t::load_fp(const string& filename)
 {
+	tictoc_t clk;
 	int ret;
 
 	/* load floorplan info */
+	tic(clk);
 	ret = this->floorplan.import_from_fp(filename);
 	if(ret)
 	{
@@ -205,14 +211,17 @@ int fp_optimizer_t::load_fp(const string& filename)
 	}
 
 	/* success */
+	toc(clk, "Importing floorplan");
 	return 0;
 }
 
 int fp_optimizer_t::export_fp(const string& filename) const
 {
+	tictoc_t clk;
 	int ret;
 
 	/* export floorplan */
+	tic(clk);
 	ret = this->floorplan.export_to_fp(filename);
 	if(ret)
 	{
@@ -225,6 +234,7 @@ int fp_optimizer_t::export_fp(const string& filename) const
 	}
 
 	/* success */
+	toc(clk, "Exporting floorplan");
 	return 0;	
 }
 
@@ -234,9 +244,11 @@ int fp_optimizer_t::export_fp(const string& filename) const
 
 int fp_optimizer_t::optimize()
 {
+	tictoc_t clk;
 	unsigned int i; 
 
 	/* optimize positions of walls, floors, and ceilings */
+	tic(clk);
 	for(i = 0; i < this->num_iterations; i++)
 	{
 		/* perform a single iteration of optimization
@@ -246,6 +258,7 @@ int fp_optimizer_t::optimize()
 	}
 	
 	/* success */
+	toc(clk, "Optimizing floorplan");
 	return 0; 
 }
 
