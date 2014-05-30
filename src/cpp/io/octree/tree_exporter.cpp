@@ -124,7 +124,7 @@ int tree_exporter::export_leafs_to_obj(const string& filename,
  */
 void export_exterior_cubes_to_obj_recur(ostream& os, const octnode_t* node)
 {
-	unsigned int i;
+	unsigned int i, r, g, b;
 	double hw;
 	int cc[8][3] = { /* this list indicates corner corner pos */
 			{ 1, 1, 1},
@@ -137,17 +137,22 @@ void export_exterior_cubes_to_obj_recur(ostream& os, const octnode_t* node)
 			{-1, 1,-1}	};
 
 	/* check if this node is a leaf (i.e. it has data) */
-	if(node->data != NULL && !(node->data->is_interior()) 
-			&& node->data->get_fp_room() >= 0)
+	if(node->data != NULL && node->data->is_object())
 	{
 		/* export cube of this leaf */
-	
+
+		/* color appropriately by the data count */
+		r = (node->data->get_count() == 0 ? 255 : 0);
+		g = (node->data->get_count() == 0 ? 0 : 255);
+		b = (int) (255.0*node->data->get_probability());
+
 		/* vertices of cube */
 		hw = node->halfwidth;
 		for(i = 0; i < 8; i++)
 			os << "v " << (node->center(0)+cc[i][0]*hw)
 			   <<  " " << (node->center(1)+cc[i][1]*hw)
 			   <<  " " << (node->center(2)+cc[i][2]*hw)
+			   <<  " " << r << " " << g << " " << b
 			   << endl;
 		
 		/* faces of the cube */
@@ -156,7 +161,7 @@ void export_exterior_cubes_to_obj_recur(ostream& os, const octnode_t* node)
 		   << "f -2 -3 -7 -6" << endl
 		   << "f -1 -5 -8 -4" << endl
 		   << "f -3 -4 -8 -7" << endl
-		   << "f -2 -1 -5 -6" << endl;
+		   << "f -6 -5 -1 -2" << endl;
 	}
 
 	/* recurse through the node's children */

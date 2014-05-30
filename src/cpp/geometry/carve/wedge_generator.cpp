@@ -102,7 +102,7 @@ int wedge_generator_t::process(const vector<string>& fssfiles,
 	}
 	
 	/* prepare wedge file */
-	ret = wedge_outfile.open(wedgefile);
+	ret = wedge_outfile.open(wedgefile, this->carving_buffer);
 	if(ret)
 	{
 		ret = PROPEGATE_ERROR(-2, ret);

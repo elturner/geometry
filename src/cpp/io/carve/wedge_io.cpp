@@ -191,7 +191,7 @@ writer_t::~writer_t()
 	this->close();
 }
 
-int writer_t::open(const std::string& filename)
+int writer_t::open(const std::string& filename, double carvebuf)
 {
 	/* close streams if necessary */
 	this->close();
@@ -209,6 +209,7 @@ int writer_t::open(const std::string& filename)
 	}
 
 	/* attempt to write header information (as a place-holder) */
+	this->header.buf = carvebuf;
 	this->header.print(this->outfile);
 
 	/* success */

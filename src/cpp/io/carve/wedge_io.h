@@ -224,11 +224,13 @@ namespace wedge
 			 * Will open the file for writing
 			 *
 			 * @param filename   Where to write the file to disk
+			 * @param carvebuf   The carving buffer to export
 			 *
 			 * @return    Returns zero on success, non-zero on
 			 *            failure.
 			 */
-			int open(const std::string& filename);
+			int open(const std::string& filename,
+			         double carvebuf);
 
 			/**
 			 * Writes a wedge to the file
