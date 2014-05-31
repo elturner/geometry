@@ -13,9 +13,6 @@ function [] = convert_mad_to_noisypath(madfile, noisypathfile, err_T, err_R)
 	%	err_R -		The standard-deviation to use for rotation
 	%
 
-	% use libraries
-	addpath('../math/');
-	
 	% read the mad file
 	[poses, timestamps, zupts] = readMAD(madfile);
 

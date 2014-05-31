@@ -56,6 +56,12 @@ class octsurf_run_settings_t
 		 * the extension of the outfile. */
 		OUTPUT_FILE_FORMAT output_format;
 
+		/**
+		 * If exporting to OBJ, this option indicates whether
+		 * to export all leaf node centers or to export a mesh
+		 */
+		bool export_obj_leafs;
+
 	/* functions */
 	public:
 

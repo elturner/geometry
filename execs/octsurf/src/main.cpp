@@ -68,9 +68,13 @@ int main(int argc, char** argv)
 			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
-			//ret = tree_exporter::export_leafs_to_obj(
-			ret = tree_exporter::export_exterior_cubes_to_obj(
-					args.outfile, tree);
+			if(args.export_obj_leafs)
+				ret = tree_exporter::export_leafs_to_obj(
+						args.outfile, tree);
+			else
+				ret = tree_exporter::
+					export_exterior_cubes_to_obj(
+						args.outfile, tree);
 			if(ret)
 			{
 				cerr << "[main]\tError " << ret << ": "

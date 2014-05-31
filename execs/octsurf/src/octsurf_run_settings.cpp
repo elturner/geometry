@@ -25,8 +25,9 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define SETTINGS_FLAG  "-s" /* program-specific settings (.xml) */
-#define OUTPUT_FLAG    "-o" /* where to store the output file */
+#define SETTINGS_FLAG     "-s" /* program-specific settings (.xml) */
+#define OUTPUT_FLAG       "-o" /* where to store the output file */
+#define EXPORT_LEAFS_FLAG "-l" /* export leafs to OBJ */
 
 /* file extensions to check for */
 
@@ -68,6 +69,12 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"described by the input .oct files.  This program "
 			"supports multiple output file formats, including: "
 			".vox, .obj", false, 1);
+	args.add(EXPORT_LEAFS_FLAG, "If present, this flag indicates that "
+			"all leaf centers of the octree should be exported "
+			"to the specified OBJ file.  This flag will be "
+			"ignored if the output file is not .obj.  If this "
+			"flag is not present, then a mesh will be exported "
+			"to the file.", true, 0);
 	args.add_required_file_type(OCT_FILE_EXT, 1,
 			"The input octree files.  These represent the "
 			"volume information of the scanned environment, and"
@@ -91,6 +98,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	this->outfile = args.get_val(OUTPUT_FLAG);
 	this->output_format 
 		= octsurf_run_settings_t::get_format(this->outfile);
+	this->export_obj_leafs = args.tag_seen(EXPORT_LEAFS_FLAG);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);
 
 	/* check if a settings xml file was specified */
