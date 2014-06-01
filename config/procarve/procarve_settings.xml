@@ -25,7 +25,7 @@
 	     This value is in units of standard deviation of the point
 	     position.  So, the actual distance carved may vary from
 	     point-to-point, but will be scaled by this amount. -->
-	<procarve_carvebuf>2.0</procarve_carvebuf>
+	<procarve_carvebuf>3.0</procarve_carvebuf>
 
 	<!-- This value indicates the size of chunks that are generated
 	     by the scan_chunker program.  The size of a chunk will not

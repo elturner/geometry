@@ -108,6 +108,17 @@ class octree_t
 		double get_resolution() const;
 
 		/**
+		 * Will increase the max allowed depth of the tree
+		 *
+		 * This call will NOT destroy any existing data in the
+		 * tree.  After this call, the resolution of the tree
+		 * will be multiplied by 2^(-n).
+		 *
+		 * @param n   Number of levels by which to increase depth
+		 */
+		void increase_depth(unsigned int n);
+
+		/**
 		 * Frees all memory and resources from this structure.
 		 *
 		 * Clears all information from tree.  set_resolution()

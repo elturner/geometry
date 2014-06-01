@@ -87,6 +87,12 @@ double octree_t::get_resolution() const
 {
 	return (2.0 * this->root->halfwidth) / (1 << this->max_depth);
 }
+		
+void octree_t::increase_depth(unsigned int n)
+{
+	/* crease the max depth by this amount */
+	this->max_depth += n;
+}
 	
 void octree_t::clear()
 {

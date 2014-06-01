@@ -211,6 +211,22 @@ class octdata_t
 		{ return (this->get_probability() > 0.5); };
 
 		/**
+		 * Returns best estimate of whether this node is an object
+		 *
+		 * An 'object' is represented by exterior nodes that
+		 * are contained within the extruded floorplan.  These
+		 * nodes should be objects such as furniture, countertops,
+		 * ceiling beams, etc.
+		 *
+		 * @return  Returns true iff data indicates object node
+		 */
+		inline bool is_object() const
+		{ 
+			return !(this->is_interior() 
+				|| this->get_fp_room() < 0);
+		};
+
+		/**
 		 * Returns the average surface probability observation
 		 */
 		inline double get_surface_prob() const

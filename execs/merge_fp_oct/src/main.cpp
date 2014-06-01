@@ -1,5 +1,6 @@
 #include "merge_run_settings.h"
 #include <mesh/floorplan/floorplan.h>
+#include <mesh/optimize/shapes/object_remover.h>
 #include <geometry/octree/octree.h>
 #include <geometry/shapes/extruded_poly.h>
 #include <util/progress_bar.h>

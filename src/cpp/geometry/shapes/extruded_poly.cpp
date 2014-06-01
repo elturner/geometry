@@ -3,6 +3,7 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/poly_intersect/poly2d.h>
 #include <mesh/floorplan/floorplan.h>
+#include <util/error_codes.h>
 #include <stdlib.h>
 #include <map>
 #include <vector>
@@ -204,8 +205,8 @@ octdata_t* extruded_poly_t::apply_to_leaf(const Vector3d& c,
                                           double hw, octdata_t* d)
 {
 	/* node size inputs are not used */
-	c(0);
-	hw = hw;
+	MARK_USED(c);
+	MARK_USED(hw);
 
 	/* check if leaf is null */
 	if(d == NULL)

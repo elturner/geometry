@@ -9,7 +9,7 @@
 	     time.
 
 	     units:  number of alignment cycles -->
-	<fp_opt_iterations>5</fp_opt_iterations>
+	<fp_opt_iterations>10</fp_opt_iterations>
 
 	<!-- This value indicates the maximum search range for a floorplan
 	     surface to be moved within a single iteration when attempting
