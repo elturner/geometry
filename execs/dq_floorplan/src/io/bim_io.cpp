@@ -73,15 +73,15 @@ int writeidf(char* filename, tri_rep_t& trirep)
 	/* write basic info about the model
 	 * (this doesn't change between models) */
 	writeversion(outfile);
-	writebuilding(outfile, string(filename));
-	writetimestep(outfile);
-	writesimulationcontrol(outfile);
-	writelocation(outfile);
+//	writebuilding(outfile, string(filename));
+//	writetimestep(outfile);
+//	writesimulationcontrol(outfile);
+//	writelocation(outfile);
 	writecommonmats(outfile);
 	writecommonconstructions(outfile);
-	writedefaultschedule(outfile);
-	writethermostat(outfile, "Constant Setpoint Thermostat", 20, 25); 
-	writedictionary(outfile);
+//	writedefaultschedule(outfile);
+//	writethermostat(outfile, "Constant Setpoint Thermostat", 20, 25); 
+//	writedictionary(outfile);
 
 	/* compute the geometry for each room, and write to file */
 	trirep.get_rooms(rooms);
@@ -268,7 +268,7 @@ int writeroom(ofstream& outfile, tri_rep_t& trirep,
 void writeversion(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: VERSION");
-	outfile << "  Version,7.1;" << endl << endl;
+	outfile << "  Version,7.2;" << endl << endl;
 }
 
 /* writes information about the building described in a model */
