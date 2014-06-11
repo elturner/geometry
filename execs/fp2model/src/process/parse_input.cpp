@@ -1,8 +1,8 @@
 #include "parse_input.h"
 #include "../io/config.h"
 #include "../structs/building_model.h"
-#include "../util/error_codes.h"
-#include "../util/tictoc.h"
+#include <util/error_codes.h>
+#include <util/tictoc.h>
 
 int parse_input(building_model_t& bim, const config_t& conf)
 {
