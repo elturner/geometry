@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 #include <set>
 
 /**
@@ -25,12 +26,381 @@ namespace fp
 {
 	/* the following defines the classes that
 	 * this file contains */
-	class floorplan_t;
 	class vertex_t;
 	class edge_t;
 	class triangle_t;
 	class room_t;
+	class floorplan_t;
+	
+	/**
+	 * This class represents a 2.5D vertex.
+	 *
+	 * The vertex class references a geometric position and neighboring
+	 * triangles.  This is assumed to be a 2D floorplan, so
+	 * the vertex position is only in X and Y
+	 */
+	class vertex_t
+	{
+		/* parameters */
+		public:
 
+			/* vertex position (in meters) */
+			double x;
+			double y;
+			double min_z;
+			double max_z;
+	
+			int ind; /* index of this vertex */
+			std::set<int> tri_neighs; /* neighboring tris */
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+			
+			/**
+			 * Initializes empty vertex structure
+			 */
+			vertex_t();
+
+			/**
+			 * Frees all memory and resources
+			 */
+			~vertex_t();
+
+			/**
+			 * Resets the values of this vertex.
+			 */
+			void clear();
+
+			/*-----------*/
+			/* operators */
+			/*-----------*/
+
+			/**
+			 * Sets this vertex's value to be equal to argument
+			 *
+			 * Will copy all information from rhs and store
+			 * in this vertex object.
+			 *
+			 * @param rhs   The reference object to copy
+			 *
+			 * @return   Returns a copy of this vertex
+			 */
+			inline vertex_t operator = (const vertex_t& rhs)
+			{
+				/* copy all information */
+				this->x = rhs.x;
+				this->y = rhs.y;
+				this->min_z = rhs.min_z;
+				this->max_z = rhs.max_z;
+				this->ind = rhs.ind;
+				this->tri_neighs.clear();
+				this->tri_neighs.insert(
+					rhs.tri_neighs.begin(),
+					rhs.tri_neighs.end());
+				return (*this);
+			};
+	};
+	
+	/* this constant represents geometrical properties of edges */
+
+	/**
+	 * The number of vertices in a single edge
+	 */
+	static const unsigned int NUM_VERTS_PER_EDGE = 2;
+	
+	/**
+	 * The number of vertices in a rectangle
+	 */
+	static const unsigned int NUM_VERTS_PER_RECT = 4;
+
+	/**
+	 * an edge defines a connection between two vertices
+	 */
+	class edge_t
+	{
+		/* parameters */
+		public:
+
+			/* the indices of the connected vertices */
+			int verts[NUM_VERTS_PER_EDGE];
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Initializes default edge object
+			 */
+			edge_t();
+
+			/**
+			 * Initializes edge between vertices #i and #j
+			 */
+			edge_t(int i, int j);
+			
+			/**
+			 * Initializes this edge to the specified indices.
+			 *
+			 * @param i   The first vertex index to reference
+			 * @param j   The other vertex index to reference
+			 */
+			inline void set(int i, int j)
+			{
+				verts[0] = i;
+				verts[1] = j;
+			};
+
+			/**
+			 * Returns the reverse of this edge.
+			 *
+			 * That is, it returns an edge that has the
+			 * same verices, but points in the opposite
+			 * direction.
+			 */
+			inline edge_t flip() const
+			{
+				edge_t e;
+		
+				/* flip edge */
+				e.verts[0] = this->verts[1];
+				e.verts[1] = this->verts[0];
+		
+				/* return it */
+				return e;
+			};
+
+			/*-----------*/
+			/* operators */
+			/*-----------*/
+
+			/**
+			 * Provides a sorting for edges
+			 *
+			 * This sorting is useful for storing edges
+			 * in sets or maps, which require comparison
+			 * operators.
+			 *
+			 * @param rhs    The other edge to compare to
+			 *
+			 * @return  Returns true iff this edge less than rhs
+			 */
+			inline bool operator < (const edge_t& rhs) const
+			{
+				if(this->verts[0] < rhs.verts[0])
+					return true;
+				if(this->verts[0] > rhs.verts[0])
+					return false;
+				return (this->verts[1] < rhs.verts[1]);
+			};
+
+			/**
+			 * Checks for equality among edges
+			 *
+			 * Edges must not only have the same vertices,
+			 * but also be in the same order/direction, to
+			 * be considered equal.
+			 *
+			 * @param rhs   The other edge to compare
+			 *
+			 * @return    Returns true iff edges are equal
+			 */
+			inline bool operator == (const edge_t& rhs) const
+			{
+				return (this->verts[0] == rhs.verts[0]
+					&& this->verts[1] == rhs.verts[1]);
+			};
+		
+			/**
+			 * Checks if edges are not equal
+			 *
+			 * @param rhs   The other edge to compare
+			 *
+			 * @return   Returns true iff edges are not equal
+			 */
+			inline bool operator != (const edge_t& rhs) const
+			{
+				return (this->verts[0] != rhs.verts[0]
+					|| this->verts[1] != rhs.verts[1]);
+			};
+
+			/**
+			 * Assigns rhs value to this edge
+			 *
+			 * Will copy information from rhs to be stored
+			 * in this edge
+			 *
+			 * @param rhs   The edge to copy
+			 *
+			 * @return   Returns a copy of this edge
+			 */
+			inline edge_t operator = (const edge_t& rhs)
+			{
+				unsigned int i;
+			
+				for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
+					this->verts[i] = rhs.verts[i];
+
+				return (*this);
+			};
+	};
+
+	/* The following values indicate geometric constants of triangles */
+	
+	/**
+	 * The number of vertices in a triangle
+	 */
+	static const unsigned int NUM_VERTS_PER_TRI = 3;
+	
+	/**
+	 * The number of edges in a triangle
+	 */
+	static const unsigned int NUM_EDGES_PER_TRI = 3;
+
+	/**
+	 * This class represents a triangle object
+	 *
+	 * The triangle class references the indices of three vertices
+	 * and those of neighboring triangles
+	 */
+	class triangle_t
+	{
+		/* parameters */
+		public:
+
+			/* the vertices that define this triangle */
+			int verts[NUM_VERTS_PER_TRI]; 
+
+			/* the neighboring triangles, with each neighbor
+			 * opposite the corresponding vertex */
+			int neighs[NUM_EDGES_PER_TRI];
+
+			/* the index of this triangle */
+			int ind;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+			
+			/**
+			 * Constructs a default triangle.
+			 */
+			triangle_t();
+
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
+			/**
+			 * Retrieves the specified edge
+			 *
+			 * Returns the edge referenced by the argument
+			 * index position.
+			 *
+			 * @param ni   The index of the edge to return
+			 *
+			 * @return   Returns the edge in question.
+			 */
+			edge_t get_edge(unsigned int ni) const;
+
+			/*----------*/
+			/* topology */
+			/*----------*/
+
+			/**
+			 * Updates neighbor information of triangles
+			 *
+			 * Checks if this triangle is neighbors with
+			 * the other triangle.  If so, will update
+			 * the neighbor information of each triangle
+			 * accordingly.
+			 *
+			 * Implemented in floorplan_input.cpp
+			 * 
+			 * @param other   The neighboring triangle
+			 *
+			 * @return     Returns true iff they are neighbors.
+			 */
+			bool make_neighbors_with(triangle_t& other);
+	};
+
+	/**
+	 * Definition of the room class, which represents a set of triangles
+	 */
+	class room_t
+	{
+		/* parameters */
+		public:
+
+			/* the set of triangles that are in this room */
+			std::set<int> tris;
+
+			/* the index of this room */
+			int ind;
+
+			/* the floor and ceiling heights of this room */
+			double min_z;
+			double max_z;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+			
+			/**
+			 * Initializes empty room
+			 */
+			room_t();
+
+			/**
+			 * Frees all memory and resources
+			 */
+			~room_t();
+	
+			/**
+			 * Resets the info in this struct.
+			 */
+			void clear();
+	
+			/*-----------*/
+			/* operators */
+			/*-----------*/
+
+			/**
+			 * Copies infromation from rhs into this room
+			 *
+			 * @param rhs  The other room to copy from
+			 *
+			 * @return   Returns the updated room
+			 */
+			inline room_t operator = (const room_t& rhs)
+			{
+				/* copy all values */
+				this->min_z = rhs.min_z;
+				this->max_z = rhs.max_z;
+				this->ind = rhs.ind;
+				this->tris.clear();
+
+				/* reinsert each triangle index */
+				this->tris.insert(rhs.tris.begin(),
+				                  rhs.tris.end());
+
+				/* return updated room */
+				return (*this);
+			};
+	};
+	
 	/**
 	 * This class defines a full 2D floorplan of the environment
 	 */
@@ -225,6 +595,54 @@ namespace fp
 					unsigned int ri) const;
 
 			/**
+			 * Computes boundary vertices in counter-clockwise
+			 * order.
+			 *
+			 * Will list all boundary vertices of the given
+			 * set of triangles.  These vertices will be
+			 * listed in counter-clockwise order.  Since a 
+			 * set of triangles can have genus of greater than
+			 * zero, each element of the populated list will
+			 * be a disjoint edge.
+			 *
+			 * Any existing elements in boundary_list will be 
+			 * erased.
+			 *
+			 * @param boundary_list   Where to store the vertex
+			 *                        indices
+			 * @param tris            The triangles to analyze
+			 */
+			void compute_oriented_boundary(std::vector<
+					std::vector<int> >& boundary_list,
+					const std::set<int>& tris) const;
+
+			/**
+			 * Computes the length of the specified edge
+			 *
+			 * Given an edge that references vertices in
+			 * this floorplan, will compute the length of
+			 * that edge, in meters.
+			 *
+			 * @param e   The edge to analyze
+			 *
+			 * @return    The length of the edge, in meters.
+			 */
+			inline double compute_edge_length(
+					const edge_t& e) const
+			{
+				double dx, dy;
+
+				/* compute displacement */
+				dx = this->verts[e.verts[0]].x
+					- this->verts[e.verts[1]].x;
+				dy = this->verts[e.verts[0]].y
+					- this->verts[e.verts[1]].y;
+
+				/* get length */
+				return sqrt(dx*dx + dy*dy);
+			};
+
+			/**
 			 * Computes the 2D bounds on this floorplan.
 			 *
 			 * Will find the 2D bounding box, and store the
@@ -237,7 +655,42 @@ namespace fp
 			 */
 			void compute_bounds(double& min_x, double& min_y,
 			             double& max_x, double& max_y) const;
-	
+
+			/**
+			 * Computes the area (in square meters of a triangle
+			 *
+			 * Given the triangle index, will return the
+			 * floorplace of that triangle in the floorplan.
+			 *
+			 * @param i   The triangle index to analyze
+			 *
+			 * @return    Returns the area in square meters
+			 */
+			inline double compute_triangle_area(
+						unsigned int i) const
+			{
+				int p, q, r;
+				double ux, uy, vx, vy;
+			
+				/* get the vertices of this triangle */
+				p = this->tris[i].verts[0];
+				q = this->tris[i].verts[1];
+				r = this->tris[i].verts[2];
+		
+				/* compute the area of this triangle by
+				 * taking half the cross-product of two
+				 * edges. */
+		
+				/* get vectors */
+				ux = this->verts[p].x - this->verts[r].x;
+				uy = this->verts[p].y - this->verts[r].y;
+				vx = this->verts[q].x - this->verts[r].x;
+				vy = this->verts[q].y - this->verts[r].y;
+
+				/* compute half of cross product */
+				return (ux*vy - uy*vx)/2;
+			};
+
 			/**
 			 * Computes the area (in square meters) of a room
 			 *
@@ -260,358 +713,6 @@ namespace fp
 			 * @return   Returns the total area of the floorplan
 			 */
 			double compute_total_area() const;
-	};
-
-	/**
-	 * This class represents a 2.5D vertex.
-	 *
-	 * The vertex class references a geometric position and neighboring
-	 * triangles.  This is assumed to be a 2D floorplan, so
-	 * the vertex position is only in X and Y
-	 */
-	class vertex_t
-	{
-		/* parameters */
-		public:
-
-			/* vertex position (in meters) */
-			double x;
-			double y;
-			double min_z;
-			double max_z;
-	
-			int ind; /* index of this vertex */
-			std::set<int> tri_neighs; /* neighboring tris */
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-			
-			/**
-			 * Initializes empty vertex structure
-			 */
-			vertex_t();
-
-			/**
-			 * Frees all memory and resources
-			 */
-			~vertex_t();
-
-			/**
-			 * Resets the values of this vertex.
-			 */
-			void clear();
-
-			/*-----------*/
-			/* operators */
-			/*-----------*/
-
-			/**
-			 * Sets this vertex's value to be equal to argument
-			 *
-			 * Will copy all information from rhs and store
-			 * in this vertex object.
-			 *
-			 * @param rhs   The reference object to copy
-			 *
-			 * @return   Returns a copy of this vertex
-			 */
-			inline vertex_t operator = (const vertex_t& rhs)
-			{
-				/* copy all information */
-				this->x = rhs.x;
-				this->y = rhs.y;
-				this->min_z = rhs.min_z;
-				this->max_z = rhs.max_z;
-				this->ind = rhs.ind;
-				this->tri_neighs.clear();
-				this->tri_neighs.insert(
-					rhs.tri_neighs.begin(),
-					rhs.tri_neighs.end());
-				return (*this);
-			};
-	};
-
-	/* this constant represents geometrical properties of edges */
-	static const unsigned int NUM_VERTS_PER_EDGE = 2;
-
-	/**
-	 * an edge defines a connection between two vertices
-	 */
-	class edge_t
-	{
-		/* parameters */
-		public:
-
-			/* the indices of the connected vertices */
-			int verts[NUM_VERTS_PER_EDGE];
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-
-			/**
-			 * Initializes default edge object
-			 */
-			edge_t();
-
-			/**
-			 * Initializes edge between vertices #i and #j
-			 */
-			edge_t(int i, int j);
-			
-			/**
-			 * Initializes this edge to the specified indices.
-			 *
-			 * @param i   The first vertex index to reference
-			 * @param j   The other vertex index to reference
-			 */
-			inline void set(int i, int j)
-			{
-				verts[0] = i;
-				verts[1] = j;
-			};
-
-			/**
-			 * Returns the reverse of this edge.
-			 *
-			 * That is, it returns an edge that has the
-			 * same verices, but points in the opposite
-			 * direction.
-			 */
-			inline edge_t flip() const
-			{
-				edge_t e;
-		
-				/* flip edge */
-				e.verts[0] = this->verts[1];
-				e.verts[1] = this->verts[0];
-		
-				/* return it */
-				return e;
-			};
-
-			/*-----------*/
-			/* operators */
-			/*-----------*/
-
-			/**
-			 * Provides a sorting for edges
-			 *
-			 * This sorting is useful for storing edges
-			 * in sets or maps, which require comparison
-			 * operators.
-			 *
-			 * @param rhs    The other edge to compare to
-			 *
-			 * @return  Returns true iff this edge less than rhs
-			 */
-			inline bool operator < (const edge_t& rhs) const
-			{
-				if(this->verts[0] < rhs.verts[0])
-					return true;
-				if(this->verts[0] > rhs.verts[0])
-					return false;
-				return (this->verts[1] < rhs.verts[1]);
-			};
-
-			/**
-			 * Checks for equality among edges
-			 *
-			 * Edges must not only have the same vertices,
-			 * but also be in the same order/direction, to
-			 * be considered equal.
-			 *
-			 * @param rhs   The other edge to compare
-			 *
-			 * @return    Returns true iff edges are equal
-			 */
-			inline bool operator == (const edge_t& rhs) const
-			{
-				return (this->verts[0] == rhs.verts[0]
-					&& this->verts[1] == rhs.verts[1]);
-			};
-		
-			/**
-			 * Checks if edges are not equal
-			 *
-			 * @param rhs   The other edge to compare
-			 *
-			 * @return   Returns true iff edges are not equal
-			 */
-			inline bool operator != (const edge_t& rhs) const
-			{
-				return (this->verts[0] != rhs.verts[0]
-					|| this->verts[1] != rhs.verts[1]);
-			};
-
-			/**
-			 * Assigns rhs value to this edge
-			 *
-			 * Will copy information from rhs to be stored
-			 * in this edge
-			 *
-			 * @param rhs   The edge to copy
-			 *
-			 * @return   Returns a copy of this edge
-			 */
-			inline edge_t operator = (const edge_t& rhs)
-			{
-				unsigned int i;
-			
-				for(i = 0; i < NUM_VERTS_PER_EDGE; i++)
-					this->verts[i] = rhs.verts[i];
-
-				return (*this);
-			};
-	};
-
-	/* The following values indicate geometric constants of triangles */
-	static const unsigned int NUM_VERTS_PER_TRI = 3;
-	static const unsigned int NUM_EDGES_PER_TRI = 3;
-
-	/**
-	 * This class represents a triangle object
-	 *
-	 * The triangle class references the indices of three vertices
-	 * and those of neighboring triangles
-	 */
-	class triangle_t
-	{
-		/* parameters */
-		public:
-
-			/* the vertices that define this triangle */
-			int verts[NUM_VERTS_PER_TRI]; 
-
-			/* the neighboring triangles, with each neighbor
-			 * opposite the corresponding vertex */
-			int neighs[NUM_EDGES_PER_TRI];
-
-			/* the index of this triangle */
-			int ind;
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-			
-			/**
-			 * Constructs a default triangle.
-			 */
-			triangle_t();
-
-			/*-----------*/
-			/* accessors */
-			/*-----------*/
-
-			/**
-			 * Retrieves the specified edge
-			 *
-			 * Returns the edge referenced by the argument
-			 * index position.
-			 *
-			 * @param ni   The index of the edge to return
-			 *
-			 * @return   Returns the edge in question.
-			 */
-			edge_t get_edge(unsigned int ni) const;
-
-			/*----------*/
-			/* topology */
-			/*----------*/
-
-			/**
-			 * Updates neighbor information of triangles
-			 *
-			 * Checks if this triangle is neighbors with
-			 * the other triangle.  If so, will update
-			 * the neighbor information of each triangle
-			 * accordingly.
-			 *
-			 * Implemented in floorplan_input.cpp
-			 * 
-			 * @param other   The neighboring triangle
-			 *
-			 * @return     Returns true iff they are neighbors.
-			 */
-			bool make_neighbors_with(triangle_t& other);
-	};
-
-	/**
-	 * Definition of the room class, which represents a set of triangles
-	 */
-	class room_t
-	{
-		/* parameters */
-		public:
-
-			/* the set of triangles that are in this room */
-			std::set<int> tris;
-
-			/* the index of this room */
-			int ind;
-
-			/* the floor and ceiling heights of this room */
-			double min_z;
-			double max_z;
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-			
-			/**
-			 * Initializes empty room
-			 */
-			room_t();
-
-			/**
-			 * Frees all memory and resources
-			 */
-			~room_t();
-	
-			/**
-			 * Resets the info in this struct.
-			 */
-			void clear();
-	
-			/*-----------*/
-			/* operators */
-			/*-----------*/
-
-			/**
-			 * Copies infromation from rhs into this room
-			 *
-			 * @param rhs  The other room to copy from
-			 *
-			 * @return   Returns the updated room
-			 */
-			inline room_t operator = (const room_t& rhs)
-			{
-				/* copy all values */
-				this->min_z = rhs.min_z;
-				this->max_z = rhs.max_z;
-				this->ind = rhs.ind;
-				this->tris.clear();
-
-				/* reinsert each triangle index */
-				this->tris.insert(rhs.tris.begin(),
-				                  rhs.tris.end());
-
-				/* return updated room */
-				return (*this);
-			};
 	};
 }
 

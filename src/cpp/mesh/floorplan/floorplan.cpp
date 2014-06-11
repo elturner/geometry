@@ -1,5 +1,6 @@
 #include "floorplan.h"
 #include <vector>
+#include <map>
 #include <set>
 #include <float.h>
 
@@ -96,6 +97,99 @@ void floorplan_t::compute_edges_for_room(vector<edge_t>& edges,
 		}
 	}
 }
+			
+void floorplan_t::compute_oriented_boundary(vector<vector<int> >& 
+			boundary_list, const set<int>& tris) const
+{
+	set<int>::const_iterator tit;
+	map<int, set<edge_t> > edge_map;
+	set<edge_t> all_edges;
+	set<edge_t>::const_iterator eit;
+	vector<edge_t> to_remove;
+	vector<edge_t>::const_iterator vit;
+	unsigned int i;
+	edge_t e;
+	int last;
+
+	/* get all the edges for these triangles */
+	for(tit = tris.begin(); tit != tris.end(); tit++)
+		for(i = 0; i < NUM_EDGES_PER_TRI; i++)
+			all_edges.insert(this->tris[*tit].get_edge(i));
+
+	/* iterate over the list of edges, looking for opposing edges */
+	for(eit = all_edges.begin(); eit != all_edges.end(); eit++)
+	{
+		/* get flip of this edge */
+		e = eit->flip();
+
+		/* check if flip is present */
+		if(all_edges.count(e))
+		{
+			/* remove both, since neither is a boundary
+			 * if the other is present */
+			to_remove.push_back(*eit);
+			to_remove.push_back(e);
+		}
+	}
+
+	/* remove any edges that were found to be non-boundary */
+	for(vit = to_remove.begin(); vit != to_remove.end(); vit++)
+		all_edges.erase(*vit);
+	to_remove.clear();
+
+	/* order the edges by mapping the start vertex index to each
+	 * edge */
+	for(eit = all_edges.begin(); eit != all_edges.end(); eit++)
+		edge_map[eit->verts[0]].insert(*eit);
+
+	/* initialize output */
+	boundary_list.clear();
+
+	/* build boundaries */
+	while(!(all_edges.empty()))
+	{
+		/* start a new boundary */
+		boundary_list.push_back(vector<int>(0));
+
+		/* find the next edge to follow, remove it
+		 * from the pool of remaining edges */
+		eit = all_edges.begin();
+		boundary_list.back().push_back(eit->verts[0]);
+		boundary_list.back().push_back(eit->verts[1]);
+		last = eit->verts[1];
+		edge_map[eit->verts[0]].erase(*eit);
+		all_edges.erase(eit);
+
+		/* follow this edge as long as possible to form
+		 * an oriented boundary */
+		while(!(edge_map[last].empty()))
+		{
+			/* find an edge that starts with the last
+			 * element in the current boundary */
+			eit = edge_map[last].begin();
+
+			/* check if we've made a loop */
+			if(eit->verts[1] == boundary_list.back().front())
+			{
+				/* back at starting vertex, loop complete */
+				all_edges.erase(*eit);
+				edge_map[last].erase(eit);
+				break;
+			}
+
+			/* follow this edge */
+			boundary_list.back().push_back(eit->verts[1]);
+
+			/* remove the edge we just used from the pool
+			 * of available edges */
+			all_edges.erase(*eit);
+			edge_map[last].erase(eit);
+
+			/* continue search on latest vertex */
+			last = eit->verts[1];
+		}
+	}
+}
 	
 void floorplan_t::compute_bounds(double& min_x, double& min_y,
                                  double& max_x, double& max_y) const
@@ -125,9 +219,7 @@ void floorplan_t::compute_bounds(double& min_x, double& min_y,
 double floorplan_t::compute_room_area(unsigned int i) const
 {
 	set<int>::iterator it;
-	size_t ti;
-	int p, q, r;
-	double area, ux, uy, vx, vy;
+	double area;
 
 	/* verify valid room index */
 	if(i >= this->rooms.size())
@@ -137,28 +229,7 @@ double floorplan_t::compute_room_area(unsigned int i) const
 	area = 0.0; /* initialize area to be zero */
 	for(it = this->rooms[i].tris.begin(); 
 			it != this->rooms[i].tris.end(); it++)
-	{
-		/* get the index of this triangle */
-		ti = *it;
-
-		/* get the vertices of this triangle */
-		p = this->tris[ti].verts[0];
-		q = this->tris[ti].verts[1];
-		r = this->tris[ti].verts[2];
-		
-		/* compute the area of this triangle by
-		 * taking half the cross-product of two
-		 * edges. */
-
-		/* get vectors */
-		ux = this->verts[p].x - this->verts[r].x;
-		uy = this->verts[p].y - this->verts[r].y;
-		vx = this->verts[q].x - this->verts[r].x;
-		vy = this->verts[q].y - this->verts[r].y;
-
-		/* compute half of cross product */
-		area += (ux*vy - uy*vx)/2;
-	}
+		area += this->compute_triangle_area(*it);
 
 	/* return the total area for the room */
 	return area;
