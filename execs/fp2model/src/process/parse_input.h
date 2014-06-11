@@ -27,6 +27,6 @@
  *
  * 	Returns zero on success, non-zero on failure.
  */
-int parse_input(building_model_t& bim, config_t& conf);
+int parse_input(building_model_t& bim, const config_t& conf);
 
 #endif

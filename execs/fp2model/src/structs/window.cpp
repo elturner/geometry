@@ -1,13 +1,15 @@
 #include "window.h"
-#include <fstream>
+#include <mesh/floorplan/floorplan.h>
+#include <util/error_codes.h>
 #include <map>
+#include <sstream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <string.h>
-#include "floorplan.h"
-#include "../util/error_codes.h"
 
 using namespace std;
+using namespace fp;
 
 /***** WINDOW LIST FUNCTIONS ******/
 
@@ -26,7 +28,7 @@ void windowlist_t::clear()
 	this->windows.clear();
 }
 
-int windowlist_t::import_from_file(const char* filename)
+int windowlist_t::import_from_file(const string& filename)
 {
 	ifstream infile;
 	string buf;
@@ -34,7 +36,7 @@ int windowlist_t::import_from_file(const char* filename)
 	int ret;
 
 	/* open file for reading */
-	infile.open(filename);
+	infile.open(filename.c_str());
 	if(!(infile.is_open()))
 		return -1;
 
@@ -49,7 +51,7 @@ int windowlist_t::import_from_file(const char* filename)
 			continue;
 
 		/* parse it as a window */
-		ret = w.parse(buf.c_str());
+		ret = w.parse(buf);
 		if(ret)
 		{
 			infile.close();
@@ -65,7 +67,7 @@ int windowlist_t::import_from_file(const char* filename)
 	return 0;
 }
 
-void windowlist_t::add(window_t& w)
+void windowlist_t::add(const window_t& w)
 {
 	map<edge_t, vector<window_t> >::iterator it;
 
@@ -83,10 +85,11 @@ void windowlist_t::add(window_t& w)
 	it->second.push_back(w);
 }
 	
-void windowlist_t::get_windows_for(edge_t& wall, vector<window_t>& wins)
+void windowlist_t::get_windows_for(const edge_t& wall,
+                                   vector<window_t>& wins) const
 {
-	map<edge_t, vector<window_t> >::iterator it;
-	vector<window_t>::iterator wit;
+	map<edge_t, vector<window_t> >::const_iterator it;
+	vector<window_t>::const_iterator wit;
 
 	/* find wall in map */
 	it = this->windows.find(wall);
@@ -98,7 +101,8 @@ void windowlist_t::get_windows_for(edge_t& wall, vector<window_t>& wins)
 		wins.push_back(*wit);
 }
 	
-int windowlist_t::export_to_obj(const char* filename, floorplan_t& fp)
+int windowlist_t::export_to_obj(const string& filename,
+                               const floorplan_t& fp)
 {
 	map<edge_t, vector<window_t> >::iterator it;
 	vector<window_t>::iterator wit;
@@ -107,7 +111,7 @@ int windowlist_t::export_to_obj(const char* filename, floorplan_t& fp)
 	double wx0, wy0, wz0, wxf, wyf, wzf, lx, ly, hi, hj;
 
 	/* open file for writing */
-	outfile.open(filename);
+	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
 		return -1;
 
@@ -189,18 +193,19 @@ window_t::window_t()
 	this->set(e, 1, 1, 0, 0);
 }
 
-window_t::window_t(edge_t& e)
+window_t::window_t(const edge_t& e)
 {
 	/* set to invalid window */
 	this->set(e, 1, 1, 0, 0);
 }
 
-window_t::window_t(edge_t& e, double mh, double mv, double Mh, double Mv)
+window_t::window_t(const edge_t& e, double mh, double mv, 
+                   double Mh, double Mv)
 {
 	this->set(e, mh, mv, Mh, Mv);
 }
 	
-window_t::window_t(char* line)
+window_t::window_t(const string& line)
 {
 	this->parse(line);
 }
@@ -210,30 +215,25 @@ window_t::~window_t()
 	/* no computation necessary */
 }
 
-int window_t::parse(const char* line)
+int window_t::parse(const string& line)
 {
-	int ret;
+	stringstream ss;
 
 	/* parse the line */
-	ret = sscanf(line, "%d %d %lf %lf %lf %lf",
-			&(this->wall.verts[0]), &(this->wall.verts[1]),
-			&(this->min_h), &(this->min_v),
-			&(this->max_h), &(this->max_v));
+	ss.str(line);
+	ss >> this->wall.verts[0] >> this->wall.verts[1]
+	   >> this->min_h >> this->min_v >> this->max_h >> this->max_v;
 	
-	/* check if line formatted correctly */
-	if(ret != 6)
-		return PROPEGATE_ERROR(-1, ret);
-
 	/* check if valid window */
 	if(!(this->valid()))
-		return -2;
+		return -1;
 
 	/* success */
 	return 0;
 }
 	
 void window_t::get_world_coords(double* wx, double* wy, double* wz, 
-				floorplan_t& fp)
+				const floorplan_t& fp)
 {
 	double dx, dy, dz, floor_z, ceil_z;
 

@@ -1,14 +1,16 @@
 #include "building_model.h"
+#include "window.h"
+#include <mesh/floorplan/floorplan.h>
+#include <util/error_codes.h>
+#include <iostream>
 #include <fstream>
+#include <string>
 #include <vector>
 #include <map>
 #include <cmath>
-#include "floorplan.h"
-#include "window.h"
-#include "../util/error_codes.h"
-#include "../util/parameters.h"
 
 using namespace std;
+using namespace fp;
 
 building_model_t::building_model_t()
 {
@@ -27,7 +29,7 @@ void building_model_t::clear()
 	this->windows.clear();
 }
 	
-int building_model_t::import_floorplan(char* filename)
+int building_model_t::import_floorplan(const string& filename)
 {
 	int ret;
 
@@ -40,7 +42,7 @@ int building_model_t::import_floorplan(char* filename)
 	return 0;
 }
 
-int building_model_t::import_windows(char* filename)
+int building_model_t::import_windows(const string& filename)
 {
 	int ret;
 
@@ -53,19 +55,19 @@ int building_model_t::import_windows(char* filename)
 	return 0;
 }
 	
-int building_model_t::export_obj(char* filename)
+int building_model_t::export_obj(const string& filename) const
 {
 	vector<edge_t> edges;
 	vector<window_t> ws;
 	ofstream outfile;
-	int i, j, num_verts, num_tris, num_edges, num_window_verts;
+	unsigned int i, j, num_verts, num_tris, num_edges, num_window_verts;
 	double wx[NUM_VERTS_PER_RECT];
 	double wy[NUM_VERTS_PER_RECT];
 	double wz[NUM_VERTS_PER_RECT];
 	double min_x, min_y, max_x, max_y;
 
 	/* open file for writing */
-	outfile.open(filename);
+	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
 		return -1;
 
@@ -184,11 +186,10 @@ int building_model_t::export_obj(char* filename)
 			/* currently unable to handle multiple windows */
 			if(ws.size() > 1)
 			{
-				PRINT_WARNING(
-					"[building_model.export_obj]\t"
+				cerr << "[building_model.export_obj]\t"
 					"Unable to handle walls that "
 					"have multiple windows defined. "
-					"Ignoring extra windows.");
+					"Ignoring extra windows.";
 			}
 
 			/* create wall with single window */
@@ -267,12 +268,12 @@ int building_model_t::export_obj(char* filename)
 	return 0;
 }
 
-int building_model_t::export_wrl(char* filename)
+int building_model_t::export_wrl(const string& filename) const
 {
 	ofstream outfile;
 
 	/* open file for writing */
-	outfile.open(filename);
+	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
 		return -1;
 	
@@ -309,7 +310,7 @@ int building_model_t::export_wrl(char* filename)
 	return 0;
 }
 
-void building_model_t::write_floor_to_wrl(std::ostream& outfile)
+void building_model_t::write_floor_to_wrl(std::ostream& outfile) const
 {
 	double min_x, min_y, max_x, max_y;
 	unsigned int i, num_verts, num_tris;
@@ -417,7 +418,7 @@ void building_model_t::write_floor_to_wrl(std::ostream& outfile)
 		<< "\t\t}" << endl;
 }
 
-void building_model_t::write_ceiling_to_wrl(std::ostream& outfile)
+void building_model_t::write_ceiling_to_wrl(std::ostream& outfile) const
 {
 	double min_x, min_y, max_x, max_y;
 	unsigned int i, num_verts, num_tris;
@@ -525,7 +526,7 @@ void building_model_t::write_ceiling_to_wrl(std::ostream& outfile)
 		<< "\t\t}" << endl;
 }
 	
-void building_model_t::write_wall_to_wrl(ostream& outfile)
+void building_model_t::write_wall_to_wrl(ostream& outfile) const
 {
 	int i, num_edges;
 	vector<edge_t> edges;

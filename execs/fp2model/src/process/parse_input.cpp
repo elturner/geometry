@@ -4,9 +4,9 @@
 #include "../util/error_codes.h"
 #include "../util/tictoc.h"
 
-int parse_input(building_model_t& bim, config_t& conf)
+int parse_input(building_model_t& bim, const config_t& conf)
 {
-	int ret;
+	int ret, i, n;
 	tictoc_t clk;
 
 	/* start timing */
@@ -21,9 +21,11 @@ int parse_input(building_model_t& bim, config_t& conf)
 		return PROPEGATE_ERROR(-1, ret);
 
 	/* read windows info, if available */
-	if(conf.windows_infile)
+	n = conf.windows_infiles.size();
+	for(i = 0; i < n; i++)
 	{
-		ret = bim.import_windows(conf.windows_infile);
+		/* import windows from file */
+		ret = bim.import_windows(conf.windows_infiles[i]);
 		if(ret)
 			return PROPEGATE_ERROR(-2, ret);
 	}

@@ -1,143 +1,87 @@
 #include "config.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include "filetypes.h"
-#include "../util/error_codes.h"
-#include "../util/parameters.h"
+#include <util/cmd_args.h>
+#include <util/error_codes.h>
+#include <iostream>
+#include <string>
+#include <vector>
 
-#define HELP_FLAG                "-h"
+/**
+ * @file config.h
+ * @author Eric Turner <elturner@eecs.berkeley.edu>
+ * @brief  Configuration parameters for program
+ *
+ * Represents the functions used
+ * to read command-line arguments.
+ */
 
-int config_t::parseargs(int argc, char** argv)
+using namespace std;
+
+/* desired file formats */
+
+#define FLOORPLAN_FILE_EXT "fp"
+#define WINDOWS_FILE_EXT   "windows"
+
+#define OBJ_FILE_EXT       "obj"
+#define IDF_FILE_EXT       "idf"
+#define WRL_FILE_EXT       "wrl"
+
+/* function implementations */
+
+int config_t::parse(int argc, char** argv)
 {
-	int i;
-	filetype_t ft;
+	vector<string> fp_infile_list;
+	cmd_args_t args;
+	int ret;
 
 	/* set default config */
-	this->fp_infile = NULL;
-	this->windows_infile = NULL;
-	this->outfile = NULL;
-	this->output_type = unknown_file;
+	this->fp_infile = "";
+	this->windows_infiles.clear();
+	this->outfile_obj.clear();
+	this->outfile_idf.clear();
+	this->outfile_wrl.clear();
 
-	/* save program name */
-	this->prog_name = argv[0];
+	/* prepare command-args parser */
+	args.set_program_description("This program is used to convert "
+		"floorplan geometry that is represented in .fp files to "
+		"other formats.");
+	args.add_required_file_type(WINDOWS_FILE_EXT, 0, "Specifies "
+		"location of windows relative to the given floorplan.");
+	args.add_required_file_type(FLOORPLAN_FILE_EXT, 1, "Specifies "
+		"floorplan geometry to convert and export.  If multiple "
+		"files are given, only the first will be used.");
+	args.add_required_file_type(OBJ_FILE_EXT, 0, "If present, then "
+		"will export floorplan geometry to the specified Wavefront "
+		"OBJ file, which represents the triagulation mesh.");
+	args.add_required_file_type(IDF_FILE_EXT, 0, "If present, then "
+		"will export floorplan geometry to the specified EnergyPlus"
+		" Input Data File (IDF), which represents the building "
+		"information, including rooms, windows, and "
+		"constructions.");
+	args.add_required_file_type(WRL_FILE_EXT, 0, "If present, then "
+		"will export floorplan geometry to the specified Virtual "
+		"Reality Modeling Language (VRML), which stores the model "
+		"as a set of of meshed surfaces.");
 
-	/* iterate through arguments */
-	for(i = 1; i < argc; i++)
+	/* parse the args */
+	ret = args.parse(argc, argv);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* retrieve the parsed values */
+	args.files_of_type(FLOORPLAN_FILE_EXT, fp_infile_list);
+	if(fp_infile_list.empty())
 	{
-		if(!strcmp(argv[i], HELP_FLAG))
-		{
-			this->print_usage();
-			exit(0);
-		}
-		else
-		{
-			/* this argument is assumed to be a filename,
-			 * figure out which filetype it is */
-			ft = filetype_of(argv[i]);
-			switch(ft)
-			{
-				/* check for outfiles */
-				case obj_file:
-				case wrl_file:
-					if(this->outfile != NULL)
-					{
-						PRINT_WARNING("Multiple"
-							" output files "
-							"specified, "
-							"using:");
-						PRINT_WARNING(
-							this->outfile);
-						PRINT_WARNING("");
-					}
-					else
-					{
-						/* save output file */
-						this->outfile = argv[i];
-						this->output_type = ft;
-					}
-					break;
-
-				/* check for input files */
-				case fp_file:
-					if(this->fp_infile != NULL)
-					{
-						PRINT_WARNING("Multiple"
-							" fp files "
-							"specified, "
-							"using:");
-						PRINT_WARNING(
-							this->fp_infile);
-						PRINT_WARNING("");
-					}
-					else
-					{
-						this->fp_infile = argv[i];
-					}
-					break;
-				case windows_file:
-					if(this->windows_infile != NULL)
-					{
-						PRINT_WARNING("Multiple"
-							" windows files "
-							"specified, "
-							"using:");
-						PRINT_WARNING(
-						this->windows_infile);
-						PRINT_WARNING("");
-					}
-					else
-					{
-						this->windows_infile 
-							= argv[i];
-					}
-					break;
-
-				/* return error if unknown file */
-				case unknown_file:
-				default:
-					PRINT_WARNING("Ignoring arg:");
-					PRINT_WARNING(argv[i]);
-					PRINT_WARNING("");
-					break;
-			}
-		}
+		/* must specify infile! */
+		cerr << "[config_t::parse]\tMust specify an input .fp file!"
+		     << endl;
+		return -2;
 	}
-
-	/* check that we were given sufficient arguments */
-	if(!this->fp_infile)
-	{
-		PRINT_ERROR("Must specify input floorplan file!");
-		return -1;
-	}
-	if(!this->outfile)
-	{
-		PRINT_ERROR("Must specify an outfile!");
-		return -3;
-	}
+	this->fp_infile = fp_infile_list[0];
+	args.files_of_type(WINDOWS_FILE_EXT, this->windows_infiles);
+	args.files_of_type(OBJ_FILE_EXT, this->outfile_obj);
+	args.files_of_type(IDF_FILE_EXT, this->outfile_idf);
+	args.files_of_type(WRL_FILE_EXT, this->outfile_wrl);
 
 	/* success */
 	return 0;
-}
-
-void config_t::print_usage()
-{
-	printf("\n Usage:\n\n");
-	printf("\t%s [flags] <file1> <file2> ...\n\n", this->prog_name);
-	printf("\n Valid input files:\n\n");
-	printf("\t<fp>       The input *.fp files specify floorplans to\n"
-	       "\t           parse and convert to models.\n\n");
-	printf("\t<obj>      Specifies an output *.obj file to create\n"
-	       "\t           that models the input floorplans.\n\n");
-	printf("\t<windows>  Specifies an input *.windows file that\n"
-	       "\t           specifies where windows exist in relation\n"
-	       "\t           to the input floorplan.\n\n");
-	printf("\n");
-}
-
-void config_t::print_usage_short()
-{
-	printf("\n For help information, type:\t%s %s\n\n", 
-				this->prog_name, HELP_FLAG);
 }

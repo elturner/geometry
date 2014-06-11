@@ -2,32 +2,39 @@ CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -ansi -pedantic
 LFLAGS = -lm #-lpthread
 PFLAGS = #-pg
-BUILDDIR = build
+SOURCEDIR = ../../src/cpp/
+IFLAGS = -I$(SOURCEDIR)
+BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/fp2model
 
 # defines for the program
 
-SOURCES =	src/util/tictoc.cpp \
-		src/util/progress_bar.cpp \
-		src/io/filetypes.cpp \
+SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
+		$(SOURCEDIR)util/progress_bar.cpp \
+		$(SOURCEDIR)util/cmd_args.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
 		src/io/config.cpp \
+		src/io/idf_io.cpp \
 		src/structs/building_model.cpp \
-		src/structs/floorplan.cpp \
-		src/structs/floorplan_input.cpp \
-		src/structs/floorplan_output.cpp \
 		src/structs/window.cpp \
 		src/process/parse_input.cpp \
+		src/process/subdivide_room.cpp \
 		src/process/export_data.cpp \
 		src/main.cpp
 
-HEADERS =	src/util/error_codes.h \
-		src/util/tictoc.h \
-		src/util/progress_bar.h \
-		src/util/parameters.h \
+HEADERS =	$(SOURCEDIR)util/error_codes.h \
+		$(SOURCEDIR)util/tictoc.h \
+		$(SOURCEDIR)util/progress_bar.h \
+		$(SOURCEDIR)util/cmd_args.h \
+		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
+		$(SOURCEDIR)mesh/floorplan/floorplan.h \
+		src/io/idf_io.h \
 		src/structs/building_model.h \
-		src/structs/floorplan.h \
 		src/structs/window.h \
 		src/process/parse_input.h \
+		src/process/subdivide_room.h \
 		src/process/export_data.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
@@ -38,15 +45,15 @@ all: $(SOURCES) $(EXECUTABLE)
 	make --no-builtin-rules --no-builtin-variables $(EXECUTABLE)
 
 simple:
-	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
+	$(CC) $(IFLAGS) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS)
+	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS) $(IFLAGS) $(CFLAGS)
 
 $(BUILDDIR)/%.o : %.cpp
 	@mkdir -p $(shell dirname $@)		# ensure folder exists
 	@g++ -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
 # helper commands
 
@@ -54,7 +61,7 @@ todo:
 	grep -n --color=auto "TODO" $(SOURCES) $(HEADERS)
 
 grep:
-	grep -n --color=auto "coryf2.edge" $(SOURCES) $(HEADERS)
+	grep -n --color=auto "$(SEARCH)" $(SOURCES) $(HEADERS)
 
 size:
 	wc $(SOURCES) $(HEADERS)

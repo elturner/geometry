@@ -1,107 +1,133 @@
 #ifndef BUILDING_MODEL_H
 #define BUILDING_MODEL_H
 
-/* building_model.h:
+/**
+ * @file building_model.h
+ * @author Eric Turner <elturner@eecs.berkeley.edu>
+ * @brief  Defines semantic components of building information models (BIMs)
  *
- * 	This file contains definitions for a holistic
- * 	building model, which includes building geometry
- * 	along with semantic labeling of building elements,
- * 	such as windows.
+ * @section DESCRIPTION
+ *
+ * This file contains definitions for a holistic
+ * building model, which includes building geometry
+ * along with semantic labeling of building elements,
+ * such as windows.
  */
 
-#include "floorplan.h"
+#include <mesh/floorplan/floorplan.h>
 #include "window.h"
-#include <fstream>
+#include <iostream>
+#include <string>
 
-/* the building_model_t class houses all required
+/**
+ * This structure contains BIM details
+ *
+ * the building_model_t class houses all required
  * aspects of a building model, and has functions
- * used to export this model in various formats. */
+ * used to export this model in various formats.
+ */
 class building_model_t
 {
-	/*** parameters ***/
+	/* parameters */
 	public:
 
-	/* building elements */
-	floorplan_t floorplan;
-	windowlist_t windows;
+		/* building elements */
 
-	/*** functions ***/
+		/**
+		 * The floorplan describes the geometric building layout
+		 */
+		fp::floorplan_t floorplan;
+
+		/**
+		 * This list describes the location of windows
+		 *
+		 * The window elements reference the edges (aka walls)
+		 * of the floorplan structure.
+		 */
+		windowlist_t windows;
+
+	/* functions */
 	public:
 
-	/* constructors */
-	building_model_t();
-	~building_model_t();
+		/*--------------*/
+		/* constructors */
+		/*--------------*/
 
-	/* clear:
-	 *
-	 * 	Clears all information from this model.
-	 */
-	void clear();
+		/**
+		 * Constructs empty building model
+		 */
+		building_model_t();
 
-	/* i/o */
+		/**
+		 * Frees all memory and resources
+		 */
+		~building_model_t();
 
-	/* import_floorplan:
-	 *
-	 * 	Will read the specified file as an input floorplan.
-	 *
-	 * return value:
-	 *
-	 * 	Returns zero on success, non-zero on failure.
-	 */
-	int import_floorplan(char* filename);
+		/**
+		 * Clears all information from this model.
+		 */
+		void clear();
 
-	/* import_windows:
-	 *
-	 * 	Will read the specified file as an input window list.
-	 *
-	 * return value:
-	 *
-	 * 	Returns zero on success, non-zero on failure.
-	 */
-	int import_windows(char* filename);
+		/*-----*/
+		/* i/o */
+		/*-----*/
 
-	/* export_obj:
-	 *
-	 * 	Exports this building model to the specified
-	 * 	Wavefront OBJ file.
-	 *
-	 * return value:
-	 *
-	 * 	Returns zero on success, non-zero on failure.
-	 */
-	int export_obj(char* filename);
+		/**
+		 * Will read the specified file as an input floorplan.
+		 *
+		 * @param filename   The location of the .fp file to import
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int import_floorplan(const std::string& filename);
+
+		/**
+		 * Will read the specified file as an input window list.
+		 *
+		 * @param filename   The location of the .windows file
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int import_windows(const std::string& filename);
+
+		/**
+		 * Exports this model to the specified Wavefront OBJ file.
+		 *
+		 * @param filename   Path to the file to write
+		 *
+		 * @return Returns zero on success, non-zero on failure.
+		 */
+		int export_obj(const std::string& filename) const;
 	 
-	/* export_wrl:
-	 *
-	 * 	Exports this building model to the specified
-	 * 	VMRL file.
-	 *
-	 * return value:
-	 *
-	 * 	Returns zero on success, non-zero on failure.
-	 */
-	int export_wrl(char* filename);
+		/**
+		 * Exports this building model to the specified VMRL file.
+		 *
+		 * @param filename   Path to the .wrl file to write
+		 *
+		 * @return  Returns zero on success, non-zero on failure.
+		 */
+		int export_wrl(const std::string& filename) const;
 
 	/* helper functions */
 	private:
 
-	/* write_floor_to_wrl:
-	 *
-	 * 	Exports floor as a wrl shape.
-	 */
-	void write_floor_to_wrl(std::ostream& outfile);
+		/* write_floor_to_wrl:
+		 *
+		 * 	Exports floor as a wrl shape.
+		 */
+		void write_floor_to_wrl(std::ostream& outfile) const;
+		
+		/* write_ceiling_to_wrl:
+		 *
+		 * 	Exports ceiling as a wrl shape.
+		 */
+		void write_ceiling_to_wrl(std::ostream& outfile) const;
 	
-	/* write_ceiling_to_wrl:
-	 *
-	 * 	Exports ceiling as a wrl shape.
-	 */
-	void write_ceiling_to_wrl(std::ostream& outfile);
-	
-	/* write_wall_to_wrl:
-	 *
-	 * 	Exports wall #i as a wrl shape.
-	 */
-	void write_wall_to_wrl(std::ostream& outfile);
+		/* write_wall_to_wrl:
+		 *
+		 * 	Exports walls as a wrl shape.
+		 */
+		void write_wall_to_wrl(std::ostream& outfile) const;
 };
 
 #endif

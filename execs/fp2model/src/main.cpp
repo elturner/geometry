@@ -20,9 +20,11 @@ int main(int argc, char** argv)
 	int ret;
 
 	/* read command-line args */
-	if(conf.parseargs(argc, argv))
+	ret = conf.parse(argc, argv);
+	if(ret)
 	{
-		conf.print_usage_short();
+		cerr << "[main]\tError " << ret << ": Unable to parse "
+		     << "command-line" << endl;
 		return 1;
 	}
 
@@ -32,16 +34,16 @@ int main(int argc, char** argv)
 	{
 		cerr << "ERROR: unable to parse input, ret: "
 		     << ret << endl;
-		return 1;
+		return 2;
 	}
 	
 	/* write the data to specified output */
 	ret = export_data(bim, conf);
 	if(ret)
 	{
-		cerr << "ERROR: unable to export data, ret: "
-		     << ret << endl;
-		return 1;
+		cerr << "[main]\tERROR " << ret << ": unable to "
+		     << "export data" << endl;
+		return 3;
 	}
 
 	/* success */
