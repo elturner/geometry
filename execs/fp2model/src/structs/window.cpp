@@ -223,7 +223,7 @@ int window_t::parse(const string& line)
 	ss.str(line);
 	ss >> this->wall.verts[0] >> this->wall.verts[1]
 	   >> this->min_h >> this->min_v >> this->max_h >> this->max_v;
-	
+
 	/* check if valid window */
 	if(!(this->valid()))
 		return -1;

@@ -189,7 +189,7 @@ int building_model_t::export_obj(const string& filename) const
 				cerr << "[building_model.export_obj]\t"
 					"Unable to handle walls that "
 					"have multiple windows defined. "
-					"Ignoring extra windows.";
+					"Ignoring extra windows." << endl;
 			}
 
 			/* create wall with single window */
