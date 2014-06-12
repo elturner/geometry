@@ -16,6 +16,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
 		$(SOURCEDIR)io/latex/latex_writer.cpp \
+		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
@@ -42,6 +43,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/progress_bar.h \
 		$(SOURCEDIR)io/latex/latex_writer.h \
+		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \
 		$(SOURCEDIR)config/imuProp.h \

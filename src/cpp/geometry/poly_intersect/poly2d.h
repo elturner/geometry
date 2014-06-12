@@ -41,7 +41,7 @@ namespace poly2d
 		if(y < ymin || y > ymax)
 			return false;
 		return true;
-	};
+	}
 
 	/**
 	 * Checks if a line segment intersects an axis-aligned bounding box
@@ -99,7 +99,7 @@ namespace poly2d
 
 		/* line segment must intersect */
 		return true;
-	};
+	}
 
 	/**
 	 * Determines the 2D orientation of three points
@@ -131,7 +131,7 @@ namespace poly2d
 		 * 	(qx-rx)		(qy-ry)
 		 */
 		return (px-rx)*(qy-ry) - (py-ry)*(qx-rx);
-	};
+	}
 
 	/**
 	 * Checks if point s is in triangle pqr
@@ -167,7 +167,54 @@ namespace poly2d
 
 		/* point is inside iff all orientations are positive */
 		return (opq >= 0) && (oqr >= 0) && (orp >= 0);
-	};
+	}
+
+	/**
+	 * Computes the circumcenter of the triangle p,q,r.
+	 *
+	 * The circumcenter of the triangle pqr is stored in the
+	 * vector (sx,sy).  This function will also compute the
+	 * circumradius of the given triangle, whose square is
+	 * returned.
+	 *
+	 * All triangles are assumed to be represented with counter-
+	 * clockwise ordering.
+	 *
+	 * @param px   The x-coordinate of point p
+	 * @param py   The y-coordinate of point p
+	 * @param qx   The x-coordinate of point q
+	 * @param qy   The y-coordinate of point q
+	 * @param rx   The x-coordinate of point r
+	 * @param ry   The y-coordinate of point r
+	 * @param sx   Where to store the x-coordinate of point s
+	 * @param sy   Where to store the y-coordinate of point s
+	 *
+	 * @return     Returns square of circum-radius of pqr
+	 */
+	inline double triangle_circumcenter(double px, double py,
+	                                    double qx, double qy,
+	                                    double rx, double ry,
+	                                    double& sx, double& sy)
+	{
+		double a, b;
+
+		/* compute circule */
+		a = (qx*qx - px*px + qy*qy - py*py)*(ry-py)
+		    - (rx*rx - px*px + ry*ry - py*py)*(qy-py);
+		a = a / (2 * ( (qx-px)*(ry-py) - (qy-py)*(rx-px) ) );
+		b = (qy*qy - py*py + qx*qx - px*px)*(rx - px)
+		    - (ry*ry - py*py + rx*rx - px*px)*(qx-px);
+		b = b / ( 2 * ( (qy-py)*(rx-px) - (qx-px)*(ry-py) ) );
+
+		/* store results */
+		sx = a;
+		sy = b;
+
+		/* return the circumradius of this triangle */
+		a = px-sx;
+		b = py-sy;
+		return ( a*a + b*b );
+	}
 }
 
 #endif

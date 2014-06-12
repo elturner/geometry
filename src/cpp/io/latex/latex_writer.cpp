@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <set>
 
 /**
  * @file latex_writer.h
@@ -69,6 +70,7 @@ int latex_writer_t::open(const std::string& filename)
 		<< "\\documentclass[10pt,onecolumn,letterpaper]{article}\n"
 		<< "\n"
 		<< "\\usepackage{graphicx}\n"
+		<< "\\usepackage{tikz}\n"
 		<< "\n"
 		<< "\% This file was auto-generated with the c++ code\n"
 		<< "\% written by Eric Turner "
@@ -125,11 +127,15 @@ void latex_writer_t::write_path_info(const system_path_t& path)
 		
 void latex_writer_t::write_floorplan_info(const fp::floorplan_t& fp)
 {
-	double a;
+	double a, min_x, min_y, max_x, max_y, scale;
+	vector<fp::edge_t> edges;
+	vector<fp::edge_t>::iterator eit;
 
 	/* compute stats */
+	fp.compute_bounds(min_x, min_y, max_x, max_y);
 	a = fp.compute_total_area();
 	this->fp_counter++;
+	scale = 4.25 / max(max(-min_x, -min_y), max(max_x, max_y));
 
 	/* print results */
 	this->outfile << "\\section*{Floor " << (this->fp_counter) 
@@ -139,6 +145,21 @@ void latex_writer_t::write_floorplan_info(const fp::floorplan_t& fp)
 		      << "\\paragraph*{} Area: " 
 		      << a << " square meters (" << (10.7639*a)
 		      << " square feet)\n\n";
+
+	/* export vectorized image */
+	fp.compute_edges(edges);
+	this->outfile << "\\begin{tikzpicture}[scale=" << scale << "]\n"
+	              << "\\draw[ultra thick]";
+	for(eit = edges.begin(); eit != edges.end(); eit++)
+	{
+		/* export position of this edge */
+		this->outfile << "\n(" << fp.verts[eit->verts[0]].x << ","
+			      << fp.verts[eit->verts[0]].y << ")"
+			      << " -- "
+			      << "(" << fp.verts[eit->verts[1]].x << ","
+			      << fp.verts[eit->verts[1]].y << ")";
+	}
+	this->outfile << ";\n\\end{tikzpicture}\n\n";
 }
 		
 void latex_writer_t::close()
