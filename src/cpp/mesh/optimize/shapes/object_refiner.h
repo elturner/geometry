@@ -14,17 +14,22 @@
  * those locations can be recarved at a finer resolution.
  */
 
-#include <geometry/octree/shape.h>
+#include <io/carve/chunk_io.h>
+#include <io/carve/wedge_io.h>
+#include <io/carve/carve_map_io.h>
+#include <geometry/octree/octree.h>
 #include <geometry/octree/octdata.h>
+#include <geometry/octree/shape.h>
 #include <Eigen/StdVector>
 #include <Eigen/Dense>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <map>
 
 /* the following classes are defined in this file */
-class node_location_t;
 class object_refiner_t;
+class node_location_t;
 
 /**
  * Identifies and refines areas of the tree that represent objects
@@ -38,6 +43,44 @@ class object_refiner_t : public shape_t
 {
 	/* parameters */
 	private:
+
+		/**
+		 * The amount to increase an octree's depth at object nodes
+		 *
+		 * This class will refine an octree's geometry at the
+		 * location of object nodes.  This value indicates how
+		 * many levels of the octree to increase at these locations.
+		 */
+		unsigned int object_depth_increase;
+
+		/**
+		 * The input chunklist file to reference
+		 *
+		 * This file contains the list of chunks that were used
+		 * to populate the octree.  This acts as the reference of
+		 * chunk locations in order to determine which chunks to
+		 * recarve.
+		 */
+		chunk::chunklist_reader_t chunklist;
+
+		/**
+		 * The input list of wedges to reference
+		 *
+		 * This file contains the list of wedges that are
+		 * referenced by the chunks.  These wedges will be
+		 * the shapes used to recarve the octree.
+		 */
+		wedge::reader_t wedges;
+
+		/**
+		 * The input list of carvemaps to reference
+		 *
+		 * This file represents the carvemaps associated with
+		 * the original scans of the system.  These are referenced
+		 * by the wedge shapes and define the scan geometry used
+		 * to carve the octree.
+		 */
+		cm_io::reader_t carvemaps;
 
 		/**
 		 * A list of node locations to modify
@@ -56,11 +99,46 @@ class object_refiner_t : public shape_t
 		/* processing */
 		/*------------*/
 
-		// TODO
+		/**
+		 * Initializes this object with the appropriate input files
+		 *
+		 * Will initialize the parameters of this object, including
+		 * loading the specified files.
+		 *
+		 * @param inc_depth         The increase in depth to 
+		 *                          enact at object nodes
+		 * @param chunklistfile     The input .chunklist file
+		 * @param wedgefile         The input .wedge file
+		 * @param cmfile            The input .carvemap file
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int init(unsigned int inc_depth,
+		         const std::string& chunklistfile,
+		         const std::string& wedgefile,
+		         const std::string& cmfile);
 
-		/*-----------*/
-		/* accessors */
-		/*-----------*/
+		/**
+		 * Refines nodes of the given octree that represent objects
+		 *
+		 * Will manipulate the given octree by identifying the
+		 * location of objects in the environment, and recarving
+		 * these locations at a finer resolution.  Objects are
+		 * defined as exterior nodes that are contained within
+		 * the volume of the floorplan.  This call must occur
+		 * on an octree that has been merged with a floorplan.
+		 *
+		 * @param tree   The octree to refine
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int refine(octree_t& tree);
+
+		/*---------------------*/
+		/* container accessors */
+		/*---------------------*/
+
+		// TODO make better container for nodes
 
 		/**
 		 * Clears all values from this structure

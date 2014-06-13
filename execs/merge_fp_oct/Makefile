@@ -1,10 +1,10 @@
 CC = g++
-CFLAGS = -g -O2 -W -Wall -Wextra -ansi
-LFLAGS = -lm
+CFLAGS = -g -O2 -W -Wall -Wextra -ansi -std=c++0x
+LFLAGS = -lm -lboost_thread
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
-IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
+IFLAGS = -I$(SOURCEDIR) -I$(SOURCEDIR)/include -I$(EIGENDIR)
 BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/merge_fp_oct
 
@@ -12,7 +12,19 @@ EXECUTABLE = ../../bin/merge_fp_oct
 
 SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
+		$(SOURCEDIR)util/rotLib.cpp \
+		$(SOURCEDIR)util/randLib.cpp \
+		$(SOURCEDIR)util/range_list.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
+		$(SOURCEDIR)io/carve/chunk_io.cpp \
+		$(SOURCEDIR)io/carve/wedge_io.cpp \
+		$(SOURCEDIR)io/carve/carve_map_io.cpp \
+		$(SOURCEDIR)io/carve/noisypath_io.cpp \
+		$(SOURCEDIR)config/backpackConfig.cpp \
+		$(SOURCEDIR)config/cameraProp.cpp \
+		$(SOURCEDIR)config/imuProp.cpp \
+		$(SOURCEDIR)config/laserProp.cpp \
+		$(SOURCEDIR)config/tofProp.cpp \
 		$(SOURCEDIR)xmlreader/tinystr.cpp \
 		$(SOURCEDIR)xmlreader/tinyxml.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
@@ -23,10 +35,23 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
 		$(SOURCEDIR)mesh/optimize/shapes/object_refiner.cpp \
+		$(SOURCEDIR)geometry/system_path.cpp \
+		$(SOURCEDIR)geometry/transform.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/shapes/carve_wedge.cpp \
+		$(SOURCEDIR)geometry/shapes/chunk_exporter.cpp \
 		$(SOURCEDIR)geometry/shapes/extruded_poly.cpp \
+		$(SOURCEDIR)geometry/pca/line_fit.cpp \
+		$(SOURCEDIR)geometry/carve/random_carver.cpp \
+		$(SOURCEDIR)geometry/carve/frame_model.cpp \
+		$(SOURCEDIR)geometry/carve/gaussian/carve_map.cpp \
+		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.cpp \
+		$(SOURCEDIR)geometry/carve/gaussian/scan_model.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/fpcube.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/pcube.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.cpp \
 		src/merge_run_settings.cpp \
 		src/main.cpp
 
@@ -34,19 +59,45 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/tictoc.h \
 		$(SOURCEDIR)util/cmd_args.h \
 		$(SOURCEDIR)util/endian.h \
+		$(SOURCEDIR)util/rotLib.h \
+		$(SOURCEDIR)util/randLib.h \
+		$(SOURCEDIR)util/range_list.h \
 		$(SOURCEDIR)util/progress_bar.h \
+		$(SOURCEDIR)io/carve/chunk_io.h \
+		$(SOURCEDIR)io/carve/wedge_io.h \
+		$(SOURCEDIR)io/carve/carve_map_io.h \
+		$(SOURCEDIR)io/carve/noisypath_io.h \
+		$(SOURCEDIR)config/backpackConfig.h \
+		$(SOURCEDIR)config/cameraProp.h \
+		$(SOURCEDIR)config/imuProp.h \
+		$(SOURCEDIR)config/laserProp.h \
+		$(SOURCEDIR)config/sensorProp.h \
+		$(SOURCEDIR)config/tofProp.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
 		$(SOURCEDIR)mesh/optimize/shapes/object_refiner.h \
+		$(SOURCEDIR)geometry/system_path.h \
+		$(SOURCEDIR)geometry/transform.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
+		$(SOURCEDIR)geometry/shapes/carve_wedge.h \
+		$(SOURCEDIR)geometry/shapes/chunk_exporter.h \
 		$(SOURCEDIR)geometry/shapes/extruded_poly.h \
+		$(SOURCEDIR)geometry/pca/line_fit.h \
+		$(SOURCEDIR)geometry/carve/random_carver.h \
+		$(SOURCEDIR)geometry/carve/frame_model.h \
+		$(SOURCEDIR)geometry/carve/gaussian/carve_map.h \
+		$(SOURCEDIR)geometry/carve/gaussian/noisy_scanpoint.h \
+		$(SOURCEDIR)geometry/carve/gaussian/scan_model.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
+		$(SOURCEDIR)geometry/poly_intersect/fpcube.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/pcube.cpp \
+		$(SOURCEDIR)geometry/poly_intersect/get_polygon_normal.cpp \
 		src/merge_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
@@ -64,7 +115,7 @@ $(EXECUTABLE): $(OBJECTS)
 
 $(BUILDDIR)/%.o : %.cpp
 	@mkdir -p $(shell dirname $@)		# ensure folder exists
-	@g++ -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
+	@g++ -std=c++0x -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
 	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
 # helper commands
