@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <string.h>
+#include <iostream>
 
 using namespace std;
 using namespace fp;
@@ -226,7 +227,12 @@ int window_t::parse(const string& line)
 
 	/* check if valid window */
 	if(!(this->valid()))
+	{
+		/* report error to user */
+		cerr << "[window_t::parse]\tInvalid window line: "
+		     << line << endl;
 		return -1;
+	}
 
 	/* success */
 	return 0;

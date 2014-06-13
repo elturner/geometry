@@ -1,0 +1,73 @@
+
+*******************************************
+* Format Specification for .windows Files *
+*******************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+June 12, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the format for .windows files.  These files
+represent the position of windows on walls described by a .fp floorplan
+file.  The windows in the .windows file are referenced relative to the
+vertices of the floorplan.  Each window is assumed be rectangular and
+aligned to a wall.
+
+***************
+* Conventions *
+***************
+
+This file format is in ASCII
+All indices start from 0.
+
+**********
+* Format *
+**********
+
+Each line of this file describes a window.  Each line is represented
+by six values:
+
+<vert_1> <vert_2> <min_horizontal> <min_vertical> <max_horizontal> <max_vertical>
+
+Where:
+
+-------------------------------------------------------------------
+value              type                 description
+-------------------------------------------------------------------
+vert_1             Integer              Index of first vertex of edge
+vert_2             Integer              Inded of second vertex of edge
+min_horizontal     double               Value [0,1] norm pos along edge
+min_vertical       double               Value [0,1] norm pos along edge
+max_horizontal     double               Value [0,1] norm pos along edge
+max_vertical       double               Value [0,1] norm pos along edge
+-------------------------------------------------------------------
+
+Note that all positions are in the range [0,1].  A value of zero indicates
+the position is close to vert_1 (if horizontal) or close to the ground (if
+vertical).  A value of one indicates the position is close to vert_2 (if
+horizontal) or close to the ceiling (if vertical).
+
+For both the horizontal and vertical ranges, the min value must be smaller
+than the max value.
+
+***********
+* Example *
+***********
+
+For a floorplan where the following edges are walls: (0,15), (3,7), (4,5)
+
+Then the following specifies four windows on these walls:
+
+----------
+
+0 15 0.2 0.5 0.8 0.7
+3 7 0.3 0.2 0.4 0.8
+3 7 0.6 0.2 0.7 0.8
+4 5 0.1 0.1 0.9 0.9
+
+----------
+
