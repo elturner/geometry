@@ -1,10 +1,10 @@
-#ifndef OBJECT_REMOVER_H
-#define OBJECT_REMOVER_H
+#ifndef OBJECT_REFINER_H
+#define OBJECT_REFINER_H
 
 /**
- * @file object_remover.h
+ * @file object_refiner.h
  * @author Eric Turner <elturner@eecs.berkeley.edu>
- * @brief This class is used to selectively delete data from an octree
+ * @brief This class is used to selectively refine data in an octree
  *
  * @section DESCRIPTION
  *
@@ -22,39 +22,51 @@
 #include <vector>
 #include <map>
 
+/* the following classes are defined in this file */
+class node_location_t;
+class object_refiner_t;
+
 /**
- * Identifies and removes areas of the tree that represent objects
+ * Identifies and refines areas of the tree that represent objects
  *
- * The object_remover_t class will intersect with all nodes, identify
+ * The object_refiner_t class will intersect with all nodes, identify
  * nodes that represent objects in the environment, and remove those
  * sections of the tree so that they can be recarved at a finer resolution
  * later.
  */
-class object_remover_t : public shape_t
+class object_refiner_t : public shape_t
 {
 	/* parameters */
 	private:
 
 		/**
-		 * A mapping from room id's to object node centers
+		 * A list of node locations to modify
 		 *
 		 * For each data element we remove, we want to keep
 		 * track of the floorplan room it came from.  This
-		 * map represents the locations in the environment
+		 * list represents the locations in the environment
 		 * that were modified, and what room they reside in.
 		 */
-		std::map<int, std::vector<Eigen::Vector3d,
-				Eigen::aligned_allocator<
-					Eigen::Vector3d> > > objects;
+		std::vector<node_location_t> nodes;
 
 	/* functions */
 	public:
+
+		/*------------*/
+		/* processing */
+		/*------------*/
+
+		// TODO
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Clears all values from this structure
 		 */
 		inline void clear()
-		{ this->objects.clear(); };
+		{ this->nodes.clear(); };
 
 		/*----------------------*/
 		/* overloaded functions */
@@ -128,6 +140,101 @@ class object_remover_t : public shape_t
 		 * @param os   Where to write the data
 		 */
 		void writeobj(std::ostream& os) const;
+};
+
+/**
+ * Identifies the location and size of a node in the tree
+ *
+ * Objects of this class represent the persistent data of nodes
+ * in the octree that will be refined.
+ */
+class node_location_t
+{
+	/* parameters */
+	private:
+		
+		/**
+		 * The room id index of this node
+		 */
+		int room_id;
+
+		/**
+		 * The center position of the node
+		 */
+		double x, y, z;
+
+		/**
+		 * The halfwidth of this node
+		 */
+		double hw;
+
+	/* functions */
+	public:
+
+		/*--------------*/
+		/* constructors */
+		/*--------------*/
+
+		/**
+		 * Constructs default object
+		 */
+		node_location_t()
+		{
+			/* default values */
+			this->room_id = -1;
+			this->x = this->y = this->z = this->hw = 0;
+		};
+
+		/**
+		 * Constructs object with specified parameters
+		 *
+		 * @param rid   The room id of this node
+		 * @param c     The center position of this node
+		 * @param h     The halfwidth of this node
+		 */
+		node_location_t(int rid,const Eigen::Vector3d& c,double h)
+		{ this->set(rid,c,h); };
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Sets the parameter values of this object
+		 *
+		 * @param rid   The room id of this node
+		 * @param c     The center position of this node
+		 * @param h     The halfwidth of this node
+		 */
+		inline void set(int rid, const Eigen::Vector3d& c, double h)
+		{
+			/* set the values */
+			this->room_id = rid;
+			this->x = c(0); this->y = c(1); this->z = c(2);
+			this->hw = h;
+		};
+
+		/**
+		 * Retrieves room id of this object
+		 */
+		inline int get_room_id() const
+		{ return this->room_id; };
+
+		/**
+		 * Retrieves the center position of this object
+		 */
+		inline Eigen::Vector3d get_center() const
+		{
+			/* return coordinates as vector */
+			Eigen::Vector3d c(this->x, this->y, this->z);
+			return c;
+		};
+
+		/**
+		 * Retrieves the halfwidth of this object
+		 */
+		inline double get_halfwidth() const
+		{ return this->hw; };
 };
 
 #endif
