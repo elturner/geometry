@@ -20,7 +20,9 @@
 /* number of children each node in the octree has */
 #define CHILDREN_PER_NODE 8
 
-/* defines the individual nodes of a octree */ 
+/**
+ * defines the individual nodes of a octree
+ */ 
 class octnode_t
 {
 	/*** parameters ***/

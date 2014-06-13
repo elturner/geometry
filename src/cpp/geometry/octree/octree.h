@@ -18,7 +18,9 @@
 #include "shape.h"
 #include "octdata.h"
 
-/* defines the octree class */
+/**
+ * defines the octree class
+ */
 class octree_t
 {
 	/*** parameters ***/
@@ -111,8 +113,10 @@ class octree_t
 		 * Will increase the max allowed depth of the tree
 		 *
 		 * This call will NOT destroy any existing data in the
-		 * tree.  After this call, the resolution of the tree
-		 * will be multiplied by 2^(-n).
+		 * tree.  It will also not add any new nodes.  After this
+		 * call, the allowed resolution of the tree will be 
+		 * multiplied by 2^(-n), but the tree structure itself
+		 * will be unchanged.
 		 *
 		 * @param n   Number of levels by which to increase depth
 		 */
