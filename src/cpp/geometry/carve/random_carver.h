@@ -128,7 +128,7 @@ class random_carver_t
 		int serialize(const std::string& octfile) const;
 
 	/* helper functions */
-	private:
+	public:
 		
 		/**
 		 * Carves a single chunk into the tree

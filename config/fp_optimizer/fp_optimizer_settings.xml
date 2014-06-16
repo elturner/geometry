@@ -37,4 +37,13 @@
 	     Units:   number of tree resolutions -->
 	<fp_opt_offset_step_coeff>0.25</fp_opt_offset_step_coeff>
 
+	<!-- This value indicates the relative amount of refinement
+	     octree nodes that contain objects or furniture should
+	     receive.  This value represents a relative depth in the
+	     octree.  Object nodes will be carved this many levels
+	     deeper than other areas.
+
+	     units:  number of octree levels -->
+	<object_refine_depth>2</object_refine_depth>
+
 </settings>

@@ -51,6 +51,11 @@ octnode_t::octnode_t(const Vector3d& c, double hw)
 
 octnode_t::~octnode_t()
 {
+	this->clear();
+}
+
+void octnode_t::clear()
+{
 	int i;
 
 	/* free children */

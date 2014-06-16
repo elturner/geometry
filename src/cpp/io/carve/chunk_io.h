@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <set>
 
 /**
  * Namespace for chunk files.
@@ -535,7 +536,18 @@ namespace chunk
 			 *            on failure.
 			 */
 			int next(point_index_t& i);
-			
+	
+			/**
+			 * Retrieves all remaining indices from file
+			 *
+			 * Will add all remaining indices from this file
+			 * into the specified set.  Any contents of the
+			 * set before this call will be preserved.
+			 *
+			 * @param inds   Where to store the indices
+			 */
+			void get_all(std::set<point_index_t>& inds);
+
 			/**
 			 * Closes the reader, freeing resources.
 			 *

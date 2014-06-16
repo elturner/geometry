@@ -388,9 +388,8 @@ int random_carver_t::carve_chunk(cm_io::reader_t& carvemaps,
 	Eigen::Vector3d chunkcenter;
 	set<chunk::point_index_t> inds;
 	chunk::chunk_reader_t infile;
-	chunk::point_index_t pi;
 	octnode_t* chunknode;
-	unsigned int i, n, chunkdepth;
+	unsigned int chunkdepth;
 	int ret;
 
 	/* open this chunk file for reading */
@@ -398,33 +397,25 @@ int random_carver_t::carve_chunk(cm_io::reader_t& carvemaps,
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
-	/* import the indices in this chunk */
-	n = infile.num_points();
-	for(i = 0; i < n; i++)
-	{
-		/* get the point index structure from file */
-		ret = infile.next(pi);
-		if(ret)
-		{
-			/* could not read from file */
-			infile.close();
-			return PROPEGATE_ERROR(-2, ret);
-		}
-
-		/* import this index into index set.  Since the
-		 * set is sorted, the indices will be ordered
-		 * with sensor-major, then frame, then point-minor
-		 * ordering, which allows us to carve everything
-		 * efficiently while only preparing each frame
-		 * once. */
-		inds.insert(pi);
-	}
+	/* import the indices into index set.  Since the
+	 * set is sorted, the indices will be ordered
+	 * with sensor-major, then frame, then point-minor
+	 * ordering, which allows us to carve everything
+	 * efficiently while only preparing each frame
+	 * once. */
+	infile.get_all(inds);
 
 	/* check if file had duplicate indices */
-	if(inds.size() != n)
+	if(inds.size() != infile.num_points())
+	{	
+		/* error occurred */
 		cerr << "[random_carver_t::carve_chunk]\tInfile had "
-		     << n << " points but only " << inds.size()
+		     << infile.num_points() << " points but only " 
+		     << inds.size()
 		     << " were unique." << endl << endl;
+		infile.close();
+		return PROPEGATE_ERROR(-2, ret);
+	}
 
 	/* prepare chunk location within tree */
 	chunkcenter << infile.center_x(),

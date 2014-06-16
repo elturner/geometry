@@ -492,6 +492,26 @@ int chunk_reader_t::next(point_index_t& i)
 	return 0;
 }
 			
+void chunk_reader_t::get_all(std::set<point_index_t>& inds)
+{
+	point_index_t pi;
+	unsigned int i, n;
+	int ret;
+
+	/* get all remaining points, store in set */
+	n = this->num_points();
+	for(i = 0; i < n; i++)
+	{
+		/* get next point */
+		ret = this->next(pi);
+		if(ret)
+			return; /* no more points */
+	
+		/* store in set */
+		inds.insert(pi);
+	}
+}
+
 void chunk_reader_t::close()
 {
 	/* check if streams are open.  If so, close them */

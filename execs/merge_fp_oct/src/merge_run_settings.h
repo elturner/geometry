@@ -35,6 +35,21 @@ class merge_run_settings_t
 		std::string input_octfile;
 
 		/**
+		 * Location of the input chunklist file
+		 */
+		std::string input_chunklistfile;
+
+		/**
+		 * Location of the input wedge file
+		 */
+		std::string input_wedgefile;
+
+		/**
+		 * Location of the input carve map file
+		 */
+		std::string input_carvemapfile;
+
+		/**
 		 * Location of the output .oct file
 		 *
 		 * This can be the same as the input file, in which
@@ -46,6 +61,14 @@ class merge_run_settings_t
 		 * Locations of the floorplan files
 		 */
 		std::vector<std::string> fpfiles;
+
+		/* the following parameters are used in this program */
+
+		/**
+		 * How much further, in number of octree levels, to
+		 * carve object nodes than regular nodes.
+		 */
+		unsigned int object_refine_depth;
 
 	/* functions */
 	public:

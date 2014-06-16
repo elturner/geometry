@@ -12,6 +12,8 @@
  * to objects.  This requires the octree to have already imported floorplan
  * information.  The motivation for removing these data elements is so
  * those locations can be recarved at a finer resolution.
+ * 
+ * This file requires the Eigen framework.
  */
 
 #include <io/carve/chunk_io.h>
@@ -20,16 +22,12 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/shape.h>
+#include <geometry/chunk/chunk_dict.h>
 #include <Eigen/StdVector>
 #include <Eigen/Dense>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <map>
-
-/* the following classes are defined in this file */
-class object_refiner_t;
-class node_location_t;
 
 /**
  * Identifies and refines areas of the tree that represent objects
@@ -54,14 +52,24 @@ class object_refiner_t : public shape_t
 		unsigned int object_depth_increase;
 
 		/**
-		 * The input chunklist file to reference
+		 * This structure represents the chunks that carved the tree
 		 *
-		 * This file contains the list of chunks that were used
-		 * to populate the octree.  This acts as the reference of
-		 * chunk locations in order to determine which chunks to
-		 * recarve.
+		 * This structure contains all the original chunk files
+		 * used to generate a carved octree.  Each chunk indexes
+		 * a list of wedges that intersect that volume in space.
+		 *
+		 * This structure allows these chunks to be referenced
+		 * easily based on intersecting points.
 		 */
-		chunk::chunklist_reader_t chunklist;
+		chunk_dict_t chunk_map;
+
+		/**
+		 * This structure stores the chunks containing objects
+		 *
+		 * This represents a subset of all chunks, storing only
+		 * the ones that contain object nodes and should be refined
+		 */
+		std::set<std::string> object_chunks;
 
 		/**
 		 * The input list of wedges to reference
@@ -81,16 +89,6 @@ class object_refiner_t : public shape_t
 		 * to carve the octree.
 		 */
 		cm_io::reader_t carvemaps;
-
-		/**
-		 * A list of node locations to modify
-		 *
-		 * For each data element we remove, we want to keep
-		 * track of the floorplan room it came from.  This
-		 * list represents the locations in the environment
-		 * that were modified, and what room they reside in.
-		 */
-		std::vector<node_location_t> nodes;
 
 	/* functions */
 	public:
@@ -138,13 +136,11 @@ class object_refiner_t : public shape_t
 		/* container accessors */
 		/*---------------------*/
 
-		// TODO make better container for nodes
-
 		/**
 		 * Clears all values from this structure
 		 */
 		inline void clear()
-		{ this->nodes.clear(); };
+		{ this->object_chunks.clear(); };
 
 		/*----------------------*/
 		/* overloaded functions */
@@ -206,113 +202,6 @@ class object_refiner_t : public shape_t
 		 */
 		octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
 		                         double hw, octdata_t* d);
-
-		/*---------------------*/
-		/* debugging functions */
-		/*---------------------*/
-
-		/**
-		 * Will export the found posiitons to the Wavefront
-		 * OBJ formatted stream.
-		 *
-		 * @param os   Where to write the data
-		 */
-		void writeobj(std::ostream& os) const;
-};
-
-/**
- * Identifies the location and size of a node in the tree
- *
- * Objects of this class represent the persistent data of nodes
- * in the octree that will be refined.
- */
-class node_location_t
-{
-	/* parameters */
-	private:
-		
-		/**
-		 * The room id index of this node
-		 */
-		int room_id;
-
-		/**
-		 * The center position of the node
-		 */
-		double x, y, z;
-
-		/**
-		 * The halfwidth of this node
-		 */
-		double hw;
-
-	/* functions */
-	public:
-
-		/*--------------*/
-		/* constructors */
-		/*--------------*/
-
-		/**
-		 * Constructs default object
-		 */
-		node_location_t()
-		{
-			/* default values */
-			this->room_id = -1;
-			this->x = this->y = this->z = this->hw = 0;
-		};
-
-		/**
-		 * Constructs object with specified parameters
-		 *
-		 * @param rid   The room id of this node
-		 * @param c     The center position of this node
-		 * @param h     The halfwidth of this node
-		 */
-		node_location_t(int rid,const Eigen::Vector3d& c,double h)
-		{ this->set(rid,c,h); };
-
-		/*-----------*/
-		/* accessors */
-		/*-----------*/
-
-		/**
-		 * Sets the parameter values of this object
-		 *
-		 * @param rid   The room id of this node
-		 * @param c     The center position of this node
-		 * @param h     The halfwidth of this node
-		 */
-		inline void set(int rid, const Eigen::Vector3d& c, double h)
-		{
-			/* set the values */
-			this->room_id = rid;
-			this->x = c(0); this->y = c(1); this->z = c(2);
-			this->hw = h;
-		};
-
-		/**
-		 * Retrieves room id of this object
-		 */
-		inline int get_room_id() const
-		{ return this->room_id; };
-
-		/**
-		 * Retrieves the center position of this object
-		 */
-		inline Eigen::Vector3d get_center() const
-		{
-			/* return coordinates as vector */
-			Eigen::Vector3d c(this->x, this->y, this->z);
-			return c;
-		};
-
-		/**
-		 * Retrieves the halfwidth of this object
-		 */
-		inline double get_halfwidth() const
-		{ return this->hw; };
 };
 
 #endif

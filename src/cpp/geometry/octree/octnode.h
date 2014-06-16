@@ -65,6 +65,14 @@ class octnode_t
 		 */
 		~octnode_t();
 
+		/**
+		 * Frees all dynamically allocated memory and info
+		 *
+		 * After this call, the node will still have valid geometry,
+		 * but will be an empty leaf node with no data.
+		 */
+		void clear();
+
 		/* accessors */
 
 		/**

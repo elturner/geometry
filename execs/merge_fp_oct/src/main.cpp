@@ -21,6 +21,7 @@ using namespace std;
 
 /* function headers */
 
+int import_all_fps(octree_t& tree, const merge_run_settings_t& args);
 int import_fp(const std::string& fp, octree_t& tree,
 			unsigned int& num_rooms);
 void clear_fp(octree_t& tree);
@@ -34,7 +35,7 @@ int main(int argc, char** argv)
 {
 	merge_run_settings_t args;
 	octree_t tree;
-	unsigned int i, num_fps, num_rooms;
+	object_refiner_t refiner;
 	tictoc_t clk;
 	int ret;
 
@@ -59,6 +60,83 @@ int main(int argc, char** argv)
 	}
 	toc(clk, "Importing octree");
 
+	/* merge floorplan info into tree */
+	ret = import_all_fps(tree, args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to import floorplans." << endl;
+		return 3;
+	}
+	
+	/* refine the tree at the location of objects in the environment */
+	ret = refiner.init(args.object_refine_depth,
+			args.input_chunklistfile, args.input_wedgefile,
+			args.input_carvemapfile);
+	if(ret)
+	{
+		/* inform user of initialization error */
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to initialize refiner." << endl;
+		return 4;
+	}
+	ret = refiner.refine(tree);
+	if(ret)
+	{
+		/* inform user of processing error */
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to refine octree." << endl;
+		return 5;
+	}
+
+	/* once again, merge floorplan info into tree */
+	ret = import_all_fps(tree, args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to import floorplans again." << endl;
+		return 6;
+	}
+
+	/* export the octree to destination */
+	tic(clk);
+	ret = tree.serialize(args.output_octfile);
+	if(ret)
+	{
+		/* unable to write to file, inform user */
+		cerr << "[main]\tError " << ret
+		     << ": Unable to write to output file "
+		     << args.output_octfile << endl;
+		return 7;
+	}
+	toc(clk, "Exporting octree");	
+
+	/* success */
+	return 0;
+}
+
+/*---------------------------------*/
+/* helper function implementations */
+/*---------------------------------*/
+
+/**
+ * Imports all floorplan information into a carved tree
+ *
+ * After this call, the tree's floorplan information will be
+ * replaced with the info specified in the list of floorplans
+ * represented in the settings object given.
+ *
+ * @param tree      The tree to modify
+ * @param args      The settings to use
+ *
+ * @return          Returns zero on success, non-zero on failure.
+ */
+int import_all_fps(octree_t& tree, const merge_run_settings_t& args)
+{
+	unsigned int i, num_fps, num_rooms;
+	tictoc_t clk;
+	int ret;
+
 	/* clear any floorplan info */
 	tic(clk);
 	clear_fp(tree);
@@ -73,31 +151,16 @@ int main(int argc, char** argv)
 		ret = import_fp(args.fpfiles[i], tree, num_rooms);
 		if(ret)
 		{
-			cerr << "[main]\tError " << ret << ": "
+			ret = PROPEGATE_ERROR(-1, ret);
+			cerr << "[import_all_fps]\tError " << ret << ": "
 			     << "Unable to import fp #" << i << endl;
-			return 3;
+			return ret;
 		}
 	}
-
-	/* export the octree to destination */
-	tic(clk);
-	ret = tree.serialize(args.output_octfile);
-	if(ret)
-	{
-		/* unable to write to file, inform user */
-		cerr << "[main]\tError " << ret
-		     << ": Unable to write to output file "
-		     << args.output_octfile << endl;
-		return 4;
-	}
-	toc(clk, "Exporting octree");
-	
 
 	/* success */
 	return 0;
 }
-
-/* helper function implementations */
 
 /**
  * Imports floor plan information into a carved tree
