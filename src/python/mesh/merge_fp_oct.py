@@ -62,12 +62,12 @@ def run(dataset_dir):
 		return -1	
 
 	# prepare the command-line arguments for the merge_fp_oct code
-	args = [FP_OPT_EXE, '-s', SETTINGS_XML, '-m', carvemapfile, \
+	args = [MERGE_EXE, '-s', SETTINGS_XML, '-m', carvemapfile, \
 			'-w', wedgefile, '-l', chunklistfile, \
 			'-i', in_octfile, '-o', out_octfile] + fpfiles
 
 	# run the merge_fp_oct
-	ret = subprocess.call(args, executable=FP_OPT_EXE, \
+	ret = subprocess.call(args, executable=MERGE_EXE, \
 		cwd=dataset_dir, stdout=None, stderr=None, \
 		stdin=None, shell=False)
 	if ret != 0:
