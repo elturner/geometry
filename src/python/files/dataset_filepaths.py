@@ -211,7 +211,7 @@ def get_tex_file(dataset_dir, dataset_name):
 	return os.path.join(get_docs_dir(dataset_dir), \
 			(dataset_name + ".tex"))
 
-#--------------- Files generated from carving --------------------
+#--------------- Files generated from procarve suite --------------------
 
 ##
 # Returns the location of the carving directory
@@ -249,4 +249,38 @@ def get_octree(dataset_dir):
 #
 def get_carved_obj_file(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "mesh.obj")
+
+#--------------- Files generated from merging ------------------------
+
+##
+# Returns the directory containing merged geometry information
+#
+def get_merged_dir(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), "merged")
+
+##
+# Returns the directory containing aligned floorplan files
+#
+def get_aligned_fp_dir(dataset_dir):
+	return os.path.join(get_merged_dir(dataset_dir), "aligned_fp")
+
+##
+# Returns all aligned floorplan files in the aligned_fp directory
+#
+def get_aligned_fp_files(dataset_dir):
+	
+	# get the floorplan directory
+	fpdir = get_aligned_fp_dir(dataset_dir)
+	
+	# get all fp files in this directory
+	fpfiles = [os.path.join(fpdir, f) \
+			for f in os.listdir(fpdir) \
+				if f.endswith(".fp")]
+	return fpfiles
+
+##
+# Returns location of refined octree file.  This file contains fp info
+#
+def get_refined_octree(dataset_dir):
+	return os.path.join(get_merged_dir(dataset_dir), "refined.oct")
 
