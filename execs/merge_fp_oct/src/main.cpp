@@ -68,34 +68,42 @@ int main(int argc, char** argv)
 		     << "Unable to import floorplans." << endl;
 		return 3;
 	}
-	
-	/* refine the tree at the location of objects in the environment */
-	ret = refiner.init(args.object_refine_depth,
-			args.input_chunklistfile, args.input_wedgefile,
-			args.input_carvemapfile);
-	if(ret)
-	{
-		/* inform user of initialization error */
-		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to initialize refiner." << endl;
-		return 4;
-	}
-	ret = refiner.refine(tree);
-	if(ret)
-	{
-		/* inform user of processing error */
-		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to refine octree." << endl;
-		return 5;
-	}
 
-	/* once again, merge floorplan info into tree */
-	ret = import_all_fps(tree, args);
-	if(ret)
-	{
-		cerr << "[main]\tError " << ret << ": "
-		     << "Unable to import floorplans again." << endl;
-		return 6;
+	/* if we specify an increased depth for object nodes, then
+	 * recarve those areas */
+	if(args.object_refine_depth > 0)
+	{	
+		/* refine the tree at the location of objects in 
+		 * the environment */
+		ret = refiner.init(args.object_refine_depth,
+				args.input_chunklistfile,
+				args.input_wedgefile,
+				args.input_carvemapfile);
+		if(ret)
+		{
+			/* inform user of initialization error */
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to initialize refiner." << endl;
+			return 4;
+		}
+		ret = refiner.refine(tree);
+		if(ret)
+		{
+			/* inform user of processing error */
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to refine octree." << endl;
+			return 5;
+		}
+
+		/* once again, merge floorplan info into tree */
+		ret = import_all_fps(tree, args);
+		if(ret)
+		{
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to import floorplans again." 
+			     << endl;
+			return 6;
+		}
 	}
 
 	/* export the octree to destination */

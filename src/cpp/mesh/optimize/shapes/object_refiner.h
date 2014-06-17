@@ -23,7 +23,6 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/shape.h>
 #include <geometry/chunk/chunk_dict.h>
-#include <Eigen/StdVector>
 #include <Eigen/Dense>
 #include <iostream>
 #include <string>
