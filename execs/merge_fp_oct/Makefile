@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -ansi -std=c++0x
-LFLAGS = -lm -lboost_thread
+LFLAGS = -lm -lboost_thread -pthread -lboost_system
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/

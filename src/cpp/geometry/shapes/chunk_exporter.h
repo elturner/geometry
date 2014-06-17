@@ -216,7 +216,7 @@ class chunk_exporter_t : public shape_t
 		 */
 		inline Eigen::Vector3d get_vertex(unsigned int i) const
 		{
-			Eigen::Vector3d x;
+			Eigen::Vector3d x(0,0,0);
 
 			/* use the reference shape */
 			if(this->reference_shape == NULL)
