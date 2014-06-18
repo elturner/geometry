@@ -201,6 +201,20 @@ class object_refiner_t : public shape_t
 		 */
 		octdata_t* apply_to_leaf(const Eigen::Vector3d& c,
 		                         double hw, octdata_t* d);
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Exports stored object chunks to Wavefront OBJ file.
+		 *
+		 * Will export the extent of the chunks stored in this
+		 * structure to the given obj file stream.
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void writeobj(std::ostream& os) const;
 };
 
 #endif

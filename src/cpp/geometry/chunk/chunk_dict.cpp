@@ -84,8 +84,8 @@ int chunk_dict_t::init(const std::string& filename)
 		/* store chunk geometry */
 		this->width = 2*chunkreader.halfwidth();
 		keypos(0) = chunkreader.center_x();
-		keypos(1) = chunkreader.center_x();
-		keypos(2) = chunkreader.center_x();
+		keypos(1) = chunkreader.center_y();
+		keypos(2) = chunkreader.center_z();
 
 		/* convert the chunk position into a key, which
 		 * requires converting into normalized coordinates */

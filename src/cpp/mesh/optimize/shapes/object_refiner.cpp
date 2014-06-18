@@ -200,3 +200,60 @@ octdata_t* object_refiner_t::apply_to_leaf(const Vector3d& c,
 	/* don't modify the data...for now */
 	return d;
 }
+
+/*---------------------*/
+/* debugging functions */
+/*---------------------*/
+
+void object_refiner_t::writeobj(ostream& os) const
+{
+	set<string>::const_iterator sit;
+	chunk::chunk_reader_t chunk;
+	double x, y, z, h;
+	int ret;
+
+	/* iterate over chunks to export */
+	for(sit = this->object_chunks.begin();
+			sit != this->object_chunks.end(); sit++)
+	{
+		/* open this chunk file */
+		ret = chunk.open(*sit);
+		if(ret)
+		{
+			/* store error code in output */
+			os << "# Unable to open chunk file: "
+			   << (*sit) << endl
+			   << "# Call to open returned error "
+			   << ret << endl << endl;
+			continue;
+		}
+		
+		/* get extent of chunk */
+		x = chunk.center_x();
+		y = chunk.center_y();
+		z = chunk.center_z();
+		h = chunk.halfwidth();
+		chunk.close();
+
+		/* export cube corners to file */
+		os << "# Chunk at: " << (*sit) << endl
+		   << "v " << (x  ) << " " << (y  ) << " " << (z  )
+		   <<  " 255 0 255" << endl
+		   << "v " << (x-h) << " " << (y-h) << " " << (z-h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x-h) << " " << (y-h) << " " << (z+h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x-h) << " " << (y+h) << " " << (z-h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x-h) << " " << (y+h) << " " << (z+h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x+h) << " " << (y-h) << " " << (z-h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x+h) << " " << (y-h) << " " << (z+h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x+h) << " " << (y+h) << " " << (z-h)
+		   <<  " 0 255 0" << endl
+		   << "v " << (x+h) << " " << (y+h) << " " << (z+h)
+		   <<  " 0 255 0" << endl << endl;
+	}
+}
