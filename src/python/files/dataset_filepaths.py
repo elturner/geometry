@@ -61,7 +61,8 @@ def get_all_fss_files(dataset_dir):
 	config_xml = get_hardware_config_xml(dataset_dir)
 
 	# parse the hardware configuration file
-	sensor_types, sensor_cfn = config.parse_backpack_xml(config_xml)
+	sensor_types, sensor_cfn, sensor_names = \
+			config.parse_backpack_xml(config_xml)
 	if sensor_types is None or sensor_cfn is None \
 			or len(sensor_types) != len(sensor_cfn):
 		return None # could not parse the xml file
@@ -90,6 +91,24 @@ def get_all_fss_files(dataset_dir):
 
 	# return the final list of fss files
 	return fssfiles
+
+##
+# Retrieves location of camera color metadata file
+#
+# @param cam_name      The name of this camera
+# @param cam_metafile  The location of the bayer metadata file for camera
+#
+def get_color_metadata_file(cam_name, cam_metafile):
+	return os.path.join(os.path.dirname(cam_metafile), \
+		"color_" + cam_name + "_metadata.txt")
+
+##
+# Retrieves location of camera color image directory
+#
+# @param bayerdir   The location of directory that contains bayer images
+#
+def get_color_image_dir(bayerdir):
+	return os.path.normpath(os.path.join(bayerdir, "..", "color"))
 
 #--------------- Interfacing with Localization Output --------------
 

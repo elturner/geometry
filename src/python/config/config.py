@@ -76,6 +76,7 @@ def parse_backpack_xml(filename):
 		# initialize lists
 		sensor_types   = []
 		sensor_configs = []
+		sensor_names   = []
 
 		# parse the file
 		for group in sensors: # iterate over sensor type groups
@@ -88,12 +89,15 @@ def parse_backpack_xml(filename):
 
 				# add to list
 				sensor_types.append(sensor.tag.strip())
-				sensor_configs.append(
-					sensor.find(
+				sensor_configs.append( \
+					sensor.find( \
 					'configFile').text.strip())
+				sensor_names.append( \
+					sensor.find( \
+					'name').text.strip())
 
 		# return lists
-		return (sensor_types, sensor_configs)
+		return (sensor_types, sensor_configs, sensor_names)
 
 	except:
 		return None
