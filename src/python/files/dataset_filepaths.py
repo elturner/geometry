@@ -144,6 +144,26 @@ def get_pc_levels_dir(dataset_dir):
 	return os.path.join(get_pointcloud_dir(dataset_dir),"levels")
 
 ##
+# Returns the prefix path for all the partioned levels pointclouds
+#
+# @param dataset_dir   Location of this dataset root
+# @param name          Human-readable name of dataset
+#
+def get_pc_levels_prefix(dataset_dir, name):
+	return os.path.join(get_pc_levels_dir(dataset_dir), \
+		name + "_level_")
+
+##
+# Returns location of matlab histogram file from partitioning pointclouds
+#
+# @param dataset_dir   Location of this dataset root
+# @param name          Human-readable name of dataset
+#
+def get_pc_levels_hist(dataset_dir, name):
+	return os.path.join(get_pc_levels_dir(dataset_dir), \
+		name + "_hist.m")
+
+##
 # Returns a list of the pointcloud files in the levels directory
 #
 def get_pc_levels_list(dataset_dir):
