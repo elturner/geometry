@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 ##
-# @file procarve_suite.py
+# @file run_procarve.py
 # @author Eric Turner <elturner@eecs.berkeley.edu>
-# @brief  Calls all the programs to generate a procarve
+# @brief  Calls all programs to generate detailed surface reconstruction
 #
 # @section DESCRIPTION
 #
@@ -16,23 +16,32 @@ import os
 import sys
 import subprocess
 
-# Get the location of this file
+# Get the location of this file and other source files
 SCRIPT_LOCATION = os.path.dirname(__file__)
+PYTHON_SRC_LOC = os.path.normpath(os.path.join(SCRIPT_LOCATION, \
+				'..', 'src', 'python'))
 
 # import local libraries
+sys.path.append(os.path.join(PYTHON_SRC_LOC, 'geometry'))
 import wedge_gen
 import chunker
 import procarve
 import octsurf
-sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'files'))
+sys.path.append(os.path.join(PYTHON_SRC_LOC, 'mesh'))
+import fp_optimizer
+import merge_fp_oct
+sys.path.append(os.path.join(PYTHON_SRC_LOC, 'files'))
 import dataset_filepaths
 
+#-----------------------------------------------------------------
+#------------ RUNS SCRIPTS FOR INDIVIDUAL PROGRAMS ---------------
+#-----------------------------------------------------------------
 
 ##
 # This function runs this script
 #
 # @param dataset_dir  The path to the dataset to process
-# @param path_file    The path to the 3D path file to use
+# @param path_file    The path to the noisypath file to use
 #
 # @return             Returns zero on success, non-zero on failure
 def run(dataset_dir, path_file):
@@ -58,10 +67,20 @@ def run(dataset_dir, path_file):
 	if ret != 0:
 		return -3 # an error occurred
 
+	# run the fp optimization program on resulting octree
+	ret = fp_optimizer.run(dataset_dir)
+	if ret != 0:
+		return -4 # an error occurred
+
+	# merge the floorplans and carving into one file
+	ret = merge_fp_oct.run(dataset_dir)
+	if ret != 0:
+		return -5 # an error ocurred
+
 	# run the octsurf program to generate mesh
 	ret = octsurf.run(dataset_dir)
 	if ret != 0:
-		return -4 # an error occurred
+		return -6 # an error occurred
 
 	# success
 	return 0
