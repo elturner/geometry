@@ -30,12 +30,15 @@
 
 /********** QUADTREE DEFINES *************/
 
+/* very small number to counteract rounding error */
+#define EPSILON_APPROXIMATION 0.000001
+
 #define DEFAULT_QUADTREE_RESOLUTION 0.05 /* meters */
 
 #define NUM_DIMS 2
 #define CHILDREN_PER_NODE 4
 
-#define DEFAULT_MIN_WALL_HEIGHT 2.5 /* meters */
+#define DEFAULT_MIN_WALL_HEIGHT 2.0 /* meters */
 #define VERTICAL_BIN_SIZE 0.1 /* meters */
 #define DEFAULT_MIN_NUM_POINTS_PER_WALL_SAMPLE 50
 

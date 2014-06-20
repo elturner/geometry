@@ -550,8 +550,8 @@ inline bool quadnode_t::contains(point_t& p)
 		pi = p.get(i);
 		ci = this->center.get(i);
 		
-		/* containment is inclusive on left, exclusive on right */
-		if(pi < ci - h || pi >= ci + h)
+		/* containment is inclusive */
+		if(fabs(pi - ci) > h + EPSILON_APPROXIMATION)
 			return false; /* out of bounds */
 	}
 
@@ -661,7 +661,8 @@ quaddata_t* quadnode_t::insert(point_t& p, int d)
 	/* verify that node contains p */
 	if(!(this->contains(p)))
 	{
-		cerr << "[insert]\tGot to node that doesn't contain"
+		cerr << endl 
+		     << "[insert]\tGot to node that doesn't contain"
 			" the point! d = " << d << endl;
 		cerr << "\tnode center: ";
 		this->center.print(cerr);
@@ -669,7 +670,10 @@ quaddata_t* quadnode_t::insert(point_t& p, int d)
 		cerr << "\tnode hw: " << this->halfwidth << endl;
 		cerr << "\tp: ";
 		p.print(cerr);
-		cerr << endl << endl;
+		cerr << endl;
+		cerr << "\tdisp: (" << (p.get(0) - this->center.get(0))
+		     << ", " << (p.get(1) - this->center.get(1)) << ")"
+		     << endl << endl;
 		return NULL;
 	}
 
