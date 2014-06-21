@@ -189,6 +189,25 @@ class system_path_t
 		bool is_blacklisted(double ts) const;
 
 		/**
+		 * Retrieves stored zupt information
+		 *
+		 * Zupts (or Zero-velocity interrUPTS) specify when the
+		 * system was not moving or when the information from
+		 * the system path should be ignored.
+		 *
+		 * This function populates a list of pairs dictating the
+		 * start and end times for each zupt.
+		 *
+		 * @param zupts    Where to store zupt info.
+		 */
+		inline void get_zupts(std::vector<
+				std::pair<double, double> >& zupts) const
+		{
+			/* get zupts from black-list times */
+			this->timestamp_blacklist.get_ranges(zupts);
+		};
+
+		/**
 		 * Will return the timestamp of the first pose
 		 */
 		double starttime() const;
@@ -204,6 +223,22 @@ class system_path_t
 		 * The returned value will be in units of meters.
 		 */
 		double total_distance() const;
+
+		/**
+		 * Returns the total number of poses imported
+		 */
+		inline size_t num_poses() const
+		{ return this->pl_size; };
+
+		/**
+		 * Retrieves the raw pose information for the i'th pose
+		 *
+		 * @param i   The pose index to retrieve
+		 *
+		 * @return    Returns a pointer to the i'th pose, or NULL
+		 *            if i is not a valid index
+		 */
+		pose_t* get_pose(size_t i) const;
 
 	/* helper functions */
 	protected:

@@ -12,6 +12,7 @@
  * intervals.
  */
 
+#include <utility>
 #include <vector>
 #include <string>
 #include <set>
@@ -131,6 +132,21 @@ class range_list_t
 		 * @param is   Where to store the contained integers
 		 */
 		void get_ints(std::vector<int>& is) const;
+
+		/**
+		 * Populates the given list with all range pairs
+		 *
+		 * Will populate the given vector with all disjoint
+		 * ranges that are specified in this object.  Each
+		 * element is a pair <min_val, max_val>.
+		 *
+		 * Any contents of this vector will be deleted and replaced
+		 * during this call.
+		 *
+		 * @param rs   Where to store the list of ranges
+		 */
+		void get_ranges(std::vector<
+			std::pair<double, double> >& rs) const;
 };
 
 /* the following decalres the range_t class, which

@@ -147,6 +147,18 @@ void range_list_t::get_ints(vector<int>& is) const
 			is.push_back(i); /* i is within range, add it */
 }
 
+void range_list_t::get_ranges(vector<pair<double, double> >& rs) const
+{
+	set<range_t>::const_iterator it;
+
+	/* clear the vector */
+	rs.clear();
+
+	/* add the ranges */
+	for(it = this->list.begin(); it != this->list.end(); it++)
+		rs.push_back(pair<double,double>(it->min, it->max));
+}
+
 /*** range_t class function definitions ***/
 
 range_t::range_t()

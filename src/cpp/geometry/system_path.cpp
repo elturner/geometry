@@ -565,6 +565,13 @@ int system_path_t::closest_index(double t) const
 	return low;
 }
 
+pose_t* system_path_t::get_pose(size_t i) const
+{	
+	if(i >= this->pl_size)
+		return NULL;
+	return (this->pl + i);
+}
+
 /*** POSE FUNCTIONS ***/
 	
 pose_t::pose_t() {}
