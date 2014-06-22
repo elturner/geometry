@@ -21,11 +21,14 @@
  */
 
 using namespace std;
+using namespace octtopo;
 
 /* octtopo_t function implementations */
 
+void octtopo_t::init(const octree_t& tree)
+{
+	// TODO
+}
+
 // TODO
 
-/* octneighbors_t function implementations */
-
-// TODO
