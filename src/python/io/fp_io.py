@@ -155,4 +155,36 @@ class Floorplan:
 				tri_inds.append(int(r[3+j]))
 			self.room_tris.append(tri_inds)
 
+	##
+	# Computes bounds of the loaded floorplan
+	#
+	# Will compute the ((x_min, x_max), (y_min, y_max))
+	# bounds of the floorplan represented by this object.
+	#
+	# @return  Returns ((x_min, x_max), (y_min, y_max))
+	#
+	def compute_bounds(self):
+		
+		# initialize bounds
+		x_min = 0
+		x_max = 0
+		y_min = 0
+		y_max = 0
+
+		# iterate over vertices
+		for v in self.verts:
+
+			# compare current vertex to bounds
+			(x, y) = v
+			if x < x_min:
+				x_min = x
+			if x > x_max:
+				x_max = x
+			if y < y_min:
+				y_min = y
+			if y > y_max:
+				y_max = y
+
+		# return the computed bounds
+		return ((x_min, x_max), (y_min, y_max))
 
