@@ -188,3 +188,30 @@ class Floorplan:
 		# return the computed bounds
 		return ((x_min, x_max), (y_min, y_max))
 
+	##
+	# Computes boundary edges of this floorplan
+	#
+	# A boundary edge is a triangle edge that represents a 
+	# in the floorplan
+	#
+	# @return  Returns a list of tuples, each an edges as vertex indices
+	#
+	def compute_boundary_edges(self):
+		
+		# put edges into a list
+		all_edges = []
+		for (i,j,k) in self.tris:
+			# record all edges
+			all_edges.append((i,j))
+			all_edges.append((j,k))
+			all_edges.append((k,i))
+			
+		boundary_edges = []
+		for (i,j) in all_edges:
+			# check if the opposing edge exists
+			if (j,i) not in all_edges:
+				boundary_edges.append((i,j))
+
+		# return boundary edges
+		return boundary_edges
+
