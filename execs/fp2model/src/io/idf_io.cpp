@@ -323,9 +323,9 @@ void writewalls(ofstream& outfile, const building_model_t& bm,
 				/* export remainder of wall */
 				writesubwall(outfile, wx[2], wy[2],
 					bm.floorplan.verts[
-						edge_list[i].verts[0]].x,
+						edge_list[i].verts[1]].x,
 					bm.floorplan.verts[
-						edge_list[i].verts[0]].y,
+						edge_list[i].verts[1]].y,
 					r.min_z, r.max_z, wallname_ss.str(),
 					zonename);
 			}
