@@ -177,7 +177,7 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		outfile << "    "
 		        << bm.floorplan.verts[boundary_list[0][i]].x << "," 
 		        << bm.floorplan.verts[boundary_list[0][i]].y << ","
-		        << bm.floorplan.verts[boundary_list[0][i]].min_z
+		        << r.min_z
 			<< (i == n-1 ? ";" : ",")
 			<< "   !- Vertex " << i << " {m}" << endl;
 	}
@@ -205,7 +205,7 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		outfile << "    "
 		   << bm.floorplan.verts[boundary_list[0][i-1]].x << "," 
 		   << bm.floorplan.verts[boundary_list[0][i-1]].y << ","
-		   << bm.floorplan.verts[boundary_list[0][i-1]].max_z
+		   << r.max_z
 		   << (i == 1 ? ";" : ",")
 		   << "   !- Vertex " << (n-i) << " {m}" << endl;
 	}
