@@ -21,6 +21,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/octree/tree_exporter.cpp \
 		$(SOURCEDIR)io/octree/vox_writer.cpp \
+		$(SOURCEDIR)geometry/octree/octtopo.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
@@ -38,6 +39,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/octree/tree_exporter.h \
 		$(SOURCEDIR)io/octree/vox_writer.h \
+		$(SOURCEDIR)geometry/octree/octtopo.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \

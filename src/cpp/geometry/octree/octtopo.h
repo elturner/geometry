@@ -20,6 +20,8 @@
 
 #include "octree.h"
 #include "octnode.h"
+#include <iostream>
+#include <string>
 #include <vector>
 #include <map>
 
@@ -57,10 +59,31 @@ namespace octtopo
 	};
 
 	/**
+	 * This is a list of all faces on a cube, for easy iteration
+	 */
+	static const CUBE_FACE all_cube_faces[NUM_FACES_PER_CUBE]
+		= { FACE_ZMINUS, FACE_YMINUS, FACE_XMINUS,
+		    FACE_XPLUS,  FACE_YPLUS,  FACE_ZPLUS };
+
+	/**
 	 * This function is a look-up table for opposing faces on the cube
 	 */
 	static inline CUBE_FACE get_opposing_face(CUBE_FACE f)
-	{ return (NUM_FACES_PER_CUBE - 1 - f); };
+	{
+		/* return the opposing face */
+		switch(f)
+		{
+			case FACE_ZMINUS:	return FACE_ZPLUS;
+			case FACE_YMINUS:	return FACE_YPLUS;
+			case FACE_XMINUS:	return FACE_XPLUS;
+			case FACE_XPLUS:	return FACE_XMINUS;
+			case FACE_YPLUS:	return FACE_YMINUS;
+			case FACE_ZPLUS:	return FACE_ZMINUS;
+		}
+
+		/* will never get here */
+		return f;
+	};
 
 	/*-----------------------------------------------------*/
 	/*-------------- class declarations -------------------*/
@@ -85,6 +108,15 @@ namespace octtopo
 		/* functions */
 		public:
 
+			/*-----------*/
+			/* modifiers */
+			/*-----------*/
+
+			/**
+			 * Clears all neighbor info
+			 */
+			void clear();
+
 			/**
 			 * Adds a neighbor to this structure
 			 *
@@ -95,10 +127,29 @@ namespace octtopo
 			 * @param f   The face on which n neighbors
 			 */
 			inline void add(octnode_t* n, CUBE_FACE f)
-			{ 
-				this->neighs[f].push_back(n);
+			{
+				/* ignore if pointer is null */
+				if(n != NULL)
+					this->neighs[f].push_back(n);
 			};
-	
+
+			/**
+			 * Adds all neighbors to this structure
+			 *
+			 * Given a list of neighbors and a face direction,
+			 * will store the neighbors appropriately in this
+			 * object.
+			 *
+			 * @param ns  The neighboring nodes to store
+			 * @param f   The face on which ns neighbor
+			 */
+			void add_all(const std::vector<octnode_t*>& ns,
+			             CUBE_FACE f);
+
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
 			/**
 			 * Gets the neighbors for a particular face
 			 *
@@ -112,12 +163,49 @@ namespace octtopo
 			 * @param ns  The vector to modify
 			 */
 			inline void get(CUBE_FACE f,
-					std::vector<octnode*>& ns) const
+					std::vector<octnode_t*>& ns) const
 			{ 
 				ns.insert(ns.end(), 
 					this->neighs[f].begin(), 
 					this->neighs[f].end());
 			};
+
+			/**
+			 * Gets all 'singleton' neighbors
+			 *
+			 * A singleton neighbor is one where there is
+			 * exactly one neighbor on a given face.  Any
+			 * non-leaf node should have all its neighbors
+			 * as singletons (assuming the neighbors exist).
+			 *
+			 * Here, if a neighbor is non-singleton (either
+			 * because there are multiple neighbors on a face
+			 * or because there are no neighbors), then the
+			 * face index is populated with NULL.
+			 *
+			 * @param ns    The array of neighbors to populate,
+			 *              indexed by face.
+			 */
+			void get_singletons(
+				octnode_t* ns[NUM_FACES_PER_CUBE]) const;
+
+			/*-----------*/
+			/* operators */
+			/*-----------*/
+
+			/**
+			 * Copies values from given neighbor object to this
+			 *
+			 * Will destroy any existing info in this object
+			 * and replace it with a copy of the info in the
+			 * given octneighbors_t object.
+			 *
+			 * @param other   The object to copy
+			 *
+			 * @return        A reference to the modified object
+			 */
+			octneighbors_t& operator = 
+					(const octneighbors_t& other);
 	};
 
 	/**
@@ -146,7 +234,85 @@ namespace octtopo
 			 */
 			void init(const octree_t& tree);
 
-			// TODO
+
+			/*-----------*/
+			/* debugging */
+			/*-----------*/
+
+			/**
+			 * Writes boundary faces to Wavefront OBJ format
+			 *
+			 * Given an output file path, will export the faces
+			 * of internal nodes (as measured by 
+			 * octdata->is_interior()) that border with external
+			 * nodes (or null nodes).  The output will be
+			 * formatted as a wavefront .obj file.
+			 *
+			 * @param os   The output file location
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
+			 */
+			int writeobj(const std::string& filename) const;
+
+		/* helper functions */
+		private:
+
+			/**
+			 * Recursively initializes neighbors of children
+			 *
+			 * Given an octnode with valid neighbors in the
+			 * this->neighs map, will generate neighbor mappings
+			 * for the children of this node recursively.
+			 *
+			 * @param node   The node to analyze
+			 */
+			void init_children(octnode_t* node);
+	
+			/**
+			 * Removes all elements that do not represent leafs
+			 *
+			 * Will remove all neighbor objects from this
+			 * object's map that are not associated with leaf
+			 * nodes in the given tree.  This saves space,
+			 * since often we only care about the neighbor
+			 * relations on leaf nodes.
+			 */
+			void remove_nonleafs();
+	
+			/*-----------*/
+			/* debugging */
+			/*-----------*/
+
+			/**
+			 * Checks the invarients of the stored data
+			 *
+			 * Will iterate through all properties of the
+			 * stored data, checking if any elements are
+			 * inconsistent.  If an error is encountered,
+			 * the details will be printed to cerr and 
+			 * a unique value will be returned.
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int verify() const;
+	
+			/**
+			 * Writes a single node face to the OBJ stream
+			 *
+			 * Given an output stream to a wavefront OBJ file,
+			 * will export a single voxel face to that stream.
+			 *
+			 * The face will be written counter-clockwise into
+			 * the node.
+			 *
+			 * @param os   The output stream to write to
+			 * @param n    The node whose face should be written
+			 * @param f    The face to write
+			 */
+			void writeobjface(std::ostream& os, octnode_t* n,
+			                  CUBE_FACE f) const;
 	};
 }
 
