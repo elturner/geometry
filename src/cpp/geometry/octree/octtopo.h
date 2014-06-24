@@ -50,12 +50,12 @@ namespace octtopo
 	 */
 	enum CUBE_FACE
 	{
-		FACE_ZMINUS =  0,
-		FACE_YMINUS =  1,
-		FACE_XMINUS =  2,
-		FACE_XPLUS  =  3,
-		FACE_YPLUS  =  4,
-		FACE_ZPLUS  =  5,
+		FACE_ZMINUS,
+		FACE_YMINUS,
+		FACE_XMINUS,
+		FACE_XPLUS,
+		FACE_YPLUS,
+		FACE_ZPLUS
 	};
 
 	/**
@@ -268,7 +268,23 @@ namespace octtopo
 			 * @param node   The node to analyze
 			 */
 			void init_children(octnode_t* node);
-	
+
+			/**
+			 * Retrieves nodes at child level given parent node
+			 *
+			 * Given a node, will retrieve pointers to its
+			 * children.  If the parent node is a leaf, then
+			 * all child pointers will refer to the original
+			 * parent node.  If the parent node is null, then
+			 * the children will also be null.
+			 *
+			 * @param cs   Where to store the child pointers
+			 * @param p    The parent node
+			 */
+			static void get_children_of(
+				octnode_t* cs[CHILDREN_PER_NODE], 
+				octnode_t* p);
+
 			/**
 			 * Removes all elements that do not represent leafs
 			 *

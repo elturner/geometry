@@ -2,6 +2,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
+#include <geometry/octree/octtopo.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
 #include <cmath>
@@ -175,7 +176,15 @@ int tree_exporter::export_exterior_cubes_to_obj(const string& filename,
                                                 const octree_t& tree)
 {
 	ofstream outfile;
-	
+	tictoc_t clk;
+
+	// TODO DEBUGGING
+	octtopo::octtopo_t top;
+	tic(clk);
+	top.init(tree);
+	top.writeobj(string("/home/elturner/Desktop/boundary_dots.obj"));
+	toc(clk, "Initializing topology");
+
 	/* open file for writing */
 	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
@@ -190,7 +199,9 @@ int tree_exporter::export_exterior_cubes_to_obj(const string& filename,
 		<< "# data stored in that tree." << endl << endl;
 
 	/* export to file */
+	tic(clk);
 	export_exterior_cubes_to_obj_recur(outfile, tree.get_root());
+	toc(clk, "Exporting exterior cubes");
 
 	/* clean up */
 	outfile.close();

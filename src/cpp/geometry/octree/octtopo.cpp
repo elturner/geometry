@@ -115,10 +115,8 @@ int octtopo_t::writeobj(const string& filename) const
 	/* iterate through the nodes */
 	for(it = this->neighs.begin(); it != this->neighs.end(); it++)
 	{
-		/* check if leaf and interior */
+		/* only proceed if leaf */
 		if(it->first->data == NULL)
-			continue;
-		if(!(it->first->data->is_interior()))
 			continue;
 
 		/* iterate over faces, looking for exterior neighbors */
@@ -131,17 +129,22 @@ int octtopo_t::writeobj(const string& filename) const
 			/* check for external nodes */
 			for(nit = ns.begin(); nit != ns.end(); nit++)
 			{
-				/* ignore if interior or non-leaf */
+				/* ignore if interior or non-boundary */
 				if((*nit)->data == NULL)
 					continue;
-				if((*nit)->data->is_interior())
+				if((*nit)->data->is_interior()
+					== it->first->data->is_interior())
 					continue;
 
-				/* neighbor is exterior, so export face */
+				/* neighbor marks boundary, 
+				 * so export face */
 				this->writeobjface(outfile, it->first,
 				                   all_cube_faces[fi]);
 			}
-			if(ns.empty())
+
+			/* check if it is an interior node against 
+			 * null space */
+			if(ns.empty() && it->first->data->is_interior())
 				this->writeobjface(outfile, it->first,
 				                   all_cube_faces[fi]);
 		}
@@ -174,20 +177,20 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n, CUBE_FACE f) const
 			os << "v " <<  c(0) 
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)-hw) 
-			    << "128 0 0" << endl
+			    << " 128 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)+hw)
-			    << "128 0 0" << endl
+			    << " 128 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)+hw)
-			    << "128 0 0" << endl
+			    << " 128 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)-hw)
-			    << "128 0 0" << endl
-			   << "f -4 -3 -2 -1" << endl;
+			    << " 128 0 0" << endl
+			   << "f -1 -2 -3 -4" << endl;
 			break;
 		case FACE_XPLUS:
 			/* write face */
@@ -195,20 +198,20 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n, CUBE_FACE f) const
 			os << "v " <<  c(0) 
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)-hw) 
-			    << "255 0 0" << endl
+			    << " 255 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)+hw)
-			    << "255 0 0" << endl
+			    << " 255 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)+hw)
-			    << "255 0 0" << endl
+			    << " 255 0 0" << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)-hw)
-			    << "255 0 0" << endl
-			   << "f -1 -2 -3 -4" << endl;
+			    << " 255 0 0" << endl
+			   << "f -4 -3 -2 -1" << endl;
 			break;
 		case FACE_YMINUS:
 			/* write face */
@@ -216,19 +219,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n, CUBE_FACE f) const
 			os << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw) 
-			    << "0 128 0" << endl
+			    << " 0 128 0" << endl
 			   << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << "0 128 0" << endl
+			    << " 0 128 0" << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << "0 128 0" << endl
+			    << " 0 128 0" << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw)
-			    << "0 128 0" << endl
+			    << " 0 128 0" << endl
 			   << "f -4 -3 -2 -1" << endl;
 			break;
 		case FACE_YPLUS:
@@ -237,19 +240,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n, CUBE_FACE f) const
 			os << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw) 
-			    << "0 255 0" << endl
+			    << " 0 255 0" << endl
 			   << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << "0 255 0" << endl
+			    << " 0 255 0" << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << "0 255 0" << endl
+			    << " 0 255 0" << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw)
-			    << "0 255 0" << endl
+			    << " 0 255 0" << endl
 			   << "f -1 -2 -3 -4" << endl;
 			break;
 		case FACE_ZMINUS:
@@ -258,40 +261,40 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n, CUBE_FACE f) const
 			os << "v " << (c(0)-hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2) 
-			    << "0 0 128" << endl
+			    << " 0 0 128" << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2)
-			    << "0 0 128" << endl
+			    << " 0 0 128" << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << "0 0 128" << endl
+			    << " 0 0 128" << endl
 			   << "v " << (c(0)-hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << "0 0 128" << endl
+			    << " 0 0 128" << endl
 			   << "f -4 -3 -2 -1" << endl;
 			break;
 		case FACE_ZPLUS:
 			/* write face */
-			c(0) += hw;
+			c(2) += hw;
 			os << "v " << (c(0)-hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2) 
-			    << "0 0 255" << endl
+			    << " 0 0 255" << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2)
-			    << "0 0 255" << endl
+			    << " 0 0 255" << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << "0 0 255" << endl
+			    << " 0 0 255" << endl
 			   << "v " << (c(0)-hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << "0 0 255" << endl
+			    << " 0 0 255" << endl
 			   << "f -1 -2 -3 -4" << endl;
 			break;
 	}
@@ -301,8 +304,12 @@ void octtopo_t::init_children(octnode_t* node)
 {
 	octneighbors_t ns[CHILDREN_PER_NODE];
 	octnode_t* uncles[NUM_FACES_PER_CUBE];
-	vector<octnode_t*> all_uncs;
+	octnode_t* cousins[CHILDREN_PER_NODE];
 	unsigned int i;
+
+	/* only need to process if given node is non-leaf */
+	if(node->isleaf())
+		return;
 
 	/* get all existing neighbors of current node */
 	this->neighs[node].get_singletons(uncles);
@@ -369,124 +376,46 @@ void octtopo_t::init_children(octnode_t* node)
 	/* external linkages to other nodes on current level */
 	
 	/* cousins x-plus */
-	if(uncles[FACE_XPLUS]) 
-	{
-		ns[0].add(uncles[FACE_XPLUS]->children[1], FACE_XPLUS);
-		ns[3].add(uncles[FACE_XPLUS]->children[2], FACE_XPLUS);
-		ns[4].add(uncles[FACE_XPLUS]->children[5], FACE_XPLUS);
-		ns[7].add(uncles[FACE_XPLUS]->children[6], FACE_XPLUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_XPLUS, all_uncs);
-		ns[0].add_all(all_uncs, FACE_XPLUS);
-		ns[3].add_all(all_uncs, FACE_XPLUS);
-		ns[4].add_all(all_uncs, FACE_XPLUS);
-		ns[7].add_all(all_uncs, FACE_XPLUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_XPLUS]);
+	ns[0].add(cousins[1], FACE_XPLUS);
+	ns[3].add(cousins[2], FACE_XPLUS);
+	ns[4].add(cousins[5], FACE_XPLUS);
+	ns[7].add(cousins[6], FACE_XPLUS);
 
 	/* cousins x-minus */
-	if(uncles[FACE_XMINUS]) 
-	{
-		ns[1].add(uncles[FACE_XMINUS]->children[0], FACE_XMINUS);
-		ns[2].add(uncles[FACE_XMINUS]->children[3], FACE_XMINUS);
-		ns[5].add(uncles[FACE_XMINUS]->children[4], FACE_XMINUS);
-		ns[6].add(uncles[FACE_XMINUS]->children[7], FACE_XMINUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_XMINUS, all_uncs);
-		ns[1].add_all(all_uncs, FACE_XMINUS);
-		ns[2].add_all(all_uncs, FACE_XMINUS);
-		ns[5].add_all(all_uncs, FACE_XMINUS);
-		ns[6].add_all(all_uncs, FACE_XMINUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_XMINUS]);
+	ns[1].add(cousins[0], FACE_XMINUS);
+	ns[2].add(cousins[3], FACE_XMINUS);
+	ns[5].add(cousins[4], FACE_XMINUS);
+	ns[6].add(cousins[7], FACE_XMINUS);
 	
 	/* cousins y-plus */
-	if(uncles[FACE_YPLUS]) 
-	{
-		ns[0].add(uncles[FACE_YPLUS]->children[3], FACE_YPLUS);
-		ns[1].add(uncles[FACE_YPLUS]->children[2], FACE_YPLUS);
-		ns[4].add(uncles[FACE_YPLUS]->children[7], FACE_YPLUS);
-		ns[5].add(uncles[FACE_YPLUS]->children[6], FACE_YPLUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_YPLUS, all_uncs);
-		ns[0].add_all(all_uncs, FACE_YPLUS);
-		ns[1].add_all(all_uncs, FACE_YPLUS);
-		ns[4].add_all(all_uncs, FACE_YPLUS);
-		ns[5].add_all(all_uncs, FACE_YPLUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_YPLUS]);
+	ns[0].add(cousins[3], FACE_YPLUS);
+	ns[1].add(cousins[2], FACE_YPLUS);
+	ns[4].add(cousins[7], FACE_YPLUS);
+	ns[5].add(cousins[6], FACE_YPLUS);
 	
 	/* cousins y-minus */
-	if(uncles[FACE_YMINUS]) 
-	{
-		ns[3].add(uncles[FACE_YMINUS]->children[0], FACE_YMINUS);
-		ns[2].add(uncles[FACE_YMINUS]->children[1], FACE_YMINUS);
-		ns[7].add(uncles[FACE_YMINUS]->children[4], FACE_YMINUS);
-		ns[6].add(uncles[FACE_YMINUS]->children[5], FACE_YMINUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_YMINUS, all_uncs);
-		ns[3].add_all(all_uncs, FACE_YMINUS);
-		ns[2].add_all(all_uncs, FACE_YMINUS);
-		ns[7].add_all(all_uncs, FACE_YMINUS);
-		ns[6].add_all(all_uncs, FACE_YMINUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_YMINUS]);
+	ns[3].add(cousins[0], FACE_YMINUS);
+	ns[2].add(cousins[1], FACE_YMINUS);
+	ns[7].add(cousins[4], FACE_YMINUS);
+	ns[6].add(cousins[5], FACE_YMINUS);
 	
 	/* cousins z-plus */
-	if(uncles[FACE_ZPLUS]) 
-	{
-		ns[0].add(uncles[FACE_ZPLUS]->children[4], FACE_ZPLUS);
-		ns[1].add(uncles[FACE_ZPLUS]->children[5], FACE_ZPLUS);
-		ns[2].add(uncles[FACE_ZPLUS]->children[6], FACE_ZPLUS);
-		ns[3].add(uncles[FACE_ZPLUS]->children[7], FACE_ZPLUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_ZPLUS, all_uncs);
-		ns[0].add_all(all_uncs, FACE_ZPLUS);
-		ns[1].add_all(all_uncs, FACE_ZPLUS);
-		ns[2].add_all(all_uncs, FACE_ZPLUS);
-		ns[3].add_all(all_uncs, FACE_ZPLUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_ZPLUS]);
+	ns[0].add(cousins[4], FACE_ZPLUS);
+	ns[1].add(cousins[5], FACE_ZPLUS);
+	ns[2].add(cousins[6], FACE_ZPLUS);
+	ns[3].add(cousins[7], FACE_ZPLUS);
 	
 	/* cousins z-minus */
-	if(uncles[FACE_ZMINUS]) 
-	{
-		ns[4].add(uncles[FACE_ZMINUS]->children[0], FACE_ZMINUS);
-		ns[5].add(uncles[FACE_ZMINUS]->children[1], FACE_ZMINUS);
-		ns[6].add(uncles[FACE_ZMINUS]->children[2], FACE_ZMINUS);
-		ns[7].add(uncles[FACE_ZMINUS]->children[3], FACE_ZMINUS);
-	}
-	else
-	{
-		/* if got here, this node may be deeper than neighboring
-		 * nodes, so add uncles as cousins */
-		all_uncs.clear();
-		this->neighs[node].get(FACE_ZMINUS, all_uncs);
-		ns[4].add_all(all_uncs, FACE_ZMINUS);
-		ns[5].add_all(all_uncs, FACE_ZMINUS);
-		ns[6].add_all(all_uncs, FACE_ZMINUS);
-		ns[7].add_all(all_uncs, FACE_ZMINUS);
-	}
+	octtopo_t::get_children_of(cousins, uncles[FACE_ZMINUS]);
+	ns[4].add(cousins[0], FACE_ZMINUS);
+	ns[5].add(cousins[1], FACE_ZMINUS);
+	ns[6].add(cousins[2], FACE_ZMINUS);
+	ns[7].add(cousins[3], FACE_ZMINUS);
 
 	/* For each child, check if it exists and pair it appropriately
 	 * with the populated neighbor object
@@ -505,9 +434,27 @@ void octtopo_t::init_children(octnode_t* node)
 	}
 }
 			
+void octtopo_t::get_children_of(octnode_t* cs[CHILDREN_PER_NODE], 
+					octnode_t* p)
+{
+	size_t i;
+
+	/* iterate over child pointers */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* check if no children exist */
+		if(p == NULL || p->isleaf())
+			cs[i] = p; /* store parent */
+		else /* at least some children exist */
+			cs[i] = p->children[i]; /* store child */
+	}
+}
+			
 void octtopo_t::remove_nonleafs()
 {
 	map<octnode_t*, octneighbors_t>::iterator it;
+
+	// TODO do i need to check for mappings to remove?
 
 	/* remove the non-leaf nodes in the map */
 	for(it = this->neighs.begin(); it != this->neighs.end(); )
