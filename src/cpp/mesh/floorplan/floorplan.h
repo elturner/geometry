@@ -713,6 +713,17 @@ namespace fp
 			 * @return   Returns the total area of the floorplan
 			 */
 			double compute_total_area() const;
+
+			/**
+			 * Snaps elevation of all room floors to same height
+			 *
+			 * Will modify the geometry of this floorplan so
+			 * that all rooms will have floors at the same
+			 * elevation.  This elevation will be chosen by
+			 * taking the weighted average of floor elevations,
+			 * weighted based on room area.
+			 */
+			void snap_room_floors();
 	};
 }
 

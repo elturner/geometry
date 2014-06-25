@@ -37,6 +37,9 @@ int main(int argc, char** argv)
 		return 2;
 	}
 	
+	/* make minor changes to floorplan for exporting */
+	bim.floorplan.snap_room_floors();
+	
 	/* write the data to specified output */
 	ret = export_data(bim, conf);
 	if(ret)

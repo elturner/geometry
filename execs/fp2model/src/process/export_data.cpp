@@ -69,7 +69,7 @@ int export_data(const building_model_t& bim, const config_t& conf)
 	/* export idf files */
 	n = conf.outfile_idf.size();
 	for(i = 0; i < n; i++)
-	{
+	{	
 		/* export to this idf file */
 		ret = writeidf(conf.outfile_idf[i], bim);
 		if(ret)

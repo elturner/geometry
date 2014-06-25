@@ -223,7 +223,6 @@ void writewalls(ofstream& outfile, const building_model_t& bm,
 	double wx[NUM_VERTS_PER_RECT];
 	double wy[NUM_VERTS_PER_RECT];
 	double wz[NUM_VERTS_PER_RECT];
-	double px, py;
 
 	/* get boundary of this room */
 	bm.floorplan.compute_edges_for_room(edge_list, r.ind);
@@ -240,95 +239,25 @@ void writewalls(ofstream& outfile, const building_model_t& bm,
 		/* check if this wall has windows */
 		wins.clear();
 		bm.windows.get_windows_for(edge_list[i], wins);
-
-		/* check trivial case */
 		num_wins = wins.size();
-		if(num_wins == 0)
-		{
-			/* write a standard wall */
-			writesubwall(outfile,
-				bm.floorplan.verts[edge_list[i].verts[0]].x,
-				bm.floorplan.verts[edge_list[i].verts[0]].y,
-				bm.floorplan.verts[edge_list[i].verts[1]].x,
-				bm.floorplan.verts[edge_list[i].verts[1]].y,
-				r.min_z, r.max_z, wallname, zonename);
-			continue;
-		}
 
-		/* since this wall contains windows, we need to break
-		 * it up into multiple surfaces, since IDF cannot handle
-		 * surfaces with holes in them.
-		 *
-		 * In order to efficiently split the wall, we want to
-		 * sort the windows by position.  NOTE: this process
-		 * assumes the windows do not overlap horizontally, which
-		 * would occur if one window was above another. */
-		sort(wins.begin(), wins.end());
-
-		/* write portion of wall before first window */
-		wallname_ss.str("");
-		wallname_ss << wallname << "_sub" << 0;
-		wins[0].get_world_coords(wx,wy,wz,bm.floorplan);
+		/* write a standard wall */
 		writesubwall(outfile,
 			bm.floorplan.verts[edge_list[i].verts[0]].x,
 			bm.floorplan.verts[edge_list[i].verts[0]].y,
-			wx[2],wy[2],r.min_z,r.max_z,
-			wallname_ss.str(), zonename);
+			bm.floorplan.verts[edge_list[i].verts[1]].x,
+			bm.floorplan.verts[edge_list[i].verts[1]].y,
+			r.min_z, r.max_z, wallname, zonename);
 
-		/* write portions of wall around each window */
+		/* write each window, overlapping the wall geometry */
 		for(j = 0; j < num_wins; j++)
 		{
-			/* the j'th window geometry is already
-			 * loaded into the arrays wx, wy, wz */
-
-			/* write portion of wall below window */
-			wallname_ss.str("");
-			wallname_ss << wallname << "_sub" << (1+3*j);
-			writesubwall(outfile,wx[0],wy[0],wx[2],wy[2],
-					r.min_z,wz[0],
-					wallname_ss.str(), zonename);
+			/* get window geometry */
+			wins[j].get_world_coords(wx, wy, wz, bm.floorplan);
 
 			/* write window geometry */
 			writewindow(outfile,wx[0],wy[0],wx[2],wy[2],
 					wz[0],wz[1],j,wallname);
-
-			/* write portion of wall above window */
-			wallname_ss.str("");
-			wallname_ss << wallname << "_sub" << (2+3*j);
-			writesubwall(outfile,wx[0],wy[0],wx[2],wy[2],
-					wz[1],r.max_z,
-					wallname_ss.str(), zonename);
-
-			/* write portion of wall between this window
-			 * and the next window */
-			wallname_ss.str("");
-			wallname_ss << wallname << "_sub" << (3+3*j);
-			if(j+1 < num_wins)
-			{
-				/* get geometry of next window and save
-				 * position of the current window */
-				px = wx[2];
-				py = wy[2];
-				wins[j+1].get_world_coords(wx,wy,wz,
-						bm.floorplan);
-				
-				/* export subwall between windows */
-				writesubwall(outfile,px,py,wx[0],wy[0],
-						r.min_z,r.max_z,
-						wallname_ss.str(),
-						zonename);
-			}
-			else
-			{
-				/* export remainder of wall */
-				writesubwall(outfile, wx[2], wy[2],
-					bm.floorplan.verts[
-						edge_list[i].verts[1]].x,
-					bm.floorplan.verts[
-						edge_list[i].verts[1]].y,
-					r.min_z, r.max_z, wallname_ss.str(),
-					zonename);
-			}
 		}
 	}
 }

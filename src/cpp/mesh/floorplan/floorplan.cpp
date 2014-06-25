@@ -1,4 +1,5 @@
 #include "floorplan.h"
+#include <iostream>
 #include <vector>
 #include <map>
 #include <set>
@@ -248,6 +249,34 @@ double floorplan_t::compute_total_area() const
 	
 	/* return the total area of all rooms */
 	return area;
+}
+			
+void floorplan_t::snap_room_floors()
+{
+	double area, elev, avg, sum;
+	size_t vi, ri, num_verts, num_rooms;
+
+	/* get all the floor heights from each room */
+	num_rooms = this->rooms.size();
+	avg = sum = 0.0;
+	for(ri = 0; ri < num_rooms; ri++)
+	{
+		/* add this room to our weighted average */
+		area = this->compute_room_area(ri);
+		elev = this->rooms[ri].min_z;
+		avg += area*elev;
+		sum += area;
+	}
+	avg /= sum;
+
+	/* update all rooms to have the same floor */
+	for(ri = 0; ri < num_rooms; ri++)
+		this->rooms[ri].min_z = avg;
+	
+	/* update all vertices with the new height */
+	num_verts = this->verts.size();
+	for(vi = 0; vi < num_verts; vi++)
+		this->verts[vi].min_z = avg;
 }
 
 /********* VERTEX_T FUNCTIONS ****************/
