@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 /**
  * @file   noisypath_run_settings.cpp
@@ -26,6 +27,7 @@ using namespace std;
 
 #define LINEAR_SIGMA_FLAG   "--lin_sigma" /* constant linear uncertainty */
 #define ROTATION_SIGMA_FLAG "--rot_sigma" /* constant rot. uncertainty */
+#define DEGREES_FLAG        "--degrees"   /* specify rotation in degrees */
 
 /* file extensions to check for */
 
@@ -57,10 +59,15 @@ int noisypath_run_settings_t::parse(int argc, char** argv)
 			"information as well as the deterministic path.");
 	args.add(LINEAR_SIGMA_FLAG, "Specifies the constant-value standard "
 			"deviation to assume for the positional "
-			"distrubition for each pose.", true, 1);
+			"distrubition for each pose. Units: meters.", 
+			true, 1);
 	args.add(ROTATION_SIGMA_FLAG, "Specifies the constant-value "
 			"standard deviation to assume for the rotational "
-			"orientation distribution for each pose.", true, 1);
+			"orientation distribution for each pose. Units: "
+			"radians.", true, 1);
+	args.add(DEGREES_FLAG, "If present, then will assume the value "
+			"specified by the " ROTATION_SIGMA_FLAG " flag is "
+			"specified in degrees, not radians.", true, 0);
 	args.add_required_file_type(MAD_FILE_EXT, 0,
 			"The input .mad file specifies the deterministic "
 			"3D localization output information.");
@@ -100,8 +107,15 @@ int noisypath_run_settings_t::parse(int argc, char** argv)
 	else
 		this->linear_sigma = -1.0; /* specified as invalid */
 	if(args.tag_seen(ROTATION_SIGMA_FLAG))
+	{
+		/* get value */
 		this->rotational_sigma = args.get_val_as<double>(
 				ROTATION_SIGMA_FLAG);
+	
+		/* check units */
+		if(args.tag_seen(DEGREES_FLAG))
+			this->rotational_sigma *= (M_PI / 180.0);
+	}
 	else
 		this->rotational_sigma = -1.0; /* specified as invalid */
 
