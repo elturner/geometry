@@ -59,11 +59,11 @@ int noisypath_run_settings_t::parse(int argc, char** argv)
 			"information as well as the deterministic path.");
 	args.add(LINEAR_SIGMA_FLAG, "Specifies the constant-value standard "
 			"deviation to assume for the positional "
-			"distrubition for each pose. Units: meters.", 
+			"distrubition for each pose.\n\nUnits: meters.",
 			true, 1);
 	args.add(ROTATION_SIGMA_FLAG, "Specifies the constant-value "
 			"standard deviation to assume for the rotational "
-			"orientation distribution for each pose. Units: "
+			"orientation distribution for each pose.\n\nUnits: "
 			"radians.", true, 1);
 	args.add(DEGREES_FLAG, "If present, then will assume the value "
 			"specified by the " ROTATION_SIGMA_FLAG " flag is "

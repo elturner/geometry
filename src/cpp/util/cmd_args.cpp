@@ -400,7 +400,26 @@ void cmd_args_t::write_line_with_indent(const std::string& line,
 	stringstream ss;
 	string to_print;
 	int i;
-	size_t p;
+	size_t p, newline;
+
+	/* first, check for new lines in this input */
+	newline = line.find_first_of('\n');
+	if(newline != string::npos && newline < line.size()-1)
+	{
+		/* there exists a newline in the middle of
+		 * this input, so we write it as multiple lines */
+		to_print = line.substr(0, newline+1); /* include newline */
+		cmd_args_t::write_line_with_indent(to_print, indent);
+
+		/* write remainder of input */
+		for(i = 0; i < indent; i++)
+			ss << " ";
+		ss << line.substr(newline+1);
+		cmd_args_t::write_line_with_indent(ss.str(), indent);
+		
+		/* we're done here */
+		return;
+	}
 
 	/* check base case */
 	if(line.size() <= STANDARD_PAGE_WIDTH)
