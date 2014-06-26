@@ -139,6 +139,28 @@ class cell_graph_t
 	 */
 	int simplify(tri_rep_t& trirep, double threshold);
 
+	/* remove_sharps:
+	 *
+	 * 	Will simplify the graph by removing sharp protrusions
+	 * 	from the boundary, which are likely to be artifacts and
+	 * 	not accurate geometry.
+	 *
+	 * 	These protrusions are found by performing a threshold
+	 * 	against a minimum valid angle between the edges of
+	 * 	the vertex in question.  Such vertices are removed
+	 * 	from both this structure and the trirep structure.
+	 *
+	 * arguments:
+	 *
+	 * 	trirep -	The spawning triangulation topology
+	 * 	threshold -	The angle threshold, in radians.
+	 *
+	 * return value:
+	 *
+	 * 	Returns zero on success, non-zero on failure.
+	 */
+	int remove_sharps(tri_rep_t& trirep, double threshold);
+
 	/* union operations */
 
 	/* union_find:

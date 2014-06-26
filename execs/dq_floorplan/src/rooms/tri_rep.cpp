@@ -1359,7 +1359,7 @@ int tri_rep_t::remove_interroom_columns(double thresh)
 	/* success */
 	return 0;
 }
-
+	
 void tri_rep_t::find_local_max()
 {
 	set<triple_t> nonextrema;
