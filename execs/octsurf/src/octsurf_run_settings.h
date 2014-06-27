@@ -62,6 +62,13 @@ class octsurf_run_settings_t
 		 */
 		bool export_obj_leafs;
 
+		/**
+		 * If exporting to OBJ, this option indicates whether
+		 * to export boundary leaf faces without any additional
+		 * surface reconstruction.
+		 */
+		bool export_node_faces;
+
 	/* functions */
 	public:
 

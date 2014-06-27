@@ -21,6 +21,22 @@
 namespace tree_exporter
 {
 	/**
+	 * Will export boundary leaf faces to OBJ file
+	 *
+	 * Will export the boundary faces of the octree leaf nodes that
+	 * divide interior and exterior nodes.  These faces will be
+	 * exported without any additional surface reconstruction, and
+	 * will render a discretized, cubist surface.
+	 *
+	 * @param filename    The path to the .obj file to write
+	 * @param tree        The tree to export
+	 *
+	 * @return            Returns zero on success, non-zero on failure.
+	 */
+	int export_node_faces(const std::string& filename,
+	                      const octree_t& tree);
+	
+	/**
 	 * Will export the center of each leaf node as a vertex in OBJ
 	 *
 	 * This function will generate a Wavefront OBJ file that contains

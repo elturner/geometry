@@ -3,6 +3,7 @@
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
+#include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
 #include <cmath>
@@ -26,6 +27,31 @@ using namespace std;
 using namespace Eigen;
 
 /* function implementations */
+	
+int tree_exporter::export_node_faces(const string& filename,
+                                     const octree_t& tree)
+{
+	octtopo::octtopo_t top;
+	tictoc_t clk;
+	int ret;
+
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Initializing topology");
+
+	/* export the boundary topology to file */
+	tic(clk);
+	ret = top.writeobj(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+	toc(clk, "Exporting boundary faces");
+
+	/* success */
+	return 0;
+}
 
 /**
  * Helper function used to export leaf center to OBJ file
@@ -177,13 +203,6 @@ int tree_exporter::export_exterior_cubes_to_obj(const string& filename,
 {
 	ofstream outfile;
 	tictoc_t clk;
-
-	// TODO DEBUGGING
-	octtopo::octtopo_t top;
-	tic(clk);
-	top.init(tree);
-	top.writeobj(string("/home/elturner/Desktop/boundary_dots.obj"));
-	toc(clk, "Initializing topology");
 
 	/* open file for writing */
 	outfile.open(filename.c_str());

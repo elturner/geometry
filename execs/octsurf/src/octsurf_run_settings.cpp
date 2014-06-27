@@ -28,6 +28,7 @@ using namespace std;
 #define SETTINGS_FLAG     "-s" /* program-specific settings (.xml) */
 #define OUTPUT_FLAG       "-o" /* where to store the output file */
 #define EXPORT_LEAFS_FLAG "-l" /* export leafs to OBJ */
+#define EXPORT_FACES_FLAG "--node_faces" /* export node faces to OBJ */
 
 /* file extensions to check for */
 
@@ -75,6 +76,12 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"ignored if the output file is not .obj.  If this "
 			"flag is not present, then a mesh will be exported "
 			"to the file.", true, 0);
+	args.add(EXPORT_FACES_FLAG, "If present, this flag indicates that "
+			"the output mesh should be the boundary leaf node "
+			"faces without any surface reconstruction.  This "
+			"flag will be ignored if the output file is not "
+			".obj.  If this flag is not present, then the "
+			"mesh will be processed normally.", true, 0);
 	args.add_required_file_type(OCT_FILE_EXT, 1,
 			"The input octree files.  These represent the "
 			"volume information of the scanned environment, and"
@@ -95,10 +102,11 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-	this->outfile = args.get_val(OUTPUT_FLAG);
+	this->outfile           = args.get_val(OUTPUT_FLAG);
 	this->output_format 
 		= octsurf_run_settings_t::get_format(this->outfile);
-	this->export_obj_leafs = args.tag_seen(EXPORT_LEAFS_FLAG);
+	this->export_obj_leafs  = args.tag_seen(EXPORT_LEAFS_FLAG);
+	this->export_node_faces = args.tag_seen(EXPORT_FACES_FLAG);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);
 
 	/* check if a settings xml file was specified */
