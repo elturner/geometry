@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <set>
 #include <map>
 
 /**
@@ -103,7 +104,7 @@ namespace octtopo
 			/**
 			 * Stores the neighboring nodes to this node
 			 */
-			std::vector<octnode_t*> neighs[NUM_FACES_PER_CUBE];
+			std::set<octnode_t*> neighs[NUM_FACES_PER_CUBE];
 			
 		/* functions */
 		public:
@@ -130,7 +131,7 @@ namespace octtopo
 			{
 				/* ignore if pointer is null */
 				if(n != NULL)
-					this->neighs[f].push_back(n);
+					this->neighs[f].insert(n);
 			};
 
 			/**
@@ -145,6 +146,23 @@ namespace octtopo
 			 */
 			void add_all(const std::vector<octnode_t*>& ns,
 			             CUBE_FACE f);
+
+			/**
+			 * Removes neighbor from this structure
+			 *
+			 * Given a neighbor node and a face, will
+			 * remove this neighbor from this face.
+			 *
+			 * @param n   The node to remove
+			 * @param f   The face on which n neighbors
+			 *
+			 * @return    Returns true if it was removed,
+			 *            false if never there to begin with
+			 */
+			inline bool remove(octnode_t* n, CUBE_FACE f)
+			{
+				return (0 < this->neighs[f].erase(n));
+			};
 
 			/*-----------*/
 			/* accessors */
@@ -231,8 +249,11 @@ namespace octtopo
 			 * nodes' neighbor sets.
 			 *
 			 * @param tree   The tree to use to initialize
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
 			 */
-			void init(const octree_t& tree);
+			int init(const octree_t& tree);
 
 
 			/*-----------*/
@@ -293,8 +314,11 @@ namespace octtopo
 			 * nodes in the given tree.  This saves space,
 			 * since often we only care about the neighbor
 			 * relations on leaf nodes.
+			 *
+			 * @return   Returns zero on success, non-zero on
+			 *           failure.
 			 */
-			void remove_nonleafs();
+			int remove_nonleafs();
 	
 			/*-----------*/
 			/* debugging */
@@ -323,12 +347,16 @@ namespace octtopo
 			 * The face will be written counter-clockwise into
 			 * the node.
 			 *
-			 * @param os   The output stream to write to
-			 * @param n    The node whose face should be written
-			 * @param f    The face to write
+			 * @param os       The output stream to write to
+			 * @param n        The node whose face should be 
+			 *                 written
+			 * @param f        The face to write
+			 * @param inside   Specifies whether to orient the
+			 *                 face counter-clockwise into
+			 *                 or out of the node.
 			 */
 			void writeobjface(std::ostream& os, octnode_t* n,
-			                  CUBE_FACE f) const;
+			                  CUBE_FACE f, bool inside) const;
 	};
 }
 
