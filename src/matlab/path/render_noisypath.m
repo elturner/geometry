@@ -8,18 +8,13 @@ function [] = render_noisypath(path)
 	%
 	%	path - 	The path structure to render
 	%
-
-	% import libraries
-	addpath('../carve/');
-
+    
 	% prepare figure
 	hold all;
 	axis equal;
+    set(gcf, 'renderer', 'opengl');
 
 	% iterate over path
-	for i = 1:length(path.poses)
-		% render the current pose as a gaussian
-		render_gauss3d(path.poses(i).pos_mean, ...
-		               path.poses(i).pos_cov);
-	end
+    p = [path.poses.pos_mean];
+    plot3(p(1,:), p(2,:), p(3,:), 'b-o');
 end
