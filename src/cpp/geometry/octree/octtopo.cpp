@@ -33,6 +33,10 @@ using namespace std;
 using namespace Eigen;
 using namespace octtopo;
 
+/* the following definitions are used for processing */
+
+#define APPROX_ZERO 0.0000001
+
 /* octneighbors_t function implementations */
 
 void octneighbors_t::clear()
@@ -94,10 +98,6 @@ int octtopo_t::init(const octree_t& tree)
 	ret = this->remove_nonleafs();
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
-
-	// TODO debugging
-	cout << "[octtopo_t::init]\tverification results: " 
-	     << this->verify() << endl;
 
 	/* success */
 	return 0;
@@ -547,6 +547,8 @@ int octtopo_t::verify() const
 	map<octnode_t*, octneighbors_t>::const_iterator it, opp_it;
 	vector<octnode_t*> ns, ns_opp;
 	vector<octnode_t*>::iterator nit;
+	octnode_t* curr, *neigh;
+	double width_sum, dist;
 	CUBE_FACE opp;
 	size_t i;
 	int ret;
@@ -656,6 +658,62 @@ int octtopo_t::verify() const
 					     << " this node's neighbors "
 					     << "on " << opp << " does not "
 					     << "show " << it->first
+					     << endl;
+					return ret;
+				}
+
+				/* check that these nodes are geometrically
+				 * touching, by comparing their displacement
+				 * with their widths */
+				curr = it->first;
+				neigh = opp_it->first;
+				width_sum = curr->halfwidth
+						+ neigh->halfwidth;
+				dist = 0;
+				switch(all_cube_faces[i])
+				{
+					/* x-direction */
+					case FACE_XMINUS:
+					case FACE_XPLUS:
+						dist = curr->center(0)
+							- neigh->center(0);
+						break;
+
+					/* y-direction */
+					case FACE_YMINUS:
+					case FACE_YPLUS:
+						dist = curr->center(1)
+							- neigh->center(1);
+						break;
+					
+					/* z-direction */
+					case FACE_ZMINUS:
+					case FACE_ZPLUS:
+						dist = curr->center(2)
+							- neigh->center(2);
+						break;
+				}
+				dist = fabs(dist);
+				if(fabs(width_sum - dist) > APPROX_ZERO)
+				{
+					/* the two nodes don't share a face,
+					 * which means the neighbor linkage
+					 * has been incorrectly assigned */
+
+					/* notify user of error */
+					ret = -7;
+					cerr << "[octtopo_t::verify]\t"
+					     << "ERROR " << ret << ": "
+					     << curr << " and " << neigh
+					     << " think they neighbor, but "
+					     << "their relative geometry is"
+					     << ":" << endl
+					     << curr->center.transpose()
+					     << " with hw = "
+					     << curr->halfwidth << endl
+					     << neigh->center.transpose()
+					     << " with hw = "
+					     << neigh->halfwidth << endl
 					     << endl;
 					return ret;
 				}

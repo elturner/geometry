@@ -275,6 +275,20 @@ namespace octtopo
 			 *             on failure.
 			 */
 			int writeobj(const std::string& filename) const;
+			
+			/**
+			 * Checks the invarients of the stored data
+			 *
+			 * Will iterate through all properties of the
+			 * stored data, checking if any elements are
+			 * inconsistent.  If an error is encountered,
+			 * the details will be printed to cerr and 
+			 * a unique value will be returned.
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int verify() const;
 
 		/* helper functions */
 		private:
@@ -323,20 +337,6 @@ namespace octtopo
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
-
-			/**
-			 * Checks the invarients of the stored data
-			 *
-			 * Will iterate through all properties of the
-			 * stored data, checking if any elements are
-			 * inconsistent.  If an error is encountered,
-			 * the details will be printed to cerr and 
-			 * a unique value will be returned.
-			 *
-			 * @return    Returns zero on success, non-zero on
-			 *            failure.
-			 */
-			int verify() const;
 	
 			/**
 			 * Writes a single node face to the OBJ stream

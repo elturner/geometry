@@ -42,11 +42,18 @@ int tree_exporter::export_node_faces(const string& filename,
 		return PROPEGATE_ERROR(-1, ret);
 	toc(clk, "Initializing topology");
 
+	/* verify topology.  Not required, but good for debugging */
+	tic(clk);
+	ret = top.verify();
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+	toc(clk, "Topology verification");
+
 	/* export the boundary topology to file */
 	tic(clk);
 	ret = top.writeobj(filename);
 	if(ret)
-		return PROPEGATE_ERROR(-2, ret);
+		return PROPEGATE_ERROR(-3, ret);
 	toc(clk, "Exporting boundary faces");
 
 	/* success */

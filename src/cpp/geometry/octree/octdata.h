@@ -169,7 +169,7 @@ class octdata_t
 			/* check that we have any observations */
 			if(this->count > 0)
 				return (this->prob_sum / this->count);
-			return 0.0; /* if unobserved, assume exterior */
+			return 0.5; /* if unobserved, assume unknown */
 		};
 
 		/**
