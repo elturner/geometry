@@ -188,6 +188,7 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 {
 	Vector3d c;
 	double hw;
+	int r, g, b;
 
 	/* check for null argument */
 	if(n == NULL)
@@ -196,6 +197,16 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 	/* get node properties */
 	c = n->center;
 	hw = n->halfwidth;
+
+	/* set color */
+	if(n->data == NULL)
+		r = g = b = 255;
+	else
+	{
+		r = (int) (255 * (1 - n->data->get_planar_prob()));
+		g = 0;
+		b = (int) (255 * n->data->get_planar_prob());
+	}
 
 	/* switch based on face direction */
 	switch(f)
@@ -206,19 +217,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " <<  c(0) 
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)-hw) 
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)+hw)
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)+hw)
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)-hw)
-			    << " 255 0 0" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_XPLUS:
 			/* write face */
@@ -226,19 +237,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " <<  c(0) 
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)-hw) 
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)-hw)
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)+hw)
 			    << " " << (c(2)+hw)
-			    << " 255 0 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " <<  c(0)
 			    << " " << (c(1)-hw)
 			    << " " << (c(2)+hw)
-			    << " 255 0 0" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_YMINUS:
 			/* write face */
@@ -246,19 +257,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw) 
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw)
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << " 0 255 0" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_YPLUS:
 			/* write face */
@@ -266,19 +277,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw) 
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)-hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)+hw)
-			    << " 0 255 0" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " <<  c(1)
 			    << " " << (c(2)-hw)
-			    << " 0 255 0" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_ZMINUS:
 			/* write face */
@@ -286,19 +297,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " << (c(0)-hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2) 
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)-hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_ZPLUS:
 			/* write face */
@@ -306,19 +317,19 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 			os << "v " << (c(0)-hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2) 
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)-hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)+hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl
+			    << " " << r << " " << g << " " << b << endl
 			   << "v " << (c(0)-hw)
 			    << " " << (c(1)+hw)
 			    << " " <<  c(2)
-			    << " 0 0 255" << endl;
+			    << " " << r << " " << g << " " << b << endl;
 			break;
 	}
 
