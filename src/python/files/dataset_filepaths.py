@@ -259,6 +259,15 @@ def get_carving_dir(dataset_dir):
 	return os.path.join(get_models_dir(dataset_dir),"carving")
 
 ##
+# Returns location of .noisypath file of this dataset
+#
+# @param dataset_dir   The location of the root of this dataset
+#
+def get_noisypath_file(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), \
+			"path.noisypath")
+
+##
 # Returns the location of the carvemap file in a dataset
 #
 def get_carvemap_file(dataset_dir):
