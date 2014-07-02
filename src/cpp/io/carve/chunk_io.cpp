@@ -257,11 +257,36 @@ int chunklist_reader_t::next(std::string& file)
 		return -2;
 
 	/* populate the file location */
-	file = this->directory + this->header.chunk_dir
-			+ uuid + CHUNKFILE_EXTENSION;
+	file = chunklist_reader_t::get_chunkfile_for(
+			this->directory + this->header.chunk_dir,
+			uuid);
 
 	/* success */
 	return 0;
+}
+			
+string chunklist_reader_t::get_chunkfile_for(const string& chunkdir,
+					const string& uuid)
+{
+	stringstream filename;
+	size_t i, len;
+
+	/* prepare file path, making sure input has correct seperator */
+	filename << chunkdir;
+	if(*(chunkdir.rbegin()) != FILE_SEPERATOR)
+		filename << FILE_SEPERATOR;
+
+	/* split the uuid into directory hierarchy */
+	len = uuid.size();
+	for(i=0; i < len - DIR_HIERARCHY_SPLIT; i+=DIR_HIERARCHY_SPLIT)
+		filename << uuid.substr(i, DIR_HIERARCHY_SPLIT)
+		         << FILE_SEPERATOR;
+
+	/* put remainder of string into filename */
+	filename << uuid.substr(i) << CHUNKFILE_EXTENSION;
+
+	/* return the final product */
+	return filename.str();
 }
 
 /*--------------------*/

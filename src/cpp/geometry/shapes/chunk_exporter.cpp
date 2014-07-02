@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iostream>
 #include <Eigen/Dense>
+#include <boost/filesystem.hpp>
 
 /**
  * @file chunk_exporter.cpp
@@ -174,7 +175,8 @@ int chunk_exporter_t::close(double cx, double cy, double cz, double hw)
 octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
                                            double hw, octdata_t* d)
 {
-	string filename;
+	string filename, uuid_str;
+	boost::filesystem::path chunkfile;
 	unsigned long long uuid;
 	map<octdata_t*, chunk_writer_t*>::iterator mit;
 	pair<map<octdata_t*, chunk_writer_t*>::iterator, bool> ins;
@@ -189,10 +191,22 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 	
 		/* create a chunk file based on this data object */
 		uuid = (unsigned long long) d;
-		filename = this->full_chunk_dir 
-				+ chunk_exporter_t::ptr_to_uuid(d)
-				+ CHUNKFILE_EXTENSION;
-		
+		uuid_str = chunk_exporter_t::ptr_to_uuid(d);
+		filename = chunklist_reader_t::get_chunkfile_for(
+				this->full_chunk_dir, uuid_str);
+
+		/* make sure the directory tree for this file exists */
+		chunkfile = filename;
+		if(!(boost::filesystem::create_directories(
+					chunkfile.parent_path())))
+		{
+			/* unable to create chunk subdirectories */
+			cerr << "[chunk_exporter_t::apply_to_leaf\t"
+			     << "Unable to create chunkfile subdirectories "
+			     << "for: " << filename << endl << endl;
+			return d;
+		}
+
 		/* insert into map */
 		ins = this->chunk_map.insert(pair<octdata_t*,
 				chunk_writer_t*>(d, new chunk_writer_t()));

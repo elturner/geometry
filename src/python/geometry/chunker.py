@@ -14,6 +14,7 @@
 # Import standard python libraries
 import os
 import sys
+import shutil
 import subprocess
 
 # Get the location of this file
@@ -74,10 +75,7 @@ def run(dataset_dir):
 
 	# check that output directory is empty of any .chunk files
 	for f in os.listdir(chunkdir):	
-		# check if f is a chunk file
-		body,ext = os.path.splitext(f)
-		if ext == '.chunk':
-			os.remove(os.path.join(chunkdir, f))
+		shutil.rmtree(os.path.join(chunkdir, f))
 
 	# prepare the command-line arguments for the chunker code
 	args = [CHUNKER_EXE, '-m', cmfile, '-w', wedgefile, \

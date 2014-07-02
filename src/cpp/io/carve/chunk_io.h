@@ -54,6 +54,12 @@ namespace chunk
 	static const std::string CHUNKFILE_EXTENSION      = ".chunk";
 	static const char FILE_SEPERATOR                  = '/';
 
+	/* Chunk files are put into a hierarchical directory structure,
+	 * used to make sure no one directory has too many files in it.
+	 * The following value indicates how often a new directory is
+	 * started, in units of number of characters in the uuid string. */
+	static const size_t DIR_HIERARCHY_SPLIT           = 2;
+
 	/**
 	 * This represents the data in the header of a .chunklist file
 	 */
@@ -244,6 +250,25 @@ namespace chunk
 			 *                non-zero on failure.
 			 */
 			int next(std::string& file);
+	
+		/* helper functions */
+
+			/**
+			 * Converts string uuid to relative directory path
+			 *
+			 * Given the location of the top chunk directory
+			 * and a uuid string, will return the relative
+			 * filepath to the chunk file that represents
+			 * the chunk with that uuid.
+			 *
+			 * @param chunkdir   The top chunk directory path
+			 * @param uuid       The uuid to use
+			 *
+			 * @return      Returns the file path for uuid
+			 */
+			static std::string get_chunkfile_for(
+					const std::string& chunkdir,
+					const std::string& uuid);
 	};
 	
 	/**

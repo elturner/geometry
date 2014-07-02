@@ -284,7 +284,6 @@ class chunk_exporter_t : public shape_t
 			ss << p;
 			return ss.str().substr(2); /* remove '0x' */
 		};
-
 };
 
 
