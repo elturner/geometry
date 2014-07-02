@@ -19,14 +19,15 @@ space (x, y, z, roll, pitch, yaw)
 
 This file contains a superset of the information contained within an
 original path file (.mad), and is meant to be able to be used in place
-of the .mad file.
+of the .mad file. NOTE: the mad file contains angles in degrees and NED
+coordinates, while this file contains angles in radians and ENU coordinates.
 
 ***************
 * Conventions *
 ***************
 
 All distances and positions are in units of meters.
-All angles are in units of radians and are in NED coordinates.
+All angles are in units of radians and are in ENU coordinates.
 All temporal values are in units of seconds via the synchronized clock
 All values are stored in binary, in little-endian ordering.
 

@@ -215,7 +215,7 @@ int system_path_t::readnoisypath(const std::string& filename)
 		this->pl[i].timestamp = p.timestamp;
 		this->pl[i].T         = p.position.mean;
 		this->pl[i].T_cov     = p.position.cov;
-		this->pl[i].compute_transform_NED(
+		this->pl[i].compute_transform_ENU(
 				p.rotation.mean(0),
 				p.rotation.mean(1),
 				p.rotation.mean(2));
@@ -703,7 +703,7 @@ void pose_t::compute_transform_ENU(double roll, double pitch,
 	 *	Rz * Ry * Rx = 
 	 *
 	 *	cp*cy   cy*sp*sr - cr*sy        cr*cy*sp + sr*sy;
-	 *	cp*sy   sp*sr*sy + cr*cy        cr*cp*sy - cy*sr;
+	 *	cp*sy   sp*sr*sy + cr*cy        cr*sp*sy - cy*sr;
 	 *	-sp     cp*sr                   cp*cr;
 	 *
 	 * where:
@@ -716,7 +716,7 @@ void pose_t::compute_transform_ENU(double roll, double pitch,
 	 * 	sy = sin(yaw)
 	 */
 	A11 = cp*cy; A12 = cy*sp*sr-cr*sy; A13 = cr*cy*sp+sr*sy;
-	A21 = cp*sy; A22 = sp*sr*sy+cr*cy; A23 = cr*cp*sy-cy*sr;
+	A21 = cp*sy; A22 = sp*sr*sy+cr*cy; A23 = cr*sp*sy-cy*sr;
 	A31 = -sp;   A32 = cp*sr;          A33 = cp*cr;
 
 	/* compute elements for quaternion based on rotation matrix

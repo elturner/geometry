@@ -12,9 +12,9 @@ function [] = render_noisypath(path)
 	% prepare figure
 	hold all;
 	axis equal;
-    set(gcf, 'renderer', 'opengl');
+	set(gcf, 'renderer', 'opengl');
 
 	% iterate over path
-    p = [path.poses.pos_mean];
-    plot3(p(1,:), p(2,:), p(3,:), 'b-o');
+	p = [path.poses.pos_mean];
+	plot3(p(1,:), p(2,:), p(3,:), 'b-o');
 end

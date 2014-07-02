@@ -47,11 +47,14 @@ function path = read_noisypath(filename)
 
 	% read magic number
 	magic = fread(fid, 10, 'char')';
-	if(~strcmp(char(magic), ['noisypath', 0]))
-		keyboard;
+	desired_magic = ['noisypath', 0];
+	if(~strcmp(char(magic), desired_magic))
 		fclose(fid);
 		error(['Invalid file format.  ', ...
-			'Given file had magic number: ', magic]);
+			'Expected "', desired_magic, '"\t', ... 
+			'Given file had magic number(', ...
+			num2str(length(magic)), ...
+			'): "', magic, '"']);
 	end
 
 	% read header information
