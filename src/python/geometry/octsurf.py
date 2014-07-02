@@ -52,7 +52,7 @@ def run(dataset_dir):
 	outfile   = dataset_filepaths.get_carved_obj_file(dataset_dir)
 	octree    = dataset_filepaths.get_octree(dataset_dir)
 
-	# prepare the command-line arguments for the chunker code
+	# prepare the command-line arguments for the octsurf code
 	args = [OCTSURF_EXE, '-o', outfile, '-s', SETTINGS_XML] + [octree]
 
 	# run the octsurf code
