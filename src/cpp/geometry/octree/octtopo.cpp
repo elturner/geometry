@@ -187,7 +187,7 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
                              CUBE_FACE f, bool inside) const
 {
 	Vector3d c;
-	double hw;
+	double hw, val;
 	int r, g, b;
 
 	/* check for null argument */
@@ -197,15 +197,16 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 	/* get node properties */
 	c = n->center;
 	hw = n->halfwidth;
+	val = n->data->get_planar_prob();
 
 	/* set color */
 	if(n->data == NULL)
 		r = g = b = 255;
 	else
 	{
-		r = (int) (255 * (1 - n->data->get_planar_prob()));
+		r = (int) (255 * val);
 		g = 0;
-		b = (int) (255 * n->data->get_planar_prob());
+		b = (int) (255 * (1 - val));
 	}
 
 	/* switch based on face direction */
