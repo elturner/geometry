@@ -195,17 +195,14 @@ octdata_t* chunk_exporter_t::apply_to_leaf(const Vector3d& c,
 		filename = chunklist_reader_t::get_chunkfile_for(
 				this->full_chunk_dir, uuid_str);
 
-		/* make sure the directory tree for this file exists */
+		/* make sure the directory tree for this file exists 
+		 *
+		 * Since we don't care about whether the directory
+		 * already existed, we don't need to check the return
+		 * code. */
 		chunkfile = filename;
-		if(!(boost::filesystem::create_directories(
-					chunkfile.parent_path())))
-		{
-			/* unable to create chunk subdirectories */
-			cerr << "[chunk_exporter_t::apply_to_leaf\t"
-			     << "Unable to create chunkfile subdirectories "
-			     << "for: " << filename << endl << endl;
-			return d;
-		}
+		boost::filesystem::create_directories(
+				chunkfile.parent_path());
 
 		/* insert into map */
 		ins = this->chunk_map.insert(pair<octdata_t*,
