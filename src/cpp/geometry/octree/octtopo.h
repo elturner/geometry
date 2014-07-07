@@ -337,7 +337,20 @@ namespace octtopo
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
-	
+
+			/**
+			 * Determines if the given octnode should be counted
+			 * as 'interior'.
+			 *
+			 * Will return true iff the given node should be
+			 * represented as 'interior' in this topography.
+			 *
+			 * @param node    The octnode to analyze
+			 *
+			 * @return    Returns true iff node is interior
+			 */
+			bool node_is_interior(octnode_t* node) const;
+
 			/**
 			 * Writes a single node face to the OBJ stream
 			 *

@@ -103,6 +103,20 @@ int octtopo_t::init(const octree_t& tree)
 	return 0;
 }
 			
+bool octtopo_t::node_is_interior(octnode_t* node) const
+{
+	/* check if node is valid */
+	if(node == NULL)
+		return false;
+
+	/* check if node has any data */
+	if(node->data == NULL)
+		return false;
+
+	/* check if node's data considers itself interior */
+	return (node->data->is_interior());
+}
+			
 int octtopo_t::writeobj(const string& filename) const
 {
 	map<octnode_t*, octneighbors_t>::const_iterator it;
@@ -132,12 +146,8 @@ int octtopo_t::writeobj(const string& filename) const
 		/* inform user of progress */
 		progbar.update(i++, n);
 
-		/* only proceed if leaf */
-		if(it->first->data == NULL)
-			continue;
-
-		/* only proceed for interior nodes */
-		if(!(it->first->data->is_interior()))
+		/* only proceed if interior */
+		if(!(this->node_is_interior(it->first)))
 			continue;
 
 		/* iterate over faces, looking for exterior neighbors */
@@ -151,10 +161,8 @@ int octtopo_t::writeobj(const string& filename) const
 			/* check for external nodes */
 			for(nit = ns.begin(); nit != ns.end(); nit++)
 			{
-				/* ignore if interior or non-boundary */
-				if((*nit)->data == NULL)
-					continue;
-				if((*nit)->data->is_interior())
+				/* ignore if interior */
+				if(this->node_is_interior(*nit))
 					continue;
 
 				/* neighbor marks exterior boundary, 
