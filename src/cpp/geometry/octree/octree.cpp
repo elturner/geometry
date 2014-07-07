@@ -292,7 +292,7 @@ int octree_t::insert(shape_t& s)
 	}
 
 	/* carve the tree */
-	this->root->insert(s, this->max_depth-1);
+	this->root->insert(s, this->max_depth);
 
 	/* success */
 	return 0;

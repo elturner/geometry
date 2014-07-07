@@ -123,8 +123,9 @@ Vector3d extruded_poly_t::get_vertex(unsigned int i) const
 	Vector3d v;
 	bool isceil;
 
-	/* get the appropriate vertex */
-	isceil = (((int) i) > this->verts.cols());/* vertex is on ceiling */
+	/* get the appropriate vertex by checking if the
+	 * specified index counts as a floor or a ceiling vertex */
+	isceil = (((int) i) >= this->verts.cols());
 	v = this->verts.block(0, (i%this->verts.cols()), 3, 1);
 
 	/* modify it if it's on the ceiling */

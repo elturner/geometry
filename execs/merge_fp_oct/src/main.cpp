@@ -104,10 +104,6 @@ int main(int argc, char** argv)
 			     << endl;
 			return 6;
 		}
-	
-		/* simplify entire tree, now that all information has
-		 * been merged */
-		tree.get_root()->simplify_recur();
 	}
 
 	/* export the octree to destination */
