@@ -13,6 +13,7 @@ EXECUTABLE = ../../bin/octsurf
 SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
+		$(SOURCEDIR)util/union_find.cpp \
 		$(SOURCEDIR)xmlreader/tinystr.cpp \
 		$(SOURCEDIR)xmlreader/tinyxml.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
@@ -33,6 +34,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/cmd_args.h \
 		$(SOURCEDIR)util/endian.h \
 		$(SOURCEDIR)util/progress_bar.h \
+		$(SOURCEDIR)util/union_find.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
