@@ -26,6 +26,8 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
+		$(SOURCEDIR)mesh/partition/node_set.cpp \
 		src/octsurf_run_settings.cpp \
 		src/main.cpp
 
@@ -46,6 +48,8 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
+		$(SOURCEDIR)mesh/partition/node_partitioner.h \
+		$(SOURCEDIR)mesh/partition/node_set.h \
 		src/octsurf_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

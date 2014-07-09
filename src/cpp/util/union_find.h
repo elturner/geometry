@@ -2,7 +2,7 @@
 #define UNION_FIND_H
 
 /**
- * @file union_find.h
+ * @file   union_find.h
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  * @brief  Classes to perform the union-find algorithm
  *

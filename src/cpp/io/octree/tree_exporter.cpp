@@ -3,6 +3,7 @@
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
+#include <mesh/partition/node_partitioner.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>

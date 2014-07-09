@@ -255,6 +255,36 @@ namespace octtopo
 			 */
 			int init(const octree_t& tree);
 
+			/**
+			 * Retrieves the begin iterator for the stored nodes
+			 *
+			 * Will return an iterator to the first node
+			 * neighbor object stored in this structure.
+			 *
+			 * Each referenced element is a pair, where a
+			 * pointer to the given octnode is the first
+			 * value, and the neighbor-structure for that
+			 * node is the second element.
+			 *
+			 * @return   Returns first iterator in structure
+			 */
+			inline std::map<octnode_t*,
+				octneighbors_t>::const_iterator
+					begin() const
+			{ return this->neighs.begin(); };
+
+			/**
+			 * Retrieves the end iterator for the stored nodes
+			 *
+			 * Will return an iterator to the end of
+			 * the stored node structure.
+			 *
+			 * @return   Returns the end iterator of structure
+			 */
+			inline std::map<octnode_t*,
+			       octneighbors_t>::const_iterator
+				       end() const
+			{ return this->neighs.end(); };
 
 			/*-----------*/
 			/* debugging */

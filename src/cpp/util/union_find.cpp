@@ -4,7 +4,7 @@
 #include <map>
 
 /**
- * @file union_find.cpp
+ * @file   union_find.cpp
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  * @brief  Classes to perform the union-find algorithm
  *
@@ -58,7 +58,7 @@ int union_find_t::add_edge(size_t a, size_t b)
 void union_find_t::get_unions(vector<vector<size_t> >& unions)
 {
 	map<size_t, size_t> roots2unions;
-	size_t i, n, r;
+	size_t i, n, r, u;
 
 	/* count the number of roots in the tree */
 	n = this->forest.size();
@@ -70,7 +70,8 @@ void union_find_t::get_unions(vector<vector<size_t> >& unions)
 			continue;
 
 		/* add root to map */
-		roots2unions[r] = roots2unions.size();
+		u = roots2unions.size();
+		roots2unions[r] = u;
 	}
 
 	/* prepare output structure */
@@ -79,7 +80,9 @@ void union_find_t::get_unions(vector<vector<size_t> >& unions)
 	for(i = 0; i < n; i++)
 	{
 		/* add the i'th node to the appropriate union */
-		unions[roots2unions[this->get_root(i)]].push_back(i);
+		r = this->get_root(i);
+		u = roots2unions[r];
+		unions[u].push_back(i);
 	}
 }
 
@@ -101,7 +104,7 @@ int union_find_t::get_root(size_t i)
 	/* i is not a root, which means we
 	 * need to recurse until we find its
 	 * root. */
-	r = this->get_root(i);
+	r = this->get_root(p);
 
 	/* we can simplify the forest to improve
 	 * performance on the next call */
