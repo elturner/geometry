@@ -47,6 +47,11 @@ class octdata_t
 		 * previous techniques. */
 		bool is_carved;
 
+		/* the following definitions are used in computing the
+		 * statistics for a given node's data */
+		static constexpr double UNOBSERVED_PROBABILITY = 0.5;
+		static constexpr double MAXIMUM_VARIANCE       = 1.0;
+
 	/* functions */
 	public:
 
@@ -169,7 +174,9 @@ class octdata_t
 			/* check that we have any observations */
 			if(this->count > 0)
 				return (this->prob_sum / this->count);
-			return 0.5; /* if unobserved, assume unknown */
+			
+			/* if unobserved, assume unknown */
+			return UNOBSERVED_PROBABILITY; 
 		};
 
 		/**
@@ -183,19 +190,21 @@ class octdata_t
 		 */
 		inline double get_uncertainty() const
 		{
+			double m, m2, n;
+
 			/* check if we have observed any samples */
-			if(this->count == 0)
-				return 1.0; /* maximum uncertainty for
+			n = this->count;
+			if(n <= 1) /* don't have multiple samples */
+				return MAXIMUM_VARIANCE;
+				            /* maximum uncertainty for
 				             * values that are restricted
 				             * to a range of [0,1] */
 
-			/* get mean estimate */
-			double p = this->get_probability();
-
-			/* compute variance:
-			 *
-			 * Var[x] = E[x^2] - E[x]^2 */
-			return ((this->prob_sum_sq/this->count) - (p*p));
+			/* get unbiased estimate of the variance, 
+			 * by using Bessel's correction: */
+			m = this->prob_sum; /* sum of samples */
+			m2 = this->prob_sum_sq; /* sum of squared samples */
+			return (m2 - (m*m/n)) / (n-1);
 		};
 		
 		/**
