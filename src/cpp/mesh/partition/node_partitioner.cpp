@@ -4,6 +4,7 @@
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/union_find.h>
+#include <util/tictoc.h>
 #include <Eigen/Dense>
 #include <sstream>
 #include <string>
@@ -109,10 +110,12 @@ int node_partitioner_t::writeobjs(const std::string& prefix) const
 {
 	progress_bar_t progbar;
 	stringstream ss;
+	tictoc_t clk;
 	size_t i, n;
 	int ret;
 
 	/* iterate over the objects to write */
+	tic(clk);
 	progbar.set_name("Writing objects");
 	n = this->partitions.size();
 	for(i = 0; i < n; i++)
@@ -129,5 +132,7 @@ int node_partitioner_t::writeobjs(const std::string& prefix) const
 	}
 
 	/* success */
+	progbar.clear();
+	toc(clk, "Writing objects");
 	return 0;
 }

@@ -486,13 +486,15 @@ void octtopo_t::init_children(octnode_t* node)
 void octtopo_t::get_children_of(octnode_t* cs[CHILDREN_PER_NODE], 
 					octnode_t* p)
 {
+	bool isleaf;
 	size_t i;
 
 	/* iterate over child pointers */
+	isleaf = (p == NULL || p->isleaf());
 	for(i = 0; i < CHILDREN_PER_NODE; i++)
 	{
 		/* check if no children exist */
-		if(p == NULL || p->isleaf())
+		if(isleaf)
 			cs[i] = p; /* store parent */
 		else /* at least some children exist */
 			cs[i] = p->children[i]; /* store child */
