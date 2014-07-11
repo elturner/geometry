@@ -46,6 +46,16 @@ function [] = render_fp(floorplan, color_by_room, c)
 			'EdgeColor', 'none');
 	end
 
+	% print room indices
+	for i = 1:floorplan.num_rooms
+		ts = find(floorplan.room_inds == i);
+		vs = floorplan.tris(ts,:);
+		x_avg = mean(floorplan.verts(vs(:),1));
+		y_avg = mean(floorplan.verts(vs(:),2));
+		name = num2str(i-1);
+		text(x_avg, y_avg, name);
+	end
+
 	% plot edges
 	line([floorplan.verts(floorplan.edges(:,1),1)' ; ...
 		floorplan.verts(floorplan.edges(:,2),1)'], ...
