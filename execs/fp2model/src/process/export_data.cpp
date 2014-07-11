@@ -1,6 +1,7 @@
 #include "export_data.h"
 #include "../io/config.h"
 #include "../io/idf_io.h"
+#include "../io/csv_io.h"
 #include "../structs/building_model.h"
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -79,6 +80,23 @@ int export_data(const building_model_t& bim, const config_t& conf)
 			cerr << "[export_data]\tError " << ret << ": "
 			     << "Unable to export idf file #" << i << ": "
 			     << conf.outfile_idf[i] << endl;
+			return ret;
+		}
+	}
+
+	/* export csv files */
+	n = conf.outfile_csv.size();
+	for(i = 0; i < n; i++)
+	{
+		/* export to csv file */
+		ret = writecsv(conf.outfile_csv[i], bim);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-4, ret);
+			cerr << "[export_data]\tError " << ret << ": "
+			     << "Unable to export csv file #" << i << ": "
+			     << conf.outfile_csv[i] << endl;
 			return ret;
 		}
 	}

@@ -43,6 +43,7 @@ class config_t
 		std::vector<std::string> outfile_obj;
 		std::vector<std::string> outfile_idf;
 		std::vector<std::string> outfile_wrl;
+		std::vector<std::string> outfile_csv;
 
 	/*** functions ***/
 	public:

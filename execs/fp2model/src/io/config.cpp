@@ -24,6 +24,7 @@ using namespace std;
 #define OBJ_FILE_EXT       "obj"
 #define IDF_FILE_EXT       "idf"
 #define WRL_FILE_EXT       "wrl"
+#define CSV_FILE_EXT       "csv"
 
 /* function implementations */
 
@@ -61,6 +62,10 @@ int config_t::parse(int argc, char** argv)
 		"will export floorplan geometry to the specified Virtual "
 		"Reality Modeling Language (VRML), which stores the model "
 		"as a set of of meshed surfaces.");
+	args.add_required_file_type(CSV_FILE_EXT, 0, "If present, then "
+		"will export floorplan statistical information to the "
+		"specified comma-separated-variable file, which can be "
+		"viewed in a spreadsheet program, such as excel.");
 
 	/* parse the args */
 	ret = args.parse(argc, argv);
@@ -81,6 +86,7 @@ int config_t::parse(int argc, char** argv)
 	args.files_of_type(OBJ_FILE_EXT, this->outfile_obj);
 	args.files_of_type(IDF_FILE_EXT, this->outfile_idf);
 	args.files_of_type(WRL_FILE_EXT, this->outfile_wrl);
+	args.files_of_type(CSV_FILE_EXT, this->outfile_csv);
 
 	/* success */
 	return 0;

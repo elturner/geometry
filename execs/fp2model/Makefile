@@ -17,6 +17,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
 		src/io/config.cpp \
 		src/io/idf_io.cpp \
+		src/io/csv_io.cpp \
 		src/structs/building_model.cpp \
 		src/structs/window.cpp \
 		src/process/parse_input.cpp \
@@ -31,6 +32,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
 		src/io/idf_io.h \
+		src/io/csv_io.h \
 		src/structs/building_model.h \
 		src/structs/window.h \
 		src/process/parse_input.h \
