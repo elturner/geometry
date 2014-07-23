@@ -79,6 +79,7 @@ def run(dataset_dir, path_file, xyz_file):
 	fp_file  = dataset_filepaths.get_fp_file(dq_file)
 	obj_file = dataset_filepaths.get_floorplan_obj_file(dataset_dir,\
 	                                                    fp_file)
+	csv_file  = dataset_filepaths.get_csv_floorplan_file(fp_file)
 
 	# The following folders will contain the output files of this
 	# script, so we need to verify that they exist
@@ -112,7 +113,7 @@ def run(dataset_dir, path_file, xyz_file):
 	# make obj from floorplan
 	print "##### generating extruded model #####"
 	ret = subprocess.call([FP2MODEL_EXE, \
-                      obj_file, fp_file], \
+                      obj_file, fp_file, csv_file], \
                       executable=FP2MODEL_EXE, cwd=dataset_dir, \
                       stdout=None, stderr=None, stdin=None, shell=False)
 	if ret != 0:

@@ -13,6 +13,7 @@ all: floorplan_progs procarve_progs util_progs
 
 # programs needed for generating floorplans
 floorplan_progs:
+	@mkdir -p ../bin # ensure output directory exists
 	@echo ""
 	@echo "Compiling floorplan programs..."
 	@echo ""
@@ -24,6 +25,7 @@ floorplan_progs:
 
 # programs needed to generate carvings
 procarve_progs:
+	@mkdir -p ../bin # ensure output directory exists
 	@echo ""
 	@echo "Compiling procarve programs..."
 	@echo ""
@@ -37,6 +39,7 @@ procarve_progs:
 
 # utility programs
 util_progs:
+	@mkdir -p ../bin # ensure output directory exists
 	@echo ""
 	@echo "Compiling utility programs..."
 	@echo ""

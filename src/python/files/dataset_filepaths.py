@@ -123,6 +123,17 @@ def get_madfile_from_name(dataset_dir, dataset_name):
 			dataset_name, "optimization", \
 			(dataset_name + "_opt.mad")))
 
+##
+# Returns the name of the dataset given a .mad file
+#
+# @param madfile  The file to parse
+#
+def get_name_from_madfile(madfile):
+	name = get_file_body(madfile)
+	if name.endswith("_opt"):
+		name = name[:-4]
+	return name
+
 #--------------- Files generated from pointcloud code --------------
 
 ##
@@ -210,6 +221,14 @@ def get_dq_file(dataset_dir, pc_file):
 def get_fp_file(dq_file):
 	(body, ext) = os.path.splitext(dq_file)
 	return (body + ".fp")
+
+##
+# Returns the output .csv file for a floorplan given the input fp file
+#
+def get_csv_floorplan_file(fp_file):
+	(body, ext) = os.path.splitext(fp_file)
+	return (body + ".csv")
+
 
 ##
 # Returns the floorplan mesh file, given the fp

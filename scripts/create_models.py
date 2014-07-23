@@ -29,6 +29,7 @@ PYTHON_SRC_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 PYTHON_FILES_DIR    = os.path.join(PYTHON_SRC_DIR, 'files')
 PYTHON_CONFIG_DIR   = os.path.join(PYTHON_SRC_DIR, 'config')
 PYTHON_GEOMETRY_DIR = os.path.join(PYTHON_SRC_DIR, 'geometry')
+PYTHON_LATEX_DIR    = os.path.join(PYTHON_SRC_DIR, 'latex')
 sys.path.append(PYTHON_SRC_DIR)
 sys.path.append(PYTHON_FILES_DIR)
 import dataset_filepaths
@@ -38,6 +39,8 @@ sys.path.append(PYTHON_GEOMETRY_DIR)
 import pointcloud_gen
 import partition_pointcloud_levels
 import floorplan
+sys.path.append(PYTHON_LATEX_DIR)
+import generate_tex
 
 ###################################
 ##### PARSE COMMAND ARGUMENTS #####
@@ -78,7 +81,7 @@ print "#### GENERATING MODELS FOR %s ####" % DATASET_NAME
 print ""
 
 # POINTCLOUD GENERATION
-xyzfiles = pointcloud_gen.run(DATASET_DIR, LOCALIZATION_FILE, True)
+xyzfiles = pointcloud_gen.run(DATASET_DIR, LOCALIZATION_FILE, False)
 if xyzfiles is None:
 	print "Error! Pointcloud generation script failed"
 	sys.exit(4)
@@ -99,3 +102,8 @@ for level_xyz_file in dataset_filepaths.get_pc_levels_list(DATASET_DIR):
 		print "Error! Could not generate floorplans:",ret
 		sys.exit(6)
 
+# prepare some documentation about this dataset
+ret = generate_tex.run(DATASET_DIR, DATASET_NAME)
+if ret != 0:
+	print "Error! Unable to generate PDF documentation",ret
+	sys.exit(7)
