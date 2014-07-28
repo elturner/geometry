@@ -50,6 +50,7 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/fss/fss_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/color_image/color_image_metadata_reader.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/carve/noisypath_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/timestamp/*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/system_path.cpp
