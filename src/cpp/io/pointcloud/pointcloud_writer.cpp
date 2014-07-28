@@ -518,7 +518,7 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
                          int ind, double ts, vector<double>& noise)
 {
 	size_t i, n;
-	double x, y, z;
+	double x, y, z, q;
 	int red, green, blue;
 	int ret;
 
@@ -536,10 +536,24 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 		switch(this->coloring)
 		{
 			case NEAREST_IMAGE:
+				/* color from cameras */
 				ret = this->color_from_cameras(
-					red,green,blue,x,y,z,ts);
+					red,green,blue,x,y,z,ts,q);
 				if(ret)
 					return PROPEGATE_ERROR(-1, ret);
+				break;
+			case NEAREST_IMAGE_DROP_UNCOLORED:
+				/* color from cameras */
+				ret = this->color_from_cameras(
+					red,green,blue,x,y,z,ts,q);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
+
+				/* check quality of coloring */
+				if(q == 0)
+					continue;
+
+				/* end coloring */
 				break;
 			case NO_COLOR:
 			default:
@@ -733,7 +747,7 @@ void pointcloud_writer_t::time_to_color(int& red, int& green, int& blue,
 		
 int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
                                             double x, double y, double z,
-                                            double t)
+                                            double t, double& quality)
 {
 	double q, q_best;
 	unsigned int i, n;
@@ -771,6 +785,7 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	}
 
 	/* success */
+	quality = q_best;
 	return 0;
 }
 

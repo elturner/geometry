@@ -34,6 +34,7 @@ using namespace std;
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 #define COLOR_BY_NOISE_FLAG       "--color_by_noise"
 #define COLOR_BY_TIME_FLAG        "--color_by_time"
+#define REMOVE_NONCOLORED_POINTS  "--remove_noncolored_points"
 
 /* the following are helper functions for this program */
 void init_args(cmd_args_t& args);
@@ -157,6 +158,10 @@ void init_args(cmd_args_t& args)
 	               "based on their timestamp values. This flag will "
 	               "override coloring from images, even if cameras are "
 	               "provided.");
+	args.add(REMOVE_NONCOLORED_POINTS, /* colors by image */
+	               "Will color by provided images, but will not export "
+	               "any points that were out of the field of view of "
+	               "its corresponding camera.");
 }
 
 /**
@@ -218,7 +223,11 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	else if(args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags))
 	{
 		/* use camera images to color */
-		c = pointcloud_writer_t::NEAREST_IMAGE;
+		if(args.tag_seen(REMOVE_NONCOLORED_POINTS))
+			c = pointcloud_writer_t
+				::NEAREST_IMAGE_DROP_UNCOLORED;
+		else
+			c = pointcloud_writer_t::NEAREST_IMAGE;
 	}
 	else
 		c = pointcloud_writer_t::NO_COLOR;

@@ -51,7 +51,9 @@ class pointcloud_writer_t
 			COLOR_BY_HEIGHT, /* color output by height */
 			COLOR_BY_NOISE, /* color output by noise level */
 			COLOR_BY_TIME, /* color output by timestamp */
-			NEAREST_IMAGE /* color points based on imagery */
+			NEAREST_IMAGE, /* color points based on imagery */
+			NEAREST_IMAGE_DROP_UNCOLORED /* don't export 
+			                              * uncolored points */
 		};
 
 	/* parameters */
@@ -389,12 +391,13 @@ class pointcloud_writer_t
 		 * @param y     The input world y-coordinate of point
 		 * @param z     The input world z-coordinate of point
 		 * @param t     The input timestamp of point
+		 * @param quality  The quality of the coloring [0,1]
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int color_from_cameras(int& red, int& green, int& blue,
 		                       double x, double y, double z,
-		                       double t);
+		                       double t, double& quality);
 
 		/**
 		 * Rectifies the input 2D laser scan and converts to matrix

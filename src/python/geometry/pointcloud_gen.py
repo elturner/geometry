@@ -158,7 +158,7 @@ def run(dataset_dir, pathfile, use_cameras=True):
 
 		# Prepare arguments for pointcloud generation program.
 		# This will generate pointclouds in units of millimeters 
-		# and remove points that are farther than 10 meters from the
+		# and remove points farther than 10 meters from the
 		# sensor
 		args = [POINTCLOUD_EXE, '-c', config_xml, \
 				'-t', timesync_xml, \
@@ -169,6 +169,7 @@ def run(dataset_dir, pathfile, use_cameras=True):
 
 		# add camera information if we want to color
 		if use_cameras:
+			args += ['--remove_noncolored_points']
 			for ci in range(len(cam_metas)):
 				args += ['-f', cam_metas[ci], \
 					cam_calibs[ci], cam_dirs[ci]]
