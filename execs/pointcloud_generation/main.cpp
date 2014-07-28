@@ -244,7 +244,8 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	}
 
 	/* read in camera information, if they are being used */
-	if(c == pointcloud_writer_t::NEAREST_IMAGE)
+	if(c == pointcloud_writer_t::NEAREST_IMAGE
+		|| c == pointcloud_writer_t::NEAREST_IMAGE_DROP_UNCOLORED)
 	{
 		/* iterate over command-line args */
 		n = fisheye_tags.size() / 3;

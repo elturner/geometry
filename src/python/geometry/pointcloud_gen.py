@@ -175,7 +175,7 @@ def run(dataset_dir, pathfile, use_cameras=True):
 					cam_calibs[ci], cam_dirs[ci]]
 
 		# run pointcloud generation program
-		ret = subprocess.call(args, executable=POINTCLOUD_EXE, \
+                ret = subprocess.call(args, executable=POINTCLOUD_EXE, \
 			cwd=dataset_dir, stdout=None, stderr=None, \
 			stdin=None, shell=False)
 		if ret != 0:
