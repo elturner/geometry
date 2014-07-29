@@ -40,6 +40,9 @@ using namespace Eigen;
 /* the following defines the default grayscale color of points */
 #define DEFAULT_POINT_COLOR 0
 
+/* specifies image cache size */
+#define IMAGE_CACHE_SIZE 10 
+
 /* function implementations */
 
 pointcloud_writer_t::pointcloud_writer_t()
@@ -136,6 +139,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
 	this->max_range_limit = maxrange; /* range limit option */
+	this->camera_time_buffer_range = 4.0; /* TODO units: seconds */
+	this->camera_time_buffer_dt = 0.5; /* TODO units: seconds */
 
 	/* get output file type */
 	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
@@ -164,6 +169,7 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 		return PROPEGATE_ERROR(-1, ret);
 
 	/* add to this structure */
+	cam.set_cache_size(IMAGE_CACHE_SIZE);
 	this->fisheye_cameras.push_back(cam);
 
 	/* success */
@@ -550,7 +556,7 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 					return PROPEGATE_ERROR(-1, ret);
 
 				/* check quality of coloring */
-				if(q == 0)
+				if(q <= 0)
 					continue;
 
 				/* end coloring */
@@ -749,8 +755,9 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
                                             double x, double y, double z,
                                             double t, double& quality)
 {
-	double q, q_best;
-	unsigned int i, n;
+	vector<double> times_to_search;
+	double q, q_best, tau;
+	unsigned int i, j, n, m;
 	int ret, r, g, b;
 
 	/* search for the best quality, start with lowest possible value */
@@ -759,28 +766,50 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	/* start with default color */
 	red = green = blue = r = g = b = DEFAULT_POINT_COLOR;
 
+	/* determine the list of timestamps to search for each camera */
+	if(this->camera_time_buffer_range <= 0)
+		times_to_search.push_back(t);
+	else
+	{
+		for(tau = t - this->camera_time_buffer_range;
+				tau <= t + this->camera_time_buffer_range;
+					tau += this->camera_time_buffer_dt)
+			times_to_search.push_back(tau);
+	}
+
 	/* iterate over cameras */
 	n = this->fisheye_cameras.size();
+	m = times_to_search.size();
 	for(i = 0; i < n; i++)
 	{
-		/* get coloring from this camera */
-		ret = this->fisheye_cameras[i].color_point(x,y,z,t,r,g,b,q);
-		if(ret)
+		/* iterate over times to search for this camera */
+		for(j = 0; j < m; j++)
 		{
-			cerr << "[pointcloud_writer_t::color_from_cameras]"
-			     << "\tError " << ret << " from color point "
-			     << "using camera #" << i << endl;
-			return PROPEGATE_ERROR(-1, ret);
-		}
+			/* get current timestamp */
+			tau = times_to_search[j];
 
-		/* check if this is best quality so far */
-		if(q > q_best)
-		{
-			/* save coloring */
-			q_best = q;
-			red = r;
-			green = g;
-			blue = b;
+			/* get coloring from this camera */
+			ret = this->fisheye_cameras[i].color_point(
+						x,y,z,tau,r,g,b,q);
+			if(ret)
+			{
+				cerr << "[pointcloud_writer_t::"
+				     << "color_from_cameras]"
+				     << "\tError " << ret 
+				     << " from color point "
+				     << "using camera #" << i << endl;
+				return PROPEGATE_ERROR(-1, ret);
+			}
+
+			/* check if this is best quality so far */
+			if(q > q_best)
+			{
+				/* save coloring */
+				q_best = q;
+				red = r;
+				green = g;
+				blue = b;
+			}
 		}
 	}
 

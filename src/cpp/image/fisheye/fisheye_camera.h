@@ -102,6 +102,12 @@ class fisheye_camera_t
 		void clear();
 
 		/**
+		 * Adjusts the size of the internal image cache
+		 */
+		inline void set_cache_size(size_t n)
+		{ this->images.set_capacity(n); };
+
+		/**
 		 * Gets the point color and camera-relative properties
 		 *
 		 * Retrieves the color and confidence of coloring

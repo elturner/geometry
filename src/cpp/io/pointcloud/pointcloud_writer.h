@@ -94,6 +94,22 @@ class pointcloud_writer_t
 		 */
 		double max_range_limit;
 
+		/**
+		 * Camera time buffer.
+		 *
+		 * This value indicates how many seconds to look into
+		 * the past and future for each camera when coloring 
+		 * points.  The goal of looking at multiple images from 
+		 * each camera is that a point that wasn't seen by any 
+		 * cameras may have been by an image from close by,
+		 * given that the system is moving in space.
+		 *
+		 * This value searches in both past and future, in units
+		 * of seconds:   [-t, +t]
+		 */
+		double camera_time_buffer_range; /* how far to search */
+		double camera_time_buffer_dt; /* time step between search */
+
 		/*------------------------*/
 		/* file export parameters */
 		/*------------------------*/
