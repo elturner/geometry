@@ -16,6 +16,7 @@ function [] = render_fp(floorplan, color_by_room, c)
 	%
 
 	hold all;
+	set(gcf, 'renderer', 'opengl');
 	axis equal;
 	axis off;
 
@@ -38,12 +39,14 @@ function [] = render_fp(floorplan, color_by_room, c)
 	end
 
 	% plot triangles
-	for i = 1:floorplan.num_tris
-		fill(floorplan.verts(floorplan.tris(i,:),1), ...
-			floorplan.verts(floorplan.tris(i,:),2), ...
-			colors(floorplan.room_inds(i),:), ...
-			'FaceAlpha', c(4), ...
-			'EdgeColor', 'none');
+	if(c(4) ~= 0)
+		for i = 1:floorplan.num_tris
+			fill(floorplan.verts(floorplan.tris(i,:),1), ...
+				floorplan.verts(floorplan.tris(i,:),2), ...
+				colors(floorplan.room_inds(i),:), ...
+				'FaceAlpha', c(4), ...
+				'EdgeColor', 'none');
+		end
 	end
 
 	% print room indices

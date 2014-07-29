@@ -2,8 +2,9 @@
 #define FLOORPLAN_H
 
 /**
- * @file floorplan.h
- * @author Eric Turner
+ * @file   floorplan.h
+ * @author Eric Turner <elturner@eecs.berkeley.edu>
+ * @brief  Contains classes used to represent floorplan information
  *
  * @section DESCRIPTION
  *

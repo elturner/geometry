@@ -215,6 +215,105 @@ namespace poly2d
 		b = py-sy;
 		return ( a*a + b*b );
 	}
+
+	/**
+	 * Computes the linear center of a triangle, given its vertices
+	 *
+	 * Will find the linear center of the given triangle, based on
+	 * the input vertices.  This is just the average position of
+	 * the three vertices given.
+	 *
+	 * @param px   The x-coordinate of point p
+	 * @param py   The y-coordinate of point p
+	 * @param qx   The x-coordinate of point q
+	 * @param qy   The y-coordinate of point q
+	 * @param rx   The x-coordinate of point r
+	 * @param ry   The y-coordinate of point r
+	 * @param sx   Where to store the x-coordinate of point s
+	 * @param sy   Where to store the y-coordinate of point s
+	 */
+	inline void triangle_center(double px, double py,
+	                            double qx, double qy,
+	                            double rx, double ry,
+	                            double& sx, double& sy)
+	{
+		/* compute average */
+		sx = (px + qx + rx) / 3;
+		sy = (py + qy + ry) / 3;
+	}
+
+	/**
+	 * Finds the intersection point between two line segments
+	 *
+	 * Given the endpoints of two line segments, will determine
+	 * the point of intersection, and return the fraction along
+	 * the first line of that point:
+	 *
+	 * intersection point = v0 + (v1-v0)*<return value>
+	 *
+	 * @param v0x  The X-val of starting point of first line segment
+	 * @param v0y  The Y-val of starting point of first line segment
+	 * @param v1x  The X-val of ending point of first line segment
+	 * @param v1y  The Y-val of ending point of first line segment
+	 * @param w0x  The X-val of starting point of second line segment
+	 * @param w0y  The Y-val of starting point of second line segment
+	 * @param w1x  The X-val of ending point of second line segment
+	 * @param w1y  The Y-val of ending point of second line segment
+	 *
+	 * @return  Returns fraction along line v of intersection point
+	 */
+	inline double line_intersect(double v0x, double v0y,
+				double v1x, double v1y,
+				double w0x, double w0y,
+				double w1x, double w1y)
+	{
+		bool v_vert, w_vert;
+		double v_slope, w_slope, q;
+
+		/* check if either line is vertical, for efficiency */
+		v_vert = (v0x == v1x);
+		w_vert = (w0x == w1x);
+
+		/* check edge case of both lines vertical */
+		if( v_vert && w_vert )
+			return 0; /* parallel lines */
+		else if(v_vert) /* v is vertical, w non-vertical */
+		{
+			/* get intersection point by finding w(v_x) */
+			w_slope = (w1y - w0y) / (w1x - w0x);
+			q = w0y + w_slope*(v0x - w0x);
+
+			/* q represents the y-value at intersection point,
+			 * so return fraction along v */
+			return (q - v0y) / (v1y - v0y);
+		}
+		else if(w_vert) /* w is vertical, v non-vertical */
+		{
+			/* get intersection point by finding v(w_x) */
+			v_slope = (v1y - v0y) / (v1x - v0x);
+			q = v0y + v_slope*(w0x - v0x);
+
+			/* q represents the y-value at intersection point,
+			 * so return the fraction along v */
+			return (q - w0y) / (w1y - w0y);
+		}
+		
+		/* neither line is vertically aligned, so we
+		 * can compute slopes */
+		v_slope = (v1y - v0y) / (v1x - v0x);
+		w_slope = (w1y - w0y) / (w1x - w0x);
+
+		/* check if parallel */
+		if(v_slope == w_slope)
+			return 0; /* parallel lines */
+		
+		/* get x-coordinate of intersection point */
+		q = ((w0y - w_slope*w0x) - (v0y - v_slope*v0x))
+				/ (v_slope - w_slope);
+		
+		/* get fraction of intersection along v */
+		return (q - v0x) / (v1x - v0x);
+	}
 }
 
 #endif
