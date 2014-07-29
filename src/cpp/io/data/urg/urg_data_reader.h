@@ -13,6 +13,7 @@
  * scanners generate a binary data file to be parsed.
  */
 
+#include <sstream>
 #include <fstream>
 #include <istream>
 #include <string>
@@ -216,14 +217,44 @@ class urg_reader_t
 		void close();
 
 		/* access functions */
-		inline int pointsPerScan() const {
+		inline int pointsPerScan() const
+		{
 			return this->points_per_scan;
 		};
-		inline float * angleMap() const {
+		inline float * angleMap() const
+		{
 			return this->angle_map;
 		};
-		inline unsigned int numScans() const {
+		inline unsigned int numScans() const
+		{
 			return this->num_scans;
+		};
+		inline const std::string& serialNum() const
+		{
+			return this->serial_num;
+		};
+		inline int serialNumAsInt() const
+		{
+			std::stringstream serial_ss;
+			int serial;
+			size_t i, n;
+			char c;
+
+			/* get the serial number as an integer */
+			n = this->serial_num.size();
+			for(i = 0; i < n; i++)
+			{
+				/* get the next character of the serial
+				 * number.  Only keep it if it is a
+				 * numeral. */
+				c = this->serial_num[i];
+				if(c >= '0' && c <= '9')
+					serial_ss << c;
+			}
+			
+			/* get the remainder as an integer */
+			serial_ss >> serial;
+			return serial;
 		};
 };
 

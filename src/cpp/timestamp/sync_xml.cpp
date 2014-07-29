@@ -175,7 +175,7 @@ bool SyncXml::read(const std::string& filename)
 	Returns true if sensorName is located in the Xml and
 	false if it is not.
 */
-bool SyncXml::isMember(const std::string& sensorName) {
+bool SyncXml::isMember(const std::string& sensorName) const {
 	return (_data.count(sensorName) != 0);
 }
 

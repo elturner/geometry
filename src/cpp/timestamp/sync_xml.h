@@ -120,7 +120,7 @@ public:
 		Returns true if sensorName is located in the Xml and
 		false if it is not.
 	*/
-	bool isMember(const std::string& sensorName);
+	bool isMember(const std::string& sensorName) const;
 
 	/*
 		FitParams get(const std::string& sensorName);
