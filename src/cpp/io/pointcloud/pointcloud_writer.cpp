@@ -43,6 +43,9 @@ using namespace Eigen;
 /* specifies image cache size */
 #define IMAGE_CACHE_SIZE 10 
 
+/* specifies an image coloring quality that is "good enough" */
+#define IMAGE_COLOR_SHORT_CIRCUIT_QUALITY 0.5
+
 /* function implementations */
 
 pointcloud_writer_t::pointcloud_writer_t()
@@ -65,7 +68,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
                               const  string& conffile,
                               double u,
                               COLOR_METHOD c,
-			      double maxrange)
+			      double maxrange,
+                              double timebuf_range, double timebuf_dt)
 {
 	string file_ext;
 	size_t p;
@@ -139,8 +143,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
 	this->max_range_limit = maxrange; /* range limit option */
-	this->camera_time_buffer_range = 4.0; /* TODO units: seconds */
-	this->camera_time_buffer_dt = 0.5; /* TODO units: seconds */
+	this->camera_time_buffer_range = timebuf_range; /* units: seconds */
+	this->camera_time_buffer_dt = timebuf_dt; /* units: seconds */
 
 	/* get output file type */
 	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
@@ -168,8 +172,13 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
-	/* add to this structure */
-	cam.set_cache_size(IMAGE_CACHE_SIZE);
+	/* add to this structure.  Set the image caching to correspond
+	 * with how many images will be searched for each point.  This
+	 * cache is set to be twice the number of images searched for
+	 * each point. */
+	cam.set_cache_size(ceil(1
+		+ (4*this->camera_time_buffer_range 
+			/ this->camera_time_buffer_dt)));
 	this->fisheye_cameras.push_back(cam);
 
 	/* success */
@@ -809,6 +818,10 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 				red = r;
 				green = g;
 				blue = b;
+			
+				/* check if "good enough" */
+				if(q >= IMAGE_COLOR_SHORT_CIRCUIT_QUALITY)
+					break;
 			}
 		}
 	}

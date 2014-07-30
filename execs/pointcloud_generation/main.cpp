@@ -31,6 +31,7 @@ using namespace std;
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define RANGE_LIMIT_FLAG          "-r"
+#define TIME_BUFFER_FLAG          "--time_buffer"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 #define COLOR_BY_NOISE_FLAG       "--color_by_noise"
 #define COLOR_BY_TIME_FLAG        "--color_by_time"
@@ -162,6 +163,15 @@ void init_args(cmd_args_t& args)
 	               "Will color by provided images, but will not export "
 	               "any points that were out of the field of view of "
 	               "its corresponding camera.");
+	args.add(TIME_BUFFER_FLAG, /* determines spread of images to use */
+	               "Specifies how far to search temporally when "
+	               "using images to color points.  This flag takes two "
+	               "flags:\n\n"
+	               "\t<range> <dt>\n\n"
+	               "Both values are doubles, in units of seconds. "
+	               "Range indicates how far to search from timestamp "
+	               "of point, and dt indicates spacing to search.",
+	               true, 2);
 }
 
 /**
@@ -181,7 +191,7 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	string pathfile, conffile, timefile, outfile;
 	vector<string> fisheye_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
-	double units, maxrange;
+	double units, maxrange, timebuf_range, timebuf_dt;
 	int ret, i, n;
 	tictoc_t clk;
 
@@ -207,6 +217,20 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 		maxrange = args.get_val_as<double>(RANGE_LIMIT_FLAG);
 	else
 		maxrange = -1.0;
+
+	/* time buffer */
+	if(args.tag_seen(TIME_BUFFER_FLAG))
+	{
+		/* get the values */
+		timebuf_range = args.get_val_as<double>(TIME_BUFFER_FLAG,0);
+		timebuf_dt = args.get_val_as<double>(TIME_BUFFER_FLAG,1);
+	}
+	else
+	{
+		/* default values */
+		timebuf_range = 0;
+		timebuf_dt = 1;
+	}
 
 	/* get coloring method */
 	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
@@ -234,7 +258,7 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 
 	/* attempt to open file */
 	ret = writer.open(outfile, pathfile, timefile, conffile,
-			units, c, maxrange);
+			units, c, maxrange, timebuf_range, timebuf_dt);
 	if(ret)
 	{
 		/* unable to initialize writer */

@@ -174,6 +174,10 @@ class pointcloud_writer_t
 		 * @param c         The coloring method to use
 		 * @param maxrange  Optional range limit.  Negative value
 		 *                  uses all points.
+		 * @param timebuf_range     Specifies range of timebuf in
+		 *                          each direction (units: seconds)
+		 * @param timebuf_dt        Specifies step-size of time
+		 *                          buffer search (units: seconds)
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
@@ -183,7 +187,8 @@ class pointcloud_writer_t
 		         const std::string& conffile,
 			 double u,
 		         COLOR_METHOD c,
-			 double maxrange);
+			 double maxrange,
+		         double timebuf_range, double timebuf_dt);
 
 		/**
 		 * Adds a camera to this object for use of coloring

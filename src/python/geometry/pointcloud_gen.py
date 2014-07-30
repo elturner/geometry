@@ -37,7 +37,7 @@ if sys.platform == 'win32' :
 # the following dictionary contains the white-list of all laser sensors
 # to use for pointcloud generation
 laser_whitelist = ['H1214157', 'H1311822', 'H1004314', 'H1004315']
-camera_whitelist = ['left_camera', 'right_camera']
+camera_whitelist = ['left_camera', 'right_camera', 'back_camera']
 
 #----------------------------------------------------
 #---------- FUNCTION IMPLEMENTATIONS ----------------
@@ -169,7 +169,8 @@ def run(dataset_dir, pathfile, use_cameras=True):
 
 		# add camera information if we want to color
 		if use_cameras:
-			args += ['--remove_noncolored_points']
+			args += ['--remove_noncolored_points', \
+				'--time_buffer', '2.0', '0.5']
 			for ci in range(len(cam_metas)):
 				args += ['-f', cam_metas[ci], \
 					cam_calibs[ci], cam_dirs[ci]]
