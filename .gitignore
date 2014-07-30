@@ -36,7 +36,6 @@
 *.pyc
 **/bin/**
 **/x64/**
-**/data/**
 **/Release/**
 **/Debug/**
 
