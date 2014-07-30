@@ -776,14 +776,15 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	red = green = blue = r = g = b = DEFAULT_POINT_COLOR;
 
 	/* determine the list of timestamps to search for each camera */
-	if(this->camera_time_buffer_range <= 0)
-		times_to_search.push_back(t);
-	else
+	times_to_search.push_back(t);
+	for(tau = this->camera_time_buffer_dt;
+			tau <= this->camera_time_buffer_range;
+				tau += this->camera_time_buffer_dt)
 	{
-		for(tau = t - this->camera_time_buffer_range;
-				tau <= t + this->camera_time_buffer_range;
-					tau += this->camera_time_buffer_dt)
-			times_to_search.push_back(tau);
+		/* search farther from current time to attempt to get
+		 * good images for the given point */
+		times_to_search.push_back(t + tau);
+		times_to_search.push_back(t - tau);
 	}
 
 	/* iterate over cameras */
