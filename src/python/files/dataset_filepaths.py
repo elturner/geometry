@@ -121,13 +121,13 @@ def get_color_image_dir(bayerdir):
 def get_madfile_from_name(dataset_dir, dataset_name):
 	# include the optimization tag in name if not already present
 	if not dataset_name.endswith("_opt"):
-            dataset_name_opt = dataset_name + "_opt"
+		dataset_name_opt = dataset_name + "_opt"
 	else:
-            dataset_name_opt = dataset_name
-            dataset_name = dataset_name[:-4]
+		dataset_name_opt = dataset_name
+		dataset_name = dataset_name[:-4] # remove _opt
 
-        # return the reconstruction filepath to the mad file
-        return os.path.abspath(os.path.join(dataset_dir,"localization", \
+	# return the reconstructed filepath to the mad file
+	return os.path.abspath(os.path.join(dataset_dir,"localization", \
 			dataset_name, "optimization", \
 			(dataset_name_opt + ".mad")))
 
@@ -138,12 +138,8 @@ def get_madfile_from_name(dataset_dir, dataset_name):
 #
 def get_name_from_madfile(madfile):
 	name = get_file_body(madfile)
-
-	# don't include the optimization tag in name
 	if name.endswith("_opt"):
 		name = name[:-4]
-
-	# return the result
 	return name
 
 #--------------- Files generated from pointcloud code --------------

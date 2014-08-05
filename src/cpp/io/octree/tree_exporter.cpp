@@ -57,6 +57,15 @@ int tree_exporter::export_node_faces(const string& filename,
 		return PROPEGATE_ERROR(-3, ret);
 	toc(clk, "Exporting boundary faces");
 
+	// TODO debugging
+	node_partitioner_t npt;
+	ret = npt.partition(top);
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	ret = npt.writeobjs("/home/elturner/Desktop/testobjs/gradlounge");
+	if(ret)
+		return PROPEGATE_ERROR(-5, ret);
+
 	/* success */
 	return 0;
 }
