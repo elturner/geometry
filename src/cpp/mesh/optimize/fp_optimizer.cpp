@@ -265,29 +265,21 @@ int fp_optimizer_t::optimize()
 void fp_optimizer_t::run_iteration_walls()
 {
 	vector<Vector2d, aligned_allocator<Vector2d> > net_offset;
-	vector<double> total_confidences; /* confidences on each vertex */
-	vector<double> offsets_tested; /* the offsets to test for each */
-	vector<double> curr_wall_costs; /* wall cost at various offsets */
+	vector<double> total_cost;
 	vector<fp::edge_t> edges; /* walls in floorplan */
-	fp_wall_t wall; /* current wall */
-	Vector2d curr_offset; /* current offset vector */
-	double r, r_min, r_max, r_step, r_best, dc, dc_best, confidence;
-	size_t i, j, n, num_offsets;
+	fp_wall_t wall;
+	Vector2d curr_offset;
+	double r, r_min, r_max, r_step, r_best, c, c_best;
+	size_t i, j, n;
 
 	/* prepare offset vectors for each wall */
-	total_confidences.resize(this->floorplan.verts.size(), 0);
+	total_cost.resize(this->floorplan.verts.size(), 0);
 	net_offset.resize(this->floorplan.verts.size(), Vector2d::Zero());
 
 	/* prepare parameters */
 	r_max = this->search_range; 
 	r_min = -r_max;
 	r_step = this->offset_step_coeff * this->tree.get_resolution();
-
-	/* precompute the offsets that will be tested */
-	for(r = r_min; r <= r_max; r += r_step)
-		offsets_tested.push_back(r);
-	num_offsets = offsets_tested.size();
-	curr_wall_costs.resize(num_offsets, 0);
 
 	/* iterate over the walls */
 	this->floorplan.compute_edges(edges);
@@ -297,40 +289,27 @@ void fp_optimizer_t::run_iteration_walls()
 		/* compute geometry for the i'th wall */
 		wall.init(this->floorplan, edges[i]);
 
-		/* find the costs for all offsets for this wall */
-		for(j = 0; j < num_offsets; j++)
+		/* find the best offset for this wall */
+		c_best = DBL_MAX; /* initialize cost */
+		r_best = 0;
+		for(r = r_min; r <= r_max; r += r_step)
 		{
 			/* set the current wall to this offset */
-			wall.set_offset(offsets_tested[j]);
+			wall.set_offset(r);
 
 			/* compute the cost at this offset */
 			this->tree.find(wall);
-			curr_wall_costs[j] = wall.get_offset_cost();
-		}
 
-		/* find the best offset position by comparing the
-		 * deltas of the costs.  The best wall position will
-		 * be where the cost improved the most (fastest
-		 * rate of change), which means the minimum delta-cost,
-		 * since we want the cost change to be negative. */
-		dc_best = 0; /* to beat this, delta-cost has to be neg. */
-		r_best = 0; /* initialze to no change */
-		confidence = 0; /* how confident we are in the wall */
-		for(j = 1; j < num_offsets; j++)
-		{
-			/* get rate of change for this offset */
-			dc = curr_wall_costs[j] - curr_wall_costs[j-1];
-
-			/* compare to best so far */
-			if(dc < dc_best)
+			/* compare to best cost so far */
+			c = wall.get_offset_cost();
+			if(c < c_best)
 			{
-				/* update best */
-				dc_best = dc;
-				confidence = -dc; /* dc is negative */
-				r_best = offsets_tested[j];
+				/* update values for best-so-far */
+				c_best = c;
+				r_best = r;
 			}
 		}
-			
+
 		/* compute the offset vector due to the best offset dist */
 		curr_offset = r_best * wall.get_norm(); 
 
@@ -341,20 +320,19 @@ void fp_optimizer_t::run_iteration_walls()
 			/* since multiple walls can affect the position
 			 * of each vertex, the net offset will be a
 			 * weighted average of the offsets from each wall,
-			 * based on the confidences given */
-			total_confidences[edges[i].verts[j]] += confidence;
-			net_offset[edges[i].verts[j]] += 
-					confidence*curr_offset;
+			 * based on the cost given */
+			total_cost[edges[i].verts[j]] += c_best;
+			net_offset[edges[i].verts[j]] += c_best*curr_offset;
 		}
 	}
 
 	/* perturb vertex positions */
-	n = total_confidences.size();
+	n = total_cost.size();
 	for(i = 0; i < n; i++)
 	{
 		/* normalize the offsets */
-		if(total_confidences[i] > 0)
-			net_offset[i] /= total_confidences[i];
+		if(total_cost[i] > 0)
+			net_offset[i] /= total_cost[i];
 
 		/* add vector to vertex position for incremental update */
 		this->floorplan.verts[i].x += net_offset[i](0);
@@ -369,9 +347,6 @@ void fp_optimizer_t::run_iteration_height()
 	double r, r_min, r_max, r_step;
 	double floor_r_best, ceil_r_best, c, floor_c_best, ceil_c_best;
 	size_t i, num_rooms, vi, vii;
-
-	// TODO determine whether this method, or the method currently
-	// implemented in run_iteration_walls(), is better
 
 	/* prepare parameters */
 	num_rooms = this->floorplan.rooms.size();
