@@ -42,6 +42,9 @@ include_directories(${OpenCV_LIBS})
 #
 # This is used for supporting outputing to .las formats
 find_package(LibLAS)
+IF(LIBLAS_FOUND)
+	MESSAGE(STATUS "LIBLAS Found.  Compiling with .las file support.")
+ENDIF(LIBLAS_FOUND)
 
 # Make the test sandbox executable
 MESSAGE(STATUS "Including binary \"pointcloud_gen\"")
