@@ -14,6 +14,9 @@ IF(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE RELEASE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
+# Set where to look for additional FindXXXX.cmake files
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
+
 # Setup where we want to build the output binaries
 #
 # This tells CMAKE where to instruct the compiler to build the
@@ -34,6 +37,11 @@ include_directories(/usr/include/eigen3/)
 # This is used for both the kdtree and the threading code
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_LIBS})
+
+# Find liblas
+#
+# This is used for supporting outputing to .las formats
+find_package(LibLAS)
 
 # Make the test sandbox executable
 MESSAGE(STATUS "Including binary \"pointcloud_gen\"")
