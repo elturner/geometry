@@ -1,4 +1,4 @@
-function [] = render_fp(floorplan, color_by_room, c)
+function [] = render_fp(floorplan, color_by_room, c, labels)
 	% render_fp(floorplan)
 	%
 	%	Renders this floor plan on the current figure
@@ -13,6 +13,9 @@ function [] = render_fp(floorplan, color_by_room, c)
 	%	c -		OPTIONAL. Default color to use. Can specify
 	%			[r g b] where each component is in [0,1],
 	%			or can also specify optional [r g b alpha]
+	%	
+	%	labels -	OPTIONAL.  If true, will write room #'s.
+	%			Default is false.
 	%
 
 	hold all;
@@ -29,6 +32,9 @@ function [] = render_fp(floorplan, color_by_room, c)
 	end
 	if(length(c) < 4)
 		c = [c, ones(1,4-length(c))];
+	end
+	if(~exist('labels', 'var'))
+		labels = false;
 	end
 
 	% make a color for each room
@@ -50,13 +56,15 @@ function [] = render_fp(floorplan, color_by_room, c)
 	end
 
 	% print room indices
-	for i = 1:floorplan.num_rooms
-		ts = find(floorplan.room_inds == i);
-		vs = floorplan.tris(ts,:);
-		x_avg = mean(floorplan.verts(vs(:),1));
-		y_avg = mean(floorplan.verts(vs(:),2));
-		name = num2str(i-1);
-		text(x_avg, y_avg, name);
+	if(labels)
+		for i = 1:floorplan.num_rooms
+			ts = find(floorplan.room_inds == i);
+			vs = floorplan.tris(ts,:);
+			x_avg = mean(floorplan.verts(vs(:),1));
+			y_avg = mean(floorplan.verts(vs(:),2));
+			name = num2str(i-1);
+			text(x_avg, y_avg, name);
+		end
 	end
 
 	% plot edges
