@@ -397,9 +397,12 @@ namespace octtopo
 			 * @param inside   Specifies whether to orient the
 			 *                 face counter-clockwise into
 			 *                 or out of the node.
+			 * @param usecolor If false, will leave uncolored.
+			 *                 By default, colors by planarity.
 			 */
 			void writeobjface(std::ostream& os, octnode_t* n,
-			                  CUBE_FACE f, bool inside) const;
+			                  CUBE_FACE f, bool inside,
+					  bool usecolor=true) const;
 	};
 }
 

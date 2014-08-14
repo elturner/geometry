@@ -126,7 +126,7 @@ int octtopo_t::writeobj(const string& filename) const
 	ofstream outfile;
 	progress_bar_t progbar;
 	size_t fi, i, n;
-	double hw;
+	double hw, other_hw;
 
 	/* open file for writing */ 
 	outfile.open(filename.c_str());
@@ -161,13 +161,16 @@ int octtopo_t::writeobj(const string& filename) const
 			/* check for external nodes */
 			for(nit = ns.begin(); nit != ns.end(); nit++)
 			{
+				/* record neighbor's surface area */
+				other_hw = (*nit)->halfwidth;
+
 				/* ignore if interior */
 				if(this->node_is_interior(*nit))
 					continue;
 
 				/* neighbor marks exterior boundary, 
 				 * so export intersection of faces */
-				if((*nit)->halfwidth < hw)
+				if(other_hw < hw)
 					this->writeobjface(outfile, (*nit), 
 						get_opposing_face(
 						all_cube_faces[fi]), false);
@@ -192,7 +195,7 @@ int octtopo_t::writeobj(const string& filename) const
 }
 			
 void octtopo_t::writeobjface(ostream& os, octnode_t* n,
-                             CUBE_FACE f, bool inside) const
+                             CUBE_FACE f, bool inside, bool usecolor) const
 {
 	Vector3d c;
 	double hw, val;
@@ -208,7 +211,7 @@ void octtopo_t::writeobjface(ostream& os, octnode_t* n,
 	val = n->data->get_planar_prob();
 
 	/* set color */
-	if(n->data == NULL)
+	if(n->data == NULL || !usecolor)
 		r = g = b = 255;
 	else
 	{
