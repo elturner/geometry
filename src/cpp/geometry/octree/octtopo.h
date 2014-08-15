@@ -351,7 +351,7 @@ namespace octtopo
 			 * nodes (or null nodes).  The output will be
 			 * formatted as a wavefront .obj file.
 			 *
-			 * @param os   The output file location
+			 * @param filename   The output file location
 			 *
 			 * @return     Returns zero on success, non-zero
 			 *             on failure.

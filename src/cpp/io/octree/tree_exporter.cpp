@@ -4,6 +4,7 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_partitioner.h>
+#include <mesh/partition/node_boundary.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -33,6 +34,7 @@ int tree_exporter::export_node_faces(const string& filename,
                                      const octree_t& tree)
 {
 	octtopo::octtopo_t top;
+	node_boundary_t boundary;
 	tictoc_t clk;
 	int ret;
 
@@ -49,22 +51,29 @@ int tree_exporter::export_node_faces(const string& filename,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 	toc(clk, "Topology verification");
+	
+	/* extract the boundary nodes using the generated topology */
+	tic(clk);
+	ret = boundary.populate(top);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+	toc(clk, "Extracting boundary nodes");
 
 	/* export the boundary topology to file */
 	tic(clk);
-	ret = top.writeobj(filename);
+	ret = boundary.writeobj(filename);
 	if(ret)
-		return PROPEGATE_ERROR(-3, ret);
+		return PROPEGATE_ERROR(-4, ret);
 	toc(clk, "Exporting boundary faces");
 
 	// TODO debugging
 	node_partitioner_t npt;
 	ret = npt.partition(top);
 	if(ret)
-		return PROPEGATE_ERROR(-4, ret);
+		return PROPEGATE_ERROR(-5, ret);
 	ret = npt.writeobjs("/home/elturner/Desktop/testobjs/gradlounge");
 	if(ret)
-		return PROPEGATE_ERROR(-5, ret);
+		return PROPEGATE_ERROR(-6, ret);
 
 	/* success */
 	return 0;

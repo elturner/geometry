@@ -17,6 +17,7 @@
 
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_set.h>
+#include <string>
 #include <vector>
 
 /**
@@ -97,6 +98,26 @@ class node_boundary_t
 		 */
 		int get_boundary_neighbors(octnode_t* node,
 				std::vector<octnode_t*>& neighs) const;
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Exports a Wavefront OBJ file representing the boundary
+		 *
+		 * Given an output file path, will export the faces
+		 * of internal nodes (as measured by 
+		 * octdata->is_interior()) that border with external
+		 * nodes (or null nodes).  The output will be
+		 * formatted as a wavefront .obj file.
+		 *
+		 * @param filename   The output file location
+		 *
+		 * @return     Returns zero on success, non-zero
+		 *             on failure.
+		 */
+		int writeobj(const std::string& filename) const;
 };
 
 #endif

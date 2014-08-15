@@ -217,7 +217,12 @@ class octdata_t
 		 * @return  Returns true iff data indicates interior label
 		 */
 		inline bool is_interior() const
-		{ return (this->get_probability() > 0.5); };
+		{
+			/* must be STRICTLY greater than 0.5 to 
+			 * be interior */
+			return (this->get_probability() 
+					> UNOBSERVED_PROBABILITY);
+		};
 
 		/**
 		 * Returns best estimate of whether this node is an object
