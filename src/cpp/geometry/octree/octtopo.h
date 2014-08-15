@@ -286,6 +286,58 @@ namespace octtopo
 				       end() const
 			{ return this->neighs.end(); };
 
+			/**
+			 * Clears all information from this structure
+			 */
+			inline void clear()
+			{ this->neighs.clear(); };
+
+			/**
+			 * Checks if this topology contains a node
+			 *
+			 * Given a node, will check if it is contained
+			 * internally in this structure
+			 *
+			 * @param node   The node to check
+			 *
+			 * @return   Returns true iff contains node
+			 */
+			inline bool contains(octnode_t* node) const
+			{ return this->neighs.count(node); };
+
+			/**
+			 * Adds a node (and its edges) to this topology
+			 *
+			 * Given a node an its neighbors, will add to this
+			 * topology structure.
+			 *
+			 * @param node     The octnode to add
+			 * @param neighs   The neighs to associate with node
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.  Failure occurs if the node
+			 *            is already present in the map.
+			 */
+			int add(octnode_t* node,
+			        const octneighbors_t& neighs);
+
+			/**
+			 * Retrieves the neighbors structure for given node
+			 *
+			 * Will find the octneighbors_t object associated
+			 * with the given octnode.  If the given octnode
+			 * is not in this structure, then will return a
+			 * failure.
+			 *
+			 * @param node    The node to find
+			 * @param neighs  The neighbor structure to populate
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
+			 */
+			int get(octnode_t* node,
+			        octneighbors_t& neighs) const;
+
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
@@ -319,6 +371,19 @@ namespace octtopo
 			 *            failure.
 			 */
 			int verify() const;
+			
+			/**
+			 * Determines if the given octnode should be counted
+			 * as 'interior'.
+			 *
+			 * Will return true iff the given node should be
+			 * represented as 'interior' in this topography.
+			 *
+			 * @param node    The octnode to analyze
+			 *
+			 * @return    Returns true iff node is interior
+			 */
+			static bool node_is_interior(octnode_t* node);
 
 		/* helper functions */
 		private:
@@ -367,19 +432,6 @@ namespace octtopo
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
-
-			/**
-			 * Determines if the given octnode should be counted
-			 * as 'interior'.
-			 *
-			 * Will return true iff the given node should be
-			 * represented as 'interior' in this topography.
-			 *
-			 * @param node    The octnode to analyze
-			 *
-			 * @return    Returns true iff node is interior
-			 */
-			bool node_is_interior(octnode_t* node) const;
 
 			/**
 			 * Writes a single node face to the OBJ stream

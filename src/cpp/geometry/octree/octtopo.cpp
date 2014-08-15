@@ -103,7 +103,33 @@ int octtopo_t::init(const octree_t& tree)
 	return 0;
 }
 			
-bool octtopo_t::node_is_interior(octnode_t* node) const
+int octtopo_t::add(octnode_t* node, const octneighbors_t& neighs)
+{
+	pair<map<octnode_t*,octneighbors_t>::iterator, bool> it;
+
+	/* attempt to insert values */
+	it = this->neighs.insert(
+			pair<octnode_t*, octneighbors_t>(node, neighs));
+	if(it.second)
+		return 0; /* value inserted */
+	return -1; /* value already exists */
+}
+			
+int octtopo_t::get(octnode_t* node, octneighbors_t& neighs) const
+{
+	map<octnode_t*, octneighbors_t>::const_iterator it;
+
+	/* find the node */
+	it = this->neighs.find(node);
+	if(it == this->neighs.end())
+		return -1; /* node not in structure */
+
+	/* copy the neighbors of this node */
+	neighs = it->second;
+	return 0;
+}
+			
+bool octtopo_t::node_is_interior(octnode_t* node)
 {
 	/* check if node is valid */
 	if(node == NULL)
