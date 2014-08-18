@@ -25,6 +25,7 @@ using namespace std;
 #define IDF_FILE_EXT       "idf"
 #define WRL_FILE_EXT       "wrl"
 #define CSV_FILE_EXT       "csv"
+#define PLY_FILE_EXT       "ply"
 
 /* function implementations */
 
@@ -66,6 +67,11 @@ int config_t::parse(int argc, char** argv)
 		"will export floorplan statistical information to the "
 		"specified comma-separated-variable file, which can be "
 		"viewed in a spreadsheet program, such as excel.");
+	args.add_required_file_type(PLY_FILE_EXT, 0, "If present, then "
+		"will export floorplan in Stanford Polygon format (PLY), "
+		"with the additional region information.  This format "
+		"is a valid .ply file (viewable in meshlab) and is "
+		"required for Peter Cheng's texture-mapping code.");
 
 	/* parse the args */
 	ret = args.parse(argc, argv);
@@ -87,6 +93,7 @@ int config_t::parse(int argc, char** argv)
 	args.files_of_type(IDF_FILE_EXT, this->outfile_idf);
 	args.files_of_type(WRL_FILE_EXT, this->outfile_wrl);
 	args.files_of_type(CSV_FILE_EXT, this->outfile_csv);
+	args.files_of_type(PLY_FILE_EXT, this->outfile_ply);
 
 	/* success */
 	return 0;
