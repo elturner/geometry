@@ -65,7 +65,8 @@ function [] = edge2fp(edgefile, fpfile)
 
 	% get attributes of triangulation
 	num_verts = size(dt.Points,1);
-	num_tris = size(dt.ConnectivityList,1);
+	io = dt.isInterior()';
+	num_tris = sum(io);
 
 	% prepare file
 	outfile = fopen(fpfile, 'w');
@@ -86,7 +87,7 @@ function [] = edge2fp(edgefile, fpfile)
 
 	% print out the triangles.  The triangles index into
 	% the list of vertices, starting at index 0
-	for i = 1:num_tris
+	for i = find(io)
 		fprintf(outfile, '%d %d %d\n', ...
 			dt.ConnectivityList(i,1)-1, ...
 			dt.ConnectivityList(i,2)-1, ...
