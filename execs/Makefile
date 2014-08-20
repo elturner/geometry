@@ -47,4 +47,5 @@ util_progs:
 	#$(MAKE) -w -C simplify_fp
 	$(MAKE) -w -C wedge2xyz
 	$(MAKE) -w -C generate_msd
+	$(MAKE) -w -C transform_model
 

@@ -22,7 +22,32 @@ using namespace std;
 /* helper functions */
 /*------------------*/
 
+/**
+ * These functions are used to convert various file formats.
+ */
 int convert_ply(const transmodel_run_settings_t& args);
+int convert_obj(const transmodel_run_settings_t& args);
+int convert_xyz(const transmodel_run_settings_t& args);
+
+/**
+ * Converts a point based on the transform described in input args
+ *
+ * @param args   The parsed input arguments
+ * @param x      The x-coordinate of point (will be modified in-place)
+ * @param y      The y-coordinate of point (will be modified in-place)
+ * @param z      The z-coordinate of point (will be modified in-place)
+ */
+inline void convert_point(const transmodel_run_settings_t& args,
+			double& x, double& y, double& z)
+{
+	/* line is a point, convert it */
+	x *= args.scale;
+	y *= args.scale;
+	z *= args.scale;
+	x += args.translate;
+	y += args.translate;
+	z += args.translate;
+}
 
 /*--------------------------*/
 /* function implementations */
@@ -64,17 +89,31 @@ int main(int argc, char** argv)
 	/* convert obj files, if they exist */
 	if(!(args.objfiles.empty()))
 	{
-		// TODO
-		cerr << "Converting OBJ: Functionality not yet implemented"
-		     << endl;
+		/* convert it */
+		tic(clk);
+		ret = convert_obj(args);
+		if(ret)
+		{
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to convert obj files." << endl;
+			return 2;
+		}
+		toc(clk, "Converting obj files");
 	}
 
 	/* convert xyz files, if they exist */
 	if(!(args.xyzfiles.empty()))
 	{
-		// TODO
-		cerr << "Converting XYZ: Functionality not yet implemented"
-		     << endl;
+		/* convert it */
+		tic(clk);
+		ret = convert_xyz(args);
+		if(ret)
+		{
+			cerr << "[main]\tError " << ret << ": "
+			     << "Unable to convert xyz files." << endl;
+			return 2;
+		}
+		toc(clk, "Converting xyz files");
 	}
 
 	/* success */
@@ -123,15 +162,8 @@ int convert_ply(const transmodel_run_settings_t& args)
 		}
 		else
 		{
-			/* line is a point, convert it */
-			x *= args.scale;
-			y *= args.scale;
-			z *= args.scale;
-			x += args.translate;
-			y += args.translate;
-			z += args.translate;
-
-			/* output it */
+			/* convert and output it */
+			convert_point(args, x, y, z);
 			outfile << x << " " << y << " " << z << endl;
 		}
 	}
@@ -142,3 +174,117 @@ int convert_ply(const transmodel_run_settings_t& args)
 	return 0;
 }
 
+int convert_obj(const transmodel_run_settings_t& args)
+{
+	ifstream infile;
+	ofstream outfile;
+	string tline;
+	int num_found;
+	double x, y, z;
+
+	/* prepare input for reading */
+	infile.open(args.objfiles[0].c_str());
+	if(!(infile.is_open()))
+	{
+		cerr << "[convert_obj]\tUnable to open input: "
+		     << args.objfiles[0] << endl;
+		return -1;
+	}
+
+	/* prepare output for writing */
+	outfile.open(args.objfiles[1].c_str());
+	if(!(outfile.is_open()))
+	{
+		cerr << "[convert_obj]\tUnable to open output: "
+		     << args.objfiles[1] << endl;
+		return -2;
+	}
+
+	/* iterate through file */
+	while(!(infile.eof()))
+	{
+		/* get the next line */
+		std::getline(infile, tline);
+
+		/* check if this line is a point */
+		num_found = sscanf(tline.c_str(),
+				"v %lf %lf %lf", &x, &y, &z);
+		if(num_found != 3)
+		{
+			/* line is not a point, just pipe it */
+			outfile << tline << endl;
+		}
+		else
+		{
+			/* convert and output it */
+			convert_point(args, x, y, z);
+			outfile << "v " 
+			        << x << " " << y << " " << z << endl;
+		}
+	}
+
+	/* clean up */
+	infile.close();
+	outfile.close();
+	return 0;
+}
+
+int convert_xyz(const transmodel_run_settings_t& args)
+{
+	ifstream infile;
+	ofstream outfile;
+	string tline;
+	int num_found;
+	double x, y, z, timestamp;
+	int r, g, b, index, serial;
+
+	/* prepare input for reading */
+	infile.open(args.plyfiles[0].c_str());
+	if(!(infile.is_open()))
+	{
+		cerr << "[convert_ply]\tUnable to open input: "
+		     << args.plyfiles[0] << endl;
+		return -1;
+	}
+
+	/* prepare output for writing */
+	outfile.open(args.plyfiles[1].c_str());
+	if(!(outfile.is_open()))
+	{
+		cerr << "[convert_ply]\tUnable to open output: "
+		     << args.plyfiles[1] << endl;
+		return -2;
+	}
+
+	/* iterate through file */
+	while(!(infile.eof()))
+	{
+		/* get the next line */
+		std::getline(infile, tline);
+
+		/* check if this line is a point */
+		num_found = sscanf(tline.c_str(),
+				"%lf %lf %lf %d %d %d %d %lf %d", 
+				&x, &y, &z, &r, &g, &b,
+				&index, &timestamp, &serial);
+		if(num_found != 9)
+		{
+			/* line is not a point, just pipe it */
+			outfile << tline << endl;
+		}
+		else
+		{
+			/* convert and output it */
+			convert_point(args, x, y, z);
+			outfile << x << " " << y << " " << z << " " 
+			        << r << " " << g << " " << b << " "
+			        << index << " " << timestamp << " "
+			        << serial << endl;
+		}
+	}
+
+	/* clean up */
+	infile.close();
+	outfile.close();
+	return 0;
+}
