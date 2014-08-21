@@ -249,7 +249,7 @@ def get_floorplan_obj_file(dataset_dir, fp_file):
 # Returns the floorplan mesh (ply) file, given the fp
 #
 def get_floorplan_ply_file(dataset_dir, fp_file):
-	return os.path.join(get_faketexture_dir(dataset_dir), \
+	return os.path.join(get_floorplan_dir(dataset_dir), \
 		get_file_body(fp_file) + ".ply")
 
 ##
