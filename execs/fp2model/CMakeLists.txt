@@ -37,5 +37,5 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/fp2model/s
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/util/tictoc.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/util/cmd_args.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/util/progress_bar.cpp
-							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/mesh/floorplan/*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/mesh/floorplan/*.cpp)
 add_executable(fp2model ${SANDBOX_SRC})
