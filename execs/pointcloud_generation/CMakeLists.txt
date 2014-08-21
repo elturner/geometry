@@ -43,7 +43,10 @@ include_directories(${OpenCV_LIBS})
 # This is used for supporting outputing to .las formats
 find_package(LibLAS)
 IF(LIBLAS_FOUND)
-	MESSAGE(STATUS "LIBLAS Found.  Compiling with .las file support.")
+	MESSAGE(STATUS "Compiling with .las file support.")
+	add_definitions(-DLIBLAS_SUPPORTED)
+ELSE(LIBLAS_FOUND)
+	MESSAGE(STATUS "Compiling without .las file support.")
 ENDIF(LIBLAS_FOUND)
 
 # Make the test sandbox executable
