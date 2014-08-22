@@ -45,6 +45,7 @@ sys.path.append(PYTHON_GEOMETRY_DIR)
 import pointcloud_gen
 import partition_pointcloud_levels
 import floorplan
+import surface_carve
 sys.path.append(PYTHON_LATEX_DIR)
 import generate_tex
 
@@ -144,6 +145,13 @@ def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME):
     if ret != 0:
         print "Error! Unable to generate PDF documentation",ret
         return -4
+
+    # generate a detailed mesh using surface carving method.
+    # this is saved for last since it takes the longest
+    ret = surface_carve.run(DATSET_DIR, LOCALIZATION_FILE)
+    if ret != 0:
+        print "Error! Unable to generate surface carving"
+        return -5
 
     # success
     return 0

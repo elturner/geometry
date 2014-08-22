@@ -183,6 +183,23 @@ def get_pc_levels_hist(dataset_dir, name):
 		name + "_hist.m")
 
 ##
+# Returns a list of the pointcloud files in the pointcloud directory
+#
+def get_all_pointcloud_files(dataset_dir):
+	# get the pointcloud levels directory
+	pcdir = get_pointcloud_dir(dataset_dir)
+
+	# iterate through files in this directory
+	pcfiles = []
+	for f in os.listdir(pcdir):
+		(body, ext) = os.path.splitext(f)
+		if ext == '.xyz':
+			pcfiles.append(os.path.join(pcdir, f))
+
+	# return final list of pointcloud files
+	return pcfiles
+
+##
 # Returns a list of the pointcloud files in the levels directory
 #
 def get_pc_levels_list(dataset_dir):
@@ -198,6 +215,34 @@ def get_pc_levels_list(dataset_dir):
 
 	# return final list of pointcloud files
 	return pcfiles
+
+#------------- Files generated from surface_carve code -------------
+
+##
+# Returns the location of the surface carve directory
+#
+def get_surface_carve_dir(dataset_dir):
+	return os.path.join(get_models_dir(dataset_dir),"surface_carve")
+
+##
+# Returns the location of the surface carving .vox file
+#
+# @param dataset_dir   The root directory of the dataset
+# @param madfile       The .mad file to use
+#
+def get_surface_carve_vox(dataset_dir, madfile):
+	return os.path.join(get_floorplan_dir(dataset_dir), \
+	                    get_name_from_madfile(madfile) + ".vox")
+
+##
+# Returns the location of the surface carving .ply file
+#
+# @param dataset_dir   The root directory of the dataset
+# @param madfile       The .mad file to use
+#
+def get_surface_carve_ply(dataset_dir, madfile):
+	return os.path.join(get_floorplan_dir(dataset_dir), \
+	                    get_name_from_madfile(madfile) + ".ply")
 
 #--------------- Files generated from floorplan code ---------------
 
