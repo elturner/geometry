@@ -142,7 +142,7 @@ def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME):
 
     # generate a detailed mesh using surface carving method.
     # this is saved for last since it takes the longest
-    ret = surface_carve.run(DATSET_DIR, LOCALIZATION_FILE)
+    ret = surface_carve.run(DATASET_DIR, LOCALIZATION_FILE)
     if ret != 0:
         print "Error! Unable to generate surface carving"
         return -4
