@@ -162,7 +162,7 @@ void tri_rep_t::init(set<triple_t>& interior)
 	for(it = interior.begin(); it != interior.end(); it++)
 	{
 		/* add triangle */
-		this->tris.insert(make_pair<triple_t, tri_info_t>(
+		this->tris.insert(pair<triple_t, tri_info_t>(
 			*it, tri_info_t(*it, this->tri, interior)));
 	
 		/* add its vertices */
@@ -189,7 +189,7 @@ pair<map<triple_t, tri_info_t>::iterator, bool>
 	if(!t.unique())
 	{
 		/* not valid triangle, won't add to struct */
-		return make_pair<
+		return pair<
 			map<triple_t, tri_info_t>::iterator, 
 			bool>(this->tris.end(), false);
 	}
@@ -199,7 +199,7 @@ pair<map<triple_t, tri_info_t>::iterator, bool>
 	if(it != this->tris.end())
 	{
 		/* triangle already exists in map, do nothing */
-		return make_pair<
+		return pair<
 			map<triple_t, tri_info_t>::iterator, 
 			bool>(it, false);
 	}
@@ -217,7 +217,7 @@ pair<map<triple_t, tri_info_t>::iterator, bool>
 		/* get neighbor info */
 		it = this->tris.find(*sit);
 		if(it == this->tris.end())
-			return make_pair<
+			return pair<
 				map<triple_t, tri_info_t>::iterator, 
 				bool>(this->tris.end(), false);
 	
@@ -226,7 +226,7 @@ pair<map<triple_t, tri_info_t>::iterator, bool>
 	}
 
 	/* add triangle to map */
-	return this->tris.insert(make_pair<triple_t, tri_info_t>(t, info));
+	return this->tris.insert(pair<triple_t, tri_info_t>(t, info));
 }
 	
 int tri_rep_t::fill_polygonal_hole(vector<int>& vs, const triple_t& root)
@@ -582,7 +582,7 @@ void tri_rep_t::get_rooms(vector<set<triple_t> >& rooms)
 		{
 			/* this is a new room, so make an entry in
 			 * the map for it */
-			mit = root_map.insert(make_pair<triple_t, int>(
+			mit = root_map.insert(pair<triple_t, int>(
 				it->second.root, rooms.size())).first;
 			rooms.push_back(set<triple_t>());
 		}
@@ -992,7 +992,7 @@ int tri_rep_t::collapse_edge(int a, int b)
 		}
 
 		/* add tnew to the structure */
-		tnew_it = this->tris.insert(make_pair<triple_t, 
+		tnew_it = this->tris.insert(pair<triple_t, 
 				tri_info_t>(tnew, tri_info_t())).first;
 
 		/* get info about old triangle */
@@ -1568,7 +1568,7 @@ void tri_rep_t::add_edge_to_room(tri_edge_t& e, room_info_t& r)
 	if(bit == r.border_lengths.end())
 	{
 		/* need to add a new entry for this neighboring room */
-		bit = r.border_lengths.insert(make_pair<triple_t,
+		bit = r.border_lengths.insert(pair<triple_t,
 				double>((*eit).second.root, 0)).first;
 	}
 	(*bit).second += sqrt(e.len_sq);
@@ -1615,7 +1615,7 @@ int tri_rep_t::unlabel_extra_rooms()
 		{
 			/* need to make a new room info for this root */
 			room_list.push_back(new room_info_t(root));
-			rit = room_map.insert(make_pair<triple_t,
+			rit = room_map.insert(pair<triple_t,
 				room_info_t*>(root, 
 				room_list.back())).first;
 		}
@@ -1745,7 +1745,7 @@ int tri_rep_t::add_room_labels_to_graph()
 	for(it = this->tris.begin(); it != this->tris.end(); it++)
 	{
 		/* add this triangle's room's root to the map */
-		room_ids.insert(make_pair<triple_t, int>(
+		room_ids.insert(pair<triple_t, int>(
 					(*it).second.root, 0));
 	}
 
@@ -1802,12 +1802,12 @@ void tri_rep_t::populate_room_heights()
 		fit = room_min_z_vals.find(tit->second.root);
 		if(fit == room_min_z_vals.end())
 			fit = room_min_z_vals.insert(
-				make_pair<triple_t, vector<double> >(
+				pair<triple_t, vector<double> >(
 				tit->second.root, vector<double>())).first;
 		cit = room_max_z_vals.find(tit->second.root);
 		if(cit == room_max_z_vals.end())
 			cit = room_max_z_vals.insert(
-				make_pair<triple_t, vector<double> >(
+				pair<triple_t, vector<double> >(
 				tit->second.root, vector<double>())).first;
 
 		/* add the heights of each vertex to this room */
@@ -1835,7 +1835,7 @@ void tri_rep_t::populate_room_heights()
 		{
 			/* make a new entry */
 			rit = this->room_heights.insert(
-				make_pair<triple_t, room_height_t>(
+				pair<triple_t, room_height_t>(
 				fit->first, room_height_t())).first;
 		}
 

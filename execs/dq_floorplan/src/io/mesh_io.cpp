@@ -88,7 +88,7 @@ int writeobj(char* filename, tri_rep_t& trirep)
 		num_verts++;
 
 		/* add to map */
-		index_map.insert(make_pair<int,int>(vit->first, 
+		index_map.insert(pair<int,int>(vit->first, 
 						num_verts));
 	
 		/* print the vertex (floor level) */
@@ -327,7 +327,7 @@ int writeply(char* filename, tri_rep_t& trirep)
 		 * we should remember the mapping between root and
 		 * region number.  Add one to floor index to get ceiling
 		 * region index. */
-		room_to_floor_region_map.insert(make_pair<triple_t, int>(
+		room_to_floor_region_map.insert(pair<triple_t, int>(
 				tit->second.root, region_normals.size()));
 
 		/* get heights */
@@ -405,7 +405,7 @@ int writeply(char* filename, tri_rep_t& trirep)
 		p = TRI_VERTEX_POS(&(trirep.tri), vit->first);
 
 		/* add to map */
-		index_map.insert(make_pair<int,int>(vit->first, 
+		index_map.insert(pair<int,int>(vit->first, 
 						pts_to_write.size()));
 	
 		/* print the vertex (floor level) */
