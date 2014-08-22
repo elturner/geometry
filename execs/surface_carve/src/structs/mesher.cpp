@@ -558,7 +558,7 @@ int mesher_t::coalesce_regions()
 	/* initialize flexible region indices */
 	n = this->regions.size();
 	for(r = 0; r < n; r++)
-		flexible_regions.insert(make_pair<int, int>(
+		flexible_regions.insert(pair<int, int>(
 				this->regions[r].neighbors.size(), r));
 
 	/* user (aka Eric) wants a progress bar */
@@ -670,7 +670,7 @@ int mesher_t::coalesce_regions_lax()
 	/* initialize flexible region indices */
 	n = this->regions.size();
 	for(r = 0; r < n; r++)
-		flexible_regions.insert(make_pair<int, int>(
+		flexible_regions.insert(pair<int, int>(
 				this->regions[r].neighbors.size(), r));
 
 	/* keep coalescing while there are available regions */
@@ -1056,7 +1056,7 @@ int mesher_t::compute_verts()
 			{
 				/* add a new entry to the verts map */
 				vit = this->verts.insert(
-							make_pair<voxel_t, 
+							pair<voxel_t, 
 							vertex_state_t>(v, 
 							vertex_state_t(v))
 						).first;

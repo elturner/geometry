@@ -19,6 +19,12 @@
 #include <mesh/partition/node_set.h>
 #include <string>
 #include <vector>
+#include <map>
+
+/* the following classes are defined in this file */
+class node_boundary_t;
+class node_face_t;
+class node_face_info_t;
 
 /**
  * The node_boundary_t class can compute the subset of nodes
@@ -44,6 +50,16 @@ class node_boundary_t
 		 * of the topology for the whole set of leaf nodes.
 		 */
 		octtopo::octtopo_t boundary;
+
+		/**
+		 * The boundary faces and their topology
+		 *
+		 * The set of faces is populated using the
+		 * boundary nodes.  This mapping gives information
+		 * about each node face, such as what adjoining faces
+		 * it touches.
+		 */
+		std::multimap<node_face_t, node_face_info_t> faces;
 
 	/* functions */
 	public:
@@ -118,6 +134,145 @@ class node_boundary_t
 		 *             on failure.
 		 */
 		int writeobj(const std::string& filename) const;
+};
+
+/**
+ * This class represents a face of a node
+ *
+ * This class is expressed by the minimal amount of information
+ * necessary to uniquely identify a particular face of a specific node.
+ */
+class node_face_t
+{
+	/* parameters */
+	public:
+		/* the originating node for this face */
+		octnode_t* node;
+		octtopo::CUBE_FACE f; /* the face of node this represents */
+
+	/* functions */
+	public:
+
+		/*-----------*/
+		/* operators */
+		/*-----------*/
+
+		/**
+		 * Copies information from the given node into this object
+		 */
+		inline node_face_t& operator = (const node_face_t& other)
+		{
+			this->node = other.node;
+			this->f = other.f;
+			return (*this);
+		};
+
+		/**
+		 * Determines ordering of node faces.
+		 *
+		 * Ordering is necessary for insertion into sorted
+		 * structures, such as sets or maps.
+		 */
+		inline bool operator < (const node_face_t& other) const
+		{
+			if(this->node < other.node)
+				return true;
+			if(this->node > other.node)
+				return false;
+			return (this->f < other.f);
+		};
+
+		/**
+		 * Checks equality between node faces
+		 */
+		inline bool operator == (const node_face_t& other) const
+		{
+			return ((this->node == other.node) 
+					&& (this->f == other.f));
+		};
+
+		/**
+		 * Checks inequality between node faces
+		 */
+		inline bool operator != (const node_face_t& other) const
+		{
+			return ((this->node != other.node)
+					|| (this->f != other.f));
+		};
+};
+
+/**
+ * This class represents the face of a node
+ *
+ * Node faces are necessary for computing various boundary properties
+ */
+class node_face_info_t
+{
+	/* parameters */
+	public:
+
+		/* center position of the face */
+		double x;
+		double y;
+		double z;
+
+		/* faces are always squares.  This
+		 * value represents half the length
+		 * of one side */
+		double halfwidth;
+
+		/* this value represents the list of faces that are 
+		 * connected in some way to this face */
+		std::set<node_face_t> neighbors;
+
+	/* functions */
+	public:
+
+		/*----------------*/
+		/* initialization */
+		/*----------------*/
+
+		/**
+		 * Will populate values of face based on the given node.
+		 *
+		 * Given a node and a cube face, will populate all
+		 * the parameters of this face.
+		 *
+		 * @param n     The node whose face this is
+		 * @param ff    The face of the node that this represents
+		 */
+		void init(octnode_t* n, octtopo::CUBE_FACE ff);
+
+		/**
+		 * Initializes the face info based on the given face
+		 *
+		 * @param face  The face to use to initialize
+		 */
+		inline void init(const node_face_t& face)
+		{ this->init(face.node, face.f); };
+
+		/*-----------*/
+		/* operators */
+		/*-----------*/
+
+		/**
+		 * Copies parameters from given node_face_t to this one
+		 */
+		inline node_face_info_t& operator = (
+				const node_face_info_t& other)
+		{
+			/* copy values */
+			this->x         = other.x;
+			this->y         = other.y;
+			this->z         = other.z;
+			this->halfwidth = other.halfwidth;
+			this->neighbors.clear();
+			this->neighbors.insert(other.neighbors.begin(),
+					other.neighbors.end());
+
+			/* return the result */
+			return (*this);
+		};
 };
 
 #endif

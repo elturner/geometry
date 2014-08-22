@@ -53,7 +53,7 @@ int union_find_faces(vector<vector<face_t> >& unions, mesher_t& mesh)
 	i = 0;
 	for(git = mesh.graph.begin(); git != mesh.graph.end(); git++)
 	{
-		faces.insert(make_pair<face_t, int>((*git).first, i));
+		faces.insert(pair<face_t, int>((*git).first, i));
 		i++;
 	}
 	M = i;
