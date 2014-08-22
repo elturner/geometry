@@ -140,17 +140,17 @@ def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME):
                     "floorplans:",ret
             return -3
 
-    # prepare some documentation about this dataset
-    ret = generate_tex.run(DATASET_DIR, DATASET_NAME)
-    if ret != 0:
-        print "Error! Unable to generate PDF documentation",ret
-        return -4
-
     # generate a detailed mesh using surface carving method.
     # this is saved for last since it takes the longest
     ret = surface_carve.run(DATSET_DIR, LOCALIZATION_FILE)
     if ret != 0:
         print "Error! Unable to generate surface carving"
+        return -4
+    
+    # prepare some documentation about this dataset
+    ret = generate_tex.run(DATASET_DIR, DATASET_NAME)
+    if ret != 0:
+        print "Error! Unable to generate PDF documentation",ret
         return -5
 
     # success
