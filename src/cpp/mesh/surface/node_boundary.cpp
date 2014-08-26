@@ -3,7 +3,9 @@
 #include <geometry/octree/octtopo.h>
 #include <geometry/poly_intersect/poly2d.h>
 #include <mesh/partition/node_set.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
+#include <util/tictoc.h>
 #include <Eigen/Dense>
 #include <algorithm>
 #include <iostream>
@@ -39,9 +41,11 @@ using namespace Eigen;
 
 int node_boundary_t::populate(const octtopo_t& topo)
 {
+	tictoc_t clk;
 	int ret;
 
 	/* populate the faces structure */
+	tic(clk);
 	ret = this->populate_faces(topo);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
@@ -52,6 +56,7 @@ int node_boundary_t::populate(const octtopo_t& topo)
 		return PROPEGATE_ERROR(-2, ret);
 
 	/* success */
+	toc(clk, "Populating boundary faces");
 	return 0;
 }
 		
@@ -101,18 +106,31 @@ int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
 int node_boundary_t::writeobj(const string& filename) const
 {
 	map<node_face_t, node_face_info_t>::const_iterator fit;
+	progress_bar_t progbar;
 	ofstream outfile;
+	size_t i, n;
 
 	/* open file for writing */
 	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
 		return -1;
 
+	/* prepare progress bar */
+	progbar.set_name("Writing OBJ");
+	i = 0; n = this->faces.size();
+
 	/* iterate over faces */
 	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
-		fit->first.writeobj(outfile); /* write face */
+	{
+		/* inform user of progress */
+		progbar.update(i++, n);
+
+		/* write face */
+		fit->first.writeobj(outfile);
+	}
 
 	/* success */
+	progbar.clear();
 	outfile.close();
 	return 0;
 }
@@ -125,15 +143,24 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 	Vector3d p, norm;
 	double halfwidth;
 	int num_verts;
+	progress_bar_t progbar;
+	size_t i, n;
 
 	/* open file for writing */
 	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
 		return -1;
 
+	/* prepare progress bar */
+	progbar.set_name("Writing OBJ");
+	i = 0; n = this->faces.size();
+
 	/* write out the centers of all found faces */
 	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
 	{
+		/* inform user of progress */
+		progbar.update(i++, n);
+
 		/* store index.  Note that OBJ files index
 		 * starting at 1, so should we. */
 		fit->first.get_center(p);
@@ -159,6 +186,7 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 			/* ignore self-neighbors */
 			if(*nit == fit->first)
 			{
+				progbar.clear();
 				cerr << "[node_boundary_t::"
 				     << "writeobj_cliques]\tFound selfcycle"
 				     << endl;
@@ -179,6 +207,7 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 	}
 
 	/* clean up */
+	progbar.clear();
 	outfile.close();
 	return 0;
 }
@@ -193,14 +222,23 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 	pair<map<node_face_t, node_face_info_t>::iterator, bool> ins;
 	node_face_t face;
 	vector<octnode_t*> neighs;
-	size_t f, i, n;
+	size_t f, i, j, n, num_nodes;
 	bool found_exterior;
+	progress_bar_t progbar;
+
+	/* set up progress bar */
+	progbar.set_name("Making boundary faces");
 
 	/* now that we've stored the bounary nodes, we can determine the
 	 * set of boundary faces.  Each boundary node can contribute one
 	 * or more boundary faces. */
+	j = 0;
+	num_nodes = topo.size();
 	for(it = topo.begin(); it != topo.end(); it++)
 	{
+		/* update user on progress */
+		progbar.update(j++, num_nodes);
+
 		/* ignore exterior nodes */
 		if(!(octtopo_t::node_is_interior(it->first)))
 			continue;
@@ -244,6 +282,7 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 				if(!(ins.second))
 				{
 					/* unable to insert face */
+					progbar.clear();
 					cerr << "[node_boundary_t::"
 					     << "populate_faces]\tSomehow, "
 					     << "current face was already "
@@ -273,6 +312,7 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 	}
 
 	/* success */
+	progbar.clear();
 	return 0;
 }
 		
@@ -282,6 +322,8 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 	set<node_face_t> nearby_faces;
 	set<node_face_t>::iterator nit;
 	node_face_t face;
+	progress_bar_t progbar;
+	size_t j, num_faces;
 	int ret;
 
 	/* populate linkages between faces using node_face_map
@@ -292,9 +334,17 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 	 * 	- they are on neighboring nodes and have same f value
 	 */
 
+	/* prepare progress bar */
+	progbar.set_name("Linking node faces");
+
 	/* iterate all the faces to connect */
+	j = 0;
+	num_faces = this->faces.size();
 	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
 	{
+		/* update user on progress */
+		progbar.update(j++, num_faces);
+
 		/* get the current face */
 		face = fit->first;
 
@@ -385,6 +435,7 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 	}
 
 	/* success */
+	progbar.clear();
 	return 0;
 }
 

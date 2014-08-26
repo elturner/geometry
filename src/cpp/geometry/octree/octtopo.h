@@ -326,6 +326,12 @@ namespace octtopo
 			{ this->neighs.clear(); };
 
 			/**
+			 * Returns the number of nodes in this topology
+			 */
+			inline size_t size() const
+			{ return this->neighs.size(); };
+
+			/**
 			 * Checks if this topology contains a node
 			 *
 			 * Given a node, will check if it is contained

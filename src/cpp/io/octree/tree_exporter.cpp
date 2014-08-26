@@ -4,7 +4,7 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_partitioner.h>
-#include <mesh/partition/node_boundary.h>
+#include <mesh/surface/node_boundary.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -45,19 +45,10 @@ int tree_exporter::export_node_faces(const string& filename,
 		return PROPEGATE_ERROR(-1, ret);
 	toc(clk, "Initializing topology");
 
-	/* verify topology.  Not required, but good for debugging */
-	tic(clk);
-	ret = top.verify();
-	if(ret)
-		return PROPEGATE_ERROR(-2, ret);
-	toc(clk, "Topology verification");
-	
 	/* extract the boundary nodes using the generated topology */
-	tic(clk);
 	ret = boundary.populate(top);
 	if(ret)
 		return PROPEGATE_ERROR(-3, ret);
-	toc(clk, "Extracting boundary");
 
 	/* export the boundary topology to file */
 	tic(clk);
