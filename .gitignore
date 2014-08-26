@@ -35,6 +35,7 @@
 *.sql
 *.pyc
 **/bin/**
+**/build/**
 **/x64/**
 **/Release/**
 **/Debug/**
