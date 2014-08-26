@@ -20,6 +20,7 @@
 
 #include "octree.h"
 #include "octnode.h"
+#include <Eigen/Dense>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -85,6 +86,38 @@ namespace octtopo
 		/* will never get here */
 		return f;
 	};
+
+	/**
+	 * This represents a lookup table for the outward normals
+	 * for each cube face.
+	 *
+	 * @param f   The face to check
+	 * @param n   Where to store the normal vector
+	 */
+	static inline void cube_face_normals(CUBE_FACE f, Eigen::Vector3d n)
+	{
+		switch(f)
+		{
+			case FACE_ZMINUS:
+				n << 0,0,-1;
+				break;
+			case FACE_YMINUS:
+				n << 0,-1,0;
+				break;
+			case FACE_XMINUS:
+				n << -1,0,0;
+				break;
+			case FACE_XPLUS:
+				n << 1,0,0;
+				break;
+			case FACE_YPLUS:
+				n << 0,1,0;
+				break;
+			case FACE_ZPLUS:
+				n << 0,0,1;
+				break;
+		}
+	}
 
 	/*-----------------------------------------------------*/
 	/*-------------- class declarations -------------------*/

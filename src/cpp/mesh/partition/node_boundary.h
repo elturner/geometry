@@ -17,6 +17,8 @@
 
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_set.h>
+#include <Eigen/Dense>
+#include <ostream>
 #include <string>
 #include <vector>
 #include <map>
@@ -59,7 +61,7 @@ class node_boundary_t
 		 * about each node face, such as what adjoining faces
 		 * it touches.
 		 */
-		std::multimap<node_face_t, node_face_info_t> faces;
+		std::map<node_face_t, node_face_info_t> faces;
 
 	/* functions */
 	public:
@@ -134,6 +136,65 @@ class node_boundary_t
 		 *             on failure.
 		 */
 		int writeobj(const std::string& filename) const;
+
+		/**
+		 * Exports a Wavefront OBJ file representing cliques in
+		 * boundary graph
+		 *
+		 * Given an output file paht, will epxort the discovered
+		 * cliques in the graph representation of the boundary
+		 * faces each as a triangle.
+		 *
+		 * @param filename   The output file location
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int writeobj_cliques(const std::string& filename) const;
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Populates the boundary struct inside this object
+		 *
+		 * This function is called within the populate()
+		 * function.
+		 *
+		 * @param topo   The topology to use
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate_boundary(const octtopo::octtopo_t& topo);
+
+		/**
+		 * Populates the faces struct inside this object
+		 *
+		 * This function is called within the populate()
+		 * function.  populate_boundary() must be called first.
+		 *
+		 * @param topo   The original, full topology
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate_faces(const octtopo::octtopo_t& topo);
+
+		/**
+		 * Populates the linkages between faces
+		 *
+		 * Will compute which faces are neighbors to which other
+		 * faces. populate_faces() must have already been called
+		 * before calling this function.
+		 *
+		 * @param topo   The original, full topology
+		 * @param node_face_map     A mapping from nodes to the 
+		 *                          faces that make
+		 *                          contact with those nodes.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate_face_linkages(const octtopo::octtopo_t& topo,
+				const std::multimap<octnode_t*,
+				node_face_t>& node_face_map);
 };
 
 /**
@@ -152,6 +213,49 @@ class node_face_t
 
 	/* functions */
 	public:
+
+		/*--------------*/
+		/* constructors */
+		/*--------------*/
+
+		/**
+		 * Default constructor establishes invalid face
+		 */
+		node_face_t()
+		{
+			this->node = NULL;
+			this->f = octtopo::FACE_ZMINUS;
+		};
+
+		/**
+		 * Constructor provides parameters for face
+		 *
+		 * @param n   The originating node for this face
+		 * @param ff  The side of the node that holds this face
+		 */
+		node_face_t(octnode_t* n, octtopo::CUBE_FACE ff)
+		{
+			this->node = n;
+			this->f = ff;
+		};
+
+		/*----------*/
+		/* geometry */
+		/*----------*/
+
+		/**
+		 * Checks if this face shares an edge with another face
+		 *
+		 * To share an edge means that the faces are touching
+		 * along a line defined by the intersection of the boundary
+		 * of both faces.  This function call will check if such
+		 * an intersection exists and if the faces fall along it.
+		 *
+		 * @param other   The other face to compare to
+		 *
+		 * @return        Returns true iff the faces share an edge
+		 */
+		bool shares_edge_with(const node_face_t& other) const;
 
 		/*-----------*/
 		/* operators */
@@ -204,22 +308,38 @@ class node_face_t
 /**
  * This class represents the face of a node
  *
- * Node faces are necessary for computing various boundary properties
+ * Node faces are necessary for computing various boundary properties.
+ *
+ * Note that a face can be represented as a set of subfaces.  This is
+ * because the entirety of the area of a face may not be touching the
+ * boundary of the model, in which case we need to keep track of which
+ * portions of the face are part of the boundary.
  */
 class node_face_info_t
 {
+	/* security */
+	friend class node_boundary_t;
+
 	/* parameters */
-	public:
+	private:
 
-		/* center position of the face */
-		double x;
-		double y;
-		double z;
+		/* the face being represented.  This is stored as the
+		 * originating node for this face and the side of the node
+		 * that the face resides on.
+		 *
+		 * The originating node is always interior
+		 */
+		node_face_t face;
 
-		/* faces are always squares.  This
-		 * value represents half the length
-		 * of one side */
-		double halfwidth;
+		/* the neighboring nodes of the originating node of this
+		 * face.  Given the originating node and the neighboring
+		 * node, one can reconstruct the boundary surface between
+		 * them. 
+		 *
+		 * These should all be exterior nodes.  They are allowed
+		 * to be null.
+		 */
+		std::vector<octnode_t*> exterior_nodes;
 
 		/* this value represents the list of faces that are 
 		 * connected in some way to this face */
@@ -233,23 +353,79 @@ class node_face_info_t
 		/*----------------*/
 
 		/**
-		 * Will populate values of face based on the given node.
-		 *
-		 * Given a node and a cube face, will populate all
-		 * the parameters of this face.
-		 *
-		 * @param n     The node whose face this is
-		 * @param ff    The face of the node that this represents
+		 * Clears all information from this structure.
 		 */
-		void init(octnode_t* n, octtopo::CUBE_FACE ff);
+		inline void clear()
+		{
+			this->face.node = NULL;
+			this->exterior_nodes.clear();
+			this->neighbors.clear();
+		};
 
 		/**
-		 * Initializes the face info based on the given face
+		 * Initializes this structure for a given face
 		 *
-		 * @param face  The face to use to initialize
+		 * @param f   The face to initialize to
 		 */
-		inline void init(const node_face_t& face)
-		{ this->init(face.node, face.f); };
+		inline void init(node_face_t& f)
+		{
+			/* reset the values of this structure */
+			this->face = f;
+			this->exterior_nodes.clear();
+			this->neighbors.clear();
+		};
+
+		/**
+		 * Will populate values of a subface based on given 
+		 * exterior node.
+		 *
+		 * Given an exterior node and a cube face, will add a
+		 * subface to this face info struct.
+		 *
+		 * @param n     The opposing node that shares this face
+		 */
+		inline void add(octnode_t* n)
+		{ this->exterior_nodes.push_back(n); };
+
+		/*----------*/
+		/* analysis */
+		/*----------*/
+
+		/**
+		 * Retrieve the number of subfaces represented
+		 *
+		 * @return   Returns the number of subfaces represented
+		 *           in this info structure.
+		 */
+		inline size_t num_subfaces() const
+		{ return this->exterior_nodes.size(); };
+
+		/**
+		 * Get the center position of the given subface
+		 *
+		 * Given the index of a subface, will determine the
+		 * 3D center position of that subface.
+		 * 
+		 * @param i   The index of the subface to analyze
+		 * @param p   Where to store the center position of subface
+		 */
+		void get_subface_center(size_t i, Eigen::Vector3d& p) const;
+
+		/**
+		 * Get the halfwidth of the given subface
+		 *
+		 * Given the index of a subface, will determine the
+		 * halfwidth of that subface.
+		 *
+		 * The halfwidth represents half the length of one
+		 * side of the square that represents the shape of
+		 * the subface.
+		 *
+		 * @param i   The index of the subface to analyze
+		 *
+		 * @return    Returns the halfwidth of that subface
+		 */
+		double get_subface_halfwidth(size_t i) const;
 
 		/*-----------*/
 		/* operators */
@@ -262,10 +438,12 @@ class node_face_info_t
 				const node_face_info_t& other)
 		{
 			/* copy values */
-			this->x         = other.x;
-			this->y         = other.y;
-			this->z         = other.z;
-			this->halfwidth = other.halfwidth;
+			this->face = other.face;
+			this->exterior_nodes.clear();
+			this->exterior_nodes.insert(
+				this->exterior_nodes.begin(),
+				other.exterior_nodes.begin(),
+				other.exterior_nodes.end());
 			this->neighbors.clear();
 			this->neighbors.insert(other.neighbors.begin(),
 					other.neighbors.end());
@@ -273,6 +451,17 @@ class node_face_info_t
 			/* return the result */
 			return (*this);
 		};
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Writes face to a wavefront OBJ file stream
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void writeobj(std::ostream& os) const;
 };
 
 #endif
