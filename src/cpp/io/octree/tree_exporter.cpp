@@ -61,7 +61,7 @@ int tree_exporter::export_node_faces(const string& filename,
 
 	/* export the boundary topology to file */
 	tic(clk);
-	ret = boundary.writeobj(filename);
+	ret = boundary.writeobj_cliques(filename); // TODO
 	if(ret)
 		return PROPEGATE_ERROR(-4, ret);
 	toc(clk, "Exporting boundary faces");

@@ -129,6 +129,50 @@ int octtopo_t::get(octnode_t* node, octneighbors_t& neighs) const
 	return 0;
 }
 			
+bool octtopo_t::are_neighbors(octnode_t* a, octnode_t* b) const
+{
+	octneighbors_t a_neighs, b_neighs;
+	int ret;
+	size_t fi;
+
+	/* first, check validity of arguments */
+	if(a == NULL || b == NULL || a == b)
+		return false; /* cannot be neighbors in these cases */
+
+	/* get neighbors for a */
+	ret = this->get(a, a_neighs);
+	if(ret)
+		return false; /* if a is not in topo, cannot be neighs */
+
+	/* get neighbors for b */
+	ret = this->get(b, b_neighs);
+	if(ret)
+		return false;
+
+	/* search through a's neighbors, looking for b */
+	for(fi = 0; fi < NUM_FACES_PER_CUBE; fi++)
+		if(a_neighs.neighs[fi].count(b))
+		{
+			/* 'b' is a neighbor of 'a' on face fi,
+			 * so verify that 'a' is a neigh of
+			 * 'b' on the opposite face */
+			if(b_neighs.neighs[
+					octtopo::get_opposing_face(
+					octtopo::all_cube_faces[fi])]
+					.count(a))
+				return true; /* they are neighbors */
+
+			/* if got here, the neighboring is asymmetric,
+			 * which is bad */
+			cerr << "[octtopo_t::are_neighbors]\tError! Found "
+			     << "asymmetric neighbors!" << endl << endl;
+			return true; /* still count them as neighbors */
+		}
+
+	/* no neighbors found */
+	return false;
+}
+			
 bool octtopo_t::node_is_interior(octnode_t* node)
 {
 	/* check if node is valid */

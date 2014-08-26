@@ -94,7 +94,7 @@ namespace octtopo
 	 * @param f   The face to check
 	 * @param n   Where to store the normal vector
 	 */
-	static inline void cube_face_normals(CUBE_FACE f, Eigen::Vector3d n)
+	static inline void cube_face_normals(CUBE_FACE f,Eigen::Vector3d& n)
 	{
 		switch(f)
 		{
@@ -370,6 +370,23 @@ namespace octtopo
 			 */
 			int get(octnode_t* node,
 			        octneighbors_t& neighs) const;
+
+			/**
+			 * Checks if two nodes are neighbors
+			 *
+			 * Will search through the given nodes, and checks
+			 * if they are neighbors to one another.
+			 *
+			 * Note that a node is not considered neighbors
+			 * with itself.
+			 *
+			 * @param a    The first node to check
+			 * @param b    The second node to check
+			 *
+			 * @return     Returns true iff a neighbors b
+			 */
+			bool are_neighbors(octnode_t* a,
+			                   octnode_t* b) const;
 
 			/*-----------*/
 			/* debugging */

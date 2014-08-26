@@ -14,7 +14,7 @@
 #include <map>
 
 /**
- * @file node_boundary.cpp
+ * @file   node_boundary.cpp
  * @author Eric Turner <elturner@eecs.berkeley.edu>
  * @brief  Classes used to define boundary nodes in octrees
  *
@@ -41,13 +41,13 @@ int node_boundary_t::populate(const octtopo_t& topo)
 {
 	int ret;
 
-	/* populate the boundary structure */
-	ret = this->populate_boundary(topo);
+	/* populate the faces structure */
+	ret = this->populate_faces(topo);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
-	/* now populate the faces structure */
-	ret = this->populate_faces(topo);
+	/* populate the linkages between faces */
+	ret = this->populate_face_linkages(topo);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
@@ -55,24 +55,44 @@ int node_boundary_t::populate(const octtopo_t& topo)
 	return 0;
 }
 		
-int node_boundary_t::get_boundary_neighbors(octnode_t* node,
-					vector<octnode_t*>& neighs) const
+int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
+					octnode_t* node,
+					std::set<node_face_t>& nfs) const
 {
 	octneighbors_t edges;
-	size_t fi;
+	vector<octnode_t*> neighs;
+	pair<multimap<octnode_t*, node_face_t>::const_iterator,
+		multimap<octnode_t*, node_face_t>::const_iterator> range;
+	multimap<octnode_t*, node_face_t>::const_iterator it;
+	size_t fi, i, n;
 	int ret;
 
-	/* clear any existing values in neighs container */
-	neighs.clear();
+	/* verify input */
+	if(node == NULL)
+		return 0; /* no neighbors */
 
-	/* find the node in our structure */
-	ret = this->boundary.get(node, edges);
+	/* find the node in the topology */
+	ret = topo.get(node, edges);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
-	/* store all neighbors */
+	/* iterate over all neighboring nodes */
 	for(fi = 0; fi < NUM_FACES_PER_CUBE; fi++)
+	{
+		/* get the neighboring nodes on this face */
+		neighs.clear();
 		edges.get(all_cube_faces[fi], neighs);
+
+		/* iterate over neighboring nodes */
+		n = neighs.size();
+		for(i = 0; i < n; i++)
+		{
+			/* get the faces that abut the given node */
+			range = this->node_face_map.equal_range(neighs[i]);
+			for(it = range.first; it != range.second; it++)
+				nfs.insert(it->second);
+		}
+	}
 
 	/* success */
 	return 0;
@@ -80,26 +100,31 @@ int node_boundary_t::get_boundary_neighbors(octnode_t* node,
 		
 int node_boundary_t::writeobj(const string& filename) const
 {
-	int ret;
+	map<node_face_t, node_face_info_t>::const_iterator fit;
+	ofstream outfile;
 
-	/* use the stored topology to write the file */
-	ret = this->writeobj_cliques(filename); // TODO this->boundary.writeobj(filename);
-	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
+	/* open file for writing */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return -1;
+
+	/* iterate over faces */
+	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
+		fit->first.writeobj(outfile); /* write face */
 
 	/* success */
+	outfile.close();
 	return 0;
 }
 
 int node_boundary_t::writeobj_cliques(const std::string& filename) const
 {
-	map<node_face_t, node_face_info_t>::const_iterator fit, nfit;
+	map<node_face_t, node_face_info_t>::const_iterator fit;
 	set<node_face_t>::const_iterator nit;
-	map<node_face_t, size_t> index_map;
 	ofstream outfile;
-	vector<node_face_t> intersect;
-	vector<node_face_t>::iterator eit;
-	size_t num_verts;
+	Vector3d p, norm;
+	double halfwidth;
+	int num_verts;
 
 	/* open file for writing */
 	outfile.open(filename.c_str());
@@ -107,20 +132,27 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 		return -1;
 
 	/* write out the centers of all found faces */
-	num_verts = 0;
 	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
 	{
 		/* store index.  Note that OBJ files index
 		 * starting at 1, so should we. */
-		index_map[fit->first] = ++num_verts;
-		outfile << "v " << fit->first.node->center.transpose()
-		        << endl;
-	}
+		fit->first.get_center(p);
+		if(fit->first.exterior == NULL)
+			outfile << "v " << p.transpose() 
+			        << " 255 0 0" << endl;
+		else
+			outfile << "v " << p.transpose()
+			        << " 255 255 255" << endl;
+		
+		/* write point slightly above face */
+		octtopo::cube_face_normals(fit->first.direction, norm);
+		halfwidth = fit->first.get_halfwidth();
+		p += halfwidth*0.5*norm;
+		outfile << "v " << p.transpose()
+		        << " 0 0 255" << endl;
 
-	/* find all the cliques */
-	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
-	{
 		/* iterate over the neighbors of this face */
+		num_verts = 0;
 		for(nit = fit->second.neighbors.begin();
 				nit != fit->second.neighbors.end(); nit++)
 		{
@@ -133,35 +165,16 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 				continue;
 			}
 
-			/* get the neighbors of this neighbor */
-			nfit = this->faces.find(*nit);
+			/* write out point at neighbor */
+			nit->get_center(p);
+			outfile << "v " << p.transpose()
+			        << " 0 255 0" << endl;
+			num_verts++;
 
-			/* check for the intersection of the two neighbor
-			 * sets */
-			intersect.resize(max(fit->second.neighbors.size(),
-					nfit->second.neighbors.size()));
-			eit = std::set_intersection(
-					fit->second.neighbors.begin(),
-					fit->second.neighbors.end(),
-					nfit->second.neighbors.begin(),
-					nfit->second.neighbors.end(),
-					intersect.begin());
-			intersect.resize(eit - intersect.begin());
-
-			/* iterate over the intersection */
-			for(eit = intersect.begin(); 
-					eit != intersect.end(); eit++)
-			{
-				/* ignore degenerate triangles */
-				if(*eit == *nit || *eit == fit->first)
-					continue;
-
-				/* export triangle between these
-				 * three points */
-				outfile << "f " << index_map[*eit] << " "
-					<< index_map[nfit->first] << " "
-					<< index_map[fit->first] << endl;
-			}
+			/* write triangle for this neighbor */
+			outfile << "f " << -1 
+				<< " " << (-1-num_verts)
+				<< " " << (-2-num_verts) << endl;
 		}
 	}
 
@@ -174,96 +187,34 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 /* node_boundary_t helper functions */
 /*----------------------------------*/
 
-
-int node_boundary_t::populate_boundary(const octtopo::octtopo_t& topo)
+int node_boundary_t::populate_faces(const octtopo_t& topo)
 {
 	map<octnode_t*, octneighbors_t>::const_iterator it;
+	pair<map<node_face_t, node_face_info_t>::iterator, bool> ins;
+	node_face_t face;
 	vector<octnode_t*> neighs;
 	size_t f, i, n;
 	bool found_exterior;
-	int ret;
 
-	/* iterate through the nodes in this tree, storing
-	 * the boundary nodes */
+	/* now that we've stored the bounary nodes, we can determine the
+	 * set of boundary faces.  Each boundary node can contribute one
+	 * or more boundary faces. */
 	for(it = topo.begin(); it != topo.end(); it++)
 	{
 		/* ignore exterior nodes */
 		if(!(octtopo_t::node_is_interior(it->first)))
 			continue;
 
-		/* check all neighbors of this node */
-		found_exterior = false;
-		for(f = 0; f < NUM_FACES_PER_CUBE && !found_exterior; f++)
-		{
-			/* get the neighbors for this face */
-			neighs.clear();
-			it->second.get(octtopo::all_cube_faces[f], neighs);
-
-			/* check if facing some null space */
-			if(neighs.empty())
-			{
-				/* if a face has no neighbors,
-				 * then this node is next to null
-				 * space, which is exterior */
-				found_exterior = true;
-				break;
-			}
-
-			/* check if any of this node's neighbors
-			 * are exterior.  If so, then this is a 
-			 * boundary node.
-			 *
-			 * Alternatively, if this node has no neighbors
-			 * at all, then is also a boundary, since null
-			 * space is assumed to be exterior. */
-			n = neighs.size();
-			for(i = 0; i < n && !found_exterior; i++)
-				if(!octtopo_t::node_is_interior(neighs[i]))
-					found_exterior = true;
-		}
-	
-		/* check if current node is a boundary */
-		if(found_exterior)
-		{
-			/* it is a boundary node, copy its
-			 * structure to this object */
-			ret = this->boundary.add(it->first,
-					it->second);
-			if(ret)
-				return PROPEGATE_ERROR(-1, ret);
-		}
-	}
-
-	/* success */
-	return 0;
-}
-		
-int node_boundary_t::populate_faces(const octtopo_t& topo)
-{
-	map<octnode_t*, octneighbors_t>::const_iterator it;
-	multimap<octnode_t*, node_face_t> node_face_map;
-	pair<map<node_face_t, node_face_info_t>::iterator, bool> ins;
-	node_face_t face;
-	vector<octnode_t*> neighs;
-	size_t f, i, n;
-	bool found_exterior;
-	int ret;
-
-	/* now that we've stored the bounary nodes, we can determine the
-	 * set of boundary faces.  Each boundary node can contribute one
-	 * or more boundary faces. */
-	for(it = this->boundary.begin(); it != this->boundary.end(); it++)
-	{
 		/* iterate over faces, looking for exterior neighbors */
 		for(f = 0; f < NUM_FACES_PER_CUBE; f++)
 		{
 			/* prepare properties of the current face */
-			face.node = it->first;
-			face.f = octtopo::all_cube_faces[f];
+			face.init(it->first, NULL,
+					octtopo::all_cube_faces[f]);
 			
 			/* get nodes neighboring on this face */
 			neighs.clear();
-			it->second.get(face.f, neighs);
+			it->second.get(face.direction, neighs);
 			
 			/* if the neighs list is empty, that means that
 			 * this node is abutting null space.  We want to
@@ -284,20 +235,21 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 					continue;
 				found_exterior = true; /* i'th neighbor
 				                        * exterior */
-
+				face.exterior = neighs[i];
+				
 				/* store face info */
 				ins = this->faces.insert(pair<node_face_t,
 						node_face_info_t>(
 						face, node_face_info_t()));
-				if(ins.second)
+				if(!(ins.second))
 				{
-					/* newly inserted info, we need
-					 * to initialize it to this face */
-					ins.first->second.init(face);
+					/* unable to insert face */
+					cerr << "[node_boundary_t::"
+					     << "populate_faces]\tSomehow, "
+					     << "current face was already "
+					     << "inserted!?" << endl;
+					return -1;
 				}
-
-				/* add this opposing node to face info */
-				ins.first->second.add(neighs[i]);
 
 				/* keep track of all the faces generated
 				 * for each node.
@@ -306,7 +258,7 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 				 * node and the opposing node, since both
 				 * are connected to the face. */
 				if(neighs[i] != NULL)
-					node_face_map.insert(
+					this->node_face_map.insert(
 						std::pair<octnode_t*,
 							node_face_t>(
 							neighs[i], face));
@@ -314,134 +266,120 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 			
 			/* record current node in mapping */
 			if(found_exterior)
-				node_face_map.insert(
+				this->node_face_map.insert(
 					std::pair<octnode_t*,node_face_t>(
 						it->first, face));
 		}
 	}
 
-	/* populate the linkage between nodes */
-	ret = this->populate_face_linkages(topo, node_face_map);
-	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
-
 	/* success */
 	return 0;
 }
 		
-int node_boundary_t::populate_face_linkages(const octtopo_t& topo,
-				const multimap<octnode_t*,
-				node_face_t>& node_face_map)
+int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 {
 	map<node_face_t, node_face_info_t>::iterator fit;
-	multimap<octnode_t*, node_face_t>::const_iterator it, nit;
-	pair<multimap<octnode_t*, node_face_t>::const_iterator,
-		multimap<octnode_t*, node_face_t>::const_iterator> range;
-	octnode_t* node;
+	set<node_face_t> nearby_faces;
+	set<node_face_t>::iterator nit;
 	node_face_t face;
-	CUBE_FACE oppface, joiningface;
-	octneighbors_t edges;
-	vector<octnode_t*> neighs;
-	size_t fi, i, n;
 	int ret;
 
 	/* populate linkages between faces using node_face_map
+	 *
 	 * faces should be neighbors iff one of the following:
 	 *	- they share a node (and their f values are not same 
 	 * 				or opposing)
 	 * 	- they are on neighboring nodes and have same f value
 	 */
 
-	/* iterate all the nodes in question */
-	for(it = node_face_map.begin(); it != node_face_map.end(); it++)
+	/* iterate all the faces to connect */
+	for(fit = this->faces.begin(); fit != this->faces.end(); fit++)
 	{
-		/* get the node and face at this entry */
-		node = it->first;
-		face = it->second;
-		oppface = octtopo::get_opposing_face(face.f);
+		/* get the current face */
+		face = fit->first;
 
-		/* verify that this face is a part of the mapping */
-		fit = this->faces.find(face);
-		if(fit == this->faces.end())
-		{
-			cerr << "[node_boundary_t::populate_face_linkages]"
-			     << "\tUnable to find face: (" << face.node
-			     << ", " << face.f << "), which is paired "
-			     << "with node: " << node << endl;
-			return -1;
-		}
-
-		/* get the other faces for this node */
-		range = node_face_map.equal_range(node);
-		for(nit = range.first; nit != range.second; nit++)
-		{
-			/* the face denoted by nit->second is a face on
-			 * node.  If it is facing at a right angle from the
-			 * current face, then it should be a neighbor */
-			if(nit->second.f == face.f 
-					|| nit->second.f == oppface)
-				continue;
-
-			/* check if the two faces share an edge */
-			if(!(face.shares_edge_with(nit->second)))
-				continue;
-
-			/* these faces should be linked */
-			fit->second.neighbors.insert(nit->second);
-		}
-
-		/* get the nodes that are neighbors to this node */
-		ret = topo.get(node, edges);
+		/* get all nearby faces that have the potential to
+		 * be linked to this face */
+		nearby_faces.clear();
+		ret = this->get_neighboring_faces(topo, face.interior, 
+							nearby_faces);
 		if(ret)
-		{
-			cerr << "[node_boundary_t::populate_face_linkages]"
-			     << "\tCould not locate node: " << node << endl;
+			return PROPEGATE_ERROR(-1, ret);
+		ret = this->get_neighboring_faces(topo, face.exterior,
+							nearby_faces);
+		if(ret)
 			return PROPEGATE_ERROR(-2, ret);
-		}
 
-
-		for(fi = 0; fi < NUM_FACES_PER_CUBE; fi++)
+		/* for each potential face, check if it should be linked */
+		for(nit = nearby_faces.begin(); 
+				nit != nearby_faces.end(); nit++)
 		{
-			/* we only care about neighboring nodes if the
-			 * touching face is orthogonal to the current face
-			 */
-			joiningface = octtopo::all_cube_faces[fi];
-			if(joiningface == face.f || joiningface == oppface)
-				continue;
+			/* check edge case of the faces being the same */
+			if(face == *nit)
+				continue; /* don't want self-linkages */
 
-			/* get nodes neighboring on this face */
-			neighs.clear();
-			edges.get(joiningface, neighs);
-			n = neighs.size();
-
-			/* iterate over the neighboring nodes */
-			for(i = 0; i < n; i++)
+			/* check if they have the same interior or exterior
+			 * nodes.  If so, then they are definitely
+			 * candidates to be linked */
+			if(face.interior == nit->interior)
 			{
-				/* get the boundary faces for this
-				 * neighboring node */
-				range = node_face_map.equal_range(
-							neighs[i]);
-				for(nit = range.first; 
-						nit != range.second; nit++)
+				/* guaranteed to link if their exteriors
+				 * neighbor */
+				if(!(topo.are_neighbors(face.exterior,
+							nit->exterior)))
 				{
-					/* ignore this neighboring face
-					 * if it is not facing the same
-					 * direction as the current
-					 * face */
-					if(nit->second.f != face.f)
+					/* have to check geometry
+					 * bounding */
+					if(!(face.shares_edge_with(*nit)))
 						continue;
-			
-					/* check if the two faces share 
-					 * an edge */
-					if(!(face.shares_edge_with(
-							nit->second)))
-						continue;
-
-
-					/* add this face as a neighbor */
-					fit->second.neighbors.insert(
-							nit->second);
 				}
+					
+				/* if got here, then the two faces
+				 * share an edge, and should be 
+				 * linked */
+				fit->second.neighbors.insert(*nit);
+			}
+			else if(face.exterior == nit->exterior)
+			{
+				/* guaranteed to link if their interiors
+				 * are neighbors */
+				if(!(topo.are_neighbors(face.interior,
+							nit->interior)))
+				{
+					/* have to check geometry */
+					if(!(face.shares_edge_with(*nit)))
+						continue;
+				}
+				
+				/* if got here, then the two faces
+				 * share an edge, and should be 
+				 * linked */
+				fit->second.neighbors.insert(*nit);
+			}
+			else
+			{
+				/* since the faces don't share either
+				 * node, that means that both of the
+				 * following must be true for them
+				 * to link:
+				 *
+				 * 	- their interiors must neighbor
+				 * 	- their exteriors must neighbor
+				 * 	- faces must be same direction
+				 */
+				if(!(topo.are_neighbors(face.interior,
+							nit->interior))
+						|| !(topo.are_neighbors(
+							face.exterior,
+							nit->exterior))
+						|| (face.direction
+							!= nit->direction))
+					continue; /* not to be linked */
+
+				/* if got here, then the two faces
+				 * share an edge, and should be 
+				 * linked */
+				fit->second.neighbors.insert(*nit);
 			}
 		}
 	}
@@ -461,60 +399,63 @@ bool node_face_t::shares_edge_with(const node_face_t& other) const
 	double ay[2];
 	double bx[2];
 	double by[2];
-	double hw=0.0, ohw=0.0;
-	Vector3d norm(0,0,0), othernorm(0,0,0);
+	double hw, ohw;
+	Vector3d center, othercenter, disp, disp_a, disp_perp, manhat;
+	Vector3d norm, othernorm, axis;
 
 	/* get the cube side that this face resides on */
-	oppf = octtopo::get_opposing_face(this->f);
-	if(oppf == other.f)
+	oppf = octtopo::get_opposing_face(this->direction);
+	if(oppf == other.direction)
 		return false; /* opposing faces cannot share an edge */
 	
 	/* the following initialize the variables that may
 	 * be used */
 	ax[0] = ax[1] = ay[0] = ay[1] = bx[0] = bx[1] = by[0] = by[1] = 0.0;
+	hw  = this->get_halfwidth();
+	ohw = other.get_halfwidth();
+	this->get_center(center);
+	other.get_center(othercenter);
 
 	/* check for case where they face the same direction */
-	if(this->f == other.f)
+	if(this->direction == other.direction)
 	{
 		/* face the same direction, problem is now 2D */
-		hw  = this->node->halfwidth;
-		ohw = other.node->halfwidth;
-		switch(this->f)
+		switch(this->direction)
 		{
 			case FACE_XMINUS:
 			case FACE_XPLUS:
-				ax[0] = this->node->center(1)-hw;
-				ax[1] = this->node->center(1)+hw;
-				ay[0] = this->node->center(2)-hw;
-				ay[1] = this->node->center(2)+hw;
-				bx[0] = other.node->center(1)-ohw;
-				bx[1] = other.node->center(1)+ohw;
-				by[0] = other.node->center(2)-ohw;
-				by[1] = other.node->center(2)+ohw;
+				ax[0] = center(1)-hw;
+				ax[1] = center(1)+hw;
+				ay[0] = center(2)-hw;
+				ay[1] = center(2)+hw;
+				bx[0] = othercenter(1)-ohw;
+				bx[1] = othercenter(1)+ohw;
+				by[0] = othercenter(2)-ohw;
+				by[1] = othercenter(2)+ohw;
 				break;
 
 			case FACE_YMINUS:
 			case FACE_YPLUS:
-				ax[0] = this->node->center(2)-hw;
-				ax[1] = this->node->center(2)+hw;
-				ay[0] = this->node->center(0)-hw;
-				ay[1] = this->node->center(0)+hw;
-				bx[0] = other.node->center(2)-ohw;
-				bx[1] = other.node->center(2)+ohw;
-				by[0] = other.node->center(0)-ohw;
-				by[1] = other.node->center(0)+ohw;
+				ax[0] = center(2)-hw;
+				ax[1] = center(2)+hw;
+				ay[0] = center(0)-hw;
+				ay[1] = center(0)+hw;
+				bx[0] = othercenter(2)-ohw;
+				bx[1] = othercenter(2)+ohw;
+				by[0] = othercenter(0)-ohw;
+				by[1] = othercenter(0)+ohw;
 				break;
 
 			case FACE_ZMINUS:
 			case FACE_ZPLUS:
-				ax[0] = this->node->center(0)-hw;
-				ax[1] = this->node->center(0)+hw;
-				ay[0] = this->node->center(1)-hw;
-				ay[1] = this->node->center(1)+hw;
-				bx[0] = other.node->center(0)-ohw;
-				bx[1] = other.node->center(0)+ohw;
-				by[0] = other.node->center(1)-ohw;
-				by[1] = other.node->center(1)+ohw;
+				ax[0] = center(0)-hw;
+				ax[1] = center(0)+hw;
+				ay[0] = center(1)-hw;
+				ay[1] = center(1)+hw;
+				bx[0] = othercenter(0)-ohw;
+				bx[1] = othercenter(0)+ohw;
+				by[0] = othercenter(1)-ohw;
+				by[1] = othercenter(1)+ohw;
 				break;
 		}
 
@@ -525,40 +466,59 @@ bool node_face_t::shares_edge_with(const node_face_t& other) const
 	/* the faces are orthogonal to each other.  We can determine
 	 * if these touch based on analysis corresponding to each
 	 * face's normal. */
-	octtopo::cube_face_normals(this->f, norm);
-	octtopo::cube_face_normals(other.f, othernorm);
+	octtopo::cube_face_normals(this->direction, norm);
+	octtopo::cube_face_normals(other.direction, othernorm);
+	disp = center - othercenter; /* displacement betwen faces */
+	axis = norm.cross(othernorm); /* axis of edge, if exists */
+	disp_a = disp.dot(axis) * axis; /* displacement along axis */
+	disp_perp = disp - disp_a;  /* disp. component perp to axis */
 
-	// TODO left off here ... this over-connects
-	return true;
+	/* displacement we expect if they share an edge */
+	manhat = norm*ohw - othernorm*hw;
+	
+	/* the faces, if they are touching, can either be bending inward
+	 * or outward.  We can check if it is one of these two possibilities
+	 * with the following: */
+	if((manhat - disp_perp).squaredNorm() > APPROX_ZERO
+			&& (manhat + disp_perp).squaredNorm() > APPROX_ZERO)
+	{
+		/* neither scenario checks out, so this cannot
+		 * be a shared edge */
+		return false;
+	}
+
+	/* now that we know that both faces share an edge defined by
+	 * axis, we want to make sure they occupy an overlapping
+	 * segment of that line, which can be done as follows */
+	if(disp_a.norm() < max(hw, ohw))
+		return true; /* the faces occupy overlapping 
+		              * segments on axis */
+
+	/* if got here, then the faces don't share an edge */
+	return false;
 }
 
-/*-------------------------------------------*/
-/* node_face_info_t function implementations */
-/*--------------------------------------------*/
-
-void node_face_info_t::get_subface_center(size_t i,Eigen::Vector3d& p) const
+void node_face_t::get_center(Eigen::Vector3d& p) const
 {
-	octnode_t* opp;
 	CUBE_FACE f;
 	double hw;
 
-	/* get opposing node to this subface */
-	opp = this->exterior_nodes[i];
-
 	/* determine starting node */
-	if(opp == NULL || opp->halfwidth > this->face.node->halfwidth)
+	if(this->exterior == NULL 
+			|| this->exterior->halfwidth 
+			 > this->interior->halfwidth)
 	{
 		/* the interior node dictates position */
-		f = this->face.f;
-		hw = this->face.node->halfwidth;
-		p = this->face.node->center;
+		f  = this->direction;
+		hw = this->interior->halfwidth;
+		p  = this->interior->center;
 	}
 	else
 	{
 		/* the exterior node dictates position */
-		f = octtopo::get_opposing_face(this->face.f);
-		hw = opp->halfwidth;
-		p = opp->center;
+		f  = octtopo::get_opposing_face(this->direction);
+		hw = this->exterior->halfwidth;
+		p  = this->exterior->center;
 	}
 
 	/* get face center position based on node center position */
@@ -585,37 +545,121 @@ void node_face_info_t::get_subface_center(size_t i,Eigen::Vector3d& p) const
 	}
 }
 
-double node_face_info_t::get_subface_halfwidth(size_t i) const
+double node_face_t::get_halfwidth() const
 {
-	Vector3d p;
-	octnode_t* opp;
-
-	/* get opposing node to this subface */
-	opp = this->exterior_nodes[i];
-
 	/* whichever node (either the interor or exterior) that
 	 * borders this face has the smaller halfwidth will
 	 * dictate the halfwidth of this face */
-	if(opp == NULL)
-		return this->face.node->halfwidth;
-	else if(this->face.node->halfwidth < opp->halfwidth)
-		return this->face.node->halfwidth;
-	return opp->halfwidth;
+	if(this->exterior == NULL)
+		return this->interior->halfwidth;
+	else if(this->interior->halfwidth < this->exterior->halfwidth)
+		return this->interior->halfwidth;
+	return this->exterior->halfwidth;
 }
 
-void node_face_info_t::writeobj(std::ostream& os) const
+void node_face_t::writeobj(std::ostream& os) const
 {
 	Vector3d p;
-	size_t i, n;
+	double hw;
 
-	/* iterate over subfaces */
-	n = this->num_subfaces();
-	for(i = 0; i < n; i++)
+	/* get geometry of face */
+	this->get_center(p);
+	hw = this->get_halfwidth();
+
+	/* draw vertices based on orientation of face */
+	switch(this->direction)
 	{
-		/* get the face geometry */
-		this->get_subface_center(i, p);
-
-		/* write it */
-		os << "v " << p.transpose() << " 0 255 0" << endl;
+		case FACE_ZMINUS:
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)   ) << endl;
+			break;
+		case FACE_ZPLUS:
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)   ) << endl;
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)   ) << endl;
+			break;
+		case FACE_YMINUS:
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)+hw) << endl;
+			break;
+		case FACE_YPLUS:
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)-hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)+hw)
+			   <<  " " << (p(1)   ) 
+			   <<  " " << (p(2)-hw) << endl;
+			break;
+		case FACE_XMINUS:
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)-hw) << endl;
+			break;
+		case FACE_XPLUS:
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)-hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)+hw) 
+			   <<  " " << (p(2)+hw) << endl;
+			os << "v " << (p(0)   )
+			   <<  " " << (p(1)-hw) 
+			   <<  " " << (p(2)+hw) << endl;
+			break;
 	}
-}	
+
+	/* draw the face */
+	os << "f -1 -2 -3 -4" << endl;
+}
+
+/*-------------------------------------------*/
+/* node_face_info_t function implementations */
+/*--------------------------------------------*/
+
