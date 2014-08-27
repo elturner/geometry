@@ -99,6 +99,21 @@ class node_boundary_t
 			this->faces.clear();
 		};
 
+		/**
+		 * Returns an iterator to the beginning of the set of faces
+		 */
+		inline std::map<node_face_t, 
+		       node_face_info_t>::const_iterator begin() const
+		{ return this->faces.begin(); };
+
+		/**
+		 * Returns an iterator to the end of the set of faces
+		 */
+		inline std::map<node_face_t, 
+		       node_face_info_t>::const_iterator end() const
+		{ return this->faces.end(); };
+		
+
 		/*------------*/
 		/* processing */
 		/*------------*/
@@ -126,6 +141,21 @@ class node_boundary_t
 		int get_neighboring_faces(const octtopo::octtopo_t& topo,
 					octnode_t* node,
 					std::set<node_face_t>& nfs) const;
+
+		/**
+		 * Given a face, will retrieve iterators to neighbor set
+		 *
+		 * Given a face, this function call will return a 
+		 * pair of iterators <begin, end>, which will allow
+		 * for iteration over the neighbors of the given face.
+		 *
+		 * @param f   The face to analyze
+		 *
+		 * @return    The start/end pair of iterators to f's neighs
+		 */
+		std::pair<std::set<node_face_t>::const_iterator,
+			std::set<node_face_t>::const_iterator>
+				get_neighbors(const node_face_t& f) const;
 
 		/*-----------*/
 		/* debugging */
@@ -370,6 +400,19 @@ class node_face_t
 		 * @param os   The output stream to write to
 		 */
 		void writeobj(std::ostream& os) const;
+
+		/**
+		 * Writes face to a wavefront OBJ file stream, with color
+		 *
+		 * Given the RGB color, will export the geometry
+		 * of this face to the given obj output stream.
+		 *
+		 * @param os   The output stream to write to
+		 * @param r    The red component of color
+		 * @param g    The green component of color
+		 * @param b    The blue component of color
+		 */
+		void writeobj(std::ostream& os, int r, int g, int b) const;
 };
 
 /**

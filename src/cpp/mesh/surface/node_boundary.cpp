@@ -35,7 +35,7 @@ using namespace Eigen;
 
 /* the following constants are used for computations in this file */
 
-#define APPROX_ZERO  0.0000001
+#define APPROX_ZERO  0.000000001
 
 /* function implementations */
 
@@ -101,6 +101,29 @@ int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
 
 	/* success */
 	return 0;
+}
+		
+pair<set<node_face_t>::const_iterator, set<node_face_t>::const_iterator>
+		node_boundary_t::get_neighbors(const node_face_t& f) const
+{
+	map<node_face_t, node_face_info_t>::const_iterator fit;
+
+	/* get the info for this face */
+	fit = this->faces.find(f);
+	if(fit == this->faces.end())
+	{
+		/* return an empty interval using a dummy set */
+		set<node_face_t> dummy;
+		return pair<set<node_face_t>::const_iterator,
+			set<node_face_t>::const_iterator>(dummy.end(), 
+						dummy.end());
+	}
+
+	/* return the iterators to the neighbor set for this face */
+	return pair<set<node_face_t>::const_iterator,
+		set<node_face_t>::const_iterator>(
+				fit->second.neighbors.begin(),
+				fit->second.neighbors.end());
 }
 		
 int node_boundary_t::writeobj(const string& filename) const
@@ -322,6 +345,7 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 	set<node_face_t> nearby_faces;
 	set<node_face_t>::iterator nit;
 	node_face_t face;
+	Vector3d fp, np, normal;
 	progress_bar_t progbar;
 	size_t j, num_faces;
 	int ret;
@@ -409,22 +433,30 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 			else
 			{
 				/* since the faces don't share either
-				 * node, that means that both of the
+				 * node, that means that all of the
 				 * following must be true for them
 				 * to link:
 				 *
 				 * 	- their interiors must neighbor
 				 * 	- their exteriors must neighbor
 				 * 	- faces must be same direction
+				 * 	- faces on the same plane
 				 */
 				if(!(topo.are_neighbors(face.interior,
-							nit->interior))
-						|| !(topo.are_neighbors(
-							face.exterior,
-							nit->exterior))
-						|| (face.direction
-							!= nit->direction))
-					continue; /* not to be linked */
+							nit->interior)))
+					continue; /* not int. neighbors */
+				if(!(topo.are_neighbors(face.exterior,
+							nit->exterior)))
+					continue; /* not ext. neighbors */
+				if(face.direction != nit->direction)
+					continue; /* not same direction */
+
+				face.get_center(fp);
+				nit->get_center(np);
+				octtopo::cube_face_normals(face.direction,
+								normal);
+				if(normal.dot(fp - np) > APPROX_ZERO)
+					continue; /* not coplanar */
 
 				/* if got here, then the two faces
 				 * share an edge, and should be 
@@ -610,6 +642,11 @@ double node_face_t::get_halfwidth() const
 
 void node_face_t::writeobj(std::ostream& os) const
 {
+	this->writeobj(os, 255, 255, 255);
+}
+
+void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
+{
 	Vector3d p;
 	double hw;
 
@@ -623,86 +660,110 @@ void node_face_t::writeobj(std::ostream& os) const
 		case FACE_ZMINUS:
 			os << "v " << (p(0)-hw)
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)-hw)
+			   <<  " " << (p(2)   ) 
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)-hw)
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)   ) << endl;
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_ZPLUS:
 			os << "v " << (p(0)-hw)
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)   ) << endl;
-			os << "v " << (p(0)-hw)
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)-hw)
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)   ) << endl;
+			   <<  " " << (p(2)   )
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_YMINUS:
 			os << "v " << (p(0)-hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)-hw)
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)-hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)+hw) << endl;
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_YPLUS:
 			os << "v " << (p(0)-hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)-hw)
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)-hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)+hw)
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)+hw)
 			   <<  " " << (p(1)   ) 
-			   <<  " " << (p(2)-hw) << endl;
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_XMINUS:
 			os << "v " << (p(0)   )
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)-hw) << endl;
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 		case FACE_XPLUS:
 			os << "v " << (p(0)   )
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)-hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)-hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)+hw) 
-			   <<  " " << (p(2)+hw) << endl;
-			os << "v " << (p(0)   )
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl
+			   << "v " << (p(0)   )
 			   <<  " " << (p(1)-hw) 
-			   <<  " " << (p(2)+hw) << endl;
+			   <<  " " << (p(2)+hw)
+			   <<  " " << r << " " << g << " " << b << endl;
 			break;
 	}
 
