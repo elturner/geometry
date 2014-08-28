@@ -152,6 +152,12 @@ def run(dataset_dir, pathfile, use_cameras=True):
 	if not os.path.exists(pc_output_dir):
 		os.makedirs(pc_output_dir)
 
+	# choose appropriate parameters based on input
+        if use_cameras:
+            range_limit_flag = '10'
+        else
+            range_limit_flag = '30'
+
 	# now that we have a list of geometry sensors to use, we
 	# want to make pointcloud files for each sensor
 	output_files = []
@@ -169,7 +175,7 @@ def run(dataset_dir, pathfile, use_cameras=True):
 				'-t', timesync_xml, \
 				'-o', xyzfile, \
 				'-p', os.path.abspath(pathfile), \
-				'-u', '1000', '-r', '10', \
+				'-u', '1000', '-r', range_limit, \
 				'-l', geomnames[si], geomfiles[si]]
 
 		# add camera information if we want to color
