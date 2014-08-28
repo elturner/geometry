@@ -85,7 +85,8 @@ def main():
         sys.exit(3)
 
     # get the human-friendly name of this dataset from the input file
-    DATASET_NAME = dataset_filepaths.get_file_body(LOCALIZATION_FILE)
+    DATASET_NAME = dataset_filepaths.get_name_from_madfile( \
+		    LOCALIZATION_FILE)
 
     # process the geometry for this dataset
     print ""
