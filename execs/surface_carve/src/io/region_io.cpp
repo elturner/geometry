@@ -91,17 +91,17 @@ int writeply_with_regions(char* filename, triangulation_t& tri,
 		{
 			/* write x coordinate */
 			buf.f = (float) ( (*vit).second->x );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host already little endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write y coordinate */
 			buf.f = (float) ( (*vit).second->y );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host already little endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write z coordinate */
 			buf.f = (float) ( (*vit).second->z );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host already little endian */
 			outfile.write(buf.arr, sizeof(uint32_t));	
 		}
 	}
@@ -131,7 +131,7 @@ int writeply_with_regions(char* filename, triangulation_t& tri,
 			for(i = 0; i < NUM_VERTS_PER_TRI; i++)
 			{
 				buf.i = (*tit)->v[i]->index;
-				buf.b = htole32(buf.b);
+				buf.b = (buf.b); /* host is little endian */
 				outfile.write(buf.arr, sizeof(uint32_t));
 			}
 		}
@@ -194,39 +194,39 @@ int writeply_with_regions(char* filename, triangulation_t& tri,
 			
 			/* write x coordinate */
 			buf.f = (float) ( (*rit).avg_norm.x );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write y coordinate */
 			buf.f = (float) ( (*rit).avg_norm.y );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write z coordinate */
 			buf.f = (float) ( (*rit).avg_norm.z );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));	
 
 			/* export point on the region */
 			
 			/* write x coordinate */
 			buf.f = (float) px;
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write y coordinate */
 			buf.f = (float) py;
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write z coordinate */
 			buf.f = (float) pz;
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));	
 
 			/* export the size of this region */
 			buf.i = (*rit).tris.size();
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 
 			/* export the triangle indices of this region */
@@ -242,14 +242,14 @@ int writeply_with_regions(char* filename, triangulation_t& tri,
 					continue;
 
 				/* write triangle index to file */
-				buf.b = htole32(buf.b);
+				buf.b = (buf.b); /* host is little-endian */
 				outfile.write(buf.arr, sizeof(uint32_t));
 			}
 
 			/* export number of edges (times two, since
 			 * each edge represented by two ints */
 			buf.i = 2 * (*rit).boundary.size();
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 
 			/* export boundary edges */
@@ -259,12 +259,12 @@ int writeply_with_regions(char* filename, triangulation_t& tri,
 			{
 				/* export index of edge start vertex */
 				buf.i = (*eit).start->index;
-				buf.b = htole32(buf.b);
+				buf.b = (buf.b); /* host is little-endian */
 				outfile.write(buf.arr, sizeof(uint32_t));
 
 				/* export index of edge end vertex */
 				buf.i = (*eit).end->index;
-				buf.b = htole32(buf.b);
+				buf.b = (buf.b); /* host is little-endian */
 				outfile.write(buf.arr, sizeof(uint32_t));
 			}
 		}

@@ -221,17 +221,17 @@ int writeply(char* filename, triangulation_t& tri, bool ascii)
 		{
 			/* write x coordinate */
 			buf.f = (float) ( (*vit).second->x );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian already */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write y coordinate */
 			buf.f = (float) ( (*vit).second->y );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little-endian */
 			outfile.write(buf.arr, sizeof(uint32_t));
 	
 			/* write z coordinate */
 			buf.f = (float) ( (*vit).second->z );
-			buf.b = htole32(buf.b);
+			buf.b = (buf.b); /* host is little endian already */
 			outfile.write(buf.arr, sizeof(uint32_t));	
 			
 			/* write colors */
@@ -269,7 +269,7 @@ int writeply(char* filename, triangulation_t& tri, bool ascii)
 			for(i = 0; i < NUM_VERTS_PER_TRI; i++)
 			{
 				buf.i = (*tit)->v[i]->index;
-				buf.b = htole32(buf.b);
+				buf.b = (buf.b); /* host is little-endian */
 				outfile.write(buf.arr, sizeof(uint32_t));
 			}
 		}
