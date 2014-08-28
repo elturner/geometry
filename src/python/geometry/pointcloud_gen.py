@@ -143,7 +143,12 @@ def run(dataset_dir, pathfile, use_cameras=True):
 
 	# prepare output directory for pointclouds
 	name = dataset_filepaths.get_file_body(pathfile)
-	pc_output_dir = dataset_filepaths.get_pointcloud_dir(dataset_dir)
+	if use_cameras:
+		pc_output_dir = dataset_filepaths.get_colored_pc_dir( \
+				dataset_dir)
+	else:
+		pc_output_dir = dataset_filepaths.get_pointcloud_dir( \
+				dataset_dir)
 	if not os.path.exists(pc_output_dir):
 		os.makedirs(pc_output_dir)
 

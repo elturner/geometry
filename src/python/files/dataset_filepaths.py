@@ -163,6 +163,12 @@ def get_pc_levels_dir(dataset_dir):
 	return os.path.join(get_pointcloud_dir(dataset_dir),"levels")
 
 ##
+# Returns the location of the colored pointclouds directory
+#
+def get_colored_pc_dir(dataset_dir):
+	return os.path.join(get_pointcloud_dir(dataset_dir),"colored")
+
+##
 # Returns the prefix path for all the partioned levels pointclouds
 #
 # @param dataset_dir   Location of this dataset root

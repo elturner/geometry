@@ -116,11 +116,17 @@ def main():
 #
 def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME): 
 
-    # POINTCLOUD GENERATION
+    # COLORED POINTCLOUD GENERATION
+    xyzfiles = pointcloud_gen.run(DATASET_DIR, LOCALIZATION_FILE, True)
+    if xyzfiles is None:
+        print "[create_models] Error! Color pointcloud gen script failed"
+        return -1
+
+    # POINTCLOUD GENERATION (has more points than colored pc's)
     xyzfiles = pointcloud_gen.run(DATASET_DIR, LOCALIZATION_FILE, False)
     if xyzfiles is None:
         print "[create_models] Error! Pointcloud generation script failed"
-        return -1
+        return -2
 
     # POINTCLOUD PARTITIONING
     ret = partition_pointcloud_levels.run(DATASET_DIR, \
@@ -128,7 +134,7 @@ def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME):
     if ret != 0:
         print "[create_models] Error! Pointcloud partitioning " \
                 + "script returned",ret
-        return -2
+        return -3
 
     # iterate through the different levels of the building
     for level_xyz_file in dataset_filepaths.get_pc_levels_list(DATASET_DIR):
@@ -138,20 +144,20 @@ def run(DATASET_DIR, LOCALIZATION_FILE, DATASET_NAME):
         if ret != 0:
             print "[create_models]  Error! Could not generate " \
                     "floorplans:",ret
-            return -3
+            return -4
 
     # generate a detailed mesh using surface carving method.
     # this is saved for last since it takes the longest
     ret = surface_carve.run(DATASET_DIR, LOCALIZATION_FILE)
     if ret != 0:
         print "Error! Unable to generate surface carving"
-        return -4
+        return -5
     
     # prepare some documentation about this dataset
     ret = generate_tex.run(DATASET_DIR, DATASET_NAME)
     if ret != 0:
         print "Error! Unable to generate PDF documentation",ret
-        return -5
+        return -6
 
     # success
     return 0
