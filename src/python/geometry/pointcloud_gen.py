@@ -155,7 +155,7 @@ def run(dataset_dir, pathfile, use_cameras=True):
 	# choose appropriate parameters based on input
         if use_cameras:
             range_limit_flag = '10'
-        else
+        else:
             range_limit_flag = '30'
 
 	# now that we have a list of geometry sensors to use, we
