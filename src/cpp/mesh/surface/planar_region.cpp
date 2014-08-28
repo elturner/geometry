@@ -32,12 +32,11 @@ using namespace Eigen;
 
 void planar_region_t::floodfill(const node_face_t& seed,
 				const node_boundary_t& boundary,
-				set<node_face_t>& blacklist)
+				faceset& blacklist)
 {
 	queue<node_face_t> to_check;
-	pair<set<node_face_t>::const_iterator, 
-		set<node_face_t>::const_iterator> range;
-	set<node_face_t>::const_iterator it;
+	pair<faceset::const_iterator, faceset::const_iterator> range;
+	faceset::const_iterator it;
 
 	/* clear any existing information for this region */
 	this->clear();
@@ -58,7 +57,7 @@ void planar_region_t::floodfill(const node_face_t& seed,
 			continue;
 
 		/* add to our region and to the blacklist */
-		this->faces.insert(to_check.front());
+		this->add(to_check.front());
 		blacklist.insert(to_check.front());
 
 		/* add neighbors to list to check */
@@ -70,7 +69,7 @@ void planar_region_t::floodfill(const node_face_t& seed,
 
 void planar_region_t::writeobj(ostream& os) const
 {
-	set<node_face_t>::iterator it;
+	faceset::iterator it;
 	int r, g, b;
 
 	/* generate a random color */

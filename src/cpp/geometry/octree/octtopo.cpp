@@ -37,7 +37,20 @@ using namespace octtopo;
 
 #define APPROX_ZERO 0.0000001
 
+/*-----------------------------------------*/
 /* octneighbors_t function implementations */
+/*-----------------------------------------*/
+
+octneighbors_t::octneighbors_t()
+{}
+
+octneighbors_t::octneighbors_t(const octneighbors_t& other)
+{
+	size_t i;
+	for(i = 0; i < NUM_FACES_PER_CUBE; i++)
+		this->neighs[i].insert(other.neighs[i].begin(),
+					other.neighs[i].end());
+}
 
 void octneighbors_t::clear()
 { 

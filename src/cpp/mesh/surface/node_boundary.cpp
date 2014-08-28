@@ -37,7 +37,17 @@ using namespace Eigen;
 
 #define APPROX_ZERO  0.000000001
 
+/*--------------------------*/
 /* function implementations */
+/*--------------------------*/
+		
+node_boundary_t::node_boundary_t()
+{}
+
+node_boundary_t::~node_boundary_t()
+{ 
+	this->clear();
+}
 
 int node_boundary_t::populate(const octtopo_t& topo)
 {
@@ -60,9 +70,8 @@ int node_boundary_t::populate(const octtopo_t& topo)
 	return 0;
 }
 		
-int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
-					octnode_t* node,
-					std::set<node_face_t>& nfs) const
+int node_boundary_t::get_nearby_faces(const octtopo_t& topo,
+		octnode_t* node, faceset& nfs) const
 {
 	octneighbors_t edges;
 	vector<octnode_t*> neighs;
@@ -70,6 +79,7 @@ int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
 		multimap<octnode_t*, node_face_t>::const_iterator> range;
 	multimap<octnode_t*, node_face_t>::const_iterator it;
 	size_t fi, i, n;
+	CUBE_FACE f;
 	int ret;
 
 	/* verify input */
@@ -84,9 +94,11 @@ int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
 	/* iterate over all neighboring nodes */
 	for(fi = 0; fi < NUM_FACES_PER_CUBE; fi++)
 	{
+		f = octtopo::all_cube_faces[fi];
+
 		/* get the neighboring nodes on this face */
 		neighs.clear();
-		edges.get(all_cube_faces[fi], neighs);
+		edges.get(f, neighs);
 
 		/* iterate over neighboring nodes */
 		n = neighs.size();
@@ -103,32 +115,32 @@ int node_boundary_t::get_neighboring_faces(const octtopo_t& topo,
 	return 0;
 }
 		
-pair<set<node_face_t>::const_iterator, set<node_face_t>::const_iterator>
+pair<faceset::const_iterator, faceset::const_iterator>
 		node_boundary_t::get_neighbors(const node_face_t& f) const
 {
-	map<node_face_t, node_face_info_t>::const_iterator fit;
+	facemap::const_iterator fit;
 
 	/* get the info for this face */
 	fit = this->faces.find(f);
 	if(fit == this->faces.end())
 	{
 		/* return an empty interval using a dummy set */
-		set<node_face_t> dummy;
-		return pair<set<node_face_t>::const_iterator,
-			set<node_face_t>::const_iterator>(dummy.end(), 
+		faceset dummy;
+		return pair<faceset::const_iterator,
+			faceset::const_iterator>(dummy.end(), 
 						dummy.end());
 	}
 
 	/* return the iterators to the neighbor set for this face */
-	return pair<set<node_face_t>::const_iterator,
-		set<node_face_t>::const_iterator>(
+	return pair<faceset::const_iterator,
+			faceset::const_iterator>(
 				fit->second.neighbors.begin(),
 				fit->second.neighbors.end());
 }
 		
 int node_boundary_t::writeobj(const string& filename) const
 {
-	map<node_face_t, node_face_info_t>::const_iterator fit;
+	facemap::const_iterator fit;
 	progress_bar_t progbar;
 	ofstream outfile;
 	size_t i, n;
@@ -160,8 +172,8 @@ int node_boundary_t::writeobj(const string& filename) const
 
 int node_boundary_t::writeobj_cliques(const std::string& filename) const
 {
-	map<node_face_t, node_face_info_t>::const_iterator fit;
-	set<node_face_t>::const_iterator nit;
+	facemap::const_iterator fit;
+	faceset::const_iterator nit;
 	ofstream outfile;
 	Vector3d p, norm;
 	double halfwidth;
@@ -242,7 +254,7 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 int node_boundary_t::populate_faces(const octtopo_t& topo)
 {
 	map<octnode_t*, octneighbors_t>::const_iterator it;
-	pair<map<node_face_t, node_face_info_t>::iterator, bool> ins;
+	pair<facemap::iterator, bool> ins;
 	node_face_t face;
 	vector<octnode_t*> neighs;
 	size_t f, i, j, n, num_nodes;
@@ -341,9 +353,9 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 		
 int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 {
-	map<node_face_t, node_face_info_t>::iterator fit;
-	set<node_face_t> nearby_faces;
-	set<node_face_t>::iterator nit;
+	facemap::iterator fit;
+	faceset nearby_faces;
+	faceset::iterator nit;
 	node_face_t face;
 	Vector3d fp, np, normal;
 	progress_bar_t progbar;
@@ -375,12 +387,12 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 		/* get all nearby faces that have the potential to
 		 * be linked to this face */
 		nearby_faces.clear();
-		ret = this->get_neighboring_faces(topo, face.interior, 
-							nearby_faces);
+		ret = this->get_nearby_faces(topo, face.interior, 
+					nearby_faces);
 		if(ret)
 			return PROPEGATE_ERROR(-1, ret);
-		ret = this->get_neighboring_faces(topo, face.exterior,
-							nearby_faces);
+		ret = this->get_nearby_faces(topo, face.exterior,
+					nearby_faces);
 		if(ret)
 			return PROPEGATE_ERROR(-2, ret);
 

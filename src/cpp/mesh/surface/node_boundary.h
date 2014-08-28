@@ -23,11 +23,16 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 /* the following classes are defined in this file */
 class node_boundary_t;
 class node_face_t;
 class node_face_info_t;
+
+/* the following typedefs are used for these classes */
+typedef std::map<node_face_t, node_face_info_t> facemap;
+typedef std::set<node_face_t>                   faceset;
 
 /**
  * The node_boundary_t class can compute the subset of nodes
@@ -60,7 +65,7 @@ class node_boundary_t
 		 * about each node face, such as what adjoining faces
 		 * it touches.
 		 */
-		std::map<node_face_t, node_face_info_t> faces;
+		facemap faces;
 
 	/* functions */
 	public:
@@ -70,10 +75,14 @@ class node_boundary_t
 		/*----------------*/
 
 		/**
+		 * Default constructor for node boundary object.
+		 */
+		node_boundary_t();
+
+		/**
 		 * Frees all memory and resources.
 		 */
-		~node_boundary_t()
-		{ this->clear(); };
+		~node_boundary_t();
 
 		/**
 		 * Generates a set of boundary nodes from an octree topology
@@ -102,15 +111,13 @@ class node_boundary_t
 		/**
 		 * Returns an iterator to the beginning of the set of faces
 		 */
-		inline std::map<node_face_t, 
-		       node_face_info_t>::const_iterator begin() const
+		inline facemap::const_iterator begin() const
 		{ return this->faces.begin(); };
 
 		/**
 		 * Returns an iterator to the end of the set of faces
 		 */
-		inline std::map<node_face_t, 
-		       node_face_info_t>::const_iterator end() const
+		inline facemap::const_iterator end() const
 		{ return this->faces.end(); };
 		
 
@@ -132,15 +139,14 @@ class node_boundary_t
 		 * Any values that were stored in nfs before this call
 		 * will remain in nfs.
 		 *
-		 * @param topo  The octree topology
-		 * @param node  The node to analyze
-		 * @param nfs   The neighboring face set to modify
+		 * @param topo       The octree topology
+		 * @param node       The node to analyze
+		 * @param nfs        The neighboring face set to modify
 		 *
 		 * @return      Returns zero on success, non-zero on failure
 		 */
-		int get_neighboring_faces(const octtopo::octtopo_t& topo,
-					octnode_t* node,
-					std::set<node_face_t>& nfs) const;
+		int get_nearby_faces(const octtopo::octtopo_t& topo,
+			octnode_t* node, faceset& nfs) const;
 
 		/**
 		 * Given a face, will retrieve iterators to neighbor set
@@ -153,8 +159,7 @@ class node_boundary_t
 		 *
 		 * @return    The start/end pair of iterators to f's neighs
 		 */
-		std::pair<std::set<node_face_t>::const_iterator,
-			std::set<node_face_t>::const_iterator>
+		std::pair<faceset::const_iterator, faceset::const_iterator>
 				get_neighbors(const node_face_t& f) const;
 
 		/*-----------*/
@@ -270,7 +275,10 @@ class node_face_t
 		 * Default constructor establishes invalid face
 		 */
 		node_face_t()
-		{ this->init(NULL, NULL, octtopo::FACE_ZMINUS); };
+			:	interior(NULL),
+				exterior(NULL),
+				direction(octtopo::FACE_ZMINUS)
+		{};
 
 		/**
 		 * Constructor provides parameters for face
@@ -280,8 +288,20 @@ class node_face_t
 		 * @param dir  The direction from in to ex
 		 */
 		node_face_t(octnode_t* in, octnode_t* ex,
-				octtopo::CUBE_FACE dir)
-		{ this->init(in, ex, dir); };
+					octtopo::CUBE_FACE dir)
+			: 	interior(in), 
+				exterior(ex), 
+				direction(dir)
+		{};
+
+		/**
+		 * Constructor by copying another node face object
+		 */
+		node_face_t(const node_face_t& other)
+			: 	interior(other.interior), 
+				exterior(other.exterior), 
+				direction(other.direction)
+		{};
 
 		/**
 		 * Initializes this face
@@ -320,6 +340,9 @@ class node_face_t
 		 * Get the center position of the face
 		 *
 		 * Will determine the 3D center position of the face.
+		 * Note that this position will be aligned with the grid,
+		 * and does not take any isosurface computation into
+		 * account.
 		 * 
 		 * @param p   Where to store the center position of face
 		 */
@@ -433,7 +456,7 @@ class node_face_info_t
 
 		/* this value represents the list of faces that are 
 		 * connected in some way to this face */
-		std::set<node_face_t> neighbors;
+		faceset neighbors;
 
 	/* functions */
 	public:
@@ -441,12 +464,20 @@ class node_face_info_t
 		/*----------------*/
 		/* initialization */
 		/*----------------*/
-		
+
 		/**
 		 * Default constructor
 		 */
 		node_face_info_t()
 		{ this->clear(); };
+
+		/**
+		 * Constructs this info from the given info object
+		 */
+		node_face_info_t(const node_face_info_t& other)
+			: neighbors(other.neighbors.begin(), 
+					other.neighbors.end())
+		{};
 
 		/**
 		 * Clears all information from this structure.

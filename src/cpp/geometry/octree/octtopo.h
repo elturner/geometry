@@ -142,6 +142,21 @@ namespace octtopo
 		/* functions */
 		public:
 
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Default constructor
+			 */
+			octneighbors_t();
+
+			/**
+			 * Constructs this object from given octneighbors_t
+			 */
+			octneighbors_t(
+				const octtopo::octneighbors_t& other);
+
 			/*-----------*/
 			/* modifiers */
 			/*-----------*/

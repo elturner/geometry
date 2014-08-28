@@ -37,7 +37,7 @@ class planar_region_t
 		/**
 		 * The set of faces that contribute to this region.
 		 */
-		std::set<node_face_t> faces;
+		faceset faces;
 
 		/**
 		 * The plane geometry is defined by a normal vector
@@ -77,7 +77,34 @@ class planar_region_t
 		 */
 		void floodfill(const node_face_t& seed,
 				const node_boundary_t& boundary,
-				std::set<node_face_t>& blacklist);
+				faceset& blacklist);
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Retrieves the plane information for this region
+		 *
+		 * @return    Returns a reference to the plane geometry
+		 */
+		inline const plane_t& get_plane() const
+		{ return this->plane; };
+
+		/**
+		 * Adds a face to this region
+		 *
+		 * Note that this call does not modify the planar
+		 * geometry at all.  It will simply add the face
+		 * to the set of faces contained in this region.
+		 *
+		 * If the face was already a part of this region,
+		 * then this function is a no-op.
+		 *
+		 * @param f   The face to add
+		 */
+		inline void add(const node_face_t& f)
+		{ this->faces.insert(f); };
 
 		/*-----------*/
 		/* debugging */
