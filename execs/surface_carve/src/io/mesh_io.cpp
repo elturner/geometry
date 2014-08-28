@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 #include <queue>
-#include <endian.h>
 #include <stdint.h>
 #include "../structs/triangulation.h"
 #include "../util/error_codes.h"

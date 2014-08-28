@@ -3,7 +3,6 @@
 #include <set>
 #include <fstream>
 #include <sstream>
-#include <endian.h>
 #include <stdint.h>
 #include "../structs/triangulation.h"
 #include "../triangulate/region_growing.h"
