@@ -144,7 +144,7 @@ void latex_writer_t::write_floorplan_info(const fp::floorplan_t& fp)
 		      << fp.rooms.size() << "\n\n"
 		      << "\\paragraph*{} Area: " 
 		      << a << " square meters (" << (10.7639*a)
-		      << " square feet)\n\n\\\\\n\n";
+		      << " square feet)\n\n  \\\n  \\\n\n";
 
 	/* export vectorized image */
 	fp.compute_edges(edges);
