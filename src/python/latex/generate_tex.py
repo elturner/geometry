@@ -81,15 +81,18 @@ def run(dataset_dir, name_of_dataset):
 
 	# run pdflatex on the result
 	(junk, texfile_local) = os.path.split(texfile);
+	dnull = open(os.devnull,'w');
 	ret = subprocess.call( \
 		['pdflatex', '-halt-on-error', texfile_local], \
-		cwd=docs_dir, stdout=None, stderr=None, stdin=None, \
+		cwd=docs_dir, stdout=dnull, stderr=None, stdin=None, \
 		shell=False)
+	dnull.close()
 	if ret != 0:
 		print "Error! pdflatex returned",ret
 		return -3
 
 	# move the output pdf file to the root directory of the dataset
+	
 	pdffile_old = os.path.abspath(os.path.join(dataset_dir, docs_dir, \
 				(name_of_dataset + '.pdf')))
 	pdffile_new = os.path.abspath(os.path.join(dataset_dir, \
