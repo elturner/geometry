@@ -237,7 +237,7 @@ def get_surface_carve_dir(dataset_dir):
 # @param madfile       The .mad file to use
 #
 def get_surface_carve_vox(dataset_dir, madfile):
-	return os.path.join(get_floorplan_dir(dataset_dir), \
+	return os.path.join(get_surface_carve_dir(dataset_dir), \
 	                    get_name_from_madfile(madfile) + ".vox")
 
 ##
@@ -247,7 +247,7 @@ def get_surface_carve_vox(dataset_dir, madfile):
 # @param madfile       The .mad file to use
 #
 def get_surface_carve_ply(dataset_dir, madfile):
-	return os.path.join(get_floorplan_dir(dataset_dir), \
+	return os.path.join(get_surface_carve_dir(dataset_dir), \
 	                    get_name_from_madfile(madfile) + ".ply")
 
 #--------------- Files generated from floorplan code ---------------
