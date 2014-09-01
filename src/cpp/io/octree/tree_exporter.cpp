@@ -5,6 +5,7 @@
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_partitioner.h>
 #include <mesh/surface/node_boundary.h>
+#include <mesh/surface/planar_region.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -12,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <Eigen/Dense>
 
 /**
@@ -48,25 +50,56 @@ int tree_exporter::export_node_faces(const string& filename,
 	/* extract the boundary nodes using the generated topology */
 	ret = boundary.populate(top);
 	if(ret)
-		return PROPEGATE_ERROR(-3, ret);
+		return PROPEGATE_ERROR(-2, ret);
 
-	/* export the boundary topology to file */
+	/* write the surface */
 	tic(clk);
-	ret = boundary.writeobj_cliques(filename); // TODO
+	ret = boundary.writeobj(filename);
 	if(ret)
-		return PROPEGATE_ERROR(-4, ret);
-	toc(clk, "Exporting boundary faces");
-
-	// TODO debugging
-	node_partitioner_t npt;
-	ret = npt.partition(top);
-	if(ret)
-		return PROPEGATE_ERROR(-5, ret);
-	ret = npt.writeobjs("/home/elturner/Desktop/testobjs/gradlounge");
-	if(ret)
-		return PROPEGATE_ERROR(-6, ret);
+		return PROPEGATE_ERROR(-3, ret);
+	toc(clk, "Writing OBJ");
 
 	/* success */
+	return 0;
+}
+	
+int tree_exporter::export_regions(const std::string& filename,
+					const octree_t& tree)
+{
+	octtopo::octtopo_t top;
+	node_boundary_t boundary;
+	planar_region_t region;
+	set<node_face_t> blacklist;
+	ofstream outfile;
+	tictoc_t clk;
+	int ret;
+
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+
+	/* prepare to export to file */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return PROPEGATE_ERROR(-3, ret);
+
+	/* generate the regions based on floodfill */
+	for(auto it = boundary.begin(); it != boundary.end(); it++)
+	{
+		region.floodfill(it->first, boundary, blacklist);
+		region.writeobj(outfile); /* write to file */
+	}
+
+	/* success */
+	outfile.close();
 	return 0;
 }
 

@@ -425,6 +425,17 @@ class node_face_t
 		void writeobj(std::ostream& os) const;
 
 		/**
+		 * Writes face to OBJ file stream, colored by value
+		 *
+		 * Given a scalar value in the range [0,1], will generate
+		 * geometry for this face colored to reflect the value.
+		 *
+		 * @param os  The output stream to write to
+		 * @param v   The value to use
+		 */
+		void writeobj(std::ostream& os, double v) const;
+
+		/**
 		 * Writes face to a wavefront OBJ file stream, with color
 		 *
 		 * Given the RGB color, will export the geometry

@@ -31,6 +31,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \
 		$(SOURCEDIR)mesh/surface/node_boundary.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region.cpp \
+		$(SOURCEDIR)mesh/surface/planar_region_graph.cpp \
 		src/octsurf_run_settings.cpp \
 		src/main.cpp
 
@@ -58,6 +59,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/partition/node_set.h \
 		$(SOURCEDIR)mesh/surface/node_boundary.h \
 		$(SOURCEDIR)mesh/surface/planar_region.h \
+		$(SOURCEDIR)mesh/surface/planar_region_graph.h \
 		src/octsurf_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

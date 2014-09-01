@@ -656,6 +656,25 @@ void node_face_t::writeobj(std::ostream& os) const
 {
 	this->writeobj(os, 255, 255, 255);
 }
+		
+void node_face_t::writeobj(std::ostream& os, double v) const
+{
+	int r, g, b;
+
+	/* make sure bounds are valid for input value */
+	if(v < 0)
+		v = 0;
+	if(v > 1)
+		v = 1;
+	
+	/* compute color based on value */
+	r = (int) (255 * v);
+	g = 0;
+	b = (int) (255 * (1-v));
+
+	/* write the face */
+	this->writeobj(os, r, g, b);
+}
 
 void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 {
