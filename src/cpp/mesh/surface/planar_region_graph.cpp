@@ -53,8 +53,52 @@ int planar_region_graph_t::populate(const node_boundary_t& boundary)
 /*------------------*/
 
 double planar_region_graph_t::get_face_planarity(const node_face_t& f)
-{
-	return 0; // TODO
+{	
+	double mu_i, planar_i, mu_e, planar_e, s;
+	
+	/* check validity of argument */
+	if(f.interior == NULL || f.interior->data == NULL
+			|| (f.exterior != NULL && f.exterior->data == NULL))
+	{
+		/* invalid data given */
+		cerr << "[planar_region_graph_t::get_isosurface_pos]\t"
+		     << "Given invalid face" << endl;
+		return 0;
+	}
+	
+	/* get the values we need from the originating octdata structs */
+	mu_i = f.interior->data->get_probability(); /* mean interior val */
+	planar_i = f.interior->data->get_planar_prob();
+	if(f.exterior == NULL)
+	{
+		/* exterior is a null node, which should be counted
+		 * as an unobserved external node */
+		mu_e     = 0.5; /* value given to unobserved nodes */
+		planar_e = planar_i; /* just use the same value */
+	}
+	else
+	{
+		/* exterior node exists, get its data */
+		mu_e     = f.exterior->data->get_probability();
+		planar_e = f.exterior->data->get_planar_prob();
+	}
+
+	/* In order to get the planarity value for the face,
+	 * we perform a weighted average between the values for
+	 * the two nodes that define this face.  The first step 
+	 * is to find this weighting with respect to the distance
+	 * of the isosurface between the node centers.  This
+	 * value can be determined with:
+	 *
+	 * 	s = (p_i - 0.5) / (p_i - p_e)
+	 *
+	 * Where s is the weighting for the exterior node, and (1-s)
+	 * is the weighting for the interior node.
+	 */
+	s = (mu_i - 0.5) / (mu_i - mu_e);
+
+	/* weight the node's values */
+	return s*planar_e + (1-s)*planar_i; 
 }
 		 
 void planar_region_graph_t::get_isosurface_pos(const node_face_t& f,
