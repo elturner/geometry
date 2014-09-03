@@ -33,21 +33,49 @@ function [] = edge2fp(edgefile, fpfile)
 	%	on August 17, 2014
 	%
 
-	% import the wall line segments
-	W = load(edgefile);
+	% check if given a single input file or a list of files
+	if(iscell(edgefile))
+		% load as a list of vertex files, where each file
+		% only has <x> <y> per line, and defines a closed
+		% polygon
+		infile_list = edgefile;
+		C = [];
+		verts_x = [];
+		verts_y = [];
+		for i = 1:length(infile_list)
+			
+			% load current polygon
+			vs = load(infile_list{i});
 
-	% check format of input
-	N = size(W,1);
-	if(size(W,2) ~= 4)
-		error('Input .edge file incorrectly formatted');
+			% add constraints
+			C = [C ; length(verts_x) ...
+				+ [ [1:size(vs,1)]', ...
+				[2:size(vs,1), 1]' ] ];
+			
+			% add vertices
+			verts_x = [verts_x; vs(:,1)];
+			verts_y = [verts_y; vs(:,2)];
+		end
+
+	else
+		% import the wall line segments
+		W = load(edgefile);
+
+		% check format of input
+		N = size(W,1);
+		if(size(W,2) ~= 4)
+			error('Input .edge file incorrectly formatted');
+		end
+
+		% represent the wall segments as vertices and edges
+		verts_x = W(:,[1 3])'; verts_x = verts_x(:);
+		verts_y = W(:,[2 4])'; verts_y = verts_y(:);
+	
+		% the segments themselves are constraints 
+		% on the triangulation
+		C = [ [1:(N-1)]', [2:N]' ]; % each edge is a constraint
+
 	end
-
-	% represent the wall segments as vertices and edges
-	verts_x = W(:,[1 3])'; verts_x = verts_x(:);
-	verts_y = W(:,[2 4])'; verts_y = verts_y(:);
-
-	% the segments themselves are constraints on the triangulation
-	C = [ [1:(N-1)]', [2:N]' ]; % each edge is a constraint
 
 	% generate the triangulation
 	% (This will throw a warning about duplicate vertices, which
