@@ -5,6 +5,13 @@ function [] = edge2fp(edgefile, fpfile)
 	%	input .edge file to a volumetric floorplan represented
 	%	in a .fp file.
 	%
+	% edge2fp({vertfile1, vertfile2, ...}, fpfile)
+	%
+	%	Will convert a set of vertices from the input .vert files
+	%	to a .fp file.  The vertices are given as a cell array
+	%	of .vert files.  Each .vert file is formatted as described
+	%	below.
+	%
 	% arguments:
 	%
 	%	edgefile -	The input edge file to convert.  Each
@@ -17,6 +24,17 @@ function [] = edge2fp(edgefile, fpfile)
 	%			It is assumed that the values are
 	%			in world coordinates, in units of
 	%			meters.
+	%
+	%	vertfile -	The vert file is formatted as follows:
+	%
+	%				<x1> <y1>
+	%				<x2> <y2>
+	%
+	%			Each .vert file should represent one
+	%			closed polygon in the environment.  So,
+	%			for example, if the floorplan has a set
+	%			of pillars, then each pillar should be its
+	%			own .vert file.
 	%
 	%	fpfile -	The output .fp file to generate.  This
 	%			file format is described in 
