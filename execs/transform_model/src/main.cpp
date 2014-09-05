@@ -239,20 +239,20 @@ int convert_xyz(const transmodel_run_settings_t& args)
 	int r, g, b, index, serial;
 
 	/* prepare input for reading */
-	infile.open(args.plyfiles[0].c_str());
+	infile.open(args.xyzfiles[0].c_str());
 	if(!(infile.is_open()))
 	{
 		cerr << "[convert_ply]\tUnable to open input: "
-		     << args.plyfiles[0] << endl;
+		     << args.xyzfiles[0] << endl;
 		return -1;
 	}
 
 	/* prepare output for writing */
-	outfile.open(args.plyfiles[1].c_str());
+	outfile.open(args.xyzfiles[1].c_str());
 	if(!(outfile.is_open()))
 	{
 		cerr << "[convert_ply]\tUnable to open output: "
-		     << args.plyfiles[1] << endl;
+		     << args.xyzfiles[1] << endl;
 		return -2;
 	}
 
