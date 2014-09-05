@@ -69,12 +69,13 @@ int main(int argc, char** argv)
 			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
+			octree_padder::pad(tree);
 			if(args.export_node_faces)
-			{
-				octree_padder::pad(tree);
 				ret = tree_exporter::export_node_faces(
 						args.outfile, tree);
-			}
+			else if(args.export_regions)
+				ret = tree_exporter::export_regions(
+						args.outfile, tree);
 			else if(args.export_obj_leafs)
 				ret = tree_exporter::export_leafs_to_obj(
 						args.outfile, tree);

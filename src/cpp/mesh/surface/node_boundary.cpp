@@ -71,7 +71,7 @@ int node_boundary_t::populate(const octtopo_t& topo)
 }
 		
 int node_boundary_t::get_nearby_faces(const octtopo_t& topo,
-		octnode_t* node, faceset& nfs) const
+		octnode_t* node, faceset_t& nfs) const
 {
 	octneighbors_t edges;
 	vector<octnode_t*> neighs;
@@ -115,32 +115,32 @@ int node_boundary_t::get_nearby_faces(const octtopo_t& topo,
 	return 0;
 }
 		
-pair<faceset::const_iterator, faceset::const_iterator>
+pair<faceset_t::const_iterator, faceset_t::const_iterator>
 		node_boundary_t::get_neighbors(const node_face_t& f) const
 {
-	facemap::const_iterator fit;
+	facemap_t::const_iterator fit;
 
 	/* get the info for this face */
 	fit = this->faces.find(f);
 	if(fit == this->faces.end())
 	{
 		/* return an empty interval using a dummy set */
-		faceset dummy;
-		return pair<faceset::const_iterator,
-			faceset::const_iterator>(dummy.end(), 
+		faceset_t dummy;
+		return pair<faceset_t::const_iterator,
+			faceset_t::const_iterator>(dummy.end(), 
 						dummy.end());
 	}
 
 	/* return the iterators to the neighbor set for this face */
-	return pair<faceset::const_iterator,
-			faceset::const_iterator>(
+	return pair<faceset_t::const_iterator,
+			faceset_t::const_iterator>(
 				fit->second.neighbors.begin(),
 				fit->second.neighbors.end());
 }
 		
 int node_boundary_t::writeobj(const string& filename) const
 {
-	facemap::const_iterator fit;
+	facemap_t::const_iterator fit;
 	progress_bar_t progbar;
 	ofstream outfile;
 	size_t i, n;
@@ -172,8 +172,8 @@ int node_boundary_t::writeobj(const string& filename) const
 
 int node_boundary_t::writeobj_cliques(const std::string& filename) const
 {
-	facemap::const_iterator fit;
-	faceset::const_iterator nit;
+	facemap_t::const_iterator fit;
+	faceset_t::const_iterator nit;
 	ofstream outfile;
 	Vector3d p, norm;
 	double halfwidth;
@@ -254,7 +254,7 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 int node_boundary_t::populate_faces(const octtopo_t& topo)
 {
 	map<octnode_t*, octneighbors_t>::const_iterator it;
-	pair<facemap::iterator, bool> ins;
+	pair<facemap_t::iterator, bool> ins;
 	node_face_t face;
 	vector<octnode_t*> neighs;
 	size_t f, i, j, n, num_nodes;
@@ -353,9 +353,9 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 		
 int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 {
-	facemap::iterator fit;
-	faceset nearby_faces;
-	faceset::iterator nit;
+	facemap_t::iterator fit;
+	faceset_t nearby_faces;
+	faceset_t::iterator nit;
 	node_face_t face;
 	Vector3d fp, np, normal;
 	progress_bar_t progbar;
@@ -467,7 +467,7 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 				nit->get_center(np);
 				octtopo::cube_face_normals(face.direction,
 								normal);
-				if(normal.dot(fp - np) > APPROX_ZERO)
+				if(abs(normal.dot(fp - np)) > APPROX_ZERO)
 					continue; /* not coplanar */
 
 				/* if got here, then the two faces

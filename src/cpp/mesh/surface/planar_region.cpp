@@ -1,5 +1,6 @@
 #include "planar_region.h"
 #include <mesh/surface/node_boundary.h>
+#include <mesh/surface/planar_region_graph.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octtopo.h>
 #include <iostream>
@@ -32,11 +33,11 @@ using namespace Eigen;
 
 void planar_region_t::floodfill(const node_face_t& seed,
 				const node_boundary_t& boundary,
-				faceset& blacklist)
+				faceset_t& blacklist)
 {
 	queue<node_face_t> to_check;
-	pair<faceset::const_iterator, faceset::const_iterator> range;
-	faceset::const_iterator it;
+	pair<faceset_t::const_iterator, faceset_t::const_iterator> range;
+	faceset_t::const_iterator it;
 
 	/* clear any existing information for this region */
 	this->clear();
@@ -66,10 +67,34 @@ void planar_region_t::floodfill(const node_face_t& seed,
 			to_check.push(*it);
 	}
 }
+		
+void planar_region_t::find_face_centers(vector<Vector3d,
+			Eigen::aligned_allocator<Vector3d> >& centers,
+			vector<double>& variances) const
+{
+	faceset_t::const_iterator it;
+	size_t i, n;
+
+	/* resize the vectors appropriately */
+	i = max(centers.size(), variances.size());
+	n = this->faces.size();
+	centers.resize(i+n);
+	variances.resize(i+n);
+
+	/* iterate through the faces in this region */
+	for(it = this->faces.begin(); it != this->faces.end(); it++, i++)
+	{
+		/* compute the center */
+		planar_region_graph_t::get_isosurface_pos(*it, centers[i]);
+
+		/* compute the variances */
+		variances[i] = planar_region_graph_t::get_face_pos_var(*it);
+	}
+}
 
 void planar_region_t::writeobj(ostream& os) const
 {
-	faceset::iterator it;
+	faceset_t::iterator it;
 	int r, g, b;
 
 	/* generate a random color */

@@ -20,16 +20,22 @@
  * been generated with a node_boundary_t object.
  */
 
+#include <geometry/shapes/plane.h>
 #include <mesh/surface/node_boundary.h>
+#include <mesh/surface/planar_region.h>
+#include <string>
 #include <map>
+#include <float.h>
 #include <Eigen/Dense>
 
 /* the following classes are defined in this file */
 class planar_region_graph_t;
 class planar_region_info_t;
+class planar_region_pair_t;
 
 /* the following types are defined in this file */
-typedef std::map<node_face_t, planar_region_info_t> regionmap;
+typedef std::map<node_face_t, planar_region_info_t> regionmap_t;
+typedef std::map<node_face_t, node_face_t>          seedmap_t;
 
 /**
  * The planar_region_graph_t represents the set of regions on a model
@@ -58,8 +64,19 @@ class planar_region_graph_t
 		 * acts as a seed for the region.  As regions get coalesced,
 		 * the total number of regions is reduced but the same
 		 * seeds are used to represent the regions.
+		 *
+		 * This can be thought of as the mapping: regions --> faces
 		 */
-		regionmap regions;
+		regionmap_t regions;
+
+		/**
+		 * Represents the mapping: faces --> regions
+		 *
+		 * This structure can be thought of as the inverse mapping
+		 * from the regionmap_t, since it allows fast determination
+		 * of which region a given node face is in.
+		 */
+		seedmap_t seeds;
 
 		/* the following parameters are for region coalescing */
 
@@ -75,12 +92,32 @@ class planar_region_graph_t
 		 */
 		double planarity_threshold;
 
+		/**
+		 * The distance threshold is used to determine whether
+		 * a given face (and its corresponding center position)
+		 * are inliers or outliers to a region.
+		 *
+		 * If a face has a position p with variance v, then
+		 * the face will be considered an outlier if the distance
+		 * of p to the plane of the region is greater than 
+		 * sqrt(v)*distance_threshold.
+		 *
+		 * Thus, distance_threshold is measured in units of
+		 * standard deviations.
+		 */
+		double distance_threshold;
+
 	/* functions */
 	public:
 
 		/*----------------*/
 		/* initialization */
 		/*----------------*/
+
+		/**
+		 * Constructs this object with default parameters
+		 */
+		planar_region_graph_t();
 
 		/**
 		 * Iniitalizes this object based on the given parameters
@@ -95,8 +132,14 @@ class planar_region_graph_t
 		 * parameters will be used.
 		 *
 		 * @param planethresh   The planarity threshold [0,1] to use
+		 * @param distthresh    The distance threshold to use, in
+		 *                      units of standard deviations.
 		 */
-		void init(double planethresh);
+		void init(double planethresh, double distthresh);
+
+		/*------------*/
+		/* processing */
+		/*------------*/
 
 		/**
 		 * Populates the set of regions from the given set of faces
@@ -109,6 +152,33 @@ class planar_region_graph_t
 		 * @return     Returns zero on success, non-zero on failure
 		 */
 		int populate(const node_boundary_t& boundary);
+
+		/**
+		 * Will attempt to coalesce regions in this graph
+		 *
+		 * This function will join regions in this until no
+		 * neighboring regions can join without violating the
+		 * error thresholds provided when init() was called.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int coalesce_regions();
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Writes region geometry to specified Wavefront OBJ file
+		 *
+		 * Given the location of a .obj file to write to, will
+		 * export the node faces for each region to this file.
+		 *
+		 * @param filename    Where to write the file
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int writeobj(const std::string& filename) const;
 
 	/* public helper functions */
 	public:
@@ -160,6 +230,159 @@ class planar_region_graph_t
 		 *              along f's normal vector.
 		 */
 		 static double get_face_pos_var(const node_face_t& f);
+
+	/* private helper functions */
+	private:
+
+		/**
+		 * Will compute the best-fit plane for the combination
+		 * of the two regions in this pair.
+		 *
+		 * Will perform PCA analysis on the center points of the
+		 * faces in these regions.  Will also compute the
+		 * normalized maximal error (in units of standard
+		 * deviations) of these center points from the computed
+		 * plane.
+		 *
+		 * These values will be stored in the parameters of this
+		 * structure 'plane' and 'max_err' respectively.
+		 *
+		 * @param pair   The pair of regions to analyze
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int compute_planefit(planar_region_pair_t& pair) const;
+};
+
+/**
+ * This class represents a planar region along with its connectivity info
+ */
+class planar_region_info_t
+{
+	/* security */
+	friend class planar_region_graph_t;
+
+	/* parameters */
+	private:
+
+		/**
+		 * The region in question
+		 */
+		planar_region_t region;
+
+		/**
+		 * This set represents the seed faces for each region
+		 * that neighbors the region represented by this object
+		 *
+		 * Note that these links are symmetric, and need to be
+		 * updated after each coalescion.
+		 */
+		faceset_t neighbor_seeds;
+
+	/* functions */
+	public:
+
+		/**
+		 * Constructs empty region
+		 */
+		planar_region_info_t()
+		{ /* no processing required */ };
+
+		/**
+		 * Constructs region based on flood-fill operation
+		 *
+		 * Given necessary face-linkage information, will perform
+		 * flood-fill on the given face in order to form a region.
+		 *
+		 * @param f          The face to use as a seed for this 
+		 *                   region
+		 * @param boundary   The node_boundary_t that represents
+		 *                   face connectivity
+		 * @param blacklist  List of face not allowed to be a part
+		 *                   of this region (typically because
+		 *                   they've already been allocated
+		 *                   another region).
+		 */
+		planar_region_info_t(const node_face_t& f,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist);
+
+		// TODO functions to merge two regions
+};
+
+/**
+ * This class is used to represent two neighboring regions for coalescing.
+ *
+ * Objects of this class contain references to the seeds of two regions,
+ * which can be used to compute the merged plane geometry of the two
+ * regions.  This can be used to quantify the cost of merging the two
+ * regions.
+ */
+class planar_region_pair_t
+{
+	/* parameters */
+	public:
+
+		/* the two regions to compare, as represented by their
+		 * node face seeds */
+		node_face_t first;
+		node_face_t second;
+
+		/* the following parameters represent the result of
+		 * plane fit analysis on the two regions in this pair */
+		plane_t plane; /* the computed best-fit plane */
+		double max_err; /* normalized maximum error in the fit */
+
+	/* functions */
+	public:
+
+		/**
+		 * Constructs a default pair
+		 */
+		planar_region_pair_t()
+		{ this->max_err = DBL_MAX; };
+
+		/*-----------*/
+		/* operators */
+		/*-----------*/
+
+		/**
+		 * Sets the value of this pair, given the provided argument
+		 */
+		inline planar_region_pair_t& operator = (
+				const planar_region_pair_t& other)
+		{
+			/* copy values */
+			this->first = other.first;
+			this->second = other.second;
+			this->plane = other.plane;
+			this->max_err = other.max_err;
+
+			/* return the modified result */
+			return (*this);
+		};
+
+		/**
+		 * Determines if this pair is equal to the provided argument
+		 *
+		 * Pairs are compared based on the 'max_err' parameter.
+		 */
+		inline bool operator == (
+				const planar_region_pair_t& other) const
+		{
+			return (this->max_err == other.max_err);
+		};
+
+		/**
+		 * Compares the ordering for two pairs
+		 *
+		 * Checks if this pair is less than the given argument
+		 */
+		inline bool operator < (
+				const planar_region_pair_t& other) const
+		{
+			return (this->max_err < other.max_err);
+		};
 };
 
 #endif

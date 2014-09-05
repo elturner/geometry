@@ -26,6 +26,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/shapes/plane.cpp \
 		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \

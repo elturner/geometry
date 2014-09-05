@@ -2,7 +2,11 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
 #include <mesh/surface/node_boundary.h>
+#include <mesh/surface/planar_region.h>
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
 #include <map>
 #include <float.h>
 #include <Eigen/Dense>
@@ -33,19 +37,140 @@ using namespace Eigen;
  * in this class */
 
 #define DEFAULT_PLANARITY_THRESHOLD 0.5
+#define DEFAULT_DISTANCE_THRESHOLD 1.0
 
 /*--------------------------*/
 /* function implementations */
 /*--------------------------*/
+		
+planar_region_graph_t::planar_region_graph_t()
+{
+	this->init(DEFAULT_PLANARITY_THRESHOLD, DEFAULT_DISTANCE_THRESHOLD);
+}
 
-void planar_region_graph_t::init(double planethresh)
+void planar_region_graph_t::init(double planethresh, double distthresh)
 {
 	this->planarity_threshold = planethresh;
+	this->distance_threshold = distthresh;
 }
 		
 int planar_region_graph_t::populate(const node_boundary_t& boundary)
 {
-	return -1; // TODO
+	facemap_t::const_iterator it;
+	faceset_t::const_iterator fit, nit;
+	pair<faceset_t::const_iterator, faceset_t::const_iterator> neighs;
+	seedmap_t::const_iterator neigh_seed;
+	regionmap_t::iterator rit;
+	set<node_face_t> blacklist;
+	pair<regionmap_t::iterator, bool> ins;
+
+	/* first, initialize the regions by performing flood fill to
+	 * generate the basic regions properties */
+	for(it = boundary.begin(); it != boundary.end(); it++)
+	{
+		/* check if face has been used already */
+		if(blacklist.count(it->first))
+			continue; /* this face is already in a region */
+
+		/* create a new region with this face as the seed */
+		ins = this->regions.insert(pair<node_face_t, 
+				planar_region_info_t>(it->first,
+				planar_region_info_t(it->first, 
+					boundary, blacklist)));
+		if(!(ins.second))
+		{
+			/* this means that it->first was already in the
+			 * map, even though it wasn't in the blacklist.
+			 * This means we have conflicting info */
+			return -1;
+		}
+
+		/* add each node face in this region to the seedmap
+		 * structure */
+		for(fit = ins.first->second.region.begin(); 
+			fit != ins.first->second.region.end(); fit++)
+		{
+			/* for each face in this region, add to seed map */
+			this->seeds[*fit] = it->first; /* seed for region */
+		}
+	}
+
+	/* compute neighbor information for each region
+	 *
+	 * This requires us to iterate over each region, then iterate
+	 * over the faces in that region, then iterate over the nodes in
+	 * that face, then iterate over the neighbors of that face, and 
+	 * determine if those neighbors are part of different regions. */
+	for(rit = this->regions.begin(); rit != this->regions.end(); rit++)
+	{
+		/* iterate over the faces of this region */
+		for(fit = rit->second.region.begin();
+				fit != rit->second.region.end(); fit++)
+		{
+			/* get neighbor information for this face */
+			neighs = boundary.get_neighbors(*fit);
+
+			/* now iterate over the neighbors of this face */
+			for(nit = neighs.first; nit != neighs.second; nit++)
+			{
+				/* determine which region this neighbor
+				 * lies in, by getting the seed value
+				 * that is stored in the seeds map */
+				neigh_seed = this->seeds.find(*nit);
+				if(neigh_seed == this->seeds.end())
+				{
+					/* every face should be in
+					 * the seeds map, which means
+					 * this is an error */
+					return -2;
+				}
+
+				/* check if the neighbor's seed is
+				 * different than this region's */
+				if(neigh_seed->second == rit->first)
+				{
+					/* seeds are the same, which
+					 * means that the two faces
+					 * belong to the same region,
+					 * so we should do nothing */
+					continue;
+				}
+
+				/* the seeds are different, which means 
+				 * these two regions are neighbors.  We
+				 * should record this */
+				rit->second.neighbor_seeds.insert(
+						neigh_seed->second);
+			}
+		}
+	}	
+
+	/* success */
+	return 0;
+}
+		
+int planar_region_graph_t::coalesce_regions()
+{
+	return -1; // TODO implement me
+}
+		
+int planar_region_graph_t::writeobj(const std::string& filename) const
+{
+	ofstream outfile;
+	regionmap_t::const_iterator it;
+
+	/* prepare to export to file */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return -1;
+
+	/* generate the regions based on floodfill */
+	for(it = this->regions.begin(); it != this->regions.end(); it++)
+		it->second.region.writeobj(outfile); /* write to file */
+
+	/* success */
+	outfile.close();
+	return 0;
 }
 
 /*------------------*/
@@ -242,4 +367,60 @@ double planar_region_graph_t::get_face_pos_var(const node_face_t& f)
 	
 	/* return the computed value */
 	return var_p;
+}
+
+/*-----------------------------------------------*/
+/* planar_region_info_t function implementations */
+/*-----------------------------------------------*/
+
+planar_region_info_t::planar_region_info_t(const node_face_t& f,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist)
+{
+	/* initialize the region based on floodfill of this face */
+	this->region.floodfill(f, boundary, blacklist);
+
+	/* leave the neighbor seeds structure empty for now */
+}
+
+int planar_region_graph_t::compute_planefit(
+				planar_region_pair_t& pair) const
+{
+	regionmap_t::const_iterator fit, sit;
+	vector<Eigen::Vector3d, 
+		Eigen::aligned_allocator<Eigen::Vector3d> > centers;
+	vector<double> variances;
+	size_t i, n;
+	double d;
+
+	/* get the regions referenced in the input pair */
+	fit = this->regions.find(pair.first);
+	if(fit == this->regions.end())
+		return -1;
+	sit = this->regions.find(pair.second);
+	if(fit == this->regions.end())
+		return -2;
+
+	/* get the center points for each face in each of the regions */
+	fit->second.region.find_face_centers(centers, variances);
+	sit->second.region.find_face_centers(centers, variances);
+
+	/* perform PCA on these points */
+	pair.plane.fit(centers);
+
+	/* determine the max error by iterating over the points */
+	pair.max_err = 0;
+	n = centers.size();
+	for(i = 0; i < n; i++)
+	{
+		/* get normalized distance of this point to plane */
+		d = pair.plane.distance_to(centers[i])/sqrt(variances[i]);
+
+		/* check if this is the maximum */
+		if(d > pair.max_err)
+			pair.max_err = d;
+	}
+
+	/* success */
+	return 0;
 }

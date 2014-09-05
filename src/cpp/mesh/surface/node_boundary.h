@@ -31,8 +31,8 @@ class node_face_t;
 class node_face_info_t;
 
 /* the following typedefs are used for these classes */
-typedef std::map<node_face_t, node_face_info_t> facemap;
-typedef std::set<node_face_t>                   faceset;
+typedef std::map<node_face_t, node_face_info_t> facemap_t;
+typedef std::set<node_face_t>                   faceset_t;
 
 /**
  * The node_boundary_t class can compute the subset of nodes
@@ -65,7 +65,7 @@ class node_boundary_t
 		 * about each node face, such as what adjoining faces
 		 * it touches.
 		 */
-		facemap faces;
+		facemap_t faces;
 
 	/* functions */
 	public:
@@ -111,13 +111,13 @@ class node_boundary_t
 		/**
 		 * Returns an iterator to the beginning of the set of faces
 		 */
-		inline facemap::const_iterator begin() const
+		inline facemap_t::const_iterator begin() const
 		{ return this->faces.begin(); };
 
 		/**
 		 * Returns an iterator to the end of the set of faces
 		 */
-		inline facemap::const_iterator end() const
+		inline facemap_t::const_iterator end() const
 		{ return this->faces.end(); };
 		
 
@@ -146,7 +146,7 @@ class node_boundary_t
 		 * @return      Returns zero on success, non-zero on failure
 		 */
 		int get_nearby_faces(const octtopo::octtopo_t& topo,
-			octnode_t* node, faceset& nfs) const;
+			octnode_t* node, faceset_t& nfs) const;
 
 		/**
 		 * Given a face, will retrieve iterators to neighbor set
@@ -159,7 +159,8 @@ class node_boundary_t
 		 *
 		 * @return    The start/end pair of iterators to f's neighs
 		 */
-		std::pair<faceset::const_iterator, faceset::const_iterator>
+		std::pair<faceset_t::const_iterator,
+			faceset_t::const_iterator>
 				get_neighbors(const node_face_t& f) const;
 
 		/*-----------*/
@@ -467,7 +468,7 @@ class node_face_info_t
 
 		/* this value represents the list of faces that are 
 		 * connected in some way to this face */
-		faceset neighbors;
+		faceset_t neighbors;
 
 	/* functions */
 	public:
@@ -495,6 +496,26 @@ class node_face_info_t
 		 */
 		inline void clear()
 		{ this->neighbors.clear(); };
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+		
+		/**
+		 * Returns the beginning iterator to the neighbors set
+		 *
+		 * @return   The begin iterator to this->neighbors
+		 */
+		inline faceset_t::const_iterator begin() const
+		{ return this->neighbors.begin(); };
+
+		/**
+		 * Returns the end iterator to the neighbors set
+		 *
+		 * @return   The end iterator to this->neighbors
+		 */
+		inline faceset_t::const_iterator end() const
+		{ return this->neighbors.end(); };
 
 		/*-----------*/
 		/* operators */

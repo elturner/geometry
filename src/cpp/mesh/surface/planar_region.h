@@ -15,12 +15,15 @@
  *
  * Note that this class operates on node_boundary_t objects, which should
  * already be populated from an octtopo_t topology.
+ *
+ * This class requires the Eigen Framework.
  */
 
 #include <mesh/surface/node_boundary.h>
 #include <geometry/shapes/plane.h>
 #include <iostream>
 #include <set>
+#include <Eigen/Dense>
 
 /**
  * The planar_region_t class represents a subset of node faces that
@@ -37,7 +40,7 @@ class planar_region_t
 		/**
 		 * The set of faces that contribute to this region.
 		 */
-		faceset faces;
+		faceset_t faces;
 
 		/**
 		 * The plane geometry is defined by a normal vector
@@ -58,6 +61,10 @@ class planar_region_t
 		inline void clear()
 		{ this->faces.clear(); };
 
+		/*------------*/
+		/* processing */
+		/*------------*/
+
 		/**
 		 * Performs a flood-fill operation on the given face
 		 *
@@ -77,7 +84,39 @@ class planar_region_t
 		 */
 		void floodfill(const node_face_t& seed,
 				const node_boundary_t& boundary,
-				faceset& blacklist);
+				faceset_t& blacklist);
+
+		/**
+		 * Finds the center points to all faces in this region
+		 *
+		 * Will iterate through all faces in this region, compute
+		 * the center point of those faces, and add those points
+		 * to the given vector.
+		 *
+		 * Note that any values stored in the specified vector
+		 * will remain after this call -- this code does not
+		 * delete, it only appends.
+		 *
+		 * Also note that the centers are computed by determining
+		 * the isosurface offset of the face, not the grid-aligned
+		 * face centers.
+		 *
+		 * This function will also find the variances for
+		 * the positions of these center points, which will be
+		 * stored in the 'variances' vector.
+		 *
+		 * NOTE: it is assumed that these two vectors have
+		 * the same size.
+		 *
+		 * @param centers   Where to store the center points
+		 *                  of faces for this region
+		 * @param variances Where to store the variance values
+		 *                  for each center point.
+		 */
+		void find_face_centers(std::vector<Eigen::Vector3d,
+				Eigen::aligned_allocator<
+					Eigen::Vector3d> >& centers,
+				std::vector<double>& variances) const;
 
 		/*-----------*/
 		/* accessors */
@@ -105,6 +144,24 @@ class planar_region_t
 		 */
 		inline void add(const node_face_t& f)
 		{ this->faces.insert(f); };
+
+		/**
+		 * Returns the beginning iterator to the set of faces 
+		 * in this region.
+		 *
+		 * @return   Returns a constant iterator to the faces
+		 */
+		inline faceset_t::const_iterator begin() const
+		{ return this->faces.begin(); };
+
+		/**
+		 * Returns the end iterator to the set of faces 
+		 * in this region.
+		 *
+		 * @return   Returns a constant iterator to the faces
+		 */
+		inline faceset_t::const_iterator end() const
+		{ return this->faces.end(); };
 
 		/*-----------*/
 		/* debugging */

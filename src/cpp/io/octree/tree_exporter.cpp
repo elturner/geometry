@@ -5,7 +5,7 @@
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_partitioner.h>
 #include <mesh/surface/node_boundary.h>
-#include <mesh/surface/planar_region.h>
+#include <mesh/surface/planar_region_graph.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -68,9 +68,7 @@ int tree_exporter::export_regions(const std::string& filename,
 {
 	octtopo::octtopo_t top;
 	node_boundary_t boundary;
-	planar_region_t region;
-	set<node_face_t> blacklist;
-	ofstream outfile;
+	planar_region_graph_t region_graph;
 	tictoc_t clk;
 	int ret;
 
@@ -86,20 +84,21 @@ int tree_exporter::export_regions(const std::string& filename,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
-	/* prepare to export to file */
-	outfile.open(filename.c_str());
-	if(!(outfile.is_open()))
+	/* form planar regions from these boundary faces */
+	tic(clk);
+	ret = region_graph.populate(boundary);
+	if(ret)
 		return PROPEGATE_ERROR(-3, ret);
+	toc(clk, "Forming regions");
 
-	/* generate the regions based on floodfill */
-	for(auto it = boundary.begin(); it != boundary.end(); it++)
-	{
-		region.floodfill(it->first, boundary, blacklist);
-		region.writeobj(outfile); /* write to file */
-	}
+	/* export regions to file */
+	tic(clk);
+	ret = region_graph.writeobj(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	toc(clk, "Writing OBJ");
 
 	/* success */
-	outfile.close();
 	return 0;
 }
 

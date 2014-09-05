@@ -16,7 +16,9 @@
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
 #include <util/error_codes.h>
+#include <vector>
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 /**
  * The plane_t class represents the geometry of a plane in 3D space
@@ -59,11 +61,7 @@ class plane_t : public shape_t
 		/**
 		 * Constructs default plane orientation and offset
 		 */
-		plane_t()
-		{
-			this->normal << 0,0,1;
-			this->point  << 0,0,0;
-		};
+		plane_t();
 
 		/*----------*/
 		/* geometry */
@@ -81,6 +79,19 @@ class plane_t : public shape_t
 		 */
 		inline double distance_to(const Eigen::Vector3d& p) const
 		{ return this->normal.dot(p - this->point); };
+
+		/**
+		 * Performs PCA on the given points, and stores the best-fit
+		 * plane in this structure.
+		 *
+		 * After this call, the parameters of this structure
+		 * will be modified to fit the plane given the input
+		 * points.
+		 *
+		 * @param P    The list of points to fit a plane to
+		 */
+		void fit(const std::vector<Eigen::Vector3d,
+			Eigen::aligned_allocator<Eigen::Vector3d> >& P);
 
 		/*-----------------------------------*/
 		/* overloaded functions from shape_t */
