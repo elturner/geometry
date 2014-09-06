@@ -2,6 +2,7 @@
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
 #include <util/error_codes.h>
+#include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
@@ -81,4 +82,24 @@ void plane_t::fit(const std::vector<Eigen::Vector3d,
 	this->normal(0) = eig.eigenvectors()(0,i_min);
 	this->normal(1) = eig.eigenvectors()(1,i_min);
 	this->normal(2) = eig.eigenvectors()(2,i_min);
+}
+		
+void plane_t::writeobj(std::ostream& os) const
+{
+	Vector3d a, b;
+	int i, i_min;
+
+	/* get minimum component of normal */
+	i_min = 0;
+	for(i = 1; i < 3; i++)
+		if(this->normal(i) < this->normal(i_min))
+			i_min = i;
+
+	/* get coordinates along the plane */
+	a = 0,0,0; a(i_min) = this->normal(i_min);
+	b = this->normal.cross(a);
+	a = b.cross(this->normal);
+
+	/* export vertices */
+	// TODO LEFT OFF HERE
 }

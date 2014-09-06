@@ -131,6 +131,14 @@ class planar_region_t
 		{ return this->plane; };
 
 		/**
+		 * Sets the plane of this region to the given geometry
+		 *
+		 * @param p  The plane to use for this region
+		 */
+		inline void set_plane(const plane_t& p)
+		{ this->plane = p; };
+
+		/**
 		 * Adds a face to this region
 		 *
 		 * Note that this call does not modify the planar
@@ -162,6 +170,15 @@ class planar_region_t
 		 */
 		inline faceset_t::const_iterator end() const
 		{ return this->faces.end(); };
+
+		/**
+		 * Returns the number of faces stored in this region
+		 *
+		 * @return   The number of faces in this region
+		 */
+		inline size_t num_faces() const
+		{ return this->faces.size(); };
+
 
 		/*-----------*/
 		/* debugging */

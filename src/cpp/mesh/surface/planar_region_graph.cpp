@@ -3,13 +3,16 @@
 #include <geometry/octree/octtopo.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region.h>
+#include <util/error_codes.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
+#include <queue>
 #include <map>
 #include <float.h>
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 /**
  * @file   planar_region_graph.cpp
@@ -151,7 +154,106 @@ int planar_region_graph_t::populate(const node_boundary_t& boundary)
 		
 int planar_region_graph_t::coalesce_regions()
 {
-	return -1; // TODO implement me
+	priority_queue<planar_region_pair_t> pq;
+	regionmap_t::iterator rit, sit;
+	faceset_t::iterator fit;
+	planar_region_pair_t pair;
+	size_t num_faces;
+	int ret;
+
+	/* create a queue with all possible region merges */
+	for(rit = this->regions.begin(); rit != this->regions.end(); rit++)
+	{
+		/* iterate through the neighbors of this region to
+		 * get pairs of regions */
+		for(fit = rit->second.neighbor_seeds.begin();
+				fit != rit->second.neighbor_seeds.end(); 
+					fit++)
+		{
+			/* to prevent duplication, only add a pair if the
+			 * neighbor's seed is greater than the current
+			 * region seed (since all linkages are 
+			 * bidirectional, not doing this would result in
+			 * twice as many pairs as needed). */
+			if(*fit < rit->first)
+				continue;
+
+			/* generate the pairing of neighboring regions */
+			pair.first = rit->first; /* this region */
+			pair.second = *fit; /* the neighboring region */
+			ret = this->compute_planefit(pair);
+			if(ret)
+				return PROPEGATE_ERROR(-1, ret);
+
+			/* add this pair to the queue */
+			pq.push(pair);
+		}
+	}
+
+	// TODO incorporate planarity into region growth
+
+	/* cycle through queue, get next region to merge */
+	cout << "num regions: " << this->regions.size() << endl; // TODO
+	cout << "queue size: " << pq.size() << endl; // TODO debugging
+	while(!pq.empty())
+	{
+		/* get next pair to check */
+		pair = pq.top();
+		pq.pop();
+
+		/* check if thresholds met.  if not, quit */
+		if(pair.max_err > this->distance_threshold)
+			break; /* all remaining pairs won't pass either */
+
+		/* get info for the two regions involved */
+		rit = this->regions.find(pair.first);
+		sit = this->regions.find(pair.second);
+
+		/* check if regions still exist */
+		if(rit == this->regions.end() || sit == this->regions.end())
+			continue; /* not valid pair anymore */
+
+		/* use checksum to see if we need to recalc plane */
+		num_faces = rit->second.region.num_faces()
+				+ sit->second.region.num_faces();
+		if(num_faces != pair.num_faces)
+		{
+			/* regions have been modified, compute
+			 * fitting planes the pair */
+			ret = this->compute_planefit(pair);
+			if(ret)
+				return PROPEGATE_ERROR(-2, ret);
+		}
+
+		/* merge the regions */
+		ret = this->merge_regions(pair);
+		if(ret)
+			return PROPEGATE_ERROR(-3, ret);
+		
+		/* Insert new neighbor merges into the queue.
+		 *
+		 * Note that the second region in our pair no
+		 * longer exists, so just insert neighbor-pairs
+		 * of the first region. */
+		for(fit = rit->second.neighbor_seeds.begin();
+				fit != rit->second.neighbor_seeds.end(); 
+					fit++)
+		{
+			/* generate the pairing of neighboring regions */
+			pair.first = rit->first; /* this region */
+			pair.second = *fit; /* the neighboring region */
+			ret = this->compute_planefit(pair);
+			if(ret)
+				return PROPEGATE_ERROR(-4, ret);
+
+			/* add this pair to the queue */
+			pq.push(pair);
+		}
+	}
+	cout << "num regions: " << this->regions.size() << endl; // TODO
+
+	/* success */
+	return 0;
 }
 		
 int planar_region_graph_t::writeobj(const std::string& filename) const
@@ -164,7 +266,7 @@ int planar_region_graph_t::writeobj(const std::string& filename) const
 	if(!(outfile.is_open()))
 		return -1;
 
-	/* generate the regions based on floodfill */
+	/* write the faces for each region */
 	for(it = this->regions.begin(); it != this->regions.end(); it++)
 		it->second.region.writeobj(outfile); /* write to file */
 
@@ -384,14 +486,13 @@ planar_region_info_t::planar_region_info_t(const node_face_t& f,
 }
 
 int planar_region_graph_t::compute_planefit(
-				planar_region_pair_t& pair) const
+				planar_region_pair_t& pair)
 {
-	regionmap_t::const_iterator fit, sit;
-	vector<Eigen::Vector3d, 
-		Eigen::aligned_allocator<Eigen::Vector3d> > centers;
-	vector<double> variances;
-	size_t i, n;
-	double d;
+	std::vector<Eigen::Vector3d, 
+			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
+	regionmap_t::iterator fit, sit;
+	size_t i, nf;
+	double d, v;
 
 	/* get the regions referenced in the input pair */
 	fit = this->regions.find(pair.first);
@@ -401,25 +502,117 @@ int planar_region_graph_t::compute_planefit(
 	if(fit == this->regions.end())
 		return -2;
 
-	/* get the center points for each face in each of the regions */
-	fit->second.region.find_face_centers(centers, variances);
-	sit->second.region.find_face_centers(centers, variances);
+	/* get the center points for each face in each of the regions.
+	 *
+	 * We only need to compute them if they are not already cached */
+	if(fit->second.centers.size() != fit->second.region.num_faces())
+	{
+		/* get face center positions for first region */
+		fit->second.centers.clear();
+		fit->second.region.find_face_centers(fit->second.centers,
+					fit->second.variances);	
+	}
+	if(sit->second.centers.size() != sit->second.region.num_faces() )
+	{
+		/* get face center positions for second region */
+		sit->second.centers.clear();
+		sit->second.region.find_face_centers(sit->second.centers,
+					sit->second.variances);
+	}
 
 	/* perform PCA on these points */
+	centers.insert(centers.end(), fit->second.centers.begin(),
+				fit->second.centers.end());
+	centers.insert(centers.end(), sit->second.centers.begin(),
+				sit->second.centers.end());
 	pair.plane.fit(centers);
 
 	/* determine the max error by iterating over the points */
 	pair.max_err = 0;
-	n = centers.size();
-	for(i = 0; i < n; i++)
+	pair.num_faces = centers.size();
+	nf = fit->second.variances.size();
+	for(i = 0; i < pair.num_faces; i++)
 	{
+		/* get variance of center position for face */
+		v = (i >= nf) ? sit->second.variances[i-nf] 
+			: fit->second.variances[i];
+
 		/* get normalized distance of this point to plane */
-		d = pair.plane.distance_to(centers[i])/sqrt(variances[i]);
+		d = pair.plane.distance_to(centers[i]) / sqrt(v);
 
 		/* check if this is the maximum */
 		if(d > pair.max_err)
 			pair.max_err = d;
 	}
+
+	/* success */
+	return 0;
+}
+		
+int planar_region_graph_t::merge_regions(const planar_region_pair_t& pair)
+{
+	regionmap_t::iterator fit, sit, neighinfo;
+	faceset_t::iterator faceit, nit;
+
+	/* retrieve the region information to modify */
+	fit = this->regions.find(pair.first);
+	if(fit == this->regions.end())
+		return -1; /* can't merge non-existent region */
+	sit = this->regions.find(pair.second);
+	if(sit == this->regions.end())
+		return -2; /* can't merge non-existent region */
+
+	/* iterate over the faces in the second region */
+	for(faceit = sit->second.region.begin();
+			faceit != sit->second.region.end(); faceit++)
+	{
+		/* add this face to the first region's set */
+		fit->second.region.add(*faceit);
+
+		/* update seed information for this face to first region */
+		this->seeds[*faceit] = fit->first; /* now in first region */
+	}
+	
+	/* verify that checksum matches */
+	if(pair.num_faces != fit->second.region.num_faces())
+		return -3;
+
+	/* iterate over the neighbors of the second region */
+	for(nit = sit->second.neighbor_seeds.begin();
+			nit != sit->second.neighbor_seeds.end(); nit++)
+	{
+		/* get info for this neighbor */
+		neighinfo = this->regions.find(*nit);
+		if(neighinfo == this->regions.end())
+			return -4;
+
+		/* perform following only if neighbor isn't first region */
+		if(*nit != fit->first)
+		{
+			/* add this neighbor to the first region */
+			fit->second.neighbor_seeds.insert(*nit);
+
+			/* add first region as neighbor of this neighbor */
+			neighinfo->second.neighbor_seeds.insert(fit->first);
+		}
+		
+		/* remove second region as a neighbor of this neighbor */
+		neighinfo->second.neighbor_seeds.erase(sit->first);
+	}
+
+	/* copy cached values to the newly edited first region */
+	fit->second.centers.insert(fit->second.centers.end(),
+			sit->second.centers.begin(),
+			sit->second.centers.end());
+	fit->second.variances.insert(fit->second.variances.end(),
+			sit->second.variances.begin(),
+			sit->second.variances.end());
+
+	/* update region's plane information */
+	fit->second.region.set_plane(pair.plane);
+
+	/* remove second region from this graph */
+	this->regions.erase(sit);
 
 	/* success */
 	return 0;

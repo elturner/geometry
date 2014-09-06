@@ -16,6 +16,7 @@
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
 #include <util/error_codes.h>
+#include <iostream>
 #include <vector>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
@@ -93,10 +94,24 @@ class plane_t : public shape_t
 		void fit(const std::vector<Eigen::Vector3d,
 			Eigen::aligned_allocator<Eigen::Vector3d> >& P);
 
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Writes a representation of this plane to an OBJ file
+		 *
+		 * Given the stream to a Wavefront OBJ file, will export
+		 * a patch of this plane.
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void writeobj(std::ostream& os) const;
+
 		/*-----------------------------------*/
 		/* overloaded functions from shape_t */
 		/*-----------------------------------*/
-		
+
 		/**
 		 * The number of vertices used to represent this shape
 		 *

@@ -23,10 +23,12 @@
 #include <geometry/shapes/plane.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region.h>
+#include <vector>
 #include <string>
 #include <map>
 #include <float.h>
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 
 /* the following classes are defined in this file */
 class planar_region_graph_t;
@@ -247,11 +249,29 @@ class planar_region_graph_t
 		 * These values will be stored in the parameters of this
 		 * structure 'plane' and 'max_err' respectively.
 		 *
+		 * This call will cache statistical information in
+		 * this structure.
+		 *
 		 * @param pair   The pair of regions to analyze
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int compute_planefit(planar_region_pair_t& pair) const;
+		int compute_planefit(planar_region_pair_t& pair);
+
+		/**
+		 * Will combine the two regions into one region
+		 *
+		 * This function, when given a pair of regions, will
+		 * combine their contents into one region.  This process
+		 * includes joining face sets, removing the now-outdated
+		 * regions from the structure, and updating seed-neighbor
+		 * linkages.
+		 *
+		 * @param pair   The pair of regions to join
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int merge_regions(const planar_region_pair_t& pair);
 };
 
 /**
@@ -278,6 +298,24 @@ class planar_region_info_t
 		 * updated after each coalescion.
 		 */
 		faceset_t neighbor_seeds;
+
+		/**
+		 * The following vectors store the center positions for
+		 * each face in this region.
+		 *
+		 * If the vector is empty, that means that the centers
+		 * have not yet been computed.  Note that the 'centers'
+		 * vector should always be the same length as the
+		 * 'variances' vector.
+		 *
+		 * These values are cached so not to be doubly-computed.
+		 * Note that they are not necessarily stored in any
+		 * particular order, except that each index in 'centers'
+		 * corresponds to each index in 'variances'.
+		 */
+		std::vector<Eigen::Vector3d, 
+			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
+		std::vector<double> variances;
 
 	/* functions */
 	public:
@@ -306,8 +344,6 @@ class planar_region_info_t
 		planar_region_info_t(const node_face_t& f,
 				const node_boundary_t& boundary,
 				faceset_t& blacklist);
-
-		// TODO functions to merge two regions
 };
 
 /**
@@ -333,6 +369,19 @@ class planar_region_pair_t
 		plane_t plane; /* the computed best-fit plane */
 		double max_err; /* normalized maximum error in the fit */
 
+		/**
+		 * The sum of the number of faces in the two regions
+		 *
+		 * this value represents a checksum on the two regions
+		 * described in this structure.  If these regions have
+		 * been merged with other regions since this pair was
+		 * initialized, then the plane/max_err parameters may
+		 * be out of date.  By comparing this value to the
+		 * observed sum of faces between the two regions, we
+		 * can determine if these parameters should be recomputed.
+		 */
+		size_t num_faces;
+
 	/* functions */
 	public:
 
@@ -340,7 +389,10 @@ class planar_region_pair_t
 		 * Constructs a default pair
 		 */
 		planar_region_pair_t()
-		{ this->max_err = DBL_MAX; };
+		{ 
+			this->max_err = DBL_MAX; 
+			this->num_faces = 0;
+		};
 
 		/*-----------*/
 		/* operators */
@@ -357,6 +409,7 @@ class planar_region_pair_t
 			this->second = other.second;
 			this->plane = other.plane;
 			this->max_err = other.max_err;
+			this->num_faces = other.num_faces;
 
 			/* return the modified result */
 			return (*this);
@@ -376,12 +429,20 @@ class planar_region_pair_t
 		/**
 		 * Compares the ordering for two pairs
 		 *
-		 * Checks if this pair is less than the given argument
+		 * Checks if this pair is less than the given argument.
+		 *
+		 * These are compared based on the negation of the max_err
+		 * parameter, which means that, when sorted, the element
+		 * with the highest max error will appear first.
+		 *
+		 * The reason for this is so these pairs can be put into
+		 * a priority queue, and the pair with the smallest error
+		 * will appear at the top.
 		 */
 		inline bool operator < (
 				const planar_region_pair_t& other) const
 		{
-			return (this->max_err < other.max_err);
+			return (this->max_err > other.max_err);
 		};
 };
 

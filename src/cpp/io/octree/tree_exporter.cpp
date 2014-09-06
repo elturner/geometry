@@ -91,11 +91,19 @@ int tree_exporter::export_regions(const std::string& filename,
 		return PROPEGATE_ERROR(-3, ret);
 	toc(clk, "Forming regions");
 
+	/* coalesce regions */
+	tic(clk);
+	region_graph.init(0.5, 500.0); // TODO debugging
+	ret = region_graph.coalesce_regions();
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	toc(clk, "Coalesce regions");
+
 	/* export regions to file */
 	tic(clk);
 	ret = region_graph.writeobj(filename);
 	if(ret)
-		return PROPEGATE_ERROR(-4, ret);
+		return PROPEGATE_ERROR(-5, ret);
 	toc(clk, "Writing OBJ");
 
 	/* success */
