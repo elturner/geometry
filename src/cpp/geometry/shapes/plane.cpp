@@ -92,14 +92,24 @@ void plane_t::writeobj(std::ostream& os) const
 	/* get minimum component of normal */
 	i_min = 0;
 	for(i = 1; i < 3; i++)
-		if(this->normal(i) < this->normal(i_min))
+		if(abs(this->normal(i)) < abs(this->normal(i_min)))
 			i_min = i;
 
 	/* get coordinates along the plane */
-	a = 0,0,0; a(i_min) = this->normal(i_min);
-	b = this->normal.cross(a);
+	a << 0,0,0; a(i_min) = 1;
+	b = this->normal.cross(a).normalized();
 	a = b.cross(this->normal);
 
-	/* export vertices */
-	// TODO LEFT OFF HERE
+	/* export vertices and facecs */
+	os << "#" << endl
+	   << "# Plane Definition: " << endl
+	   << "# \tnormal : " << this->normal.transpose() << endl
+	   << "# \tcenter : " << this->point.transpose() << endl
+	   << "# \ta      : " << a.transpose() << endl
+	   << "# \tb      : " << b.transpose() << endl
+	   << "v " << (this->point + 0.1*( a + b)).transpose() << endl
+	   << "v " << (this->point + 0.1*( a - b)).transpose() << endl
+	   << "v " << (this->point + 0.1*(-a - b)).transpose() << endl
+	   << "v " << (this->point + 0.1*(-a + b)).transpose() << endl
+	   << "f -1 -2 -3 -4" << endl << endl;
 }

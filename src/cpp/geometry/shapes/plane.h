@@ -64,6 +64,14 @@ class plane_t : public shape_t
 		 */
 		plane_t();
 
+		/**
+		 * Constructs plane from given other plane
+		 */
+		plane_t(const plane_t& other)
+			:	normal(other.normal),
+				point(other.point)
+		{};
+
 		/*----------*/
 		/* geometry */
 		/*----------*/

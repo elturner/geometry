@@ -3,6 +3,7 @@
 #include <geometry/octree/octtopo.h>
 #include <geometry/poly_intersect/poly2d.h>
 #include <mesh/partition/node_set.h>
+//#include <mesh/surface/planar_region_graph.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -651,6 +652,17 @@ double node_face_t::get_halfwidth() const
 		return this->interior->halfwidth;
 	return this->exterior->halfwidth;
 }
+		
+double node_face_t::get_area() const
+{
+	double hw;
+
+	/* compute the halfwidth of this face */
+	hw = this->get_halfwidth();
+
+	/* compute the area */
+	return 4*hw*hw;
+}
 
 void node_face_t::writeobj(std::ostream& os) const
 {
@@ -678,12 +690,18 @@ void node_face_t::writeobj(std::ostream& os, double v) const
 
 void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 {
-	Vector3d p;
+	Vector3d p, center;
 	double hw;
 
 	/* get geometry of face */
 	this->get_center(p);
 	hw = this->get_halfwidth();
+
+	/* export center position */
+	//planar_region_graph_t::get_isosurface_pos(*this, center);
+	center = p;
+	os << "v " << center(0) << " " << center(1) << " " << center(2)
+	   <<  " " << r << " " << g << " " << b << endl;
 
 	/* draw vertices based on orientation of face */
 	switch(this->direction)
@@ -798,8 +816,11 @@ void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 			break;
 	}
 
-	/* draw the face */
-	os << "f -1 -2 -3 -4" << endl;
+	/* draw the faces, oriented ccw inward */
+	os << "f -5 -1 -2" << endl
+	   << "f -5 -2 -3" << endl
+	   << "f -5 -3 -4" << endl
+	   << "f -5 -4 -1" << endl;
 }
 
 /*-------------------------------------------*/

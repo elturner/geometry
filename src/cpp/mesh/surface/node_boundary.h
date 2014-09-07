@@ -360,6 +360,16 @@ class node_face_t
 		 */
 		double get_halfwidth() const;
 
+		/**
+		 * Computes the surface area of this face
+		 *
+		 * The surface area is computed by first computing
+		 * the halfwidth of the face.
+		 *
+		 * @return   Returns the area of this face
+		 */
+		double get_area() const;
+
 		/*-----------*/
 		/* operators */
 		/*-----------*/
