@@ -80,7 +80,8 @@ int planar_region_graph_t::populate(const node_boundary_t& boundary)
 		ins = this->regions.insert(pair<node_face_t, 
 				planar_region_info_t>(it->first,
 				planar_region_info_t(it->first, 
-					boundary, blacklist)));
+					boundary, blacklist,
+					this->planarity_threshold)));
 		if(!(ins.second))
 		{
 			/* this means that it->first was already in the
@@ -205,8 +206,6 @@ int planar_region_graph_t::coalesce_regions()
 	pq_size = 0;
 	original_num_regions = this->regions.size();
 
-	// TODO incorporate planarity into region growth
-
 	/* cycle through queue, get next region to merge */
 	while(!pq.empty())
 	{
@@ -228,7 +227,7 @@ int planar_region_graph_t::coalesce_regions()
 		progbar.update(original_num_regions - this->regions.size(),
 				original_num_regions);
 
-		/* check if thresholds met.  if not, quit */
+		/* check if distance thresholds met.  if not, quit */
 		if(pair.err > this->distance_threshold)
 			break; /* all remaining pairs won't pass either */
 		
@@ -245,6 +244,21 @@ int planar_region_graph_t::coalesce_regions()
 		/* check if regions still exist */
 		if(rit == this->regions.end() || sit == this->regions.end())
 			continue; /* not valid pair anymore */
+		
+		/* check if planarity threshold met.  If not, then
+		 * abort this merge */
+		if((rit->second.get_planarity() < this->planarity_threshold)
+			|| (sit->second.get_planarity() 
+				< this->planarity_threshold))
+		{
+			/* one or both of the input planes don't meet
+			 * the planarity threshold, which indicates that
+			 * the geometry described by these planes may not
+			 * be well-represented by a plane, so they shouldn't
+			 * be merged. */
+			continue;
+		}
+
 
 		/* use checksum to see if we need to recalc plane */
 		num_faces = rit->second.region.num_faces()
@@ -310,7 +324,7 @@ int planar_region_graph_t::writeobj(const std::string& filename) const
 	/* write the faces for each region */
 	for(it = this->regions.begin(); it != this->regions.end(); it++)
 		it->second.region.writeobj(outfile); /* write to file */
-
+	
 	/* success */
 	outfile.close();
 	return 0;
@@ -546,20 +560,6 @@ double planar_region_graph_t::get_face_pos_var(const node_face_t& f)
 	return var_p;
 }
 
-/*-----------------------------------------------*/
-/* planar_region_info_t function implementations */
-/*-----------------------------------------------*/
-
-planar_region_info_t::planar_region_info_t(const node_face_t& f,
-				const node_boundary_t& boundary,
-				faceset_t& blacklist)
-{
-	/* initialize the region based on floodfill of this face */
-	this->region.floodfill(f, boundary, blacklist);
-
-	/* leave the neighbor seeds structure empty for now */
-}
-
 int planar_region_graph_t::compute_planefit(
 				planar_region_pair_t& pair)
 {
@@ -586,7 +586,7 @@ int planar_region_graph_t::compute_planefit(
 		fit->second.centers.clear();
 		fit->second.variances.clear();
 		fit->second.region.find_face_centers(fit->second.centers,
-					fit->second.variances);	
+					fit->second.variances, false);	
 	}
 	if(sit->second.centers.size() != sit->second.region.num_faces() )
 	{
@@ -594,7 +594,7 @@ int planar_region_graph_t::compute_planefit(
 		sit->second.centers.clear();
 		sit->second.variances.clear();
 		sit->second.region.find_face_centers(sit->second.centers,
-					sit->second.variances);
+					sit->second.variances, false);
 	}
 
 	/* perform PCA on these points */
@@ -692,6 +692,8 @@ int planar_region_graph_t::merge_regions(const planar_region_pair_t& pair)
 	fit->second.variances.insert(fit->second.variances.end(),
 			sit->second.variances.begin(),
 			sit->second.variances.end());
+	fit->second.planarity = min(fit->second.get_planarity(), 
+					sit->second.get_planarity());
 
 	/* update region's plane information */
 	fit->second.region.set_plane(pair.plane);
@@ -701,4 +703,45 @@ int planar_region_graph_t::merge_regions(const planar_region_pair_t& pair)
 
 	/* success */
 	return 0;
+}
+
+/*-----------------------------------------------*/
+/* planar_region_info_t function implementations */
+/*-----------------------------------------------*/
+
+planar_region_info_t::planar_region_info_t(const node_face_t& f,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist, double planethresh)
+{
+	/* initialize planarity value to be not-yet-computed */
+	this->planarity = -1;
+
+	/* initialize the region based on floodfill of this face */
+	this->region.floodfill(f, boundary, blacklist, planethresh);
+
+	/* leave the neighbor seeds structure empty for now */
+}
+		
+double planar_region_info_t::get_planarity()
+{
+	faceset_t::iterator it;
+	double p;
+
+	/* check if the value has been cached */
+	if(this->planarity >= 0)
+		return this->planarity;
+
+	/* compute the value and then return it */
+	for(it = this->region.begin(); it != this->region.end(); it++)
+	{
+		/* get the planarity value for the current face */
+		p = planar_region_graph_t::get_face_planarity(*it);
+
+		/* incorporate into the region-wide planarity */
+		if(p < this->planarity || this->planarity < 0)
+			this->planarity = p; /* record the min */
+	}
+
+	/* return the computed value */
+	return this->planarity;
 }

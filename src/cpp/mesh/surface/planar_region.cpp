@@ -35,6 +35,14 @@ void planar_region_t::floodfill(const node_face_t& seed,
 				const node_boundary_t& boundary,
 				faceset_t& blacklist)
 {
+	/* give the most lax possible threshold, to allow all faces */
+	this->floodfill(seed, boundary, blacklist, 0.0);
+}
+
+void planar_region_t::floodfill(const node_face_t& seed,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist, double planethresh)
+{
 	queue<node_face_t> to_check;
 	pair<faceset_t::const_iterator, faceset_t::const_iterator> range;
 	faceset_t::const_iterator it;
@@ -46,6 +54,16 @@ void planar_region_t::floodfill(const node_face_t& seed,
 	seed.get_center(this->plane.point);
 	octtopo::cube_face_normals(seed.direction, this->plane.normal);
 
+	/* check if seed face does not meet threshold.  If so, then
+	 * it should be in a region by itself */
+	if(planar_region_graph_t::get_face_planarity(seed) < planethresh)
+	{
+		/* seed gets added in a region by itself */
+		this->add(seed);
+		blacklist.insert(seed);
+		return; /* no neighbors for you */
+	}
+
 	/* check everything in the queue until we run out */
 	for(to_check.push(seed); !(to_check.empty()); to_check.pop())
 	{
@@ -55,6 +73,11 @@ void planar_region_t::floodfill(const node_face_t& seed,
 
 		/* check that face is direction in same orientation */
 		if(to_check.front().direction != seed.direction)
+			continue;
+
+		/* check that face meets planarity threshold */
+		if(planar_region_graph_t::get_face_planarity(
+					to_check.front()) < planethresh)
 			continue;
 
 		/* add to our region and to the blacklist */
@@ -70,7 +93,7 @@ void planar_region_t::floodfill(const node_face_t& seed,
 		
 void planar_region_t::find_face_centers(vector<Vector3d,
 			Eigen::aligned_allocator<Vector3d> >& centers,
-			vector<double>& variances) const
+			vector<double>& variances, bool useiso) const
 {
 	faceset_t::const_iterator it;
 	size_t i, n;
@@ -84,11 +107,24 @@ void planar_region_t::find_face_centers(vector<Vector3d,
 	/* iterate through the faces in this region */
 	for(it = this->faces.begin(); it != this->faces.end(); it++, i++)
 	{
-		/* compute the center */
-		planar_region_graph_t::get_isosurface_pos(*it, centers[i]);
+		if(useiso)
+		{
+			/* compute the center */
+			planar_region_graph_t::get_isosurface_pos(*it,
+							centers[i]);
 
-		/* compute the variances */
-		variances[i] = planar_region_graph_t::get_face_pos_var(*it);
+			/* compute the variances */
+			variances[i] = planar_region_graph_t
+						::get_face_pos_var(*it);
+		}
+		else
+		{
+			/* use the grid positions and halfwidth */
+			it->get_center(centers[i]);
+			variances[i] = it->get_area(); /* variance is in
+							* units of area */
+
+		}
 	}
 }
 

@@ -329,6 +329,20 @@ class planar_region_info_t
 			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
 		std::vector<double> variances;
 
+		/**
+		 * The planarity in this region
+		 *
+		 * This value indicates the planarity of this
+		 * region.  If this value is set to be negative, then
+		 * that means that the value has not yet been computed.
+		 *
+		 * Note that this value is not explicitly specified
+		 * as the average planarity, min planarity, or max
+		 * planarity, since the author (Eric Turner)
+		 * wants the freedom to try different methods.
+		 */
+		double planarity;
+
 	/* functions */
 	public:
 
@@ -336,7 +350,9 @@ class planar_region_info_t
 		 * Constructs empty region
 		 */
 		planar_region_info_t()
-		{ /* no processing required */ };
+		{
+			this->planarity = -1; /* not yet computed */
+		};
 
 		/**
 		 * Constructs region based on flood-fill operation
@@ -344,18 +360,31 @@ class planar_region_info_t
 		 * Given necessary face-linkage information, will perform
 		 * flood-fill on the given face in order to form a region.
 		 *
-		 * @param f          The face to use as a seed for this 
-		 *                   region
-		 * @param boundary   The node_boundary_t that represents
-		 *                   face connectivity
-		 * @param blacklist  List of face not allowed to be a part
-		 *                   of this region (typically because
-		 *                   they've already been allocated
-		 *                   another region).
+		 * @param f           The face to use as a seed for this 
+		 *                    region
+		 * @param boundary    The node_boundary_t that represents
+		 *                    face connectivity
+		 * @param blacklist   List of face not allowed to be a part
+		 *                    of this region (typically because
+		 *                    they've already been allocated
+		 *                    another region).
+		 * @param planethresh The minimum planarity threshold to use
 		 */
 		planar_region_info_t(const node_face_t& f,
 				const node_boundary_t& boundary,
-				faceset_t& blacklist);
+				faceset_t& blacklist, double planethresh);
+
+		/**
+		 * Get the computed planarity of this region
+		 *
+		 * Will return the cached value for the
+		 * planarity of this region.  If this value has not
+		 * yet been cached, then it will be computed, cached,
+		 * and returned.
+		 *
+		 * @return   Returns the region's planarity value [0,1]
+		 */
+		double get_planarity();
 };
 
 /**

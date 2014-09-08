@@ -3,7 +3,7 @@
 #include <geometry/octree/octtopo.h>
 #include <geometry/poly_intersect/poly2d.h>
 #include <mesh/partition/node_set.h>
-//#include <mesh/surface/planar_region_graph.h>
+#include <mesh/surface/planar_region_graph.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -822,8 +822,4 @@ void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 	   << "f -5 -3 -4" << endl
 	   << "f -5 -4 -1" << endl;
 }
-
-/*-------------------------------------------*/
-/* node_face_info_t function implementations */
-/*--------------------------------------------*/
 

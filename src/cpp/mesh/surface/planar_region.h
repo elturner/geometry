@@ -87,6 +87,27 @@ class planar_region_t
 				faceset_t& blacklist);
 
 		/**
+		 * Performs flood-fill, but also selects faces based on
+		 * the given planarity threshold.
+		 *
+		 * Given a threshold for minimum valid planarity,
+		 * will perform flood-fill on the faces around the
+		 * given seed face, but will only select faces that
+		 * are equal to or greater than the given planarity.
+		 *
+		 * Note that if the seed face does not meet the threshold,
+		 * then it will be considered in a region by itself.
+		 *
+		 * @param seed          The seed face for the floodfill
+		 * @param boundary      The representation of all faces
+		 * @param blacklist     A set of faces to ignore
+		 * @param planethresh   The planarity threshold to use
+		 */
+		void floodfill(const node_face_t& seed,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist, double planethresh);
+
+		/**
 		 * Finds the center points to all faces in this region
 		 *
 		 * Will iterate through all faces in this region, compute
@@ -112,11 +133,17 @@ class planar_region_t
 		 *                  of faces for this region
 		 * @param variances Where to store the variance values
 		 *                  for each center point.
+		 * @param useiso    If true, will perform the computations
+		 *                  of center positions and variances using
+		 *                  isosurface analysis on the nodes of the
+		 *                  octree.  If false, will return the
+		 *                  positions on the grid of the octree.
 		 */
 		void find_face_centers(std::vector<Eigen::Vector3d,
 				Eigen::aligned_allocator<
 					Eigen::Vector3d> >& centers,
-				std::vector<double>& variances) const;
+				std::vector<double>& variances,
+				bool useiso=true) const;
 
 		/*-----------*/
 		/* accessors */
