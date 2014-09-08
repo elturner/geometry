@@ -370,6 +370,52 @@ class node_face_t
 		 */
 		double get_area() const;
 
+		/*------------------------*/
+		/* isosurface computation */
+		/*------------------------*/
+
+		/**
+		 * Will compute the planrity estimate for this face
+		 *
+		 * Will use the originating octnodes of this
+		 * face to compute the planarity estimate.
+		 * A planarity estimate is a value between 0 and 1, where
+		 * 1 is perfectly planar and 0 is not planar at all.
+		 *
+		 * @return    Returns the planarity estimate, in [0,1]
+		 */
+		 double get_planarity() const;
+
+		/**
+		 * Computes the position of the center of this face,
+		 * assuming alignment with the local isosurface.
+		 *
+		 * Rather than using this face's built-in get_center()
+		 * function, which aligns the center with the octree
+		 * grid, this function will compute the center based
+		 * on the underlying octdata in order to put this
+		 * face on the isosurface of the probability distribution.
+		 *
+		 * @param p    Where to store the center position
+		 */
+		 void get_isosurface_pos(Eigen::Vector3d& p) const;
+
+		/**
+		 * Computes the variance of this face's position along the
+		 * normal direction of this face.
+		 *
+		 * This function will
+		 * determine what the positional variance is for
+		 * this face's center point, along the normal of the face.
+		 * This computation uses the octdata values in the
+		 * originating octnodes that are used to represent this
+		 * face.
+		 *
+		 * @return      Returns the variance in f's center position
+		 *              along f's normal vector.
+		 */
+		 double get_pos_variance() const;
+
 		/*-----------*/
 		/* operators */
 		/*-----------*/

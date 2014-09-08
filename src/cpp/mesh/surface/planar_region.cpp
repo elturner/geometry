@@ -1,6 +1,5 @@
 #include "planar_region.h"
 #include <mesh/surface/node_boundary.h>
-#include <mesh/surface/planar_region_graph.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octtopo.h>
 #include <iostream>
@@ -56,7 +55,7 @@ void planar_region_t::floodfill(const node_face_t& seed,
 
 	/* check if seed face does not meet threshold.  If so, then
 	 * it should be in a region by itself */
-	if(planar_region_graph_t::get_face_planarity(seed) < planethresh)
+	if(seed.get_planarity() < planethresh)
 	{
 		/* seed gets added in a region by itself */
 		this->add(seed);
@@ -76,8 +75,7 @@ void planar_region_t::floodfill(const node_face_t& seed,
 			continue;
 
 		/* check that face meets planarity threshold */
-		if(planar_region_graph_t::get_face_planarity(
-					to_check.front()) < planethresh)
+		if(to_check.front().get_planarity() < planethresh)
 			continue;
 
 		/* add to our region and to the blacklist */
@@ -110,12 +108,10 @@ void planar_region_t::find_face_centers(vector<Vector3d,
 		if(useiso)
 		{
 			/* compute the center */
-			planar_region_graph_t::get_isosurface_pos(*it,
-							centers[i]);
+			it->get_isosurface_pos(centers[i]);
 
 			/* compute the variances */
-			variances[i] = planar_region_graph_t
-						::get_face_pos_var(*it);
+			variances[i] = it->get_pos_variance();
 		}
 		else
 		{

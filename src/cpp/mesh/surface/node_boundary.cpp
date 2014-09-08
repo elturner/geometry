@@ -3,7 +3,6 @@
 #include <geometry/octree/octtopo.h>
 #include <geometry/poly_intersect/poly2d.h>
 #include <mesh/partition/node_set.h>
-#include <mesh/surface/planar_region_graph.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -15,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <float.h>
 
 /**
  * @file   node_boundary.cpp
@@ -664,6 +664,202 @@ double node_face_t::get_area() const
 	return 4*hw*hw;
 }
 
+double node_face_t::get_planarity() const
+{	
+	double mu_i, planar_i, mu_e, planar_e, s;
+	
+	/* check validity of this face */
+	if(this->interior == NULL || this->interior->data == NULL
+		|| (this->exterior != NULL 
+			&& this->exterior->data == NULL))
+	{
+		/* invalid data given */
+		cerr << "[node_face_t::get_planarity]\t"
+		     << "Given invalid face" << endl;
+		return 0;
+	}
+	
+	/* get the values we need from the originating octdata structs */
+	mu_i = this->interior->data->get_probability();
+	planar_i = this->interior->data->get_planar_prob();
+	if(this->exterior == NULL)
+	{
+		/* exterior is a null node, which should be counted
+		 * as an unobserved external node */
+		mu_e     = 0.5; /* value given to unobserved nodes */
+		planar_e = planar_i; /* just use the same value */
+	}
+	else
+	{
+		/* exterior node exists, get its data */
+		mu_e     = this->exterior->data->get_probability();
+		planar_e = this->exterior->data->get_planar_prob();
+	}
+
+	/* In order to get the planarity value for the face,
+	 * we perform a weighted average between the values for
+	 * the two nodes that define this face.  The first step 
+	 * is to find this weighting with respect to the distance
+	 * of the isosurface between the node centers.  This
+	 * value can be determined with:
+	 *
+	 * 	s = (p_i - 0.5) / (p_i - p_e)
+	 *
+	 * Where s is the weighting for the exterior node, and (1-s)
+	 * is the weighting for the interior node.
+	 */
+	s = (mu_i - 0.5) / (mu_i - mu_e);
+
+	/* weight the node's values */
+	return s*planar_e + (1-s)*planar_i; 
+}
+		 
+void node_face_t::get_isosurface_pos(Vector3d& p) const
+{
+	double mu_i, int_hw, mu_e, ext_hw, mu_s;
+	Vector3d normal;
+
+	/* check validity of argument */
+	if(this->interior == NULL || this->interior->data == NULL
+		|| (this->exterior != NULL 
+			&& this->exterior->data == NULL))
+	{
+		/* invalid data given */
+		cerr << "[node_face_t::get_isosurface_pos]\t"
+		     << "Given invalid face" << endl;
+		return;
+	}
+	
+	/* get the values we need from the originating octdata structs */
+	mu_i  = this->interior->data->get_probability();
+	int_hw = this->interior->halfwidth;
+	if(this->exterior == NULL)
+	{
+		/* exterior is a null node, which should be counted
+		 * as an unobserved external node */
+		mu_e   = 0.5; /* value given to unobserved nodes */
+		ext_hw = 0;
+	}
+	else
+	{
+		/* exterior node exists, get its data */
+		mu_e   = this->exterior->data->get_probability();
+		ext_hw = this->exterior->halfwidth;
+	}
+	
+	/* get properties of the face */
+	this->get_center(p);
+	octtopo::cube_face_normals(this->direction, normal);
+
+	/* the face's position is based on where we expect the 0.5 value
+	 * to be if we interpolated the pdf between the centers of the
+	 * two nodes given.
+	 *
+	 * The isosurface position would be:
+	 *
+	 * 	s = (p_i - 0.5) / (p_i - p_e)
+	 *	p = <interior center> + norm * s * (int_hw + ext_hw)
+	 *
+	 * (remember, the norm points from the interior into the exterior)
+	 *
+	 * Note that:
+	 *
+	 * 	p_i ~ Guass(mu_i, var_i)
+	 * 	p_e ~ Gauss(mu_e, var_e)
+	 *
+	 * We want to compute the expected position for the isosurface mark,
+	 * which would be:
+	 *
+	 * 	s = (mu_i - 0.5) / (mu_i - mu_e)
+	 *
+	 * (due to linearization approximation used)
+	 *
+	 * So we can set the actual isosurface position to be:
+	 */
+	mu_s = (mu_i - 0.5) / (mu_i - mu_e);
+	p += normal*mu_s*(int_hw + ext_hw); // TODO fix me, start at interior center not face center
+}
+
+double node_face_t::get_pos_variance() const
+{
+	double mu_i, var_i, int_hw, mu_e, var_e, ext_hw, mu_s, var_s;
+	double ss, var_p;
+
+	/* check validity of argument */
+	if(this->interior == NULL || this->interior->data == NULL
+		|| (this->exterior != NULL 
+			&& this->exterior->data == NULL))
+	{
+		/* invalid data given */
+		cerr << "[node_face_t::get_pos_variance]\t"
+		     << "Given invalid face" << endl;
+		return DBL_MAX;
+	}
+
+	/* get the values we need from the originating octdata structs */
+	mu_i  = this->interior->data->get_probability(); /* mean interior
+	                                                  * value */
+	var_i = this->interior->data->get_uncertainty(); /* variance of 
+	                                              * interior value */
+	int_hw = this->interior->halfwidth;
+	if(this->exterior == NULL)
+	{
+		/* exterior is a null node, which should be counted
+		 * as an unobserved external node */
+		mu_e   = 0.5; /* value given to unobserved nodes */
+		var_e  = 1.0; /* maximum variance for a value in [0,1] */
+		ext_hw = 0;
+	}
+	else
+	{
+		/* exterior node exists, get its data */
+		mu_e   = this->exterior->data->get_probability();
+		var_e  = this->exterior->data->get_uncertainty();
+		ext_hw = this->exterior->halfwidth;
+	}
+
+	/* the face's position is based on where we expect the 0.5 value
+	 * to be if we interpolated the pdf between the centers of the
+	 * two nodes given.
+	 *
+	 * The isosurface position would be:
+	 *
+	 * 	s = (p_i - 0.5) / (p_i - p_e)
+	 *	p = <interior center> + norm * s * (int_hw + ext_hw)
+	 *
+	 * (remember, the norm points from the interior into the exterior)
+	 *
+	 * Note that:
+	 *
+	 * 	p_i ~ Guass(mu_i, var_i)
+	 * 	p_e ~ Gauss(mu_e, var_e)
+	 *
+	 * We want to compute the variance of s.  For ease of computation,
+	 * we linearize s(p_i,p_e) about (p_i,p_e) = (mu_i,mu_e), which
+	 * gives us:
+	 *
+	 * 	mu_s  = (mu_i - 0.5) / (mu_i - mu_e)
+	 * 	var_s = (1-mu_s^2)*var_i + mu_s^2*var_e
+	 * 	      - 2*(0.5-mu_e)*(0.5-mu_i)/(mu_i-mu_e)^2*cov(p_i,p_e)
+	 *
+	 * If we assume that p_i is indepentent from p_e, then:
+	 *
+	 * 	var_s = (1-mu_s^2)*var_i + mu_s^2*var_e
+	 */
+	mu_s = (mu_i - 0.5) / (mu_i - mu_e);
+	ss = mu_s*mu_s;
+	var_s = (1-ss)*var_i + ss*var_e;
+
+	/* now we need to scale this quantity based on the size of the
+	 * nodes being analyzed for this face */
+	ss = (int_hw + ext_hw);
+	var_p = ss*ss*var_s; /* for variance, multiply by squared coef. */
+	
+	/* return the computed value */
+	return var_p;
+}
+
+
 void node_face_t::writeobj(std::ostream& os) const
 {
 	this->writeobj(os, 255, 255, 255);
@@ -698,7 +894,6 @@ void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 	hw = this->get_halfwidth();
 
 	/* export center position */
-	//planar_region_graph_t::get_isosurface_pos(*this, center);
 	center = p;
 	os << "v " << center(0) << " " << center(1) << " " << center(2)
 	   <<  " " << r << " " << g << " " << b << endl;
