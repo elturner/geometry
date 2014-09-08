@@ -4,6 +4,7 @@
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region.h>
 #include <util/error_codes.h>
+#include <util/progress_bar.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -157,13 +158,22 @@ int planar_region_graph_t::coalesce_regions()
 	priority_queue<planar_region_pair_t> pq;
 	regionmap_t::iterator rit, sit;
 	faceset_t::iterator fit;
-	planar_region_pair_t pair;
-	size_t num_faces;
+	planar_region_pair_t pair, old_pair;
+	progress_bar_t progbar;
+	size_t num_faces, i, pq_size, original_num_regions;
 	int ret;
 
+	/* prepare progress bar */
+	progbar.set_name("Coalescing");
+	progbar.set_color(progress_bar_t::BLUE);
+
 	/* create a queue with all possible region merges */
+	i = 0;
 	for(rit = this->regions.begin(); rit != this->regions.end(); rit++)
 	{
+		/* update user on status */
+		progbar.update(i++, this->regions.size());
+
 		/* iterate through the neighbors of this region to
 		 * get pairs of regions */
 		for(fit = rit->second.neighbor_seeds.begin();
@@ -190,20 +200,43 @@ int planar_region_graph_t::coalesce_regions()
 		}
 	}
 
+	/* redo progress bar for next stage */
+	progbar.clear();
+	pq_size = 0;
+	original_num_regions = this->regions.size();
+
 	// TODO incorporate planarity into region growth
 
 	/* cycle through queue, get next region to merge */
-	cout << "num regions: " << this->regions.size() << endl; // TODO
-	cout << "queue size: " << pq.size() << endl; // TODO debugging
 	while(!pq.empty())
 	{
 		/* get next pair to check */
 		pair = pq.top();
 		pq.pop();
 
+		/* update user on status */
+		if(pq_size < pq.size())
+			/* queue is growing */
+			progbar.set_color(progress_bar_t::RED);
+		else if(pq_size == pq.size())
+			/* queue remains the same size */
+			progbar.set_color(progress_bar_t::YELLOW);
+		else
+			/* queue is shrinking */
+			progbar.set_color(progress_bar_t::GREEN);
+		pq_size = pq.size();
+		progbar.update(original_num_regions - this->regions.size(),
+				original_num_regions);
+
 		/* check if thresholds met.  if not, quit */
-		if(pair.max_err > this->distance_threshold)
+		if(pair.err > this->distance_threshold)
 			break; /* all remaining pairs won't pass either */
+		
+		/* check for duplicate pairs in the queue -- only need
+		 * to process each one once */
+		if(pair.equivalent_to(old_pair))
+			continue;
+		old_pair = pair; /* duplicates will always be adjacent */
 
 		/* get info for the two regions involved */
 		rit = this->regions.find(pair.first);
@@ -223,6 +256,14 @@ int planar_region_graph_t::coalesce_regions()
 			ret = this->compute_planefit(pair);
 			if(ret)
 				return PROPEGATE_ERROR(-2, ret);
+	
+			/* since we had to recompute the plane information,
+			 * this pair may not actually be as low-cost as
+			 * we thought.  We should reinsert it into the
+			 * queue to see if it is still on top */
+			if(pair.err <= this->distance_threshold)
+				pq.push(pair);
+			continue;
 		}
 
 		/* merge the regions */
@@ -247,10 +288,10 @@ int planar_region_graph_t::coalesce_regions()
 				return PROPEGATE_ERROR(-4, ret);
 
 			/* add this pair to the queue */
-			pq.push(pair);
+			if(pair.err <= this->distance_threshold)
+				pq.push(pair);
 		}
 	}
-	cout << "num regions: " << this->regions.size() << endl; // TODO
 
 	/* success */
 	return 0;
@@ -273,6 +314,40 @@ int planar_region_graph_t::writeobj(const std::string& filename) const
 	/* success */
 	outfile.close();
 	return 0;
+}
+		
+void planar_region_graph_t::writeobj_linkages(ostream& os) const
+{
+	regionmap_t::const_iterator it;
+	faceset_t::const_iterator fit;
+	Vector3d p, n;
+	int num_verts;
+
+	/* iterate over the regions in this graph */
+	for(it = this->regions.begin(); it != this->regions.end(); it++)
+	{
+		/* write vertex for this region */
+		planar_region_graph_t::get_isosurface_pos(it->first, p);
+		octtopo::cube_face_normals(it->first.direction, n);
+		n = p + 0.1*n;
+		os << "v " << p.transpose() << " 0 255 0" << endl
+		   << "v " << n.transpose() << " 255 255 255" << endl;
+		num_verts = 0;
+
+		/* iterate over the neighbors of this region */
+		for(fit = it->second.neighbor_seeds.begin();
+			fit != it->second.neighbor_seeds.end(); fit++)
+		{
+			/* get center position for this neighbor seed */
+			planar_region_graph_t::get_isosurface_pos(*fit, p);
+
+			/* write arrow from this region to the neighbor */
+			os << "v " << p.transpose() << " 255 0 0" << endl
+			   << "f -1 " << (-num_verts-2) 
+			   << " " << (-num_verts-3) << endl;
+			num_verts++;
+		}
+	}
 }
 
 /*------------------*/
@@ -509,6 +584,7 @@ int planar_region_graph_t::compute_planefit(
 	{
 		/* get face center positions for first region */
 		fit->second.centers.clear();
+		fit->second.variances.clear();
 		fit->second.region.find_face_centers(fit->second.centers,
 					fit->second.variances);	
 	}
@@ -516,6 +592,7 @@ int planar_region_graph_t::compute_planefit(
 	{
 		/* get face center positions for second region */
 		sit->second.centers.clear();
+		sit->second.variances.clear();
 		sit->second.region.find_face_centers(sit->second.centers,
 					sit->second.variances);
 	}
@@ -526,10 +603,15 @@ int planar_region_graph_t::compute_planefit(
 	centers.insert(centers.end(), sit->second.centers.begin(),
 				sit->second.centers.end());
 	pair.plane.fit(centers);
-
-	/* determine the max error by iterating over the points */
-	pair.max_err = 0;
+	
+	/* verify the checksum */
 	pair.num_faces = centers.size();
+	if(pair.num_faces != fit->second.region.num_faces() 
+				+ sit->second.region.num_faces())
+		return -3;
+
+	/* determine the error by iterating over the points */
+	pair.err = 0;
 	nf = fit->second.variances.size();
 	for(i = 0; i < pair.num_faces; i++)
 	{
@@ -538,11 +620,14 @@ int planar_region_graph_t::compute_planefit(
 			: fit->second.variances[i];
 
 		/* get normalized distance of this point to plane */
-		d = pair.plane.distance_to(centers[i]) / sqrt(v);
+		if(v <= 0)
+			d = DBL_MAX;
+		else
+			d = pair.plane.distance_to(centers[i]) / sqrt(v);
 
 		/* check if this is the maximum */
-		if(d > pair.max_err)
-			pair.max_err = d;
+		if(d > pair.err)
+			pair.err = d;
 	}
 
 	/* success */

@@ -23,6 +23,7 @@
 #include <geometry/shapes/plane.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region.h>
+#include <iostream>
 #include <vector>
 #include <string>
 #include <map>
@@ -181,6 +182,17 @@ class planar_region_graph_t
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int writeobj(const std::string& filename) const;
+
+		/**
+		 * Writes OBJ geometry representing region linkages
+		 *
+		 * Will iterate over all neighboring regions, and 
+		 * write arrows pointing from each region seed to
+		 * its neighboring region seeds.
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void writeobj_linkages(std::ostream& os) const;
 
 	/* public helper functions */
 	public:
@@ -367,7 +379,7 @@ class planar_region_pair_t
 		/* the following parameters represent the result of
 		 * plane fit analysis on the two regions in this pair */
 		plane_t plane; /* the computed best-fit plane */
-		double max_err; /* normalized maximum error in the fit */
+		double err; /* normalized error in the fit */
 
 		/**
 		 * The sum of the number of faces in the two regions
@@ -390,13 +402,44 @@ class planar_region_pair_t
 		 */
 		planar_region_pair_t()
 		{ 
-			this->max_err = DBL_MAX; 
+			this->err = DBL_MAX; 
 			this->num_faces = 0;
 		};
+
+		/**
+		 * Constructs a pair from a given pair
+		 */
+		planar_region_pair_t(const planar_region_pair_t& other)
+			:	first(other.first),
+				second(other.second),
+				plane(other.plane),
+				err(other.err),
+				num_faces(other.num_faces)
+		{};
 
 		/*-----------*/
 		/* operators */
 		/*-----------*/
+
+		/**
+		 * Checks if two pairs represent the same set of regions
+		 *
+		 * Note that this operation is different than calling '==',
+		 * since this will check if the regions referenced in the
+		 * two pairs are the same, whereas calling '==' will
+		 * compare each pair's error value.
+		 *
+		 * @param other   The other pair to compare to
+		 *
+		 * @return  Returns true iff pairs are same regions
+		 */
+		inline bool equivalent_to(
+				const planar_region_pair_t& other) const
+		{
+			return (this->first == other.first) 
+				&& (this->second == other.second)
+				&& (this->num_faces == other.num_faces);
+		};
 
 		/**
 		 * Sets the value of this pair, given the provided argument
@@ -408,7 +451,7 @@ class planar_region_pair_t
 			this->first = other.first;
 			this->second = other.second;
 			this->plane = other.plane;
-			this->max_err = other.max_err;
+			this->err = other.err;
 			this->num_faces = other.num_faces;
 
 			/* return the modified result */
@@ -423,7 +466,7 @@ class planar_region_pair_t
 		inline bool operator == (
 				const planar_region_pair_t& other) const
 		{
-			return (this->max_err == other.max_err);
+			return (this->err == other.err);
 		};
 
 		/**
@@ -431,9 +474,9 @@ class planar_region_pair_t
 		 *
 		 * Checks if this pair is less than the given argument.
 		 *
-		 * These are compared based on the negation of the max_err
+		 * These are compared based on the negation of the err
 		 * parameter, which means that, when sorted, the element
-		 * with the highest max error will appear first.
+		 * with the highest error will appear first.
 		 *
 		 * The reason for this is so these pairs can be put into
 		 * a priority queue, and the pair with the smallest error
@@ -442,7 +485,15 @@ class planar_region_pair_t
 		inline bool operator < (
 				const planar_region_pair_t& other) const
 		{
-			return (this->max_err > other.max_err);
+			/* sort the largest errors first */
+			if(this->err > other.err)
+				return true;
+			if(this->err < other.err)
+				return false;
+			
+			/* all else being equal, sort the smallest regions
+			 * first */
+			return (this->num_faces < other.num_faces); 
 		};
 };
 
