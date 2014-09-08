@@ -41,7 +41,8 @@ using namespace Eigen;
  * in this class */
 
 #define DEFAULT_PLANARITY_THRESHOLD 0.5
-#define DEFAULT_DISTANCE_THRESHOLD 1.0
+#define DEFAULT_DISTANCE_THRESHOLD  1.0
+#define DEFAULT_FIT_TO_ISOSURFACE   false
 
 /*--------------------------*/
 /* function implementations */
@@ -49,13 +50,17 @@ using namespace Eigen;
 		
 planar_region_graph_t::planar_region_graph_t()
 {
-	this->init(DEFAULT_PLANARITY_THRESHOLD, DEFAULT_DISTANCE_THRESHOLD);
+	this->init(DEFAULT_PLANARITY_THRESHOLD,
+			DEFAULT_DISTANCE_THRESHOLD,
+			DEFAULT_FIT_TO_ISOSURFACE);
 }
 
-void planar_region_graph_t::init(double planethresh, double distthresh)
+void planar_region_graph_t::init(double planethresh, double distthresh,
+				bool fitiso)
 {
 	this->planarity_threshold = planethresh;
 	this->distance_threshold = distthresh;
+	this->fit_to_isosurface = fitiso;
 }
 		
 int planar_region_graph_t::populate(const node_boundary_t& boundary)
@@ -368,8 +373,7 @@ void planar_region_graph_t::writeobj_linkages(ostream& os) const
 /* helper functions */
 /*------------------*/
 
-int planar_region_graph_t::compute_planefit(
-				planar_region_pair_t& pair)
+int planar_region_graph_t::compute_planefit(planar_region_pair_t& pair)
 {
 	std::vector<Eigen::Vector3d, 
 			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
@@ -394,7 +398,8 @@ int planar_region_graph_t::compute_planefit(
 		fit->second.centers.clear();
 		fit->second.variances.clear();
 		fit->second.region.find_face_centers(fit->second.centers,
-					fit->second.variances, false);	
+					fit->second.variances,
+					this->fit_to_isosurface);	
 	}
 	if(sit->second.centers.size() != sit->second.region.num_faces() )
 	{
@@ -402,7 +407,8 @@ int planar_region_graph_t::compute_planefit(
 		sit->second.centers.clear();
 		sit->second.variances.clear();
 		sit->second.region.find_face_centers(sit->second.centers,
-					sit->second.variances, false);
+					sit->second.variances,
+					this->fit_to_isosurface);	
 	}
 
 	/* perform PCA on these points */

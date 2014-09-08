@@ -750,6 +750,7 @@ void node_face_t::get_isosurface_pos(Vector3d& p) const
 	/* get properties of the face */
 	this->get_center(p);
 	octtopo::cube_face_normals(this->direction, normal);
+	p -= int_hw * normal; /* aligned with interior node center */
 
 	/* the face's position is based on where we expect the 0.5 value
 	 * to be if we interpolated the pdf between the centers of the
@@ -767,8 +768,8 @@ void node_face_t::get_isosurface_pos(Vector3d& p) const
 	 * 	p_i ~ Guass(mu_i, var_i)
 	 * 	p_e ~ Gauss(mu_e, var_e)
 	 *
-	 * We want to compute the expected position for the isosurface mark,
-	 * which would be:
+	 * We want to compute the expected position for the 
+	 * isosurface mark, which would be:
 	 *
 	 * 	s = (mu_i - 0.5) / (mu_i - mu_e)
 	 *
@@ -777,7 +778,7 @@ void node_face_t::get_isosurface_pos(Vector3d& p) const
 	 * So we can set the actual isosurface position to be:
 	 */
 	mu_s = (mu_i - 0.5) / (mu_i - mu_e);
-	p += normal*mu_s*(int_hw + ext_hw); // TODO fix me, start at interior center not face center
+	p += normal*mu_s*(int_hw + ext_hw);
 }
 
 double node_face_t::get_pos_variance() const
@@ -895,6 +896,7 @@ void node_face_t::writeobj(std::ostream& os, int r, int g, int b) const
 
 	/* export center position */
 	center = p;
+	//this->get_isosurface_pos(center);
 	os << "v " << center(0) << " " << center(1) << " " << center(2)
 	   <<  " " << r << " " << g << " " << b << endl;
 

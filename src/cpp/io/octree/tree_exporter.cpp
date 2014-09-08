@@ -93,7 +93,7 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* coalesce regions */
 	tic(clk);
-	region_graph.init(0.5, 1.0); // TODO debugging
+	region_graph.init(0.5, 2.0, false); // TODO debugging
 	ret = region_graph.coalesce_regions();
 	if(ret)
 		return PROPEGATE_ERROR(-4, ret);

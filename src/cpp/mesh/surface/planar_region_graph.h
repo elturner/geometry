@@ -110,6 +110,19 @@ class planar_region_graph_t
 		 */
 		double distance_threshold;
 
+		/**
+		 * Determines if surfaces should be fit to the
+		 * isosurface positions or the discretized node
+		 * face positions.
+		 *
+		 * Fitting to the isosurface positions will likely
+		 * give a more accurate plane location for where
+		 * each surface was, but fitting to node faces will
+		 * allow for more predictable processing and may
+		 * be better for set differencing operations.
+		 */
+		bool fit_to_isosurface;
+
 	/* functions */
 	public:
 
@@ -137,8 +150,10 @@ class planar_region_graph_t
 		 * @param planethresh   The planarity threshold [0,1] to use
 		 * @param distthresh    The distance threshold to use, in
 		 *                      units of standard deviations.
+		 * @param fitiso        Specifies whether to fit to the
+		 *                      isosurface or not.
 		 */
-		void init(double planethresh, double distthresh);
+		void init(double planethresh,double distthresh,bool fitiso);
 
 		/*------------*/
 		/* processing */

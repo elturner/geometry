@@ -7,7 +7,7 @@
 	     will take more processing time and memory.
 
 	     Units: meters -->
-	<procarve_resolution>0.0625</procarve_resolution>
+	<procarve_resolution>0.125</procarve_resolution>
 
 	<!-- This value indicates the number of threads to use during
 	     carving when importing chunk data.
