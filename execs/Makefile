@@ -33,6 +33,7 @@ procarve_progs:
 	$(MAKE) -w -C wedge_generator
 	$(MAKE) -w -C scan_chunker
 	$(MAKE) -w -C procarve
+	$(MAKE) -w -C oct2dq
 	$(MAKE) -w -C fp_optimizer
 	$(MAKE) -w -C merge_fp_oct
 	$(MAKE) -w -C octsurf
