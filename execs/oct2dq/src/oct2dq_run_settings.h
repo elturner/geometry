@@ -81,6 +81,51 @@ class oct2dq_run_settings_t
 		 */
 		bool use_isosurface_pos;
 
+		/**
+		 * Specifies the verticality threshold to use
+		 * when determining if a surface is vertically aligned.
+		 *
+		 * This value is a threshold for the dot-product of the
+		 * normal of a surface with the z-vector.  Surfaces will
+		 * only be considered vertical if the following inequality
+		 * is met:
+		 *
+		 * abs(surface_normal.dot(<0,0,1>)) < verticalitythresh
+		 *
+		 * Just for reference, here's a few examples:
+		 */
+		double verticalitythresh;
+
+		/**
+		 * Specifies the surface area threshold to use
+		 * to filter regions for candidacy for wall samples.
+		 *
+		 * Only regions that have at least this much surface
+		 * area are considered to donate wall samples.
+		 *
+		 * units: meters squared
+		 */
+		double surfaceareathresh;
+
+		/**
+		 * Specifies the minimum wall height allowed for
+		 * regions to be used to contribute to wall samples.
+		 *
+		 * Note that this is measured on the bounding box
+		 * of the region, not the region itself, so any
+		 * occlusions should not have to be worried about.
+		 *
+		 * units: meters
+		 */
+		double wallheightthresh;
+
+		/**
+		 * Specifies the output DQ resolution to export
+		 *
+		 * units: meters
+		 */
+		double dq_resolution;
+
 	/* functions */
 	public:
 

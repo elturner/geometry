@@ -31,6 +31,7 @@ class node_face_t;
 class node_face_info_t;
 
 /* the following typedefs are used for these classes */
+typedef std::multimap<octnode_t*, node_face_t>  nodefacemap_t;
 typedef std::map<node_face_t, node_face_info_t> facemap_t;
 typedef std::set<node_face_t>                   faceset_t;
 
@@ -55,7 +56,7 @@ class node_boundary_t
 		 * faces can abut each node, this must be stored
 		 * as a multimap.
 		 */
-		std::multimap<octnode_t*, node_face_t> node_face_map;
+		nodefacemap_t node_face_map;
 
 		/**
 		 * The boundary faces and their topology
@@ -162,6 +163,25 @@ class node_boundary_t
 		std::pair<faceset_t::const_iterator,
 			faceset_t::const_iterator>
 				get_neighbors(const node_face_t& f) const;
+
+		/**
+		 * Finds all faces that are abutting the given node
+		 *
+		 * Given an octnode in the tree, will find all computed
+		 * node faces that are abutting the specified node.  This
+		 * list is returned as an iterator pair, so that one can
+		 * iterate from the first value to the last value in order
+		 * to access all faces.
+		 *
+		 * @param node   The octnode to analyze
+		 *
+		 * @return   Returns start/end pair of iterators for
+		 *           the retrieved faces.
+		 */
+		inline std::pair<nodefacemap_t::const_iterator,
+			nodefacemap_t::const_iterator>
+				find_node(octnode_t* node) const
+		{ return this->node_face_map.equal_range(node); };
 
 		/*-----------*/
 		/* debugging */
@@ -348,6 +368,17 @@ class node_face_t
 		 * @param p   Where to store the center position of face
 		 */
 		void get_center(Eigen::Vector3d& p) const;
+
+		/**
+		 * Computes the normal vector of this face
+		 *
+		 * Will compute the normal vector of the face,
+		 * and store it in the provided argument
+		 *
+		 * @param n  Where to store the normal vector of this face
+		 */
+		inline void get_normal(Eigen::Vector3d& n) const
+		{ octtopo::cube_face_normals(this->direction, n); };
 
 		/**
 		 * Get the halfwidth of the face

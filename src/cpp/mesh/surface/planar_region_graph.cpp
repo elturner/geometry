@@ -62,7 +62,21 @@ void planar_region_graph_t::init(double planethresh, double distthresh,
 	this->distance_threshold = distthresh;
 	this->fit_to_isosurface = fitiso;
 }
-		
+	
+regionmap_t::const_iterator planar_region_graph_t::lookup_face(
+					const node_face_t& f) const
+{
+	seedmap_t::const_iterator fit;
+
+	/* look up face to find its seed */
+	fit = this->seeds.find(f);
+	if(fit == this->seeds.end())
+		return this->end();
+
+	/* get the region information */
+	return this->regions.find(fit->second);
+}
+
 int planar_region_graph_t::populate(const node_boundary_t& boundary)
 {
 	facemap_t::const_iterator it;
@@ -538,24 +552,34 @@ planar_region_info_t::planar_region_info_t(const node_face_t& f,
 		
 double planar_region_info_t::get_planarity()
 {
+	/* compute and cache the planarity */
+	this->planarity = this->compute_planarity();
+
+	/* return the computed value */
+	return this->planarity;
+}
+		
+double planar_region_info_t::compute_planarity() const
+{
 	faceset_t::iterator it;
-	double p;
+	double p, p_best;
 
 	/* check if the value has been cached */
 	if(this->planarity >= 0)
 		return this->planarity;
 
 	/* compute the value and then return it */
+	p_best = -1;
 	for(it = this->region.begin(); it != this->region.end(); it++)
 	{
 		/* get the planarity value for the current face */
 		p = it->get_planarity();
 
 		/* incorporate into the region-wide planarity */
-		if(p < this->planarity || this->planarity < 0)
-			this->planarity = p; /* record the min */
+		if(p < p_best || p_best < 0)
+			p_best = p; /* record the min */
 	}
 
-	/* return the computed value */
-	return this->planarity;
+	/* return the computed planarity */
+	return p_best;
 }

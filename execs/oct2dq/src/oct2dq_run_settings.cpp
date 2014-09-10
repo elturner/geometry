@@ -40,6 +40,10 @@ using namespace std;
 #define XML_COALESCE_DISTTHRESH  "oct2dq_coalesce_distthresh"
 #define XML_COALESCE_PLANETHRESH "oct2dq_coalesce_planethresh"
 #define XML_USE_ISOSURFACE_POS   "oct2dq_use_isosurface_pos"
+#define XML_VERTICALITYTHRESH    "oct2dq_verticalitythresh"
+#define XML_SURFACEAREATHRESH    "oct2dq_surfaceareathresh"
+#define XML_WALLHEIGHTTHRESH     "oct2dq_wallheightthresh"
+#define XML_DQ_RESOLUTION        "oct2dq_dq_resolution"
 
 /* function implementations */
 		
@@ -52,9 +56,13 @@ oct2dq_run_settings_t::oct2dq_run_settings_t()
 	this->fssfiles.clear(); /* input scan files */
 
 	/* set default parameter values */
-	this->coalesce_distthresh = 2.0;
+	this->coalesce_distthresh  = 2.0;
 	this->coalesce_planethresh = 0.5;
-	this->use_isosurface_pos = false;
+	this->use_isosurface_pos   = false;
+	this->verticalitythresh    = 0.08;
+	this->surfaceareathresh    = 1.0;
+	this->wallheightthresh     = 2.5;
+	this->dq_resolution        = -1.0;
 }
 
 int oct2dq_run_settings_t::parse(int argc, char** argv)
@@ -175,7 +183,19 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_USE_ISOSURFACE_POS))
 		this->use_isosurface_pos 
 			= (0 != settings.getAsInt(XML_USE_ISOSURFACE_POS));
-
+	if(settings.is_prop(XML_VERTICALITYTHRESH))
+		this->verticalitythresh
+			= settings.getAsDouble(XML_VERTICALITYTHRESH);
+	if(settings.is_prop(XML_SURFACEAREATHRESH))
+		this->surfaceareathresh
+			= settings.getAsDouble(XML_SURFACEAREATHRESH);
+	if(settings.is_prop(XML_WALLHEIGHTTHRESH))
+		this->wallheightthresh
+			= settings.getAsDouble(XML_WALLHEIGHTTHRESH);
+	if(settings.is_prop(XML_DQ_RESOLUTION))
+		this->dq_resolution
+			= settings.getAsDouble(XML_DQ_RESOLUTION);
+	
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
 	return 0;

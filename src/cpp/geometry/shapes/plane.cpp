@@ -30,6 +30,17 @@ plane_t::plane_t()
 	this->normal << 0,0,1;
 	this->point  << 0,0,0;
 };
+		
+void plane_t::project_onto(Eigen::Vector3d& p) const
+{
+	double dist;
+
+	/* compute distance to plane */
+	dist = this->distance_to(p);
+
+	/* subtract the displacement using the plane normal */
+	p -= this->normal*dist;
+}
 
 void plane_t::fit(const std::vector<Eigen::Vector3d,
 		Eigen::aligned_allocator<Eigen::Vector3d> >& P)

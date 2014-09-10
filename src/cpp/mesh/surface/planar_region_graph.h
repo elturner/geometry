@@ -155,6 +155,44 @@ class planar_region_graph_t
 		 */
 		void init(double planethresh,double distthresh,bool fitiso);
 
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Retrieves the beginning iterator to the map of regions
+		 *
+		 * @return   The beginning iterator to the underlying map
+		 */
+		inline regionmap_t::const_iterator begin() const
+		{ return this->regions.begin(); };
+
+		/**
+		 * Retrieves the ending iterator to the map of regions
+		 *
+		 * @return   The end iterator to the underlying map
+		 */
+		inline regionmap_t::const_iterator end() const
+		{ return this->regions.end(); };
+
+		/**
+		 * Returns the regionmap iterator that references
+		 * the region for the given face.
+		 *
+		 * Given a face in the underlying octree, will return
+		 * an iterator to the region information to the planar
+		 * region that contains this face.
+		 *
+		 * If the face is not valid, or not in this map, then
+		 * this->end() is returned.
+		 *
+		 * @param f   The face to look up
+		 *
+		 * @return    Returns iterator to the region containing f
+		 */
+		regionmap_t::const_iterator lookup_face(
+				const node_face_t& f) const;
+
 		/*------------*/
 		/* processing */
 		/*------------*/
@@ -339,6 +377,12 @@ class planar_region_info_t
 				faceset_t& blacklist, double planethresh);
 
 		/**
+		 * Returns a reference to the stored region
+		 */
+		inline const planar_region_t& get_region() const
+		{ return this->region; };
+
+		/**
 		 * Get the computed planarity of this region
 		 *
 		 * Will return the cached value for the
@@ -349,6 +393,18 @@ class planar_region_info_t
 		 * @return   Returns the region's planarity value [0,1]
 		 */
 		double get_planarity();
+
+		/**
+		 * Get the computed planarity of this region
+		 *
+		 * Will return the cached value for the
+		 * planarity of this region.  If this value has not
+		 * yet been cached, then it will be computed
+		 * and returned, but not cached.
+		 *
+		 * @return   Returns the region's planarity value [0,1]
+		 */
+		double compute_planarity() const;
 };
 
 /**

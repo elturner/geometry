@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 #include <map>
 
 /**
@@ -20,20 +21,219 @@
 
 using namespace std;
 
+/* the following definitions are used for these classes */
+#define DEFAULT_WALL_SAMPLE_RESOLUTION 0.05 /* units: meters */
+
 /*----------------------------------------*/
 /* wall sampling function implementations */
 /*----------------------------------------*/
 
-// TODO
+wall_sampling_t::wall_sampling_t()
+{
+	this->init(DEFAULT_WALL_SAMPLE_RESOLUTION, 0, 0, 0);
+}
+		
+wall_sampling_t::wall_sampling_t(double res)
+{
+	this->init(res, 0, 0, 0);
+}
+
+wall_sampling_t::wall_sampling_t(double res, double x, double y)
+{
+	this->init(res, x, y, 0);
+}
+
+wall_sampling_t::wall_sampling_t(double res, double x, double y, double hw)
+{
+	this->init(res, x, y, hw);
+}
+
+void wall_sampling_t::init(double res, double x, double y, double hw)
+{
+	/* clear any existing samples, since we're about to overwrite
+	 * the parameters of this sampling map */
+	this->clear();
+
+	/* set the parameters of this class */
+	this->resolution = res;
+	this->center_x   = x;
+	this->center_y   = y;
+	this->halfwidth  = hw;
+}
+		
+void wall_sampling_t::add(double x, double y, double z_min, double z_max,
+				double w)
+{
+	pair<wall_sample_map_t::iterator, bool> ins;
+	wall_sample_map_t::iterator it;
+	wall_sample_t key;
+
+	/* find the sample in the map.  This may require
+	 * creating a new map entry */
+	key.init(x, y, this->resolution);
+	it = this->samples.find(key);
+	if(it == this->samples.end())
+		/* create a new entry for this sample */
+		it = this->samples.insert(pair<wall_sample_t, 
+				wall_sample_info_t>(key, 
+					wall_sample_info_t())).first;
+	
+	/* update the info with the provided sample */
+	it->second.add(x, y, w);
+	it->second.add_zs(z_min, z_max);
+}
+		 
+void wall_sampling_t::add(double x, double y, size_t ind)
+{	
+	wall_sample_map_t::iterator it;
+	wall_sample_t key;
+
+	/* find the sample in the map.  This may require
+	 * creating a new map entry */
+	key.init(x, y, this->resolution);
+	it = this->samples.find(key);
+	if(it == this->samples.end())
+		/* create a new entry for this sample */
+		it = this->samples.insert(pair<wall_sample_t, 
+				wall_sample_info_t>(key, 
+					wall_sample_info_t())).first;
+	
+	/* update the info with the provided sample */
+	it->second.add_pose(ind);
+}
+		
+int wall_sampling_t::writedq(const string& filename) const
+{
+	wall_sample_map_t::const_iterator it;
+	ofstream outfile;
+
+	/* prepare to write to the given file */
+	outfile.open(filename.c_str());
+	if(!(outfile.is_open()))
+		return -1;
+
+	/* write out the file header */
+	outfile << this->get_max_depth()                   << endl
+	        << this->halfwidth                         << endl
+	        << this->center_x << " " << this->center_y << endl;
+
+	/* iterate through the wall samples */
+	for(it = this->samples.begin(); it != this->samples.end(); it++)
+		it->second.writedq(outfile);
+
+	/* clean up */
+	outfile.close();
+	return 0;
+}
+		
+size_t wall_sampling_t::get_max_depth() const
+{
+	return (size_t) ceil(log(  (2.0*this->halfwidth) 
+					/ (this->resolution)      ));
+}
 
 /*--------------------------------------*/
 /* wall sample function implementations */
 /*--------------------------------------*/
 
-// TODO
+wall_sample_t::wall_sample_t()
+{
+	this->init(0,0);
+}
+		
+wall_sample_t::wall_sample_t(int xxi, int yyi)
+{
+	this->init(xxi,yyi);
+}
+		
+wall_sample_t::wall_sample_t(double xx, double yy, double res)
+{
+	this->init(xx,yy,res);
+}
+
+void wall_sample_t::init(double xx, double yy, double res)
+{
+	/* convert from continuous position to gridcell index.
+	 *
+	 * Note that grid cells just discretized representations
+	 * of the continous values, so we perform the following:
+	 */
+	this->xi = (int) floor(xx / res);
+	this->yi = (int) floor(yy / res);
+}
 
 /*-------------------------------------------*/
 /* wall sample info function implementations */
 /*-------------------------------------------*/
+		
+wall_sample_info_t::wall_sample_info_t()
+{
+	/* initialize to be empty */
+	this->clear();
+}
 
-// TODO
+void wall_sample_info_t::clear()
+{
+	/* reset the total weight to be zero */
+	this->total_weight = 0;
+
+	/* reset the z ranges to be invalid */
+	this->z_min = 1;
+	this->z_max = 0; /* invalid when min > max */
+
+	/* clear all pose info */
+	this->poses.clear();
+}
+		
+void wall_sample_info_t::add(double x, double y, double w)
+{
+	/* perform a weighted average between the existing
+	 * samples and the new sample */
+	this->x_avg = ( (w*x) + (this->total_weight*this->x_avg) )
+			/ (w + this->total_weight);
+	this->y_avg = ( (w*y) + (this->total_weight*this->y_avg) )
+			/ (w + this->total_weight);
+	this->total_weight += w;
+}
+		
+void wall_sample_info_t::add_zs(double z0, double z1)
+{
+	/* check if input is valid */
+	if(z0 > z1)
+		return; /* ignore invalid range */
+
+	/* check if existing range is valid */
+	if(this->z_min > this->z_max)
+	{
+		/* since we didn't have any valid ranges to begin
+		 * with, just copy over this range */
+		this->z_min = z0;
+		this->z_max = z1;
+		return;
+	}
+
+	/* merge the two valid ranges */
+	this->z_min = min(z0, this->z_min);
+	this->z_max = max(z1, this->z_max);
+}
+
+void wall_sample_info_t::writedq(ostream& os) const
+{
+	set<size_t>::const_iterator it;
+
+	/* export this info to a single line in the
+	 * given dq file stream */
+	os << this->x_avg << " " /* center position (x) */
+	   << this->y_avg << " " /* center position (y) */
+	   << this->z_min << " " /* minimum z value */
+	   << this->z_max << " " /* maximum z value */
+	   << ((int) this->total_weight) << " " /* "num_points" field */
+	   << this->poses.size(); /* number of pose indices */
+
+	/* write out each pose index */
+	for(it = this->poses.begin(); it != this->poses.end(); it++)
+		os << " " << (*it);
+
+	/* export a new line, indicating end of sample */
+	os << endl;
+}

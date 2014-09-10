@@ -76,9 +76,9 @@ int node_boundary_t::get_nearby_faces(const octtopo_t& topo,
 {
 	octneighbors_t edges;
 	vector<octnode_t*> neighs;
-	pair<multimap<octnode_t*, node_face_t>::const_iterator,
-		multimap<octnode_t*, node_face_t>::const_iterator> range;
-	multimap<octnode_t*, node_face_t>::const_iterator it;
+	pair<nodefacemap_t::const_iterator, 
+		nodefacemap_t::const_iterator> range;
+	nodefacemap_t::const_iterator it;
 	size_t fi, i, n;
 	CUBE_FACE f;
 	int ret;

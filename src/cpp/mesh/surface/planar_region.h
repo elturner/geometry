@@ -206,6 +206,47 @@ class planar_region_t
 		inline size_t num_faces() const
 		{ return this->faces.size(); };
 
+		/**
+		 * Computes the surface area of this region
+		 *
+		 * This computation will iterate over all the
+		 * faces stored in this region, and sum their
+		 * surface areas.
+		 *
+		 * @return  Returns the surface area of this region
+		 */
+		double surface_area() const;
+
+		/**
+		 * Computes the bounding box for a region using the
+		 * given basis vectors.
+		 *
+		 * Given two basis vectors, will compute the bounding
+		 * box coordinates (in the specified vector space) of
+		 * the given region.
+		 *
+		 * It is assumed that a,b are orthonormal
+		 *
+		 * All measurements are taken relative to the center
+		 * point of the plane geometry of this region.  That
+		 * is, the computed bounding box assumes that the
+		 * center of the region's plane is (0,0).
+		 *
+		 * @param a      The first basis vector to use
+		 * @param b      The second basis vector to use
+		 * @param a_min  Where to store the min. coefficient 
+		 *               of the bounding box for the a-vector
+		 * @param a_max  Where to store the max. coefficient 
+		 *               of the bounding box for the a-vector
+		 * @param b_min  Where to store the min. coefficient 
+		 *               of the bounding box for the b-vector
+		 * @param b_max  Where to store the max. coefficient 
+		 *               of the bounding box for the b-vector
+		 */
+		void compute_bounding_box(const Eigen::Vector3d& a,
+				const Eigen::Vector3d& b,
+				double& a_min, double& a_max,
+				double& b_min, double& b_max) const;
 
 		/*-----------*/
 		/* debugging */

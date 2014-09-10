@@ -90,6 +90,17 @@ class plane_t : public shape_t
 		{ return this->normal.dot(p - this->point); };
 
 		/**
+		 * Projects the specified point onto the plane
+		 *
+		 * Given a 3D point, will compute the projected position
+		 * of this point onto this plane geometry.  The point
+		 * will be modified in-place.
+		 *
+		 * @param p   The point to modify
+		 */
+		void project_onto(Eigen::Vector3d& p) const;
+
+		/**
 		 * Performs PCA on the given points, and stores the best-fit
 		 * plane in this structure.
 		 *

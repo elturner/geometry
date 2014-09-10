@@ -6,6 +6,7 @@
 #include <queue>
 #include <set>
 #include <stdlib.h>
+#include <Eigen/Dense>
 
 /**
  * @file   planar_region.cpp
@@ -121,6 +122,55 @@ void planar_region_t::find_face_centers(vector<Vector3d,
 							* units of area */
 
 		}
+	}
+}
+		
+double planar_region_t::surface_area() const
+{
+	faceset_t::const_iterator it;
+	double area;
+
+	/* iterate over the faces */
+	area = 0;
+	for(it = this->faces.begin(); it != this->faces.end(); it++)
+		area += it->get_area();
+
+	/* return the sum */
+	return area;
+}
+		
+void planar_region_t::compute_bounding_box(
+				const Vector3d& a, const Vector3d& b,
+				double& a_min, double& a_max,
+				double& b_min, double& b_max) const
+{
+	faceset_t::const_iterator it;
+	Vector3d p, q;
+	double hw, coord_a, coord_b;
+
+	/* reset bounds to something invalid */
+	a_min = 1; a_max = 0; /* if a_min > a_max, then invalid */
+	b_min = 1; b_max = 0;
+
+	/* iterate over the faces */
+	for(it = this->faces.begin(); it != this->faces.end(); it++)
+	{
+		/* get points for this face on the plane */
+		hw = it->get_halfwidth(); /* get size of this face */
+		it->get_center(p); /* get the center of this face */
+		
+		/* get this point in the a,b coordinate frame */
+		p -= this->plane.point; /* all operations relative
+		                         * to position of plane */
+		coord_a = p.dot(a);
+		coord_b = p.dot(b);
+
+		/* update the bounds for this face, taking size
+		 * of face into account */
+		a_min = min(a_min, coord_a - hw);
+		a_max = max(a_max, coord_a + hw);
+		b_min = min(b_min, coord_b - hw);
+		b_max = max(b_max, coord_b + hw);
 	}
 }
 
