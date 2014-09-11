@@ -28,6 +28,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
+		$(SOURCEDIR)io/data/fss/fss_io.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		$(SOURCEDIR)geometry/octree/octtopo.cpp \
@@ -65,6 +66,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
+		$(SOURCEDIR)io/data/fss/fss_io.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
 		$(SOURCEDIR)geometry/octree/octtopo.h \
@@ -73,6 +75,8 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
+		$(SOURCEDIR)geometry/shapes/shape_wrapper.h \
+		$(SOURCEDIR)geometry/shapes/linesegment.h \
 		$(SOURCEDIR)geometry/shapes/plane.h \
 		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \

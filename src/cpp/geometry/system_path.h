@@ -241,7 +241,7 @@ class system_path_t
 		pose_t* get_pose(size_t i) const;
 
 	/* helper functions */
-	protected:
+	public:
 
 		/**
 		 * Computes index of last pose at or before time t.

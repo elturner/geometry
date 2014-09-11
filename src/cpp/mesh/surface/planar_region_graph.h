@@ -176,6 +176,14 @@ class planar_region_graph_t
 		{ return this->regions.end(); };
 
 		/**
+		 * Retrieves the number of regions stored in this object
+		 *
+		 * @return  Returns the number of regions
+		 */
+		inline size_t size() const
+		{ return this->regions.size(); };
+
+		/**
 		 * Returns the regionmap iterator that references
 		 * the region for the given face.
 		 *

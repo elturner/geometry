@@ -15,11 +15,14 @@
 
 #include "oct2dq_run_settings.h"
 #include <geometry/octree/octree.h>
-#include <geometry/system_path.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/wall_sampling/wall_sampling.h>
 #include <map>
+#include <set>
+
+/* the following type is defined for convenience */
+typedef std::map<octnode_t*, std::set<wall_sample_t> > nodewsmap_t;
 
 /**
  * The process_t class contains all necessary data products
@@ -29,9 +32,6 @@ class process_t
 {
 	/* parameters */
 	private:
-
-		/* the system path */
-		system_path_t path;
 
 		/* the carved geometry */
 		octree_t tree;
@@ -48,6 +48,19 @@ class process_t
 		 * are added to the structure with varying weight.
 		 */
 		wall_sampling_t sampling;
+
+		/**
+		 * This mapping goes from boundary octnodes to
+		 * generated wall samples.
+		 *
+		 * The purpose of this mapping is to be able to quickly
+		 * identify which octnodes contributed to which wall
+		 * samples.  This information is useful when assigning
+		 * pose index information to the wall samples, since
+		 * that is computed by finding which poses saw which
+		 * octnodes, which in turn determine the wall samples.
+		 */
+		nodewsmap_t node_ws_map;
 
 	/* functions */
 	public:
@@ -76,6 +89,23 @@ class process_t
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int compute_wall_samples(const oct2dq_run_settings_t& args);
+
+		/**
+		 * Computes pose indices for the wall samples
+		 *
+		 * Will use the provided fss files to perform ray
+		 * tracing in the octree, in order to determine which
+		 * poses saw which wall samples.  This information is
+		 * recorded in the wall samples.
+		 *
+		 * This function should be called after 
+		 * compute_wall_samples() but before export_data().
+		 *
+		 * @param args   The parsed program arguments
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int compute_pose_inds(const oct2dq_run_settings_t& args);
 
 		/**
 		 * Exports all data products

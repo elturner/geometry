@@ -199,9 +199,11 @@ class wall_sampling_t
 		 * @param z_min  The minimum z-position of this sample
 		 * @param z_max  The maximum z-position of this sample
 		 * @param w      The weight of this sample
+		 *
+		 * @return    Returns the wall sample that was made/edited.
 		 */
-		void add(double x, double y, double z_min, double z_max,
-				double w=1.0);
+		wall_sample_t add(double x, double y, 
+				double z_min, double z_max, double w=1.0);
 
 		/**
 		 * Adds pose information to the specified sample
@@ -215,8 +217,55 @@ class wall_sampling_t
 		 * @param x      The x-position of the sample to modify
 		 * @param y      The y-position of the sample to modify
 		 * @param ind    The pose index to add to this sample
+		 *
+		 * @return    Returns the wall sample that was made/edited.
 		 */
-		 void add(double x, double y, size_t ind);
+		 wall_sample_t add(double x, double y, size_t ind);
+
+		/**
+		 * Adds pose information to the specified sample
+		 *
+		 * Will add the specified pose index to the sample
+		 * located at the given position.  Note that adding
+		 * a pose index indicates that a sensor from that
+		 * particular system pose has line-of-sight to the
+		 * given sample.
+		 *
+		 * @param ws     The wall sample to modify
+		 * @param ind    The pose index to add to this sample
+		 */
+		 void add(const wall_sample_t& ws, size_t ind);
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Retrieves an iterator to the specified wall sample
+		 *
+		 * If not found, will return this->end().
+		 *
+		 * @param ws  The wall sample to find
+		 *
+		 * @return   Returns iterator to given wall sample info
+		 */
+		inline wall_sample_map_t::const_iterator 
+			 	find(const wall_sample_t& ws) const
+		{ return this->samples.find(ws); };
+
+		/**
+		 * Retrieves an iterator to the wall sample at the
+		 * specified location.
+		 *
+		 * If not found, will return this->end()
+		 *
+		 * @param x   The x-coordinate of the location to check
+		 * @param y   The y-coordinate of the location to check
+		 *
+		 * @return    Returns iterator to wall sample info at (x,y)
+		 */
+		wall_sample_map_t::const_iterator
+					find(double x, double y) const;
 
 		/*-----*/
 		/* i/o */

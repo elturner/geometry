@@ -55,7 +55,13 @@ int main(int argc, char** argv)
 	}
 
 	/* add pose information to the wall samples */
-	// TODO
+	ret = process.compute_pose_inds(args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to compute pose indices" << endl;
+		return 4;
+	}
 
 	/* export the samples */
 	ret = process.export_data(args);

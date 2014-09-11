@@ -1,11 +1,16 @@
 #include "process.h"
 #include "oct2dq_run_settings.h"
+#include <io/data/fss/fss_io.h>
+#include <geometry/shapes/shape_wrapper.h>
+#include <geometry/shapes/linesegment.h>
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octtopo.h>
 #include <geometry/system_path.h>
+#include <geometry/transform.h>
 #include <mesh/refine/octree_padder.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <map>
@@ -37,27 +42,6 @@ int process_t::init(oct2dq_run_settings_t& args)
 	octtopo_t top;
 	tictoc_t clk;
 	int ret;
-
-	/* read in the path information */
-	tic(clk);
-	ret = path.readnoisypath(args.pathfile);
-	if(ret)
-	{
-		/* report error */
-		cerr << "[process_t::init]\tUnable to read in path file: "
-		     << args.pathfile << endl;
-		return PROPEGATE_ERROR(-1, ret);
-	}
-	ret = path.parse_hardware_config(args.configfile);
-	if(ret)
-	{
-		/* report error */
-		cerr << "[process_t::init]\tUnable to read in hardware "
-		     << "config xml file: "
-		     << args.configfile << endl;
-		return PROPEGATE_ERROR(-2, ret);
-	}
-	toc(clk, "Importing path");
 
 	/* import the octree */
 	tic(clk);
@@ -132,14 +116,17 @@ int process_t::init(oct2dq_run_settings_t& args)
 		
 int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 {
+	progress_bar_t progbar;
 	regionmap_t::const_iterator it;
 	faceset_t::const_iterator fit;
 	octnode_t* leaf;
 	pair<nodefacemap_t::const_iterator, 
 			nodefacemap_t::const_iterator> range;
 	Vector3d a, b, p;
+	wall_sample_t ws;
 	double strength, a_min, a_max, b_min, b_max, coord_a, coord_b;
 	tictoc_t clk;
+	size_t i;
 
 	/* initialize */
 	tic(clk);
@@ -147,11 +134,17 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 			this->tree.get_root()->center(0),
 			this->tree.get_root()->center(1),
 			this->tree.get_root()->halfwidth);
+	this->node_ws_map.clear();
+	progbar.set_name("Wall Sampling");
+	i = 0;
 
 	/* iterate over regions, computing strength for wall samples */
 	for(it = this->region_graph.begin();
 			it != this->region_graph.end(); it++)
 	{
+		/* show status to user */
+		progbar.update(i++, this->region_graph.size());
+
 		/* populate this->region_strengths for each region */
 		strength = this->compute_region_strength(it, args);
 		
@@ -225,13 +218,187 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 
 				/* we can now use this point to
 				 * contribute to wall samples */
-				this->sampling.add(p(0), p(1), 
+				ws = this->sampling.add(p(0), p(1), 
 						p(2), p(2), strength);
+			
+				/* store the pairing between this
+				 * wall sample and the given leaf node.
+				 *
+				 * Since the data value in a leaf will
+				 * never be null (because we padded the
+				 * tree), then saving the octdata is
+				 * equivalent to saving the node itself
+				 */
+				this->node_ws_map.insert(
+					pair<octdata_t*,
+					set<wall_sample_t> >(
+					leaf->data, 
+					set<wall_sample_t>())
+					).first->second.insert(ws);
 			}
 	}
 	
 	/* success */
+	progbar.clear();
 	toc(clk, "Computing wall samples");
+	return 0;
+}
+		
+int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
+{
+	system_path_t path;
+	fss::reader_t infile;
+	fss::frame_t frame;
+	transform_t pose;
+	Vector3d point_pos;
+	linesegment_t lineseg;
+	shape_wrapper_t shapewrap;
+	nodewsmap_t::iterator wsit;
+	set<wall_sample_t>::iterator sit;
+	progress_bar_t progbar;
+	tictoc_t clk;
+	size_t file_ind, num_files, frame_ind, num_frames;
+	size_t pt_ind, num_pts, node_ind, num_nodes;
+	size_t pose_ind;
+	int ret;
+	
+	/* read in the path information */
+	tic(clk);
+	ret = path.readnoisypath(args.pathfile);
+	if(ret)
+	{
+		/* report error */
+		cerr << "[process_t::compute_pose_inds]"
+		     << "\tUnable to read in path file: "
+		     << args.pathfile << endl;
+		return PROPEGATE_ERROR(-1, ret);
+	}
+	ret = path.parse_hardware_config(args.configfile);
+	if(ret)
+	{
+		/* report error */
+		cerr << "[process_t::compute_pose_inds]"
+		     << "\tUnable to read in hardware "
+		     << "config xml file: "
+		     << args.configfile << endl;
+		return PROPEGATE_ERROR(-2, ret);
+	}
+	toc(clk, "Importing path");
+
+	/* iterate over input fss files */
+	num_files = args.fssfiles.size();
+	for(file_ind = 0; file_ind < num_files; file_ind++)
+	{
+		/* open input fss data file */
+		infile.set_correct_for_bias(true);
+		ret = infile.open(args.fssfiles[file_ind]);
+		if(ret)
+		{
+			/* report error */
+			cerr << "[process_t::compute_pose_inds]"
+			     << "\tUnable to read in fss data file: "
+			     << args.fssfiles[file_ind] << endl;
+			return PROPEGATE_ERROR(-3, ret);
+		}
+
+		/* prepare progress bar */
+		tic(clk);
+		progbar.set_name(infile.scanner_name());
+
+		/* iterate through frames in file */
+		num_frames = infile.num_frames();
+		for(frame_ind = 0; frame_ind < num_frames; frame_ind++)
+		{
+			/* update status for user */
+			progbar.update(frame_ind, num_frames);
+
+			/* get the next scan in the file */
+			ret = infile.get(frame, frame_ind);
+			if(ret)
+			{
+				/* report error */
+				progbar.clear();
+				cerr << "[process_t::compute_pose_inds]\t"
+				     << "Error!  Difficulty parsing "
+				     << "fss scan #" << frame_ind << endl;
+				return PROPEGATE_ERROR(-4, ret);
+			}
+
+			/* check if valid timestamp */
+			if(path.is_blacklisted(frame.timestamp))
+				continue;
+
+			/* get the pose of the system at this time */
+			ret = path.compute_transform_for(pose,
+					frame.timestamp,
+					infile.scanner_name());
+			if(ret)
+			{
+				/* report error */
+				progbar.clear();
+				cerr << "[process_t::compute_pose_inds]\t"
+				     << "Error!  Can't compute fss pose at "
+				     << "time " << frame.timestamp
+				     << " for " << infile.scanner_name()
+				     << endl;
+				return PROPEGATE_ERROR(-5, ret);
+			}
+
+			/* get the index of this pose */
+			pose_ind = (size_t) path.closest_index(
+						frame.timestamp);
+
+			/* iterate over the points in this frame */
+			num_pts = frame.points.size();
+			for(pt_ind = 0; pt_ind < num_pts; pt_ind++)
+			{
+				/* get the world coordinate for this
+				 * point, represented as a line segment
+				 * in 3D space */
+				point_pos(0) = frame.points[pt_ind].x;
+				point_pos(1) = frame.points[pt_ind].y;
+				point_pos(2) = frame.points[pt_ind].z;
+
+				/* prepare the line segment */
+				lineseg.init(pose.T, point_pos);
+
+				/* find the nodes that it intersects */
+				shapewrap.find_in_tree(lineseg, this->tree);
+
+				/* iterate through the intersected
+				 * nodes, and record this pose with any
+				 * associated wall samples */
+				num_nodes = shapewrap.data.size();
+				for(node_ind = 0; node_ind < num_nodes;
+							node_ind++)
+				{
+					/* retrieve any wall samples
+					 * for this node data */
+					wsit = this->node_ws_map.find(
+						shapewrap.data[node_ind]);
+					if(wsit == this->node_ws_map.end())
+						continue; /* no samples 
+						           * here */
+
+					/* iterate over samples at this
+					 * node */
+					for(sit = wsit->second.begin();
+						sit != wsit->second.end();
+							sit++)
+						/* add pose to sample */
+						this->sampling.add(*sit,
+								pose_ind);
+				}
+			}
+		}
+
+		/* clean up this file */
+		progbar.clear();
+		infile.close();
+		toc(clk, "Computing pose indices");
+	}
+
+	/* success */
 	return 0;
 }
 		

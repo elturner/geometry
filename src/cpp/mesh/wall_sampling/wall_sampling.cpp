@@ -61,8 +61,8 @@ void wall_sampling_t::init(double res, double x, double y, double hw)
 	this->halfwidth  = hw;
 }
 		
-void wall_sampling_t::add(double x, double y, double z_min, double z_max,
-				double w)
+wall_sample_t wall_sampling_t::add(double x, double y,
+				double z_min, double z_max, double w)
 {
 	pair<wall_sample_map_t::iterator, bool> ins;
 	wall_sample_map_t::iterator it;
@@ -81,25 +81,44 @@ void wall_sampling_t::add(double x, double y, double z_min, double z_max,
 	/* update the info with the provided sample */
 	it->second.add(x, y, w);
 	it->second.add_zs(z_min, z_max);
+
+	/* return the wall sample */
+	return key;
 }
 		 
-void wall_sampling_t::add(double x, double y, size_t ind)
+wall_sample_t wall_sampling_t::add(double x, double y, size_t ind)
 {	
-	wall_sample_map_t::iterator it;
 	wall_sample_t key;
 
 	/* find the sample in the map.  This may require
 	 * creating a new map entry */
 	key.init(x, y, this->resolution);
-	it = this->samples.find(key);
+	this->add(key, ind);
+
+	/* return the wall sample */
+	return key;
+}
+		 
+void wall_sampling_t::add(const wall_sample_t& ws, size_t ind)
+{
+	wall_sample_map_t::iterator it;
+	
+	/* find in map */
+	it = this->samples.find(ws);
 	if(it == this->samples.end())
 		/* create a new entry for this sample */
 		it = this->samples.insert(pair<wall_sample_t, 
-				wall_sample_info_t>(key, 
+				wall_sample_info_t>(ws, 
 					wall_sample_info_t())).first;
 	
 	/* update the info with the provided sample */
 	it->second.add_pose(ind);
+}
+		
+wall_sample_map_t::const_iterator
+			wall_sampling_t::find(double x, double y) const
+{ 
+	return this->find(wall_sample_t(x,y,this->resolution)); 
 }
 		
 int wall_sampling_t::writedq(const string& filename) const
