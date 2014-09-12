@@ -63,7 +63,9 @@ class system_path_t
 	/*** functions ***/
 	public:
 
+		/*--------------*/
 		/* constructors */
+		/*--------------*/
 
 		/**
 		 * Constructs empty system path
@@ -75,7 +77,9 @@ class system_path_t
 		 */
 		~system_path_t();
 
+		/*-----*/
 		/* i/o */
+		/*-----*/
 		
 		/**
 		 * Reads *.mad file and stores results.
@@ -88,6 +92,19 @@ class system_path_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int readmad(const std::string& filename);
+
+		/**
+		 * Exports path to *.mad file on disk
+		 *
+		 * This function will export the path information
+		 * that is stored in this object to the specified
+		 * *.mad file on disk.
+		 * 
+		 * @param filename    Where to store the mad file
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int writemad(const std::string& filename) const;
 
 		/**
 		 * Reads *.noisypath file and stores results.
@@ -114,6 +131,10 @@ class system_path_t
 		 */
 		int parse_hardware_config(const std::string& xml);
 
+		/*-----------*/
+		/* modifiers */
+		/*-----------*/
+		
 		/**
 		 * Clears all information in this structure.
 		 *
@@ -122,7 +143,30 @@ class system_path_t
 		 */
 		void clear();
 
+		/**
+		 * Applies a rigid transform to the entire path
+		 *
+		 * Will modify all poses in the path so reflect this
+		 * new transform. For each pose, the new position will
+		 * be:
+		 *
+		 * 	T_new = R * T_old + T
+		 * 
+		 * and the rotation of the pose will be:
+		 *
+		 * 	R_new = R * R_old
+		 *
+		 * @param R   The rotation to apply to each pose
+		 * @param T   The translation to apply to each pose
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int apply_transform(const Eigen::Quaternion<double>& R,
+					const Eigen::Vector3d& T);
+
+		/*-----------*/
 		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Generates the interpolated pose for specified timestamp.

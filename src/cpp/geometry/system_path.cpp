@@ -16,6 +16,7 @@
 #include <config/cameraProp.h>
 #include <config/tofProp.h>
 #include <geometry/transform.h>
+#include <util/rotLib.h>
 #include <util/range_list.h>
 #include <util/error_codes.h>
 
@@ -169,6 +170,93 @@ int system_path_t::readmad(const std::string& filename)
 		this->pl[i-1].compute_velocity(this->pl[i]);
 
 	/* success */
+	return 0;
+}
+		
+int system_path_t::writemad(const std::string& filename) const
+{
+	vector<pair<double, double> > zupts;
+	Matrix3d R, ENU2NED;
+	Vector3d euler;
+	ofstream outfile;
+	unsigned int i, num_zupts, num_poses;
+	double t, x, y, z, roll, pitch, yaw, zupt_beg, zupt_end;
+
+	/* check arguments */
+	if(filename.empty())
+		return -1; /* can't open empty filename */
+
+	/* attempt to open file for writing */
+	outfile.open(filename.c_str(), ios_base::binary | ios_base::out);
+	if(!(outfile.is_open()))
+		return -2; /* can't open file */
+	
+	/*------------------*/
+	/* export zupt info */
+	/*------------------*/
+
+	/* get the zupts for this path */
+	this->timestamp_blacklist.get_ranges(zupts);
+	num_zupts = zupts.size();
+
+	/* export number of zupts */
+	outfile.write((char*) (&num_zupts), sizeof(num_zupts));
+
+	/* iterate over the zupt info */
+	for(i = 0; i < num_zupts; i++)
+	{
+		/* get next zupt range */
+		zupt_beg = zupts[i].first;
+		zupt_end = zupts[i].second;
+
+		/* write the beginning and ending times for this zupt */
+		outfile.write((char*) &zupt_beg, sizeof(zupt_beg));
+		outfile.write((char*) &zupt_end, sizeof(zupt_end));
+	}
+	
+	/*------------------*/
+	/* export pose info */
+	/*------------------*/
+
+	/* prepare matrix for converting rotations from ENU to NED,
+	 * which is required when exporting to .mad files */
+	ENU2NED << 0, 1, 0,
+	           1, 0, 0,
+		   0, 0,-1;
+
+	/* export number of poses */
+	num_poses = this->pl_size;
+	outfile.write((char*) (&num_poses), sizeof(num_poses)); 
+
+	/* iterate over poses, exporting to file */
+	for(i = 0; i < num_poses; i++)
+	{
+		/* prepare info for export */
+		t = this->pl[i].timestamp;
+		x = this->pl[i].T(0);
+		y = this->pl[i].T(1);
+		z = this->pl[i].T(2);
+		
+		/* convert rotations from a quaternion to NED euler
+		 * angles */
+		R = ENU2NED * this->pl[i].R.toRotationMatrix(); 
+		rotLib::rot2rpy(R, euler);
+		roll  = euler(0);
+		pitch = euler(1);
+		yaw   = euler(2);
+		
+		/* read information for this pose */
+		outfile.write((char*) (&t),     sizeof(t)); 
+		outfile.write((char*) (&x),     sizeof(x)); 
+		outfile.write((char*) (&y),     sizeof(y)); 
+		outfile.write((char*) (&z),     sizeof(z)); 
+		outfile.write((char*) (&roll),  sizeof(roll)); 
+		outfile.write((char*) (&pitch), sizeof(pitch)); 
+		outfile.write((char*) (&yaw),   sizeof(yaw)); 
+	}
+
+	/* clean up */
+	outfile.close();
 	return 0;
 }
 		
@@ -358,6 +446,32 @@ void system_path_t::clear()
 
 	/* clear any timestamp blacklist information */
 	this->timestamp_blacklist.clear();
+}
+		
+int system_path_t::apply_transform(const Eigen::Quaternion<double>& R,
+					const Eigen::Vector3d& T)
+{
+	unsigned int i;
+
+	/* iterate over the poses */
+	for(i = 0; i < this->pl_size; i++)
+	{
+		/* modify this pose */
+		this->pl[i].T = (R.toRotationMatrix() 
+				* this->pl[i].T) + T; 
+		this->pl[i].T_cov = (R.toRotationMatrix() 
+				* this->pl[i].T_cov);
+		this->pl[i].R = R * this->pl[i].R;
+		this->pl[i].R_cov = (R.toRotationMatrix()
+				* this->pl[i].R_cov);
+		this->pl[i].v = (R.toRotationMatrix()
+				* this->pl[i].v);
+		this->pl[i].w = (R.toRotationMatrix()
+				* this->pl[i].w);
+	}
+
+	/* success */
+	return 0;
 }
 
 /*** accessors ***/

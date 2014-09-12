@@ -199,6 +199,25 @@ class ic4_reader_t
 		int get(unsigned int i, ic4_frame_t& frame);
 
 		/**
+		 * Retrieves the number of scan frames in this file
+		 *
+		 * @return   Returns the number of ic4 scan frames in file
+		 */
+		inline unsigned int get_num_scans() const
+		{ return this->num_scans; };
+
+		/**
+		 * Retrieves the serial number string for this file
+		 *
+		 * The serial number is a sensor-specific value that
+		 * gives a unique identification for the hardware used.
+		 *
+		 * @return   Returns the serial number string in file
+		 */
+		inline const std::string& get_serial_num() const
+		{ return this->serial_num; };
+
+		/**
 		 * Retrieves all timestamps of remaining frames.
 		 *
 		 * Calling this function after opening the file

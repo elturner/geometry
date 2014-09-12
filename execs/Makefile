@@ -44,6 +44,7 @@ util_progs:
 	@echo ""
 	@echo "Compiling utility programs..."
 	@echo ""
+	$(MAKE) -w -C align_path
 	$(MAKE) -w -C generate_tex
 	#$(MAKE) -w -C simplify_fp
 	$(MAKE) -w -C wedge2xyz
