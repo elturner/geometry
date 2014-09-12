@@ -54,6 +54,30 @@ class align_path_run_settings_t
 		 */
 		std::string output_path;
 
+		/* the following settings can be used during processing */
+
+		/**
+		 * This value represents the magnetic declination
+		 * at the location of the scan.
+		 *
+		 * Magnetic declination is used to convert from
+		 * magnetic north to true north.  If you want the
+		 * output path of this program to be aligned with
+		 * magnetic north, leave this value as zero.  But
+		 * if you want it to be aligned with true north,
+		 * then it should be set to the declination value
+		 * at the lat/lon of the scan location.
+		 *
+		 * The value should be represented in degrees,
+		 * with east being positive, and west being negative.
+		 *
+		 * To find the magnetic declination in a particular
+		 * area, go to this site:
+		 *
+		 * http://magnetic-declination.com/
+		 */
+		double magnetic_declination;
+
 	/* functions */
 	public:
 

@@ -36,7 +36,8 @@ int import_files(const align_path_run_settings_t& args,
 int find_magnetic_south(Eigen::Vector3d& south, const system_path_t& path,
 			ic4_reader_t& ic4data,
 			const SyncXml& timesync);
-int adjust_path(const Eigen::Vector3d& south, system_path_t& path);
+int adjust_path(const align_path_run_settings_t& args,
+		const Eigen::Vector3d& south, system_path_t& path);
 int export_path(const align_path_run_settings_t& args,
 		const system_path_t& path);
 
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
 	}
 
 	/* modify the path to be aligned with the computed direction */
-	ret = adjust_path(south, path);
+	ret = adjust_path(args, south, path);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "
@@ -244,15 +245,19 @@ int find_magnetic_south(Eigen::Vector3d& south,
  * of the path so that the "south" vector is represented by south in
  * the map.
  *
+ * @param args    The command-line arguments
  * @param south   The vector to align the path to
  * @param path    The path to modify
  *
  * @return        Returns zero on success, non-zero on failure.
  */
-int adjust_path(const Eigen::Vector3d& south, system_path_t& path)
+int adjust_path(const align_path_run_settings_t& args,
+		const Eigen::Vector3d& south, system_path_t& path)
 {
 	Eigen::Quaternion<double> R;
+	Eigen::Matrix3d R_magdec;
 	Eigen::Vector3d T, s, my;
+	double md_rad;
 	tictoc_t clk;
 	int ret;
 
@@ -268,6 +273,25 @@ int adjust_path(const Eigen::Vector3d& south, system_path_t& path)
 	s = south;
 	s(2) = 0; /* we only want to apply yaw rotation to the model */
 	s.normalize(); /* we want this vector to be facing in -y dir */
+
+	/* compensate for magnetic declination if we want to be
+	 * aligned to true north instead of magnetic north */
+	if(args.magnetic_declination != 0)
+	{
+		/* get the magnetic declination in radians, oriented
+		 * so that positive means counter-clockwise rotation */
+		md_rad = -(args.magnetic_declination) * M_PI / 180;
+
+		/* construct the rotation matrix */
+		R_magdec << cos(md_rad), -sin(md_rad), 0,
+			    sin(md_rad),  cos(md_rad), 0,
+			    0,            0,           1;
+	
+		/* apply to measurement of south */
+		s = R_magdec * s;
+	}
+
+	/* compute the rotation from measured south to desired south */
 	R.setFromTwoVectors(s, my); /* rotate from s to my */
 
 	/* apply this rotation to all the poses in the model */

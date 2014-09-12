@@ -30,6 +30,8 @@ using namespace std;
 #define IC4FILE_FLAG      "-d" /* the imu data file (.dat) */
 #define INPUTPATH_FLAG    "-i" /* the input .mad file */
 #define OUTPUTPATH_FLAG   "-o" /* the output .mad file */
+#define MAGDEC_FLAG       "--mag_dec" /* angle to true north from magnetic
+                                       * north, in degrees */
 
 /* function implementations */
 		
@@ -41,6 +43,7 @@ align_path_run_settings_t::align_path_run_settings_t()
 	this->ic4file     = "";
 	this->input_path  = "";
 	this->output_path = "";
+	this->magnetic_declination = 0; /* none by default */ 
 }
 
 int align_path_run_settings_t::parse(int argc, char** argv)
@@ -70,6 +73,22 @@ int align_path_run_settings_t::parse(int argc, char** argv)
 			"path.", false, 1);
 	args.add(OUTPUTPATH_FLAG, "The output .mad file to write to when "
 			"the path has been aligned.", false, 1);
+	args.add(MAGDEC_FLAG, "This value specifies the magnetic "
+			"declination at the scan location.  Magnetic "
+			"declination is used to convert from magnetic "
+			"north to true north.\n\n"
+			"If you want the output to be aligned to magnetic "
+			"north, then don't use this flag.  If you want "
+			"the output path to be aligned to true north, then "
+			"the value after this flag should be set to the "
+			"magnetic declination at the lat/lon of the scan.  "
+			"You can compute this value at this website:\n\n"
+			"\thttp://magnetic-declination.com/\n\n"
+			"The value passed to the program should be in "
+			"degrees, with eastern angles as positive and "
+			"western angles as negative.\n\n"
+			"Example:\n\n\tBerkeley, CA => 13.816 degrees",
+			true, 1);
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -93,6 +112,11 @@ int align_path_run_settings_t::parse(int argc, char** argv)
 	this->ic4file     = args.get_val(IC4FILE_FLAG);
 	this->input_path  = args.get_val(INPUTPATH_FLAG);
 	this->output_path = args.get_val(OUTPUTPATH_FLAG);
+
+	/* check for optional arguments */
+	if(args.tag_seen(MAGDEC_FLAG))
+		this->magnetic_declination 
+			= args.get_val_as<double>(MAGDEC_FLAG);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
