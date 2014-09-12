@@ -167,8 +167,7 @@ class wall_sampling_t
 		 *
 		 * @param hw   The halfwidth to use.
 		 */
-		inline void set_halfwidth(double hw)
-		{ this->halfwidth = hw; };
+		void set_halfwidth(double hw);
 		
 		/**
 		 * Adds a wall sample to this map

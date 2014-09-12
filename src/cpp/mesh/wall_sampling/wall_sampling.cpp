@@ -35,12 +35,12 @@ wall_sampling_t::wall_sampling_t()
 		
 wall_sampling_t::wall_sampling_t(double res)
 {
-	this->init(res, 0, 0, 0);
+	this->init(res, 0, 0, res);
 }
 
 wall_sampling_t::wall_sampling_t(double res, double x, double y)
 {
-	this->init(res, x, y, 0);
+	this->init(res, x, y, res);
 }
 
 wall_sampling_t::wall_sampling_t(double res, double x, double y, double hw)
@@ -58,7 +58,20 @@ void wall_sampling_t::init(double res, double x, double y, double hw)
 	this->resolution = res;
 	this->center_x   = x;
 	this->center_y   = y;
-	this->halfwidth  = hw;
+	this->halfwidth  = res;
+	this->set_halfwidth(hw);
+}
+		
+void wall_sampling_t::set_halfwidth(double hw)
+{
+	/* initialize the halfwidth if it is non-positive */
+	if(this->halfwidth <= 0)
+		this->halfwidth = this->resolution;
+	
+	/* the halfwidth must be a power of two of the resolution,
+	 * so it can only ever grow by factors of two */
+	while(this->halfwidth < hw)
+		this->halfwidth *= 2;
 }
 		
 wall_sample_t wall_sampling_t::add(double x, double y,
@@ -81,6 +94,10 @@ wall_sample_t wall_sampling_t::add(double x, double y,
 	/* update the info with the provided sample */
 	it->second.add(x, y, w);
 	it->second.add_zs(z_min, z_max);
+
+	/* update the halfwidth */
+	this->set_halfwidth(max(abs(x-this->center_x),
+				abs(y-this->center_y)));
 
 	/* return the wall sample */
 	return key;
@@ -243,6 +260,15 @@ void wall_sample_info_t::add_zs(double z0, double z1)
 void wall_sample_info_t::writedq(ostream& os) const
 {
 	set<size_t>::const_iterator it;
+	size_t w;
+
+	/* get the weight of this sample as an integer */
+	w = (int) this->total_weight;
+
+	/* if weight is less than one, don't write out this sample,
+	 * since it's clearly not well represented */
+	if(w == 0)
+		return;
 
 	/* export this info to a single line in the
 	 * given dq file stream */
@@ -250,7 +276,7 @@ void wall_sample_info_t::writedq(ostream& os) const
 	   << this->y_avg << " " /* center position (y) */
 	   << this->z_min << " " /* minimum z value */
 	   << this->z_max << " " /* maximum z value */
-	   << ((int) this->total_weight) << " " /* "num_points" field */
+	   << w << " " /* "num_points" field */
 	   << this->poses.size(); /* number of pose indices */
 
 	/* write out each pose index */

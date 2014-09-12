@@ -1,4 +1,4 @@
-function [] = render_dq_tracing(dqfile, madfile)
+function [] = render_dq_tracing(dqfile, madfile, pose_inds)
 	% RENDER_DQ_TRACING(dqfile, madfile)
 	%
 	%	Will render the specified wall samples and path,
@@ -11,6 +11,8 @@ function [] = render_dq_tracing(dqfile, madfile)
 	%
 	%	dqfile -	The location of the wall samples on disk
 	%	madfile -	The location of the path on disk
+	%	pose_inds -	OPTIONAL.  Only show the given indices.
+	%			If not specified, shows all poses.
 	%
 	% author:
 	%
@@ -45,7 +47,15 @@ function [] = render_dq_tracing(dqfile, madfile)
 		for j = 1:length(dq.poseIdx{i})
 
 			% get pose position
-			p = poses(1:2, dq.poseIdx{i}(j)+1); % indexed from 0
+			ind = dq.poseIdx{i}(j) + 1; % indexed from 0
+			p = poses(1:2, ind);
+
+			% filter by given pose inds
+			if(exist('pose_inds', 'var') ...
+				&& ~isempty(pose_inds) ...
+					&& ~any(pose_inds == ind))
+				continue;
+			end
 
 			% record a line from this pose to the sample
 			lines_X(:,end+1) = [dq.pos(1,i); p(1)];

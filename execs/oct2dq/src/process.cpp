@@ -234,7 +234,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * contribute to wall samples */
 				ws = this->sampling.add(p(0), p(1), 
 						p(2), p(2), strength);
-			
+		
 				/* store the pairing between this
 				 * wall sample and the given leaf node.
 				 *
@@ -243,12 +243,13 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * tree), then saving the octdata is
 				 * equivalent to saving the node itself
 				 */
-				this->node_ws_map.insert(
-					pair<octdata_t*,
-					set<wall_sample_t> >(
-					leaf->data, 
-					set<wall_sample_t>())
-					).first->second.insert(ws);
+				if(leaf->data != NULL)
+					this->node_ws_map.insert(
+						pair<octdata_t*,
+						set<wall_sample_t> >(
+						leaf->data, 
+						set<wall_sample_t>())
+						).first->second.insert(ws);
 			}
 	}
 	
@@ -372,6 +373,7 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 				point_pos(0) = frame.points[pt_ind].x;
 				point_pos(1) = frame.points[pt_ind].y;
 				point_pos(2) = frame.points[pt_ind].z;
+				pose.apply(point_pos);
 
 				/* prepare the line segment */
 				lineseg.init(pose.T, point_pos);
@@ -386,6 +388,10 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 				for(node_ind = 0; node_ind < num_nodes;
 							node_ind++)
 				{
+					/* ignore nodes with null data */
+					if(shapewrap.data[node_ind] == NULL)
+						continue;
+
 					/* retrieve any wall samples
 					 * for this node data */
 					wsit = this->node_ws_map.find(
