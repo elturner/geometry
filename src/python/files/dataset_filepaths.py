@@ -383,6 +383,32 @@ def get_octree(dataset_dir):
 def get_carved_obj_file(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "mesh.obj")
 
+#----------- Files generated from oct -> floorplan -------------------
+
+##
+# Returns the directory containing floorplan files generated from octrees
+#
+def get_carving_fp_dir(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), "fp")
+
+##
+# Returns the dq file generated from an octree
+#
+# TODO NOTE will eventually need to make a dq file for each floor
+#
+def get_carving_dq_file(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), \
+			"wall_samples.dq")
+
+##
+# Returns the floorplan file generated from an octree's wall samples
+#
+# TODO NOTE will need to make a fp file for each level
+#
+def get_carving_fp_file(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), \
+			"floorplan.fp")
+
 #--------------- Files generated from merging ------------------------
 
 ##
