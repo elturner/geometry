@@ -124,6 +124,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 			nodefacemap_t::const_iterator> range;
 	Vector3d a, b, p;
 	wall_sample_t ws;
+	plane_t vertical;
 	double strength, a_min, a_max, b_min, b_max, coord_a, coord_b;
 	tictoc_t clk;
 	size_t i;
@@ -158,6 +159,12 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 			= it->second.get_region().get_plane().normal;
 		a = b.cross(n).normalized(); /* most-horizontal coord */
 		b = n.cross(a); /* most-vertical coord */
+
+		/* get a version of the region plane that's perfectly
+		 * vertical. */
+		vertical = it->second.get_region().get_plane();
+		vertical.normal(2) = 0; /* normal must be horizontal */
+		vertical.normal.normalize();
 
 		/* get bounding box of the planar region */
 		it->second.get_region().compute_bounding_box(a, b,
@@ -215,6 +222,13 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 							* node, don't use
 							* it */
 				}
+
+				/* now that we want to insert this
+				 * point as a wall sample, we should
+				 * snap it to the vertically aligned
+				 * plane that is the adjustment of the
+				 * wall. */
+				vertical.project_onto(p);
 
 				/* we can now use this point to
 				 * contribute to wall samples */

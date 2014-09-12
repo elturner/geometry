@@ -22,7 +22,7 @@
 #include <set>
 
 /* the following type is defined for convenience */
-typedef std::map<octnode_t*, std::set<wall_sample_t> > nodewsmap_t;
+typedef std::map<octdata_t*, std::set<wall_sample_t> > nodewsmap_t;
 
 /**
  * The process_t class contains all necessary data products

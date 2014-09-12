@@ -159,18 +159,6 @@ class wall_sampling_t
 		{ this->samples.clear(); };
 
 		/**
-		 * Sets the center of the map to the specified value
-		 *
-		 * @param x     The x-coordinate of the center of the map
-		 * @param y     The y-coordinate of the center of the map
-		 */
-		inline void set_center(double x, double y)
-		{
-			this->center_x = x;
-			this->center_y = y;
-		};
-
-		/**
 		 * Sets the halfwidth of this map
 		 *
 		 * Note that the halfwidth will be automatically updated
@@ -358,9 +346,12 @@ class wall_sample_t
 		 *
 		 * @param xx   The x-coordinate of the wall sample
 		 * @param yy   The y-coordinate of the wall sample
-		 * @param res  The resolution of the wall sample
+		 * @param res  The resolution of the wall samples
+		 * @param cx   The x-coordinate of the center of the map
+		 * @param cy   The y-coordinate of the center of the map
 		 */
-		wall_sample_t(double xx, double yy, double res);
+		wall_sample_t(double xx, double yy,
+			double res, double cx, double cy);
 
 		/**
 		 * Initializes a wall sample at the given discretized
@@ -389,8 +380,11 @@ class wall_sample_t
 		 * @param xx   The x-coordinate of the wall sample
 		 * @param yy   The y-coordinate of the wall sample
 		 * @param res  The resolution of the wall sample
+		 * @param cx   The x-coordinate of the center of the map
+		 * @param cy   The y-coordinate of the center of the map
 		 */
-		void init(double xx, double yy, double res);
+		void init(double xx, double yy,
+				double res, double cx, double cy);
 
 		/*-----------*/
 		/* operators */

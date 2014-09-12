@@ -70,7 +70,7 @@ wall_sample_t wall_sampling_t::add(double x, double y,
 
 	/* find the sample in the map.  This may require
 	 * creating a new map entry */
-	key.init(x, y, this->resolution);
+	key.init(x, y, this->resolution, this->center_x, this->center_y);
 	it = this->samples.find(key);
 	if(it == this->samples.end())
 		/* create a new entry for this sample */
@@ -92,7 +92,7 @@ wall_sample_t wall_sampling_t::add(double x, double y, size_t ind)
 
 	/* find the sample in the map.  This may require
 	 * creating a new map entry */
-	key.init(x, y, this->resolution);
+	key.init(x, y, this->resolution, this->center_x, this->center_y);
 	this->add(key, ind);
 
 	/* return the wall sample */
@@ -118,7 +118,8 @@ void wall_sampling_t::add(const wall_sample_t& ws, size_t ind)
 wall_sample_map_t::const_iterator
 			wall_sampling_t::find(double x, double y) const
 { 
-	return this->find(wall_sample_t(x,y,this->resolution)); 
+	return this->find(wall_sample_t(x, y,
+			this->resolution, this->center_x, this->center_y)); 
 }
 		
 int wall_sampling_t::writedq(const string& filename) const
@@ -148,7 +149,8 @@ int wall_sampling_t::writedq(const string& filename) const
 size_t wall_sampling_t::get_max_depth() const
 {
 	return (size_t) ceil(log(  (2.0*this->halfwidth) 
-					/ (this->resolution)      ));
+					/ (this->resolution)      )
+				/ log(2.0) );
 }
 
 /*--------------------------------------*/
@@ -165,20 +167,22 @@ wall_sample_t::wall_sample_t(int xxi, int yyi)
 	this->init(xxi,yyi);
 }
 		
-wall_sample_t::wall_sample_t(double xx, double yy, double res)
+wall_sample_t::wall_sample_t(double xx, double yy, 
+		double res, double cx, double cy)
 {
-	this->init(xx,yy,res);
+	this->init(xx,yy,res,cx,cy);
 }
 
-void wall_sample_t::init(double xx, double yy, double res)
+void wall_sample_t::init(double xx, double yy,
+		double res, double cx, double cy)
 {
 	/* convert from continuous position to gridcell index.
 	 *
 	 * Note that grid cells just discretized representations
 	 * of the continous values, so we perform the following:
 	 */
-	this->xi = (int) floor(xx / res);
-	this->yi = (int) floor(yy / res);
+	this->xi = (int) floor((xx-cx) / res);
+	this->yi = (int) floor((yy-cy) / res);
 }
 
 /*-------------------------------------------*/
