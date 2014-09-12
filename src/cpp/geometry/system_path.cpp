@@ -26,6 +26,7 @@ using namespace Eigen;
 
 /* the following macros are used to convert input */
 #define DEG2RAD(x)  ( (x) * 3.1415926535897932384626433 / 180.0 )
+#define RAD2DEG(x)  ( (x) * 180.0 / 3.1415926535897932384626433 )
 
 /****** PATH FUNCTIONS ********/
 
@@ -241,9 +242,9 @@ int system_path_t::writemad(const std::string& filename) const
 		 * angles */
 		R = ENU2NED * this->pl[i].R.toRotationMatrix(); 
 		rotLib::rot2rpy(R, euler);
-		roll  = euler(0);
-		pitch = euler(1);
-		yaw   = euler(2);
+		roll  = RAD2DEG(euler(0));
+		pitch = RAD2DEG(euler(1));
+		yaw   = RAD2DEG(euler(2));
 		
 		/* read information for this pose */
 		outfile.write((char*) (&t),     sizeof(t)); 
