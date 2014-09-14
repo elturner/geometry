@@ -4,6 +4,7 @@
 #include <float.h>
 #include "../structs/cell_graph.h"
 #include "../structs/quadtree.h"
+#include "../structs/normal.h"
 #include "../structs/path.h"
 #include "../structs/parameters.h"
 #include "../delaunay/insertion.h"
@@ -12,6 +13,7 @@
 #include "../rooms/tri_rep.h"
 #include "../util/error_codes.h"
 #include "../util/tictoc.h"
+#include "../util/constants.h"
 
 using namespace std;
 
@@ -170,6 +172,7 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 	unsigned int i, n;
 	vertex_t start, end;
 	point_t pp;
+	normal_t ray;
 	triple_t st, et;
 	double d, d_min, min_z, max_z;
 	int ret;
@@ -260,13 +263,26 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 					d = pp.dist_sq((*xit)->average);
 					if(d >= d_min)
 						continue;
+					
+					/* compute normalized direction 
+					 * of this ray */
+					ray.dir(pp, (*xit)->average);
 				
 					/* set the endpoint vertex to be 
 					 * the location of this closer 
-					 * cell */
+					 * cell.
+					 *
+					 * Since we want the ray
+					 * tracing to be inclusive at
+					 * the start but exclusive
+					 * at the end, subtract some
+					 * epsilon distance from the ray
+					 */
 					vertex_set(&end, 
-					           (*xit)->average.get(0), 
-					           (*xit)->average.get(1));
+						(*xit)->average.get(0)
+						- ray.get(0)*APPROX_ZERO, 
+					        (*xit)->average.get(1)
+						- ray.get(1)*APPROX_ZERO);
 					d_min = d;
 				}
 			}
