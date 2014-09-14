@@ -20,6 +20,9 @@
 /**
  * The mesh_io namespace represents all classes used for
  * mesh i/o operations.
+ *
+ * It is used to import/export vertex and polygon information
+ * from a variety of common file formats.
  */
 namespace mesh_io
 {
@@ -191,7 +194,7 @@ namespace mesh_io
 			 * @return    Returns a const reference to vertex
 			 */
 			inline const vertex_t& get_vert(size_t i) const
-			{ return this_>vertices[i]; };
+			{ return this->vertices[i]; };
 
 			/**
 			 * Retrieves the number of polygons in this
@@ -212,7 +215,7 @@ namespace mesh_io
 			 * @return    Returns a reference to this polygon
 			 */
 			inline polygon_t& get_poly(size_t i)
-			{ return this->polygons.size(); };
+			{ return this->polygons[i]; };
 			
 			/**
 			 * Retrieves a const reference to the i'th polygon.
@@ -224,7 +227,7 @@ namespace mesh_io
 			 * @return    Returns a const reference to polygon
 			 */
 			inline const polygon_t& get_poly(size_t i) const
-			{ return this->polygons.size(); };
+			{ return this->polygons[i]; };
 
 			/**
 			 * Sets this mesh to the specified vertices and
@@ -294,8 +297,8 @@ namespace mesh_io
 			 *
 			 * @return   Returns the parsed format
 			 */
-			static FILE_FORMAT get_format(
-					const std::string& filename);
+			FILE_FORMAT get_format(
+					const std::string& filename) const;
 
 			/**
 			 * Reads a Wavefront OBJ file
@@ -319,11 +322,13 @@ namespace mesh_io
 			 * specifies so.
 			 *
 			 * @param filename   The file to write to
+			 * @param color      If true, will write color info
 			 *
 			 * @return       Returns zero on success, non-zero
 			 *               on failure.
 			 */
-			int write_obj(const std::string& filename) const;
+			int write_obj(const std::string& filename,
+			              bool color) const;
 
 			/**
 			 * Reads a Stanford Polygon (PLY) file
@@ -348,11 +353,14 @@ namespace mesh_io
 			 * the format of this structure.
 			 *
 			 * @param filename    The file to write to
+			 * @param ff          The file format to use
+			 *                    when writing
 			 *
 			 * @return    Returns zero on success, non-zero
 			 *            on failure.
 			 */
-			int write_ply(const std::string& filename) const;
+			int write_ply(const std::string& filename,
+			              FILE_FORMAT ff) const;
 	};
 
 	/**
@@ -451,22 +459,6 @@ namespace mesh_io
 			/*-----*/
 
 			/**
-			 * Reads the next vertex from the specified
-			 * file stream
-			 *
-			 * Given a file stream and the format of that
-			 * stream, will parse the next vertex from
-			 * the stream.
-			 *
-			 * @param is   The input file stream
-			 * @param ff   The file format
-			 *
-			 * @return    Returns zero on success, non-zero
-			 *            on failure.
-			 */
-			int parse(std::istream& is, FILE_FORMAT ff);
-
-			/**
 			 * Writes this point to the specified file stream
 			 *
 			 * Given an output file stream and the format
@@ -543,6 +535,16 @@ namespace mesh_io
 				:	vertices(other.vertices)
 			{};
 
+			/*-----------*/
+			/* modifiers */
+			/*-----------*/
+
+			/**
+			 * Clears all vertex indices from this polygon
+			 */
+			inline void clear()
+			{ this->vertices.clear(); };
+
 			/**
 			 * Sets this triangle to a particular value
 			 *
@@ -574,22 +576,6 @@ namespace mesh_io
 			/*-----*/
 			/* i/o */
 			/*-----*/
-
-			/**
-			 * Parses the triangle from the specified file
-			 * stream.
-			 *
-			 * Given a file stream and the format of that
-			 * stream, will parse the next available triangle
-			 * from the stream.
-			 *
-			 * @param is   The input stream to parse
-			 * @param ff   The format of the stream
-			 *
-			 * @return     Returns zero on success, non-zero on
-			 *             failure.
-			 */
-			int parse(std::istream& is, FILE_FORMAT ff);
 
 			/**
 			 * Exports the triangle information to the given

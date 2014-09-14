@@ -1,5 +1,6 @@
 #include "mesh_io.h"
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -27,7 +28,7 @@ mesh_t::mesh_t(const string& filename)
 {
 	/* parse the file */
 	this->read(filename);
-};
+}
 
 int mesh_t::read(const string& filename)
 {
@@ -111,8 +112,7 @@ int mesh_t::write(const string& filename, FILE_FORMAT f) const
 
 		/* obj */
 		case FORMAT_OBJ:
-		case FORMAT_OBJ_COLOR:
-			ret = this->write_obj(filename);
+			ret = this->write_obj(filename, false);
 			if(ret)
 			{
 				/* report error */
@@ -123,6 +123,18 @@ int mesh_t::write(const string& filename, FILE_FORMAT f) const
 				return -2;
 			}
 			break;
+		case FORMAT_OBJ_COLOR:
+			ret = this->write_obj(filename, true);
+			if(ret)
+			{
+				/* report error */
+				cerr << "[mesh_t::write]\t"
+				     << "Error " << ret 
+				     << ": Unable to write colored "
+				     << "OBJ file: " << filename << endl;
+				return -3;
+			}
+			break;
 
 		/* ply */
 		case FORMAT_PLY_ASCII:
@@ -131,7 +143,7 @@ int mesh_t::write(const string& filename, FILE_FORMAT f) const
 		case FORMAT_PLY_BE_COLOR:
 		case FORMAT_PLY_LE:
 		case FORMAT_PLY_LE_COLOR:
-			ret = this->write_ply(filename);
+			ret = this->write_ply(filename, f);
 			if(ret)
 			{
 				/* report error */
@@ -155,7 +167,7 @@ void mesh_t::clear()
 	this->format = FORMAT_UNKNOWN;
 }
 			
-FILE_FORMAT mesh_t::get_format(const string& filename)
+FILE_FORMAT mesh_t::get_format(const string& filename) const
 {
 	size_t p;
 	string suffix;
@@ -168,59 +180,45 @@ FILE_FORMAT mesh_t::get_format(const string& filename)
 	/* determine format from suffix */
 	suffix = filename.substr(p);
 	if(suffix.compare(".obj") == 0)
-		return FORMAT_OBJ;
+	{
+		/* check if we read in an OBJ, in which
+		 * case we should write out with the same
+		 * formatting options */
+		switch(this->format)
+		{
+			case FORMAT_OBJ:
+			case FORMAT_OBJ_COLOR:
+				return this->format;
+			default:
+				return FORMAT_OBJ;
+		}
+	}
 	if(suffix.compare(".ply") == 0)
-		return FORMAT_PLY_ASCII;
+	{
+		/* check if we read in a PLY file, in 
+		 * which case we should write out in the
+		 * same manner */
+		switch(this->format)
+		{
+			case FORMAT_PLY_ASCII:
+			case FORMAT_PLY_BE:
+			case FORMAT_PLY_LE:
+			case FORMAT_PLY_ASCII_COLOR:
+			case FORMAT_PLY_BE_COLOR:
+			case FORMAT_PLY_LE_COLOR:
+				return this->format;
+			default:
+				return FORMAT_PLY_ASCII;
+		}
+	}
 
 	/* unknown format */
 	return FORMAT_UNKNOWN;
-}
-			
-int mesh_t::read_obj(const string& filename)
-{
-	ifstream infile;
-
-	// TODO
-}
-			
-int mesh_t::write_obj(const std::string& filename) const
-{
-	ofstream outfile;
-
-	/* attempt to open file for writing */
-	outfile.open(filename.c_str());
-	if(!(outfile.is_open()))
-	{
-		cerr << "[mesh_t::write_obj]\tUnable to open file "
-		     << "for writing: " << filename << endl;
-		return -1;
-	}
-
-	// TODO
-	
-	/* clean up */
-	outfile.close();
-	return 0;
-}
-			
-int mesh_t::read_ply(const std::string& filename)
-{
-	// TODO
-}
-			
-int mesh_t::write_ply(const std::string& filename) const
-{
-	// TODO
 }
 
 /*----------------------------------*/
 /* vertex_t function implemenations */
 /*----------------------------------*/
-			
-int vertex_t::parse(istream& is, FILE_FORMAT ff)
-{
-	// TODO
-}
 			
 int vertex_t::serialize(ostream& os, FILE_FORMAT ff) const
 {
@@ -292,11 +290,6 @@ polygon_t::polygon_t(size_t i, size_t j, size_t k)
 	this->vertices.push_back(k);
 }
 			
-int polygon_t::parse(std::istream& is, FILE_FORMAT ff)
-{
-	// TODO
-}
-
 int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const
 {
 	size_t i, n;
