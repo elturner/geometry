@@ -55,7 +55,7 @@ def get_timesync_xml(dataset_dir):
 # Note:  this does not include d-imager-generated fss files, but only those
 # generated from laser scanners.
 #
-def get_all_fss_files(dataset_dir):
+def get_all_fss_files(dataset_dir, whitelist=None):
 
 	# get the config xml location
 	config_xml = get_hardware_config_xml(dataset_dir)
@@ -72,6 +72,11 @@ def get_all_fss_files(dataset_dir):
 	for si in range(len(sensor_types)):	
 		# check for laser scanners
 		if sensor_types[si] == 'laser':
+
+			# check if a whitelist is specified
+			if whitelist != None \
+				and sensor_names[si] not in whitelist:
+				continue
 
 			# parse the settings file for this laser
 			urg_settings = config.parse_settings_xml( \

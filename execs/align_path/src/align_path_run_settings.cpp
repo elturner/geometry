@@ -87,7 +87,7 @@ int align_path_run_settings_t::parse(int argc, char** argv)
 			"The value passed to the program should be in "
 			"degrees, with eastern angles as positive and "
 			"western angles as negative.\n\n"
-			"Example:\n\n"
+			"Examples:\n\n"
 			"\tBerkeley, CA     =>  13.816 degrees\n"
 			"\tWashington, D.C. => -10.85  degrees\n"
 			"\tParis, France    =>   0.05  degrees\n",
