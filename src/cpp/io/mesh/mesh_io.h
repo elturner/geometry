@@ -250,6 +250,30 @@ namespace mesh_io
 			};
 
 			/**
+			 * Checks if color is defined for vertices on
+			 * this mesh.
+			 *
+			 * @return   Returns true iff vertices have color
+			 */
+			inline bool has_color() const
+			{
+				switch(this->format)
+				{
+					default:
+						return false;
+					case FORMAT_OBJ_COLOR:
+					case FORMAT_PLY_ASCII_COLOR:
+					case FORMAT_PLY_BE_COLOR:
+					case FORMAT_PLY_LE_COLOR:
+						return true;
+				}
+			};
+
+			/*-----------*/
+			/* modifiers */
+			/*-----------*/
+
+			/**
 			 * Clears all information from this mesh
 			 *
 			 * Will remove all vertex and polygon information
