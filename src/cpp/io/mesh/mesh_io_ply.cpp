@@ -129,201 +129,6 @@ class ply_element_t
 		vector<ply_property_t> props;
 };
 
-/**
- * This class represents the indices of which properties of which
- * elements we care about
- */
-class ply_indices_t
-{
-	public:
-
-	int vertex_ind,face_ind,x_ind,y_ind,z_ind,r_ind,g_ind,b_ind,vi_ind;
-
-	/**
-	 * Searches through the parsed element types in a 
-	 * ply file, looking for the indices of useful properties
-	 */
-	void init(const vector<ply_element_t>& elements)
-	{
-		int i, n, k, m;
-
-		/* check if vertices/faces are defined, and if so, check how
-		 * to parse them */
-		n = elements.size();
-		vertex_ind = face_ind 
-			= x_ind = y_ind = z_ind 
-			= r_ind = g_ind = b_ind 
-			= vi_ind = -1; /* not yet found */
-		for(i = 0; i < n; i++)
-		{
-			/* check the type */
-			if(string_in_arr(elements[i].name, 
-					vertex_names, num_vertex_names))
-			{
-				/* this element type is a vertex */
-				vertex_ind = i;
-
-				/* check its properties */
-				m = elements[i].props.size();
-				for(k = 0; k < m; k++)
-				{
-					/* check what type of property 
-					 * this is */
-					if(string_in_arr(
-						elements[i].props[k].name,
-						x_names, num_x_names))
-						x_ind = k;
-					else if(string_in_arr(
-						elements[i].props[k].name,
-						y_names, num_y_names))
-						y_ind = k;
-					else if(string_in_arr(
-						elements[i].props[k].name,
-						z_names, num_z_names))
-						z_ind = k;
-					else if(string_in_arr(
-						elements[i].props[k].name,
-						red_names, num_red_names))
-						r_ind = k;
-					else if(string_in_arr(
-						elements[i].props[k].name,
-						green_names, 
-						num_green_names))
-						g_ind = k;
-					else if(string_in_arr(
-						elements[i].props[k].name,
-						blue_names, 
-						num_blue_names))
-						b_ind = k;
-				}
-			}
-			else if(string_in_arr(elements[i].name,
-					face_names, num_face_names))
-			{
-				/* this element type is a face */
-				face_ind = i;
-	
-				/* check its properties */
-				m = elements[i].props.size();
-				for(k = 0; k < m; k++)
-				{
-					if(string_in_arr(
-						elements[i].props[k].name,
-						vertex_indices_names, 
-						num_vertex_indices_names))
-						vi_ind = k;
-				}
-			}
-		}
-	};
-
-	/**
-	 * Parses next available vertex information from the specified
-	 * file stream, based on the index values initialized in this
-	 * structure.
-	 *
-	 * @param is   The input file stream to parse
-	 * @param ff   The format of the stream
-	 * @param v    The vertex to populate
-	 */
-	void parse(istream& is, FILE_FORMAT ff, vertex_t& v) const
-	{
-		// TODO
-	}
-
-	/**
-	 * Parses next available face information from the specified
-	 * file stream, based on the index values initialized in
-	 * this structure.
-	 *
-	 * @param is   The input file stream to parse
-	 * @param ff   The format of the stream
-	 * @param p    The polygon to populate
-	 */
-	void parse(istream& is, FILE_FORMAT ff, polygon_t p) const
-	{
-		// TODO
-	}
-
-	/**
-	 * Reads the next value from the stream, given the expected
-	 * type of this value.
-	 *
-	 * The value will be cast to a double and returned.
-	 *
-	 * @param is   The input file stream
-	 * @param ff   The format of the stream
-	 * @param t    The type of the value to parse
-	 *
-	 * @return     The value casted to a double
-	 */
-	double parse_val(istream& is, FILE_FORMAT ff, string& t) const
-	{
-		double d;
-
-		/* how we parse depends on the format of the stream */
-		switch(ff)
-		{
-			default:
-				cerr << "[read_ply::parse_val]\tNot a "
-				     << "valid ply file format: "
-				     << ff << endl;
-				return DBL_MAX;
-			case FORMAT_PLY_ASCII:
-			case FORMAT_PLY_ASCII_COLOR:
-				/* just read ascii as a double and 
-				 * return it */
-				is >> d;
-				return d;
-			case FORMAT_PLY_BE:
-			case FORMAT_PLY_BE_COLOR:
-			case FORMAT_PLY_LE:
-			case FORMAT_PLY_LE_COLOR:
-		
-				cerr << "[read_ply::parse_val]\t"
-				     << "Binary format is unsupported"
-				     << endl;
-				return DBL_MAX;
-		}
-
-		/* if got here, not valid */
-		return DBL_MAX;
-	};
-
-	/**
-	 * Parses the list from the file
-	 *
-	 * @param is     The file stream to parse
-	 * @param ff     The file format
-	 * @param list   Where to store the list of indices
-	 */
-	void parse_list(istream& is, FILE_FORMAT ff, vector<size_t>& list)
-	{
-		size_t i, num, val;
-
-		/* remove any existing items */
-		list.clear();
-
-		/* we only support ascii */
-		if(ff != FORMAT_PLY_ASCII && ff != FORMAT_PLY_ASCII_COLOR)
-		{
-			cerr << "[read_ply::parse_list]\tCurrently only "
-			     << "ascii ply files are supported." << endl;
-			return;
-		}
-
-		/* get number of items in list */
-		is >> num;
-
-		/* get list */
-		for(i = 0; i < num; i++)
-		{
-			is >> val;
-			list.push_back(val);
-		}
-	};
-};
-
 /*---------------------------------*/
 /* mesh_t function implementations */ 
 /*---------------------------------*/
@@ -334,11 +139,7 @@ int mesh_t::read_ply(const std::string& filename)
 	vector<ply_element_t> elements;
 	stringstream ss;
 	string tline, field;
-	vertex_t vert;
-	polygon_t poly;
 	bool readingheader;
-	size_t i, j, k, n, m;
-	ply_indices_t inds;
 
 	/* open file for reading */
 	infile.open(filename.c_str(), ios_base::in | ios_base::binary);
@@ -456,52 +257,14 @@ int mesh_t::read_ply(const std::string& filename)
 		}
 	}
 
-	/* find the indices of useful parameters and elements */
-	inds.init(elements);
-
-	/* parse the data by iterating through the elements of the header */
-	n = elements.size();
-	for(i = 0; i < n; i++)
-	{
-		/* get info about this element */
-		m = elements[i].props.size();
-
-		/* iterate through instances of this element */
-		for(j = 0; j < elements[i].num_elements; j++)
-		{
-			/* iterate through properties of this element */
-			for(k = 0; k < m; k++)
-			{
-				/* check what type of element we're 
-				 * reading */
-				if(i == (size_t) inds.vertex_ind)
-				{
-					/* parse this vertex */
-					inds.parse(infile,
-						this->format, vert);
-					this->add(vert);
-				}
-				else if(i == (size_t) inds.face_ind)
-				{
-					/* parse this face */
-					inds.parse(infile,
-						this->format, poly);
-					this->add(poly);
-				}
-				else
-				{
-					/* we just want to skip over
-					 * this element without storing
-					 * its info. */
-					// TODO
-				}
-			}
-		}
-	}
+	/* inform user that ply reading is not supported */
+	cerr << "[mesh_t::read_ply]\tImporting of PLY files is not "
+	     << "supported at this time.  Note, you can still export "
+	     << "to ply files." << endl;
 
 	/* clean up */
 	infile.close();
-	return 0;
+	return -5;
 }
 			
 int mesh_t::write_ply(const std::string& filename, FILE_FORMAT ff) const
