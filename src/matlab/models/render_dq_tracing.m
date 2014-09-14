@@ -30,18 +30,12 @@ function [] = render_dq_tracing(dqfile, madfile, pose_inds)
 	hold on;
 	axis equal;
 	set(gcf, 'renderer', 'opengl');
-	
+	plot(dq.pos(1,:), dq.pos(2,:), 'b.');
+
 	% iterate over the wall samples, drawing them
 	lines_X = zeros(2, 0);
 	lines_Y = zeros(2, 0);
 	for i = 1:size(dq.pos, 2)
-
-		% draw this wall sample point
-		if(dq.numPoints(i) > 0)
-			plot(dq.pos(1,i), dq.pos(2,i), 'b.');
-		else
-			plot(dq.pos(1,i), dq.pos(2,i), 'rx');
-		end
 
 		% iterate over the poses that saw this sample
 		for j = 1:length(dq.poseIdx{i})
