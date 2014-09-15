@@ -280,7 +280,7 @@ int adjust_path(const align_path_run_settings_t& args,
 	{
 		/* get the magnetic declination in radians, oriented
 		 * so that positive means counter-clockwise rotation */
-		md_rad = -(args.magnetic_declination) * M_PI / 180;
+		md_rad = args.magnetic_declination * M_PI / 180;
 
 		/* construct the rotation matrix */
 		R_magdec << cos(md_rad), -sin(md_rad), 0,
