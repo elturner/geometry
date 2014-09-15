@@ -45,6 +45,7 @@ class config_t
 		std::vector<std::string> outfile_wrl;
 		std::vector<std::string> outfile_csv;
 		std::vector<std::string> outfile_ply;
+		std::vector<std::string> outfile_shp;
 
 	/*** functions ***/
 	public:

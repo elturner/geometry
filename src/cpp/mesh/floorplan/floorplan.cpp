@@ -191,6 +191,21 @@ void floorplan_t::compute_oriented_boundary(vector<vector<int> >&
 		}
 	}
 }
+			
+void floorplan_t::compute_oriented_boundary(
+		std::vector<std::vector<int> >& boundary_list) const
+{
+	set<int> t;
+	int i, n;
+
+	/* populate set with all triangle indices */
+	n = (int) this->tris.size();
+	for(i = 0; i < n; i++)
+		t.insert(i);
+
+	/* get boundary */
+	this->compute_oriented_boundary(boundary_list, t);
+}
 	
 void floorplan_t::compute_bounds(double& min_x, double& min_y,
                                  double& max_x, double& max_y) const

@@ -26,6 +26,7 @@ using namespace std;
 #define WRL_FILE_EXT       "wrl"
 #define CSV_FILE_EXT       "csv"
 #define PLY_FILE_EXT       "ply"
+#define SHP_FILE_EXT       "shp"
 
 /* function implementations */
 
@@ -41,6 +42,8 @@ int config_t::parse(int argc, char** argv)
 	this->outfile_obj.clear();
 	this->outfile_idf.clear();
 	this->outfile_wrl.clear();
+	this->outfile_ply.clear();
+	this->outfile_shp.clear();
 
 	/* prepare command-args parser */
 	args.set_program_description("This program is used to convert "
@@ -72,6 +75,10 @@ int config_t::parse(int argc, char** argv)
 		"with the additional region information.  This format "
 		"is a valid .ply file (viewable in meshlab) and is "
 		"required for Peter Cheng's texture-mapping code.");
+	args.add_required_file_type(SHP_FILE_EXT, 0, "If present, then "
+		"will export floorplan in ESRI Shape File format.  This "
+		"format provides a way to represent shapes for database "
+		"look-ups.");
 
 	/* parse the args */
 	ret = args.parse(argc, argv);
@@ -94,6 +101,7 @@ int config_t::parse(int argc, char** argv)
 	args.files_of_type(WRL_FILE_EXT, this->outfile_wrl);
 	args.files_of_type(CSV_FILE_EXT, this->outfile_csv);
 	args.files_of_type(PLY_FILE_EXT, this->outfile_ply);
+	args.files_of_type(SHP_FILE_EXT, this->outfile_shp);
 
 	/* success */
 	return 0;
