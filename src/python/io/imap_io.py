@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from math import floor
 
 ##
 # @file   imap_io.py
@@ -92,12 +93,12 @@ class Imagemap:
         yi = floor(y / self.res)
 
         # add to cell map
-        if (xi,yi) not in res.cells:
+        if (xi,yi) not in self.cells:
             # create empty list
-            res.cells[(xi,yi)] = []
+            self.cells[(xi,yi)] = []
 
         # add this value
-        res.cells[(xi,yi)].append(val)
+        self.cells[(xi,yi)].append(val)
     
     ##
     # Gets the values for a given cell position
@@ -113,10 +114,9 @@ class Imagemap:
         # get the discrete cell from this position
         xi = floor(x / self.res)
         yi = floor(y / self.res)
-
         try:
             # return the values for this cell
-            return res.cells[(xi,yi)]
+            return self.cells[(xi,yi)]
         except:
             return [] # nothing here
 
