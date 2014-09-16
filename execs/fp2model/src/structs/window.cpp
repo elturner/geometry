@@ -77,7 +77,7 @@ void windowlist_t::add(const window_t& w)
 	if(it == this->windows.end())
 	{
 		/* add a new list for this wall */
-		it = this->windows.insert(make_pair<edge_t, 
+		it = this->windows.insert(pair<edge_t, 
 					vector<window_t> >(w.wall, 
 					vector<window_t>())).first;
 	}

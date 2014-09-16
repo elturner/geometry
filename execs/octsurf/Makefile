@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -std=c++0x
 LFLAGS = -lm
-PFLAGS = #-pg
+PFLAGS = #-pg -fprofile-arcs
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
 IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
@@ -26,8 +26,13 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/shapes/plane.cpp \
+		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \
+		$(SOURCEDIR)mesh/surface/node_boundary.cpp \
+		$(SOURCEDIR)mesh/surface/planar_region.cpp \
+		$(SOURCEDIR)mesh/surface/planar_region_graph.cpp \
 		src/octsurf_run_settings.cpp \
 		src/main.cpp
 
@@ -48,8 +53,14 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
+		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
+		$(SOURCEDIR)geometry/shapes/plane.h \
+		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \
 		$(SOURCEDIR)mesh/partition/node_set.h \
+		$(SOURCEDIR)mesh/surface/node_boundary.h \
+		$(SOURCEDIR)mesh/surface/planar_region.h \
+		$(SOURCEDIR)mesh/surface/planar_region_graph.h \
 		src/octsurf_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

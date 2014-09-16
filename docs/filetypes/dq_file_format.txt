@@ -1,0 +1,53 @@
+**************************************
+* Format Specification for .dq Files *
+**************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+Last updated: September 8, 2014
+
+***********
+* Purpose *
+***********
+
+The .dq file format is used to house information about
+wall samples.  It is also used to represent 2D gridmaps
+for particle filtering.  This is formatted as an ASCII file,
+with the following information:
+
+This file structure represents a Dynamic Quadtree (DQ), and
+the quadtree node information is stored in the map. Since all
+elements are stored at bottom-most leaf nodes, only the root-level
+node meta-information is necessary.
+
+***************
+* Conventions *
+***************
+
+The file is formatted in space-separated ASCII.
+All distance and position units are in meters.
+All indices are referenced starting at 0.
+
+**********
+* Format *
+**********
+
+The following values denote the header information in the file:
+
+  	<max_depth>		// max depth of the quadtree
+ 	<halfwidth>		// halfwidth of the root node
+ 	<x> <y>			// The root node's center position
+
+Each cell in the tree is then represent with the following formatting,
+where each cell is stored on a line in the file:
+
+ 	<x> <y> <min_z> <max_z> <num_pts> <n> <pose_1> <pose_2> ... <pose_n>
+
+Where:
+
+	<x> <y>		-	The position of the sample
+	<min_z> <max_z> -	The height range of the sample
+	<num_pts>	-	The number of points represented
+	<n>		-	The number of pose indices in this cell
+	<pose_i>	-	The i'th pose index number (indexed from 0)
+

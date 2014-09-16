@@ -1,6 +1,7 @@
 #include "merge_run_settings.h"
 #include <mesh/floorplan/floorplan.h>
-#include <mesh/optimize/shapes/object_refiner.h>
+#include <mesh/refine/object_refiner.h>
+#include <mesh/refine/octree_padder.h>
 #include <geometry/octree/octree.h>
 #include <geometry/shapes/extruded_poly.h>
 #include <util/progress_bar.h>
@@ -106,6 +107,11 @@ int main(int argc, char** argv)
 		}
 	}
 
+	/* pad the tree to make further processing easier */
+	tic(clk);
+	octree_padder::pad(tree);
+	toc(clk, "Padding octree");
+	
 	/* export the octree to destination */
 	tic(clk);
 	ret = tree.serialize(args.output_octfile);

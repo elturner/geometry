@@ -55,7 +55,7 @@ def get_timesync_xml(dataset_dir):
 # Note:  this does not include d-imager-generated fss files, but only those
 # generated from laser scanners.
 #
-def get_all_fss_files(dataset_dir):
+def get_all_fss_files(dataset_dir, whitelist=None):
 
 	# get the config xml location
 	config_xml = get_hardware_config_xml(dataset_dir)
@@ -72,6 +72,11 @@ def get_all_fss_files(dataset_dir):
 	for si in range(len(sensor_types)):	
 		# check for laser scanners
 		if sensor_types[si] == 'laser':
+
+			# check if a whitelist is specified
+			if whitelist != None \
+				and sensor_names[si] not in whitelist:
+				continue
 
 			# parse the settings file for this laser
 			urg_settings = config.parse_settings_xml( \
@@ -163,6 +168,12 @@ def get_pc_levels_dir(dataset_dir):
 	return os.path.join(get_pointcloud_dir(dataset_dir),"levels")
 
 ##
+# Returns the location of the colored pointclouds directory
+#
+def get_colored_pc_dir(dataset_dir):
+	return os.path.join(get_pointcloud_dir(dataset_dir),"colored")
+
+##
 # Returns the prefix path for all the partioned levels pointclouds
 #
 # @param dataset_dir   Location of this dataset root
@@ -183,6 +194,23 @@ def get_pc_levels_hist(dataset_dir, name):
 		name + "_hist.m")
 
 ##
+# Returns a list of the pointcloud files in the pointcloud directory
+#
+def get_all_pointcloud_files(dataset_dir):
+	# get the pointcloud levels directory
+	pcdir = get_pointcloud_dir(dataset_dir)
+
+	# iterate through files in this directory
+	pcfiles = []
+	for f in os.listdir(pcdir):
+		(body, ext) = os.path.splitext(f)
+		if ext == '.xyz':
+			pcfiles.append(os.path.join(pcdir, f))
+
+	# return final list of pointcloud files
+	return pcfiles
+
+##
 # Returns a list of the pointcloud files in the levels directory
 #
 def get_pc_levels_list(dataset_dir):
@@ -198,6 +226,34 @@ def get_pc_levels_list(dataset_dir):
 
 	# return final list of pointcloud files
 	return pcfiles
+
+#------------- Files generated from surface_carve code -------------
+
+##
+# Returns the location of the surface carve directory
+#
+def get_surface_carve_dir(dataset_dir):
+	return os.path.join(get_models_dir(dataset_dir),"surface_carve")
+
+##
+# Returns the location of the surface carving .vox file
+#
+# @param dataset_dir   The root directory of the dataset
+# @param madfile       The .mad file to use
+#
+def get_surface_carve_vox(dataset_dir, madfile):
+	return os.path.join(get_surface_carve_dir(dataset_dir), \
+	                    get_name_from_madfile(madfile) + ".vox")
+
+##
+# Returns the location of the surface carving .ply file
+#
+# @param dataset_dir   The root directory of the dataset
+# @param madfile       The .mad file to use
+#
+def get_surface_carve_ply(dataset_dir, madfile):
+	return os.path.join(get_surface_carve_dir(dataset_dir), \
+	                    get_name_from_madfile(madfile) + ".ply")
 
 #--------------- Files generated from floorplan code ---------------
 
@@ -239,11 +295,18 @@ def get_csv_floorplan_file(fp_file):
 
 
 ##
-# Returns the floorplan mesh file, given the fp
+# Returns the floorplan mesh (obj) file, given the fp
 #
 def get_floorplan_obj_file(dataset_dir, fp_file):
 	return os.path.join(get_faketexture_dir(dataset_dir), \
 		get_file_body(fp_file) + ".obj")
+
+##
+# Returns the floorplan mesh (ply) file, given the fp
+#
+def get_floorplan_ply_file(dataset_dir, fp_file):
+	return os.path.join(get_floorplan_dir(dataset_dir), \
+		get_file_body(fp_file) + ".ply")
 
 ##
 # Returns all floorplan files in the floorplans directory
@@ -324,6 +387,32 @@ def get_octree(dataset_dir):
 #
 def get_carved_obj_file(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "mesh.obj")
+
+#----------- Files generated from oct -> floorplan -------------------
+
+##
+# Returns the directory containing floorplan files generated from octrees
+#
+def get_carving_fp_dir(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), "fp")
+
+##
+# Returns the dq file generated from an octree
+#
+# TODO NOTE will eventually need to make a dq file for each floor
+#
+def get_carving_dq_file(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), \
+			"wall_samples.dq")
+
+##
+# Returns the floorplan file generated from an octree's wall samples
+#
+# TODO NOTE will need to make a fp file for each level
+#
+def get_carving_fp_file(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), \
+			"floorplan.fp")
 
 #--------------- Files generated from merging ------------------------
 

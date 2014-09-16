@@ -4,6 +4,8 @@
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/octtopo.h>
 #include <mesh/partition/node_partitioner.h>
+#include <mesh/surface/node_boundary.h>
+#include <mesh/surface/planar_region_graph.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -11,6 +13,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <Eigen/Dense>
 
 /**
@@ -33,6 +36,7 @@ int tree_exporter::export_node_faces(const string& filename,
                                      const octree_t& tree)
 {
 	octtopo::octtopo_t top;
+	node_boundary_t boundary;
 	tictoc_t clk;
 	int ret;
 
@@ -43,28 +47,64 @@ int tree_exporter::export_node_faces(const string& filename,
 		return PROPEGATE_ERROR(-1, ret);
 	toc(clk, "Initializing topology");
 
-	/* verify topology.  Not required, but good for debugging */
-	tic(clk);
-	ret = top.verify();
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
-	toc(clk, "Topology verification");
 
-	/* export the boundary topology to file */
+	/* write the surface */
 	tic(clk);
-	ret = top.writeobj(filename);
+	ret = boundary.writeobj(filename);
 	if(ret)
 		return PROPEGATE_ERROR(-3, ret);
-	toc(clk, "Exporting boundary faces");
+	toc(clk, "Writing OBJ");
 
-	// TODO debugging
-	node_partitioner_t npt;
-	ret = npt.partition(top);
+	/* success */
+	return 0;
+}
+	
+int tree_exporter::export_regions(const std::string& filename,
+					const octree_t& tree)
+{
+	octtopo::octtopo_t top;
+	node_boundary_t boundary;
+	planar_region_graph_t region_graph;
+	tictoc_t clk;
+	int ret;
+
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+
+	/* form planar regions from these boundary faces */
+	tic(clk);
+	ret = region_graph.populate(boundary);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+	toc(clk, "Forming regions");
+
+	/* coalesce regions */
+	tic(clk);
+	region_graph.init(0.5, 2.0, false); // TODO debugging
+	ret = region_graph.coalesce_regions();
 	if(ret)
 		return PROPEGATE_ERROR(-4, ret);
-	ret = npt.writeobjs("/home/elturner/Desktop/testobjs/gradlounge");
+	toc(clk, "Coalesce regions");
+
+	/* export regions to file */
+	tic(clk);
+	ret = region_graph.writeobj(filename);
 	if(ret)
 		return PROPEGATE_ERROR(-5, ret);
+	toc(clk, "Writing OBJ");
 
 	/* success */
 	return 0;

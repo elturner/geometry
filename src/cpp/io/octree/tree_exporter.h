@@ -35,7 +35,26 @@ namespace tree_exporter
 	 */
 	int export_node_faces(const std::string& filename,
 	                      const octree_t& tree);
-	
+
+	/**
+	 * Will export coalesced regions to OBJ file
+	 *
+	 * Will generate a topology and faces for the given tree,
+	 * then will generate a set of planar regions along those faces.
+	 *
+	 * These regions will be exported to the file, where the exported
+	 * geometry is represented by the original faces, colored based on
+	 * what region they are assigned to.
+	 *
+	 *
+	 * @param filename    The path to the .obj file to write
+	 * @param tree        The tree to export
+	 *
+	 * @return            Returns zero on success, non-zero on failure.
+	 */
+	int export_regions(const std::string& filename,
+				const octree_t& tree);
+
 	/**
 	 * Will export the center of each leaf node as a vertex in OBJ
 	 *

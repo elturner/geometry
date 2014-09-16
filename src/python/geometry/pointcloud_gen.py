@@ -143,9 +143,20 @@ def run(dataset_dir, pathfile, use_cameras=True):
 
 	# prepare output directory for pointclouds
 	name = dataset_filepaths.get_file_body(pathfile)
-	pc_output_dir = dataset_filepaths.get_pointcloud_dir(dataset_dir)
+	if use_cameras:
+		pc_output_dir = dataset_filepaths.get_colored_pc_dir( \
+				dataset_dir)
+	else:
+		pc_output_dir = dataset_filepaths.get_pointcloud_dir( \
+				dataset_dir)
 	if not os.path.exists(pc_output_dir):
 		os.makedirs(pc_output_dir)
+
+	# choose appropriate parameters based on input
+        if use_cameras:
+            range_limit = '10'
+        else:
+            range_limit = '30'
 
 	# now that we have a list of geometry sensors to use, we
 	# want to make pointcloud files for each sensor
@@ -164,13 +175,13 @@ def run(dataset_dir, pathfile, use_cameras=True):
 				'-t', timesync_xml, \
 				'-o', xyzfile, \
 				'-p', os.path.abspath(pathfile), \
-				'-u', '1000', \
+				'-u', '1000', '-r', range_limit, \
 				'-l', geomnames[si], geomfiles[si]]
 
 		# add camera information if we want to color
 		if use_cameras:
 			args += ['--remove_noncolored_points', \
-				'--time_buffer', '2.0', '0.5', '-r', '10']
+				'--time_buffer', '2.0', '0.5']
 			for ci in range(len(cam_metas)):
 				args += ['-f', cam_metas[ci], \
 					cam_calibs[ci], cam_dirs[ci]]

@@ -20,7 +20,7 @@
 	     length of any desired object in the environment.
 
 	     units: meters -->
-	<fp_opt_search_range>0.05</fp_opt_search_range>
+	<fp_opt_search_range>0.10</fp_opt_search_range>
 
 	<!-- This value indicates the offset step size when searching
 	     for the optimal wall position within an optimization
@@ -46,6 +46,6 @@
 	     If this value is zero, then no refinement will occur.
 
 	     units:  number of octree levels -->
-	<object_refine_depth>2</object_refine_depth>
+	<object_refine_depth>3</object_refine_depth>
 
 </settings>

@@ -49,7 +49,7 @@ int write_fp(char* filename, tri_rep_t& trirep, double res)
 		p = TRI_VERTEX_POS(&(trirep.tri), vit->first);
 
 		/* add to map */
-		index_map.insert(make_pair<int,int>(vit->first, 
+		index_map.insert(pair<int,int>(vit->first, 
 						num_verts));
 	
 		/* print the vertex */
@@ -86,7 +86,7 @@ int write_fp(char* filename, tri_rep_t& trirep, double res)
 		}
 
 		/* store this triangle's index in the file */
-		tri_index_map.insert(make_pair<triple_t, int>(tit->first, 
+		tri_index_map.insert(pair<triple_t, int>(tit->first, 
 							num_tris));
 		num_tris++;
 

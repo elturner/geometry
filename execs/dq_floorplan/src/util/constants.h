@@ -15,7 +15,7 @@
 
 #define PARALLEL_THRESHOLD 0.95 /* 0.9998 corresponds to ~1 degree */
 #define PERPENDICULAR_THRESHOLD 0.09 /* 0.087 corresponds to ~85 degrees */
-#define APPROX_ZERO 0.000001
+#define APPROX_ZERO 0.0000001
 
 /*** Simplification ***/
 

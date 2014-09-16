@@ -27,7 +27,7 @@ inline unsigned short be2les(unsigned short x)
 {
 	/* flips the bytes */
 	return ((x & 255) << 8) | ((x >> 8) & 255);
-};
+}
 
 /**
  * Converts short (two-byte) values from little-endian to big-endian
@@ -43,7 +43,7 @@ inline unsigned short le2bes(unsigned short x)
 {
 	/* flips the bytes */
 	return ((x & 255) << 8) | ((x >> 8) & 255);
-};
+}
 
 /**
  * Converts quads (four-byte) values from big-endian to little-endian
@@ -62,7 +62,7 @@ inline unsigned int be2leq(unsigned int x)
 	     | (((x >>  8) & 255) << 16)
 	     | (((x >> 16) & 255) <<  8)
 	     | (((x >> 24) & 255) <<  0);
-};
+}
 
 /**
  * Converts quads (four-byte) values from little-endian to big-endian
@@ -81,7 +81,7 @@ inline unsigned int le2beq(unsigned int x)
 	     | (((x >>  8) & 255) << 16)
 	     | (((x >> 16) & 255) <<  8)
 	     | (((x >> 24) & 255) <<  0);
-};
+}
 
 /**
  * Converts doubles (eight-byte) values from big-endian to little-endian
@@ -108,7 +108,7 @@ inline double be2led(double x)
 
 	/* return flipped result */
 	return b.d;
-};
+}
 
 /**
  * Converts doubles (eight-byte) values from little-endian to big-endian
@@ -135,6 +135,6 @@ inline double le2bed(double x)
 
 	/* return flipped result */
 	return b.d;
-};
+}
 
 #endif

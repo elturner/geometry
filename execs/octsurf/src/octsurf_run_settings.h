@@ -69,6 +69,13 @@ class octsurf_run_settings_t
 		 */
 		bool export_node_faces;
 
+		/**
+		 * If exporting to OBJ, this option indicates that
+		 * the output should represent the node faces, and they
+		 * should be colored based on their planar region.
+		 */
+		bool export_regions;
+
 	/* functions */
 	public:
 

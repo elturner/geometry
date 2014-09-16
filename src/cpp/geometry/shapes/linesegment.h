@@ -13,6 +13,7 @@
 
 #include <geometry/octree/shape.h>
 #include <geometry/octree/octdata.h>
+#include <util/error_codes.h>
 #include <Eigen/Dense>
 
 /**
@@ -40,10 +41,36 @@ class linesegment_t : public shape_t
 		/* constructors */
 
 		/**
+		 * Constructs default line segment
+		 */
+		linesegment_t()
+		{
+			Eigen::Vector3d zeros(0,0,0);
+			this->init(zeros, zeros);
+		};
+
+		/**
 		 * Constructs line segment from end points.
 		 */
 		linesegment_t(const Eigen::Vector3d& a,
 		              const Eigen::Vector3d& b)
+		{
+			this->init(a, b);
+		};
+
+		/**
+		 * Frees all memory and resources
+		 */
+		~linesegment_t() { /* do nothing */ };
+
+		/**
+		 * Initializes this line segment to the given points
+		 *
+		 * @param a  The starting point
+		 * @param b  The ending point
+		 */
+		inline void init(const Eigen::Vector3d& a,
+		                 const Eigen::Vector3d& b)
 		{
 			/* store values */
 			orig = a;
@@ -55,11 +82,6 @@ class linesegment_t : public shape_t
 			s[1] = (invdir[1] < 0);
 			s[2] = (invdir[2] < 0);
 		};
-
-		/**
-		 * Frees all memory and resources
-		 */
-		~linesegment_t() { /* do nothing */ };
 
 		/**
 		 * Retrieves the number of vertices that compose this line
@@ -193,8 +215,8 @@ class linesegment_t : public shape_t
 		                                octdata_t* d)
 		{
 			/* do nothing */
-			c = c;
-			hw = hw;
+			MARK_USED(c);
+			MARK_USED(hw);
 			return d;
 		};
 };

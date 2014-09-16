@@ -34,7 +34,8 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
 		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
-		$(SOURCEDIR)mesh/optimize/shapes/object_refiner.cpp \
+		$(SOURCEDIR)mesh/refine/object_refiner.cpp \
+		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
@@ -79,7 +80,8 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)mesh/floorplan/floorplan.h \
-		$(SOURCEDIR)mesh/optimize/shapes/object_refiner.h \
+		$(SOURCEDIR)mesh/refine/object_refiner.h \
+		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
 		$(SOURCEDIR)geometry/octree/octree.h \

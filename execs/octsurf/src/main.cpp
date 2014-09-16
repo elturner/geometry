@@ -19,6 +19,7 @@ using namespace std;
 #include <io/octree/tree_exporter.h>
 #include <io/octree/vox_writer.h>
 #include <geometry/octree/octree.h>
+#include <mesh/refine/octree_padder.h>
 
 /**
  * The main function for this program
@@ -68,8 +69,12 @@ int main(int argc, char** argv)
 			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
+			octree_padder::pad(tree);
 			if(args.export_node_faces)
 				ret = tree_exporter::export_node_faces(
+						args.outfile, tree);
+			else if(args.export_regions)
+				ret = tree_exporter::export_regions(
 						args.outfile, tree);
 			else if(args.export_obj_leafs)
 				ret = tree_exporter::export_leafs_to_obj(

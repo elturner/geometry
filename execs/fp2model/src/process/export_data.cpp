@@ -2,6 +2,8 @@
 #include "../io/config.h"
 #include "../io/idf_io.h"
 #include "../io/csv_io.h"
+#include "../io/ply_io.h"
+#include "../io/shp_io.h"
 #include "../structs/building_model.h"
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -97,6 +99,40 @@ int export_data(const building_model_t& bim, const config_t& conf)
 			cerr << "[export_data]\tError " << ret << ": "
 			     << "Unable to export csv file #" << i << ": "
 			     << conf.outfile_csv[i] << endl;
+			return ret;
+		}
+	}
+
+	/* export ply files */
+	n = conf.outfile_ply.size();
+	for(i = 0; i < n; i++)
+	{
+		/* export each ply file given */
+		ret = writeply(conf.outfile_ply[i], bim);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-5, ret);
+			cerr << "[export_data]\tError " << ret << ": "
+			     << "Unable to export ply file #" << i << ": "
+			     << conf.outfile_ply[i] << endl;
+			return ret;
+		}
+	}
+
+	/* export shp files */
+	n = conf.outfile_shp.size();
+	for(i = 0; i < n; i++)
+	{
+		/* export each shp file given */
+		ret = writeshp(conf.outfile_shp[i], bim);
+		if(ret)
+		{
+			/* error occurred */
+			ret = PROPEGATE_ERROR(-6, ret);
+			cerr << "[export_data]\tError " << ret << ": "
+			     << "Unable to export shp file #" << i << ": "
+			     << conf.outfile_shp[i] << endl;
 			return ret;
 		}
 	}

@@ -20,6 +20,7 @@
 
 #include "octree.h"
 #include "octnode.h"
+#include <Eigen/Dense>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -86,6 +87,38 @@ namespace octtopo
 		return f;
 	};
 
+	/**
+	 * This represents a lookup table for the outward normals
+	 * for each cube face.
+	 *
+	 * @param f   The face to check
+	 * @param n   Where to store the normal vector
+	 */
+	static inline void cube_face_normals(CUBE_FACE f,Eigen::Vector3d& n)
+	{
+		switch(f)
+		{
+			case FACE_ZMINUS:
+				n << 0,0,-1;
+				break;
+			case FACE_YMINUS:
+				n << 0,-1,0;
+				break;
+			case FACE_XMINUS:
+				n << -1,0,0;
+				break;
+			case FACE_XPLUS:
+				n << 1,0,0;
+				break;
+			case FACE_YPLUS:
+				n << 0,1,0;
+				break;
+			case FACE_ZPLUS:
+				n << 0,0,1;
+				break;
+		}
+	}
+
 	/*-----------------------------------------------------*/
 	/*-------------- class declarations -------------------*/
 	/*-----------------------------------------------------*/
@@ -108,6 +141,21 @@ namespace octtopo
 			
 		/* functions */
 		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Default constructor
+			 */
+			octneighbors_t();
+
+			/**
+			 * Constructs this object from given octneighbors_t
+			 */
+			octneighbors_t(
+				const octtopo::octneighbors_t& other);
 
 			/*-----------*/
 			/* modifiers */
@@ -286,6 +334,81 @@ namespace octtopo
 				       end() const
 			{ return this->neighs.end(); };
 
+			/**
+			 * Clears all information from this structure
+			 */
+			inline void clear()
+			{ this->neighs.clear(); };
+
+			/**
+			 * Returns the number of nodes in this topology
+			 */
+			inline size_t size() const
+			{ return this->neighs.size(); };
+
+			/**
+			 * Checks if this topology contains a node
+			 *
+			 * Given a node, will check if it is contained
+			 * internally in this structure
+			 *
+			 * @param node   The node to check
+			 *
+			 * @return   Returns true iff contains node
+			 */
+			inline bool contains(octnode_t* node) const
+			{ return this->neighs.count(node); };
+
+			/**
+			 * Adds a node (and its edges) to this topology
+			 *
+			 * Given a node an its neighbors, will add to this
+			 * topology structure.
+			 *
+			 * @param node     The octnode to add
+			 * @param neighs   The neighs to associate with node
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.  Failure occurs if the node
+			 *            is already present in the map.
+			 */
+			int add(octnode_t* node,
+			        const octneighbors_t& neighs);
+
+			/**
+			 * Retrieves the neighbors structure for given node
+			 *
+			 * Will find the octneighbors_t object associated
+			 * with the given octnode.  If the given octnode
+			 * is not in this structure, then will return a
+			 * failure.
+			 *
+			 * @param node    The node to find
+			 * @param neighs  The neighbor structure to populate
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
+			 */
+			int get(octnode_t* node,
+			        octneighbors_t& neighs) const;
+
+			/**
+			 * Checks if two nodes are neighbors
+			 *
+			 * Will search through the given nodes, and checks
+			 * if they are neighbors to one another.
+			 *
+			 * Note that a node is not considered neighbors
+			 * with itself.
+			 *
+			 * @param a    The first node to check
+			 * @param b    The second node to check
+			 *
+			 * @return     Returns true iff a neighbors b
+			 */
+			bool are_neighbors(octnode_t* a,
+			                   octnode_t* b) const;
+
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
@@ -299,7 +422,7 @@ namespace octtopo
 			 * nodes (or null nodes).  The output will be
 			 * formatted as a wavefront .obj file.
 			 *
-			 * @param os   The output file location
+			 * @param filename   The output file location
 			 *
 			 * @return     Returns zero on success, non-zero
 			 *             on failure.
@@ -319,6 +442,19 @@ namespace octtopo
 			 *            failure.
 			 */
 			int verify() const;
+			
+			/**
+			 * Determines if the given octnode should be counted
+			 * as 'interior'.
+			 *
+			 * Will return true iff the given node should be
+			 * represented as 'interior' in this topography.
+			 *
+			 * @param node    The octnode to analyze
+			 *
+			 * @return    Returns true iff node is interior
+			 */
+			static bool node_is_interior(octnode_t* node);
 
 		/* helper functions */
 		private:
@@ -369,19 +505,6 @@ namespace octtopo
 			/*-----------*/
 
 			/**
-			 * Determines if the given octnode should be counted
-			 * as 'interior'.
-			 *
-			 * Will return true iff the given node should be
-			 * represented as 'interior' in this topography.
-			 *
-			 * @param node    The octnode to analyze
-			 *
-			 * @return    Returns true iff node is interior
-			 */
-			bool node_is_interior(octnode_t* node) const;
-
-			/**
 			 * Writes a single node face to the OBJ stream
 			 *
 			 * Given an output stream to a wavefront OBJ file,
@@ -397,9 +520,12 @@ namespace octtopo
 			 * @param inside   Specifies whether to orient the
 			 *                 face counter-clockwise into
 			 *                 or out of the node.
+			 * @param usecolor If false, will leave uncolored.
+			 *                 By default, colors by planarity.
 			 */
 			void writeobjface(std::ostream& os, octnode_t* n,
-			                  CUBE_FACE f, bool inside) const;
+			                  CUBE_FACE f, bool inside,
+					  bool usecolor=true) const;
 	};
 }
 

@@ -618,6 +618,19 @@ namespace fp
 					const std::set<int>& tris) const;
 
 			/**
+			 * Computes boundary vertices for entire floorplan
+			 *
+			 * Will call compute_oriented_boundary on the entire
+			 * floorplan.
+			 *
+			 * @param boundary_list   Where to store the vertex
+			 *                        indices.
+			 */
+			void compute_oriented_boundary(std::vector<
+					std::vector<int> >& boundary_list)
+					const;
+
+			/**
 			 * Computes the length of the specified edge
 			 *
 			 * Given an edge that references vertices in

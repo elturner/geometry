@@ -102,6 +102,59 @@ namespace poly2d
 	}
 
 	/**
+	 * Checks if two axis-aligned bounding boxes abut
+	 *
+	 * Checks if the two given aabb's abut (that is, they share an
+	 * edge, but have zero overlapping area).  The two boxes are
+	 * denoted as 'a' and 'b', where the min/max bounds in each
+	 * dimension are given for each box.
+	 *
+	 * Additionally, an error threshold is given to account for
+	 * any sort of rounding error that is occurred in the
+	 * construction of these bounds.
+	 *
+	 * @param ax    The {xmin, xmax} bounds of box 'a'
+	 * @param ay    The {ymin, ymax} bounds of box 'a'
+	 * @param bx    The {xmin, xmax} bounds of box 'b'
+	 * @param by    The {ymin, ymax} bounds of box 'b'
+	 * @param err   The error threshold for computation
+	 *
+	 * @return      Returns true iff the boxes abut
+	 */
+	inline bool aabb_pair_abut(double ax[2], double ay[2],
+	                           double bx[2], double by[2], double err)
+	{
+		/* check if any of the four possible edge-pairs abut */
+
+		/* check if overlapped in y */
+		if(ay[0] < by[1] && by[0] < ay[1])
+		{
+			/* ax-min touches bx-max */
+			if(ax[0] >= bx[1] - err && ax[0] <= bx[1] + err)
+				return true;
+
+			/* ax-max touches bx-min, and overlapped in y */
+			if(bx[0] >= ax[1] - err && bx[0] <= ax[1] + err)
+				return true;
+		}
+
+		/* check if overlapped in x */
+		if(ax[0] < bx[1] && bx[0] < ax[1])
+		{
+			/* ay-min touches by-max */
+			if(ay[0] >= by[1] - err && ay[0] <= by[1] + err)
+				return true;
+
+			/* ax-max touches bx-min, and overlapped in y */
+			if(by[0] >= ay[1] - err && by[0] <= ay[1] + err)
+				return true;
+		}
+
+		/* no checks match */
+		return false;
+	}
+
+	/**
 	 * Determines the 2D orientation of three points
 	 *
 	 * The value will positive if pqr are oriented counter-clockwise,
