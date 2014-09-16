@@ -164,13 +164,13 @@ def run(dataset_dir, pathfile, use_cameras=True):
 				'-t', timesync_xml, \
 				'-o', xyzfile, \
 				'-p', os.path.abspath(pathfile), \
-				'-u', '1000', '-r', '10', \
+				'-u', '1000', \
 				'-l', geomnames[si], geomfiles[si]]
 
 		# add camera information if we want to color
 		if use_cameras:
 			args += ['--remove_noncolored_points', \
-				'--time_buffer', '2.0', '0.5']
+				'--time_buffer', '2.0', '0.5', '-r', '10']
 			for ci in range(len(cam_metas)):
 				args += ['-f', cam_metas[ci], \
 					cam_calibs[ci], cam_dirs[ci]]
