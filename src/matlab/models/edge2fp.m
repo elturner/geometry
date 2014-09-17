@@ -122,8 +122,8 @@ function [] = edge2fp(edgefile, fpfile)
 
 	% write header
 	fprintf(outfile, '%f\n', DEFAULT_RESOLUTION); % resoltion in meters
-	fprintf(outfile, '%f\n', num_verts); % number of vertices
-	fprintf(outfile, '%f\n', num_tris); % num tris
+	fprintf(outfile, '%d\n', num_verts); % number of vertices
+	fprintf(outfile, '%d\n', num_tris); % num tris
 	fprintf(outfile, '1\n'); % only one room
 
 	% print out the points
