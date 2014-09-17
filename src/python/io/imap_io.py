@@ -29,14 +29,18 @@ class Imagemap:
     #   cells   -   A dictionary that goes from cell position to list 
     #               of files.
     #
-    def __init__(self, input_file=None):
+    def __init__(self, map_file=None, key_file=None):
+
+        self.res = -1.0 # invalid
+        self.cells = {} # empty dictionary
+        self.namemap = {}
 
         # check arguments
-        if input_file is None:
-            self.res = -1.0 # invalid
-            self.cells = {} # empty dictionary
-        else:
-            self.read(input_file)
+        if map_file != None:
+            self.cells = {}
+            sel.namemap = {}
+            self.res = -1.0
+            self.read(map_file, key_file)
 
 
     ##
@@ -44,17 +48,17 @@ class Imagemap:
     #
     # Will parse the specified .imap file
     #
-    # @param input_file   The path to the input .imap file
-    #
-    def read(self, input_file):
+    # @param map_file   The path to the input .imap file
+    # @param key_file   Maps the keys in the map_file to readable names
+    def read(self, map_file, key_file=None):
 
         # attemp to open file to read
-        with open(input_file) as f:
+        with open(map_file) as f:
             content = f.read().splitlines()
 
         # check formatting
         if len(content) < 1:
-            raise IOError("Empty .imap file: " + input_file)
+            raise IOError("Empty .imap file: " + map_file)
 
         # parse the header
         self.res = float(content[0])
@@ -75,6 +79,26 @@ class Imagemap:
             # add the values to the cell
             for i in range(num_vals):
                 self.add((cx,cy), vals[3+i])
+
+        # if given load the name file 
+        if key_file != None :
+
+            # Then we load the name file
+            with open(key_file) as f:
+                content = f.read().splitlines()
+
+            # Check formatting 
+            if len(content) < 1:
+                raise IOError("Empty name file: " + key_file)
+
+            # Interate over the lines inserting them
+            for lines in content :
+
+                # split the line
+                vals = lines.split(' ')
+
+                # insert into the map
+                self.namemap[vals[0]] = vals[1]
 
     ##
     # Adds value to the specified cell
@@ -114,11 +138,22 @@ class Imagemap:
         # get the discrete cell from this position
         xi = floor(x / self.res)
         yi = floor(y / self.res)
+        
+        # Query the dictionary for all ids at this location
         try:
-            # return the values for this cell
-            return self.cells[(xi,yi)]
+            ids =  self.cells[(xi,yi)]
         except:
             return [] # nothing here
+
+        # Map them to string names
+        names = []
+        for thisid in ids :
+            try :
+                names.append((thisid,self.namemap[thisid]))
+            except :
+                names.append((thisid, ""))
+        return names
+
 
 
 
