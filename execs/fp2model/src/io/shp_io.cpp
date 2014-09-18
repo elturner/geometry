@@ -213,14 +213,15 @@ void writeheader(ofstream& outfile, ofstream& shxfile,
 	/* write record header for the one shape in this file */
 	i = le2beq(1);
 	outfile.write((char*) &i, sizeof(i)); /* record indexed from 1 */
-	
+
 	/* write size of record */
 	i = filelen - shape_file_header_size 
 		- shape_file_record_header_size; /* size of record */
 	writeoffset(outfile, i);
 
 	/* write record to shape file */
-	writeoffset(shxfile, shape_file_header_size); 
+	int j = shape_file_header_size;
+	writeoffset(shxfile, j); 
 				/* record starts at end of header */
 	writeoffset(shxfile, i); /* size of record in main file */
 }
