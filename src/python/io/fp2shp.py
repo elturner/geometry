@@ -29,6 +29,7 @@ def run(fpfile, shpfile):
         vert_lists.append([])
         for v in b:
             vert_lists[-1].append(fp.verts[v])
+        verts_list[-1].append(fp.verts[b[0]]) # put end point twice
 
     # pass it to the library
     w = shapefile.Writer(shapefile.POLYGON)
