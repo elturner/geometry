@@ -73,6 +73,33 @@ class fpopt_run_settings_t
 		 */
 		double offset_step_coeff;
 
+		/**
+		 * If true, specifies that horizontal wall positions
+		 * should be optimized for each floorplan.
+		 *
+		 * If false, horizontal positions will not be modified
+		 */
+		bool opt_walls;
+
+		/**
+		 * If true, specifies that vertical floor and ceiling
+		 * heights should be optimized for each floorplan.
+		 *
+		 * If flase, vertical positions will not be modified.
+		 */
+		bool opt_heights;
+
+		/**
+		 * This value represents the bonus given to each
+		 * surface offset based on its delta from the 
+		 * previous offset.
+		 *
+		 * The purpose of awarding a delta-cost bonus is
+		 * to favor the first offset that reached a particular
+		 * cost, in order to limit shrinkage.
+		 */
+		double delta_cost_bonus;
+
 	/* functions */
 	public:
 

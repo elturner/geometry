@@ -70,6 +70,38 @@ class fp_optimizer_t
 		 */
 		double offset_step_coeff;
 
+		/**
+		 * Indicates the cost bonus given to each range offset
+		 *
+		 * The cost bonus is denoted by how much the cost
+		 * improved by the last range, times this value.
+		 *
+		 * The purpose of giving a cost bonus is to favor
+		 * the first offset to reach a particular cost.  If
+		 * no bonus is rewarded, then the objectively smallest
+		 * cost will be selected, which is typically in the
+		 * middle of the room.
+		 */
+		double delta_cost_bonus;
+		
+		/**
+		 * If true, will attempt to optimize the horizontal
+		 * positions of walls in the floorplans.
+		 *
+		 * If false, horizontal positions of walls will not
+		 * be modified.
+		 */
+		bool optimize_walls;
+
+		/**
+		 * If true, will attempt to optimize the vertical
+		 * positions of floors and ceilings in the floorplans.
+		 *
+		 * If false, vertical positions of floors and ceilings
+		 * will not be modified.
+		 */
+		bool optimize_heights;
+		
 	/* functions */
 	public:
 
@@ -82,7 +114,7 @@ class fp_optimizer_t
 		 */
 		fp_optimizer_t()
 		{
-			this->init(5, 0.05, 0.25);
+			this->init(5, 0.05, 0.25, 0.5, true, true);
 		};
 
 		/**
@@ -94,14 +126,21 @@ class fp_optimizer_t
 		 * @param num_iters   Number of iterations to run
 		 * @param search      The max range for each iter. (meters)
 		 * @param step_coef   The offset step coefficient
+		 * @param dcb         The delta-cost bonus to use
+		 * @param opt_walls   Whether to optimize walls
+		 * @param opt_heights Whether to optimize heights
 		 */
 		inline void init(unsigned int num_iters, double search,
-		                 double step_coef)
+		                 double step_coef, double dcb,
+				 bool opt_walls, bool opt_heights)
 		{
 			/* set values */
 			this->num_iterations = num_iters;
 			this->search_range = search;
 			this->offset_step_coeff = step_coef;
+			this->delta_cost_bonus = dcb;
+			this->optimize_walls = opt_walls;
+			this->optimize_heights = opt_heights;
 		};
 
 		/*------------*/

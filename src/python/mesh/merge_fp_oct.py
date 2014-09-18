@@ -56,8 +56,7 @@ def run(dataset_dir):
 	chunklistfile = dataset_filepaths.get_chunklist(dataset_dir)
 	in_octfile    = dataset_filepaths.get_octree(dataset_dir)
 	out_octfile   = dataset_filepaths.get_refined_octree(dataset_dir)
-#TODO	fpfiles       = dataset_filepaths.get_aligned_fp_files(dataset_dir)
-	fpfiles       = [dataset_filepaths.get_carving_fp_file(dataset_dir)]
+	fpfiles       = dataset_filepaths.get_aligned_fp_files(dataset_dir)
 	if fpfiles is None or len(fpfiles) == 0:
 		print "Error! Could not find any aligned floorplans to use!"
 		return -1	

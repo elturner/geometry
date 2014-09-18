@@ -31,9 +31,12 @@ using namespace std;
 
 /* xml configuration file parameters to import */
 
-#define XML_CONF_NUM_ITERS "fp_opt_iterations"
-#define XML_CONF_SEARCH    "fp_opt_search_range"
-#define XML_CONF_STEP      "fp_opt_offset_step_coeff"
+#define XML_CONF_NUM_ITERS   "fp_opt_iterations"
+#define XML_CONF_SEARCH      "fp_opt_search_range"
+#define XML_CONF_STEP        "fp_opt_offset_step_coeff"
+#define XML_CONF_DO_WALLS    "fp_opt_do_walls"
+#define XML_CONF_DO_HEIGHTS  "fp_opt_do_heights"
+#define XML_CONF_DELTA_BONUS "fp_opt_delta_cost_bonus"
 
 /* function implementations */
 		
@@ -41,6 +44,12 @@ fpopt_run_settings_t::fpopt_run_settings_t()
 {
 	/* set default values for this program's files */
 	this->octfile = "";
+	this->num_iterations = 3;
+	this->search_range = 0.1;
+	this->offset_step_coeff = 0.25;
+	this->opt_walls = true;
+	this->opt_heights = true;
+	this->delta_cost_bonus = 0.5;
 }
 
 int fpopt_run_settings_t::parse(int argc, char** argv)
@@ -130,6 +139,15 @@ int fpopt_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_CONF_STEP))
 		this->offset_step_coeff = settings.getAsDouble(
 				XML_CONF_STEP);
+	if(settings.is_prop(XML_CONF_DO_WALLS))
+		this->opt_walls = (0 != settings.getAsUint(
+					XML_CONF_DO_WALLS));
+	if(settings.is_prop(XML_CONF_DO_HEIGHTS))
+		this->opt_heights = (0 != settings.getAsUint(
+					XML_CONF_DO_HEIGHTS));
+	if(settings.is_prop(XML_CONF_DELTA_BONUS))
+		this->delta_cost_bonus = settings.getAsDouble(
+					XML_CONF_DELTA_BONUS);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

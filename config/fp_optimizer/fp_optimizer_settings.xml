@@ -9,7 +9,7 @@
 	     time.
 
 	     units:  number of alignment cycles -->
-	<fp_opt_iterations>10</fp_opt_iterations>
+	<fp_opt_iterations>3</fp_opt_iterations>
 
 	<!-- This value indicates the maximum search range for a floorplan
 	     surface to be moved within a single iteration when attempting
@@ -20,7 +20,7 @@
 	     length of any desired object in the environment.
 
 	     units: meters -->
-	<fp_opt_search_range>0.10</fp_opt_search_range>
+	<fp_opt_search_range>0.1</fp_opt_search_range>
 
 	<!-- This value indicates the offset step size when searching
 	     for the optimal wall position within an optimization
@@ -36,6 +36,46 @@
 
 	     Units:   number of tree resolutions -->
 	<fp_opt_offset_step_coeff>0.25</fp_opt_offset_step_coeff>
+	
+	<!-- This value represents the geometric base value
+	     for the optimization process.
+
+	     In other words, it represents how much of a bonus
+	     a particular surface offset should get based on the
+	     difference from the last offset.  The advantage of
+	     awarding a bonus in these situations is to give
+	     advantage to the smallest offset to produce a certain
+	     cost, and not any subsequent offsets.
+
+	     A value of 0 gives no bonus, and just selects the
+	     offset with the lowest raw cost (this will typically
+	     make the output floorplan too shrunken).  A value
+	     of 1 gives full bonus of the previous delta.
+
+	     units:  unitless, in range [0,1] -->
+	<fp_opt_delta_cost_bonus>0.5</fp_opt_delta_cost_bonus>
+
+	<!-- If this value is set to true (any non-zero value),
+	     then the horizontal wall positions in the floorplan
+	     will be optimized as part of this optimization
+	     procedure.
+
+	     If the value is set to false (i.e. zero), then the
+	     horizontal wall positions will be modified.
+
+	     value:  boolean (either '0' or '1') -->
+	<fp_opt_do_walls>0</fp_opt_do_walls>
+
+	<!-- If this value is set to true (any non-zero value),
+	     then the vertical floor and ceiling positions in the floorplan
+	     will be optimized as part of this optimization
+	     procedure.
+
+	     If the value is set to false (i.e. zero), then the
+	     vertical positions will be modified.
+
+	     value:  boolean (either '0' or '1') -->
+	<fp_opt_do_heights>1</fp_opt_do_heights>
 
 	<!-- This value indicates the relative amount of refinement
 	     octree nodes that contain objects or furniture should
@@ -46,6 +86,6 @@
 	     If this value is zero, then no refinement will occur.
 
 	     units:  number of octree levels -->
-	<object_refine_depth>3</object_refine_depth>
+	<object_refine_depth>0</object_refine_depth>
 
 </settings>

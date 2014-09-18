@@ -37,7 +37,8 @@ int main(int argc, char** argv)
 
 	/* initialize the optimizer */
 	opt.init(args.num_iterations, args.search_range,
-	         args.offset_step_coeff);
+	         args.offset_step_coeff, args.delta_cost_bonus,
+		 args.opt_walls, args.opt_heights);
 
 	/* optimize all given floorplans using the specified octree */
 	ret = opt.process_all(args.octfile, 

@@ -253,8 +253,10 @@ int fp_optimizer_t::optimize()
 	{
 		/* perform a single iteration of optimization
 		 * on this floorplan */
-		this->run_iteration_walls();
-		this->run_iteration_height();
+		if(this->optimize_walls)
+			this->run_iteration_walls();
+		if(this->optimize_heights)
+			this->run_iteration_height();
 	}
 	
 	/* success */
@@ -265,12 +267,12 @@ int fp_optimizer_t::optimize()
 void fp_optimizer_t::run_iteration_walls()
 {
 	vector<Vector2d, aligned_allocator<Vector2d> > net_offset;
-	vector<double> total_cost;
+	vector<double> total_cost, vert_costs, offsets;
 	vector<fp::edge_t> edges; /* walls in floorplan */
 	fp_wall_t wall;
 	Vector2d curr_offset;
 	double r, r_min, r_max, r_step, r_best, c, c_best;
-	size_t i, j, n;
+	size_t i, j, n, ri, num_offsets;
 
 	/* prepare offset vectors for each wall */
 	total_cost.resize(this->floorplan.verts.size(), 0);
@@ -286,22 +288,45 @@ void fp_optimizer_t::run_iteration_walls()
 	n = edges.size();
 	for(i = 0; i < n; i++)
 	{
+		/* reset vectors */
+		vert_costs.clear();
+		offsets.clear();
+
 		/* compute geometry for the i'th wall */
 		wall.init(this->floorplan, edges[i]);
 
-		/* find the best offset for this wall */
-		c_best = DBL_MAX; /* initialize cost */
-		r_best = 0;
+		/* get the costs for each offset of this wall */
 		for(r = r_min; r <= r_max; r += r_step)
 		{
 			/* set the current wall to this offset */
+			offsets.push_back(r);
 			wall.set_offset(r);
 
 			/* compute the cost at this offset */
 			this->tree.find(wall);
 
 			/* compare to best cost so far */
-			c = wall.get_offset_cost();
+			vert_costs.push_back(wall.get_offset_cost());
+		}
+
+		/* find the best offset for this wall
+		 *
+		 * Assume the first offset is best, then
+		 * check all remaining offsets.  Note that
+		 * a bonus is rewarded for amount improved
+		 * from previous offset. */
+		c_best = vert_costs[0]; /* initialize cost */
+		r_best = offsets[0];
+		num_offsets = offsets.size();
+		for(ri = 1; ri < num_offsets; ri++)
+		{
+			/* get net cost for this offset, including
+			 * delta bonus when comparing to previous
+			 * offset */
+			r = offsets[ri];
+			c = vert_costs[ri]
+				- (this->delta_cost_bonus)
+				*(vert_costs[ri-1] - vert_costs[ri]);
 			if(c < c_best)
 			{
 				/* update values for best-so-far */
@@ -342,11 +367,13 @@ void fp_optimizer_t::run_iteration_walls()
 		
 void fp_optimizer_t::run_iteration_height()
 {
+	vector<double> offsets, floor_costs, ceil_costs;
 	set<int>::iterator tit;
 	fp_horizontal_t floor, ceil;
 	double r, r_min, r_max, r_step;
-	double floor_r_best, ceil_r_best, c, floor_c_best, ceil_c_best;
-	size_t i, num_rooms, vi, vii;
+	double floor_r_best, ceil_r_best;
+	double c, floor_c_best, ceil_c_best;
+	size_t i, num_rooms, vi, vii, ri, num_offsets;
 
 	/* prepare parameters */
 	num_rooms = this->floorplan.rooms.size();
@@ -357,9 +384,12 @@ void fp_optimizer_t::run_iteration_height()
 	/* iterate over the rooms of this floorplan */
 	for(i = 0; i < num_rooms; i++)
 	{
-		/* find the best offset for this wall */
-		floor_c_best = ceil_c_best = DBL_MAX; /* initialize cost */
-		floor_r_best = ceil_r_best = 0;
+		/* reset vectors */
+		offsets.clear();
+		floor_costs.clear();
+		ceil_costs.clear();
+
+		/* record costs for each offset */
 		for(r = r_min; r <= r_max; r += r_step)
 		{
 			/* compute geometry for the i'th room's floor
@@ -371,15 +401,47 @@ void fp_optimizer_t::run_iteration_height()
 			this->tree.find(floor);
 			this->tree.find(ceil);
 
+			/* record the costs at these positions */
+			offsets.push_back(r);
+			floor_costs.push_back(floor.get_offset_cost());
+			ceil_costs.push_back(ceil.get_offset_cost());
+		}
+
+		/* now that we have the cost at every offset,
+		 * determine which offset is the best.
+		 *
+		 * To start, assume the first offset is best,
+		 * and then perform comparisons. */
+		num_offsets = offsets.size();
+		floor_c_best = floor_costs[0];
+		floor_r_best = offsets[0];
+		ceil_c_best  = ceil_costs[1];
+		ceil_r_best  = offsets[0];
+		for(ri = 1; ri < num_offsets; ri++)
+		{
+			/* check if this floor offset is best.
+			 *
+			 * Note that each offset gets a "bonus"
+			 * for the delta-cost, which penalizes
+			 * offsets that have the exact same cost
+			 * as before. */
+			r = offsets[ri];
+			c = floor_costs[ri] 
+				- (this->delta_cost_bonus)
+				*(floor_costs[ri-1] - floor_costs[ri]);
+			
 			/* compare to best cost so far */
-			c = floor.get_offset_cost();
 			if(c < floor_c_best)
 			{
 				/* update values for best-so-far */
 				floor_c_best = c;
 				floor_r_best = r;
 			}
-			c = ceil.get_offset_cost();
+
+			/* do the same thing for the ceiling */
+			c = ceil_costs[ri] 
+				- (this->delta_cost_bonus)
+				*(ceil_costs[ri-1] - ceil_costs[ri]);
 			if(c < ceil_c_best)
 			{
 				/* update values for best-so-far */
