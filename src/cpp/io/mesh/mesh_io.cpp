@@ -264,13 +264,25 @@ int vertex_t::serialize(ostream& os, FILE_FORMAT ff) const
 			break;
 		case FORMAT_PLY_BE:
 		case FORMAT_PLY_BE_COLOR:
-		case FORMAT_PLY_LE:
-		case FORMAT_PLY_LE_COLOR:
+			/* don't support big endian..yet */
 			cerr << "[vertex_t::serialize]\tError, this format "
 			     << "is not yet supported for serialization: "
 			     << ff << endl;
 			return -2;
-
+		case FORMAT_PLY_LE:
+			os.write((char*) &(this->x), sizeof(this->x));
+			os.write((char*) &(this->y), sizeof(this->y));
+			os.write((char*) &(this->z), sizeof(this->z));
+			break;
+		case FORMAT_PLY_LE_COLOR:
+			os.write((char*) &(this->x), sizeof(this->x));
+			os.write((char*) &(this->y), sizeof(this->y));
+			os.write((char*) &(this->z), sizeof(this->z));
+			os.write((char*) &(this->red), sizeof(this->red));
+			os.write((char*) &(this->green),
+						sizeof(this->green));
+			os.write((char*) &(this->blue), sizeof(this->blue));
+			break;
 	}
 
 	/* success */
@@ -293,6 +305,7 @@ polygon_t::polygon_t(size_t i, size_t j, size_t k)
 int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const
 {
 	size_t i, n;
+	unsigned char num;
 
 	/* get number of indices to export */
 	n = this->vertices.size();
@@ -326,13 +339,21 @@ int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const
 			break;
 		case FORMAT_PLY_BE:
 		case FORMAT_PLY_BE_COLOR:
-		case FORMAT_PLY_LE:
-		case FORMAT_PLY_LE_COLOR:
+			/* don't support big endian...yet */
 			cerr << "[polygon_t::serialize]\tError, format "
 			     << "is not yet supported for serialization: "
 			     << ff << endl;
 			return -2;
-
+		case FORMAT_PLY_LE:
+		case FORMAT_PLY_LE_COLOR:
+			/* export size of face as an unsigned char,
+			 * and the face vertex indices as ints */
+			num = (int) n;
+			os.write((char*) &num, sizeof(num));
+			for(i = 0; i < n; i++)
+				os.write((char*) &(this->vertices[i]),
+						sizeof(this->vertices[i]));
+			break;
 	}
 
 	/* success */

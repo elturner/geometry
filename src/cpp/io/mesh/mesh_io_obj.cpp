@@ -38,7 +38,7 @@ int mesh_t::read_obj(const string& filename)
 	string tline, val;
 	polygon_t poly;
 	vertex_t vert;
-	size_t p;
+	size_t p, q;
 	int ind;
 
 	/* open file for reading */
@@ -70,15 +70,26 @@ int mesh_t::read_obj(const string& filename)
 			tline = tline.substr(p);
 
 		/* check for unsupported characters */
-		if(tline.find_first_of(TEXTURE_SEP_CHARACTER) 
-					!= string::npos)
+		while(true)
 		{
-			/* can't support texture...yet */
-			cerr << "[mesh_t::read_obj]\tIt appears that "
-			     << "the input obj file has texture or "
-			     << "normal information, which isn't supported "
-			     << "yet." << endl;
-			return -2;
+			/* check for any texture/normal separators */
+			p = tline.find_first_of(TEXTURE_SEP_CHARACTER);
+			if(p == string::npos)
+				break;
+			
+			/* remove any values between a slash and
+			 * the next whitespace, since these denote
+			 * either texture or normal indices, which
+			 * we don't care about */
+			q = tline.find_first_of(WHITESPACE, p);	
+			if(q == string::npos)
+				/* remove rest of string */
+				tline = tline.substr(0,p);
+			else
+				/* remove segment involving texture
+				 * or normal indices */
+				tline = tline.substr(0,p)
+						+ tline.substr(q);
 		}
 
 		/* determine the type of line based on the first value */
