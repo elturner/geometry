@@ -110,6 +110,14 @@ class octree_t
 		double get_resolution() const;
 
 		/**
+		 * Retrieves the max depth of this tree
+		 *
+		 * @return   Retuns the maximum allowed depth of the tree
+		 */
+		inline int get_max_depth() const
+		{ return this->max_depth; };
+
+		/**
 		 * Will increase the max allowed depth of the tree
 		 *
 		 * This call will NOT destroy any existing data in the

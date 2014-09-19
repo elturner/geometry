@@ -2,8 +2,9 @@
 #include <iostream>
 
 /**
- * @file main.cpp
+ * @file   main.cpp
  * @author Eric Turner <elturner@eecs.berkeley.edu>
+ * @brief  Exports octrees (.oct) to various output files
  *
  * @section DESCRIPTION
  *
@@ -18,6 +19,7 @@ using namespace std;
 
 #include <io/octree/tree_exporter.h>
 #include <io/octree/vox_writer.h>
+#include <io/octree/sof_io.h>
 #include <geometry/octree/octree.h>
 #include <mesh/refine/octree_padder.h>
 
@@ -67,6 +69,16 @@ int main(int argc, char** argv)
 				return 3;
 			}
 			break;
+		case FORMAT_SOF:
+			/* export tree as sof file */
+			ret = sof_io::writesof(tree, args.outfile);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to sof" << endl;
+				return 4;
+			}
+			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
 			octree_padder::pad(tree);
@@ -87,7 +99,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to obj" << endl;
-				return 4;
+				return 5;
 			}
 			break;
 		case FORMAT_TXT:
@@ -98,7 +110,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to txt" << endl;
-				return 5;
+				return 6;
 			}
 			break;
 	}
