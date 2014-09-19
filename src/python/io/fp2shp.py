@@ -28,8 +28,9 @@ def run(fpfile, shpfile):
     for b in boundary_list:
         vert_lists.append([])
         for v in b:
-            vert_lists[-1].append(fp.verts[v])
-        verts_list[-1].append(fp.verts[b[0]]) # put end point twice
+            p = fp.verts[v]
+            vert_lists[-1].append(p)
+        vert_lists[-1].append(vert_lists[-1][0]) # put end point twice
 
     # pass it to the library
     w = shapefile.Writer(shapefile.POLYGON)
