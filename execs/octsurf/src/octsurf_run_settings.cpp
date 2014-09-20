@@ -38,6 +38,7 @@ using namespace std;
 #define OBJ_FILE_EXT   "obj"
 #define TXT_FILE_EXT   "txt"
 #define SOF_FILE_EXT   "sof"
+#define SOG_FILE_EXT   "sog"
 
 /* function implementations */
 		
@@ -71,7 +72,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"represents the meshed surface of the volume "
 			"described by the input .oct files.  This program "
 			"supports multiple output file formats, including: "
-			".vox, .obj, .sof, .txt", false, 1);
+			".vox, .obj, .sof, .sog, .txt", false, 1);
 	args.add(EXPORT_LEAFS_FLAG, "If present, this flag indicates that "
 			"all leaf centers of the octree should be exported "
 			"to the specified OBJ file.  This flag will be "
@@ -172,5 +173,7 @@ OUTPUT_FILE_FORMAT octsurf_run_settings_t::get_format(const std::string& fn)
 		return FORMAT_TXT;
 	if(!ext.compare(SOF_FILE_EXT))
 		return FORMAT_SOF;
+	if(!ext.compare(SOG_FILE_EXT))
+		return FORMAT_SOG;
 	return FORMAT_UNKNOWN; /* unknown file format */
 }

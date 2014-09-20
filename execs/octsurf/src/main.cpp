@@ -79,6 +79,16 @@ int main(int argc, char** argv)
 				return 4;
 			}
 			break;
+		case FORMAT_SOG:
+			/* export tree as sog file */
+			ret = sof_io::writesog(tree, args.outfile);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to sog" << endl;
+				return 5;
+			}
+			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
 			octree_padder::pad(tree);
@@ -99,7 +109,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to obj" << endl;
-				return 5;
+				return 6;
 			}
 			break;
 		case FORMAT_TXT:

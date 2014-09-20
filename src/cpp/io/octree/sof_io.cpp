@@ -2,6 +2,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
+#include <util/tictoc.h>
 #include <util/error_codes.h>
 #include <iostream>
 #include <fstream>
@@ -60,6 +61,10 @@ static const unsigned char LEAF_NODE         = 2;
 static const unsigned char INSIDE            = 0;
 static const unsigned char OUTSIDE           = 1;
 
+/* the following constants are used in sog files */
+static const std::string SOG_MAGIC_NUMBER    = "SOG.Format 1.0";
+static const size_t SOG_HEADER_SIZE          = 128; /* units: bytes */
+
 /* this array converts from the child ordering in sof files
  * to the child ordering in the octree_t class */
 static const size_t SOF_TO_OCTREE_ORDER[CHILDREN_PER_NODE]
@@ -72,7 +77,11 @@ static const size_t SOF_TO_OCTREE_ORDER[CHILDREN_PER_NODE]
 int sof_io::writesof(const octree_t& tree, const string& filename)
 {
 	ofstream outfile;
+	tictoc_t clk;
 	int ret;
+
+	/* start clock */
+	tic(clk);
 
 	/* open binary file for writing */
 	outfile.open(filename.c_str(), ios_base::out | ios_base::binary);
@@ -103,12 +112,51 @@ int sof_io::writesof(const octree_t& tree, const string& filename)
 
 	/* clean up */
 	outfile.close();
+	toc(clk, "Exporting SOF file");
 	return 0;
 }
 		
 int sof_io::writesog(const octree_t& tree, const string& filename)
 {
-	return -1; /* TODO implement me */
+	ofstream outfile;
+	tictoc_t clk;
+	int ret;
+
+	/* start clock */
+	tic(clk);
+
+	/* open binary file for writing */
+	outfile.open(filename.c_str(), ios_base::out | ios_base::binary);
+	if(!(outfile.is_open()))
+	{
+		cerr << "[sof_io::writesog]\tUnable to write to file: "
+		     << filename << endl;
+		return -1;
+	}
+
+	/* write header information */
+	ret = sof_io::writesog_header(tree, outfile);
+	if(ret)
+	{
+		cerr << "[sof_io::writesog]\tCan't write header info to: "
+		     << filename << endl;
+		return PROPEGATE_ERROR(-2, ret);
+	}
+
+	/* recursively write nodes to tree */
+	ret = sof_io::writesog_node(tree.get_root(), outfile,
+					tree.get_resolution());
+	if(ret)
+	{
+		cerr << "[sof_io::writesog]\tCan't write node information "
+		     << "to: " << filename << endl;
+		return PROPEGATE_ERROR(-3, ret);
+	}
+
+	/* clean up */
+	outfile.close();
+	toc(clk, "Exporting SOG file");
+	return 0;
 }
 
 int sof_io::writesof_header(const octree_t& tree, ostream& os)
@@ -178,12 +226,95 @@ int sof_io::writesof_node(const octnode_t* node, ostream& os)
 	return 0;
 }
 
-int sog_io::writesog_header(const octree_t& tree, ostream& os)
+int sof_io::writesog_header(const octree_t& tree, ostream& os)
 {
-	return -1; // TODO implement me
+	float x,y,z,len,res,hw;
+
+	/* move to beginning of stream */
+	os.seekp(0, ios_base::beg);
+
+	/* write magic number (do NOT write null-terminator) */
+	os.write(SOG_MAGIC_NUMBER.c_str(), SOG_MAGIC_NUMBER.size());
+
+	/* Next, write three floats representing the lower-left-near
+	 * corner of the octree.  Since the leaf nodes are assumed
+	 * to be unit length, this is not in metric units. */
+	res = tree.get_resolution();
+	hw = tree.get_root()->halfwidth;
+	x = (tree.get_root()->center(0) - hw) / res;
+	y = (tree.get_root()->center(1) - hw) / res;
+	z = (tree.get_root()->center(2) - hw) / res;
+	os.write((char*) &x, sizeof(x));
+	os.write((char*) &y, sizeof(y));
+	os.write((char*) &z, sizeof(z));
+
+	/* write one float denoting width of octree.  Leaf nodes
+	 * are assumed to be unit length, so the width would be
+	 * 2^max_depth */
+	len = 2.0f * hw / res;
+	os.write((char*) &len, sizeof(len));
+
+	/* pad the header out to appropriate length */
+	os.seekp(SOG_HEADER_SIZE, ios_base::beg);
+
+	/* success */
+	return 0;
 }
 		
-int sog_io::writesog_node(const octnode_t* node, ostream& os)
+int sof_io::writesog_node(const octnode_t* node, ostream& os, double res)
 {
-	return -1; // TODO implement me
+	unsigned char leafval, v;
+	float vert[3];
+	size_t i;
+	int ret;
+
+	/* check arguments */
+	if(node == NULL)
+	{
+		/* we've reached null space, which is denoted
+		 * as an "empty" node. */
+		os.write((char*) &EMPTY_NODE, sizeof(EMPTY_NODE));
+		os.write((char*) &OUTSIDE, sizeof(OUTSIDE));
+	}
+	else if(node->isleaf() || node->data != NULL)
+	{
+		/* this is a leaf node */
+		leafval = 0;
+		v = (node->data->is_interior() ? INSIDE : OUTSIDE);
+		for(i = 0; i < CHILDREN_PER_NODE; i++)
+			leafval |= (v << SOF_TO_OCTREE_ORDER[i]);
+
+		/* write the value */
+		os.write((char*) &LEAF_NODE, sizeof(LEAF_NODE));
+		os.write((char*) &leafval, sizeof(leafval));	
+	
+		/* write floats that represent point at center of
+		 * this leaf node */
+		vert[0] = (float) (node->center(0) / res);
+		vert[1] = (float) (node->center(1) / res);
+		vert[2] = (float) (node->center(2) / res);
+		os.write((char*) &vert, sizeof(vert));
+	}
+	else
+	{
+		/* this is an intermediate node */
+		os.write((char*) &INTERMEDIATE_NODE, 
+				sizeof(INTERMEDIATE_NODE));
+		
+		/* write children */
+		for(i = 0; i < CHILDREN_PER_NODE; i++)
+		{
+			/* recurse to child, in order defined by
+			 * .sof formatting */
+			ret = sof_io::writesog_node(
+					node->children[
+					SOF_TO_OCTREE_ORDER[i]], os,
+					res);
+			if(ret)
+				return PROPEGATE_ERROR(-1, ret);
+		}
+	}
+
+	/* success */
+	return 0;
 }

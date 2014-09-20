@@ -139,12 +139,13 @@ class sof_io
 		 *
 		 * @param node    The node to export
 		 * @param os      The stream to export to
+		 * @param res     The resolution of tree's leaf nodes
 		 *
 		 * @return        Returns zero on success, non-zero on
 		 *                failure.
 		 */
 		static int writesog_node(const octnode_t* node,
-				std::ostream& os);
+				std::ostream& os, double res);
 };
 
 #endif

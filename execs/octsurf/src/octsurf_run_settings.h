@@ -24,6 +24,7 @@ enum OUTPUT_FILE_FORMAT
 	FORMAT_VOX, /* .vox file for back-compatability with old carving */
 	FORMAT_OBJ, /* Wavefront OBJ file format */
 	FORMAT_SOF, /* Tao Ju's SOF (Signed Octree Format) */
+	FORMAT_SOG, /* Tao Ju's SOG (Signed Octree Geometry) format */
 	FORMAT_TXT, /* text file format */
 	FORMAT_UNKNOWN /* unknown file format */
 };
