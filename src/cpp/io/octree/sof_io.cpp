@@ -58,6 +58,7 @@ using namespace std;
 static const unsigned char INTERMEDIATE_NODE = 0;
 static const unsigned char EMPTY_NODE        = 1;
 static const unsigned char LEAF_NODE         = 2;
+static const unsigned char PSEUDO_LEAF_NODE  = 3;
 static const unsigned char INSIDE            = 0;
 static const unsigned char OUTSIDE           = 1;
 
@@ -229,12 +230,13 @@ int sof_io::writesof_node(const octnode_t* node, ostream& os)
 int sof_io::writesog_header(const octree_t& tree, ostream& os)
 {
 	float x,y,z,len,res,hw;
+	int dimen;
 
 	/* move to beginning of stream */
 	os.seekp(0, ios_base::beg);
 
-	/* write magic number (do NOT write null-terminator) */
-	os.write(SOG_MAGIC_NUMBER.c_str(), SOG_MAGIC_NUMBER.size());
+	/* write magic number (write null-terminator) */
+	os.write(SOG_MAGIC_NUMBER.c_str(), SOG_MAGIC_NUMBER.size()+1);
 
 	/* Next, write three floats representing the lower-left-near
 	 * corner of the octree.  Since the leaf nodes are assumed
@@ -253,9 +255,13 @@ int sof_io::writesog_header(const octree_t& tree, ostream& os)
 	 * 2^max_depth */
 	len = 2.0f * hw / res;
 	os.write((char*) &len, sizeof(len));
-
+	
 	/* pad the header out to appropriate length */
 	os.seekp(SOG_HEADER_SIZE, ios_base::beg);
+	
+	/* it also requires the max depth in the same manner as SOF files */
+	dimen = (1 << tree.get_max_depth());
+	os.write((char*) &dimen, sizeof(dimen));
 
 	/* success */
 	return 0;
@@ -279,13 +285,13 @@ int sof_io::writesog_node(const octnode_t* node, ostream& os, double res)
 	else if(node->isleaf() || node->data != NULL)
 	{
 		/* this is a leaf node */
+		os.write((char*) &LEAF_NODE, sizeof(LEAF_NODE));
+		
+		/* write the value at each corner */
 		leafval = 0;
 		v = (node->data->is_interior() ? INSIDE : OUTSIDE);
 		for(i = 0; i < CHILDREN_PER_NODE; i++)
 			leafval |= (v << SOF_TO_OCTREE_ORDER[i]);
-
-		/* write the value */
-		os.write((char*) &LEAF_NODE, sizeof(LEAF_NODE));
 		os.write((char*) &leafval, sizeof(leafval));	
 	
 		/* write floats that represent point at center of
