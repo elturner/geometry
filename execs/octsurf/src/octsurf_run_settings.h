@@ -78,6 +78,13 @@ class octsurf_run_settings_t
 		 */
 		bool export_regions;
 
+		/**
+		 * If exporting to OBJ, this option indicates that
+		 * the output will be a set of vertices that represent
+		 * the corners of the octnodes.
+		 */
+		bool export_corners;
+
 	/* functions */
 	public:
 

@@ -30,6 +30,7 @@ using namespace std;
 #define EXPORT_LEAFS_FLAG "-l" /* export leafs to OBJ */
 #define EXPORT_FACES_FLAG "--node_faces" /* export node faces to OBJ */
 #define EXPORT_REGIONS_FLAG "--regions"  /* export planar region geometry */
+#define EXPORT_CORNERS    "--corners" /* export node corners */
 
 /* file extensions to check for */
 
@@ -93,6 +94,9 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			".obj file.  If this flag is not present, then the "
 			"output will be processed normally.",
 			true, 0);
+	args.add(EXPORT_CORNERS, "If present, this flag indicates "
+			"that the output should be a set of verticess that "
+			"represent the corners of the tree nodes.",true,0);
 	args.add_required_file_type(OCT_FILE_EXT, 1,
 			"The input octree files.  These represent the "
 			"volume information of the scanned environment, and"
@@ -119,6 +123,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	this->export_obj_leafs  = args.tag_seen(EXPORT_LEAFS_FLAG);
 	this->export_node_faces = args.tag_seen(EXPORT_FACES_FLAG);
 	this->export_regions    = args.tag_seen(EXPORT_REGIONS_FLAG);
+	this->export_corners    = args.tag_seen(EXPORT_CORNERS);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);
 
 	/* check if a settings xml file was specified */

@@ -72,6 +72,17 @@ namespace tree_exporter
 	                        const octree_t& tree);
 
 	/**
+	 * Will export the node corners to the output OBJ as vertices
+	 *
+	 * @param filename    The path to the .obj file to write
+	 * @param tree        The tree to export
+	 *
+	 * @return            Returns zero on success, non-zero on failure.
+	 */
+	int export_corners_to_obj(const std::string& filename,
+	                          const octree_t& tree);
+
+	/**
 	 * Will export leaf nodes labeled as exterior to cubes in OBJ
 	 *
 	 * This function will generate a Wavefront OBJ file that
