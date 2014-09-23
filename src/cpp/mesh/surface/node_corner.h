@@ -22,7 +22,7 @@
 #include <mesh/surface/node_boundary.h>
 #include <Eigen/Dense>
 #include <iostream>
-#include <set>
+#include <cmath>
 
 /**
  * This namespace contains all classes, structures, and functions used
@@ -184,26 +184,31 @@ namespace node_corner
 		private:
 
 			/**
-			 * A node that contains this corner
+			 * The x-coordinate of this corner's index
 			 *
-			 * Of all the nodes that contain this corner,
-			 * this node should have the smallest halfwidth.
-			 * If multiple nodes have the same minimum
-			 * halfwidth, this should be the node that minimizes
-			 * the value of 'index'.
-			 *
-			 * With the above conditions, the (node, index)
-			 * pair should be unique for each corner.
+			 * In order to unique represent a corner
+			 * value, we store its discretized position
+			 * in units of half-resolutions of the tree.
 			 */
-			octnode_t* node;
+			int x_ind;
 
 			/**
-			 * The index of this corner in node.
+			 * The y-coordinate of this corner's index
 			 *
-			 * Value must be between 0 and 
-			 * (NUM_CORNERS_PER_CUBE-1)
+			 * In order to unique represent a corner
+			 * value, we store its discretized position
+			 * in units of half-resolutions of the tree.
 			 */
-			size_t index;
+			int y_ind;
+			
+			/**
+			 * The z-coordinate of this corner's index
+			 *
+			 * In order to unique represent a corner
+			 * value, we store its discretized position
+			 * in units of half-resolutions of the tree.
+			 */
+			int z_ind;
 
 		/* functions */
 		public:
@@ -215,7 +220,7 @@ namespace node_corner
 			/**
 			 * Constructs corner with invalid parameters
 			 */
-			corner_t() : node(NULL), index(0)
+			corner_t() : x_ind(0), y_ind(0), z_ind(0)
 			{};
 
 			/**
@@ -224,17 +229,18 @@ namespace node_corner
 			 * @param other   The other corner to copy
 			 */
 			corner_t(const corner_t& other)
-				:	node(other.node), index(other.index)
+				:	x_ind(other.x_ind), 
+					y_ind(other.y_ind),
+					z_ind(other.z_ind)
 			{};
 
 			/**
 			 * Constructs corner to be equivalent to the given
 			 * values
 			 *
-			 * Note that the input values may not actually be
-			 * the ones stored, since we want to store the
-			 * node and index that gives a unique representation
-			 * for each corner.
+			 * Will set this corner to be equivalent to the
+			 * 'ind' corner of the given node, where 'ind'
+			 * is between 0 and (NUM_CORNERS_PER_CUBE-1).
 			 *
 			 * @param tree  The originating octree
 			 * @param node  Any node that contains this corner
@@ -254,52 +260,69 @@ namespace node_corner
 			 *
 			 * Note that the input values may not actually
 			 * be the ones stored, since we want to store the
-			 * node and index that gives a unique representation
-			 * for each corner.
+			 * a unique representation for each corner.
 			 *
 			 * @param tree  The originating octree
 			 * @param n     Any node that contains this corner
 			 * @parma ind   The corner index in the given node
 			 */
-			void set(const octree_t& tree,
-					octnode_t* n, size_t ind);
+			inline void set(const octree_t& tree,
+					octnode_t* n, size_t ind)
+			{
+				double res;
+
+				/* get corner position in world coords */
+				Eigen::Vector3d p = get_corner_pos(n, ind);
+
+				/* get tree properties */
+				p -= tree.get_root()->center;
+				res = tree.get_resolution();
+
+				/* get discretized coordinates */
+				this->x_ind = (int) round(p(0) / res);
+				this->y_ind = (int) round(p(1) / res);
+				this->z_ind = (int) round(p(2) / res);
+			};
 
 			/**
-			 * Sets the value of this corner based on the
-			 * input parameters
+			 * Sets the value of this corner based on
+			 * the input parameters
 			 *
-			 * Note that the input values may not actually
-			 * be the ones stored, since we want to store the
-			 * node and index that gives a unique representation
-			 * for each corner.
-			 *
-			 * In order to set the value of this corner, all
-			 * nodes that touch this corner must be identified.
-			 * This call will save those nodes to the specified
-			 * set.  Note that this structure will be cleared
-			 * during this call.
-			 *
-			 * @param tree    The originating octree
-			 * @param n       Any node that contains this corner
-			 * @param ind     The corner index in the given node
-			 * @param neighs  All neighboring nodes to this
-			 *                corner
+			 * @param tree   The originating tree
+			 * @param f      The node face that contains
+			 *               this corner
+			 * @param ind    The index of the corner on
+			 *               this face, in range 0 to
+			 *               (NUM_CORNERS_PER_SQUARE-1)
 			 */
-			void set(const octree_t& tree,
-					octnode_t* n, size_t ind,
-					std::set<octnode_t*> neighs);
+			inline void set(const octree_t& tree,
+					const node_face_t& f,
+					size_t ind)
+			{
+				size_t node_corner_ind;
+				octnode_t* node;
+				octtopo::CUBE_FACE cf;
 
-			/*-----------*/
-			/* accessors */
-			/*-----------*/
+				/* determine which of the face's
+				 * nodes are smaller */
+				node = f.interior;
+				cf = f.direction;
+				if(f.exterior != NULL 
+						&& f.exterior->halfwidth
+						< f.interior->halfwidth)
+				{
+					node = f.exterior;
+					cf = octtopo::get_opposing_face(
+							f.direction);
+				}
 
-			/**
-			 * Checks if this corner is set to a valid value
-			 *
-			 * @return    Returns true if the corner is valid
-			 */
-			inline bool isvalid() const
-			{ return (this->node != NULL); };
+				/* get the node's corner index */
+				node_corner_ind = get_face_corner(cf, ind);
+
+				/* use the interior node of the face
+				 * to look up the corner */
+				this->set(tree, node, node_corner_ind);
+			};
 
 			/*----------*/
 			/* geometry */
@@ -308,28 +331,24 @@ namespace node_corner
 			/**
 			 * Gets the global position of this corner
 			 *
-			 * @return   Returns position of corner
+			 * @param tree   The originating octree for this
+			 *               corner
+			 * @param pos    Where to store the position vector
 			 */
-			inline Eigen::Vector3d get_position() const
+			inline void get_position(const octree_t& tree,
+						Eigen::Vector3d& pos) const
 			{ 
-				/* this function is defined above */
-				return get_corner_pos(this->node, 
-						this->index);
-			};
+				double res;
 
-			/**
-			 * Checks if the given node contains this corner
-			 *
-			 * Note that this will return true for parent
-			 * nodes as well as leaf nodes.  If this corner
-			 * is in the interior of the node, it will still
-			 * return true.
-			 *
-			 * @param n   The node to analyze
-			 *
-			 * @return   Returns true iff node contains corner
-			 */
-			bool is_contained_in(const octnode_t* n) const;
+				/* get the tree resolution */
+				res = tree.get_resolution();
+
+				/* set corner position based on tree */
+				pos = tree.get_root()->center;
+				pos(0) += this->x_ind * res;
+				pos(1) += this->y_ind * res;
+				pos(2) += this->z_ind * res;
+			};
 
 			/*-----------*/
 			/* operators */
@@ -345,8 +364,9 @@ namespace node_corner
 			inline corner_t& operator = (const corner_t& other)
 			{
 				/* copy the values */
-				this->node = other.node;
-				this->index = other.index;
+				this->x_ind = other.x_ind;
+				this->y_ind = other.y_ind;
+				this->z_ind = other.z_ind;
 
 				/* return the result */
 				return (*this);
@@ -363,20 +383,11 @@ namespace node_corner
 			inline bool operator == (
 						const corner_t& other) const
 			{
-				/* Because corners are constructed to
-				 * only allow unique representations of
-				 * each corner, then we can just compare the
-				 * parameters.
-				 *
-				 * Note that there are many other parameter
-				 * combinations that could be used to 
-				 * express the given corner, but because
-				 * we've limited how each corner is 
-				 * expressed, we can take advantage of this
-				 * speedup here.
-				 */
-				return ( (this->node == other.node) 
-					&& (this->index == other.index) );
+				/* the corners are equal if their
+				 * discretized positions are equal */
+				return ( (this->x_ind == other.x_ind)
+					|| (this->y_ind == other.y_ind)
+					|| (this->z_ind == other.z_ind) );
 			};
 
 			/**
@@ -392,12 +403,16 @@ namespace node_corner
 			 */
 			inline bool operator < (const corner_t& other) const
 			{
-				/* sort by node pointer, then by index */
-				if(this->node < other.node)
+				/* sort by each coordiante*/
+				if(this->x_ind < other.x_ind)
 					return true;
-				if(this->node > other.node)
+				if(this->x_ind > other.x_ind)
 					return false;
-				return (this->index < other.index);
+				if(this->y_ind < other.y_ind)
+					return true;
+				if(this->y_ind > other.y_ind)
+					return false;
+				return (this->z_ind < other.z_ind);
 			};
 
 			/*-----------*/
@@ -412,8 +427,10 @@ namespace node_corner
 			 * the specified OBJ file stream.
 			 *
 			 * @param os    Where to write the OBJ geometry
+			 * @param tree  The originating octree
 			 */
-			void writeobj(std::ostream& os) const;
+			void writeobj(std::ostream& os,
+					const octree_t& tree) const;
 	};
 }
 #endif

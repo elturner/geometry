@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <set>
 #include <Eigen/Dense>
 
@@ -198,48 +199,19 @@ int tree_exporter::export_leafs_to_obj(const string& filename,
 	return 0;
 }
 
-/**
- * Helper function used to export corners to OBJ file
- */
-void export_corners_to_obj_recur(ofstream& outfile, const octree_t& tree,
-					octnode_t* node)
-{
-	node_corner::corner_t corner;
-	size_t i, c;
-
-	/* check arguments */
-	if(node == NULL)
-		return; /* do nothing */
-
-	/* check if leaf node */
-	if(node->isleaf() || node->data != NULL)
-	{
-		/* export the corners of this node */
-		for(c = 0; c < node_corner::NUM_CORNERS_PER_CUBE; c++)
-		{
-			corner.set(tree, node, c);
-			corner.writeobj(outfile);
-		}
-
-		/* we're done */
-		return;
-	}
-
-	/* export children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
-		export_corners_to_obj_recur(outfile, tree, 
-						node->children[i]);
-}
-
 int tree_exporter::export_corners_to_obj(const std::string& filename,
 	                          const octree_t& tree)
 {	
 	ofstream outfile;
+	stringstream ss;
+	octtopo::octtopo_t top;
+	node_boundary_t boundary;
+	facemap_t::const_iterator it;
+	node_corner::corner_t corner;
 	tictoc_t clk;
+	size_t i;
+	int ret;
 	
-	/* time this action */
-	tic(clk);
-
 	/* open file for writing */
 	outfile.open(filename.c_str());
 	if(!(outfile.is_open()))
@@ -253,10 +225,36 @@ int tree_exporter::export_corners_to_obj(const std::string& filename,
 		<< "# nodes of an octree, colored based on the" << endl
 		<< "# corner index." << endl << endl;
 
-	/* export to file */
-	export_corners_to_obj_recur(outfile, tree, tree.get_root());
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+	
+	/* export corners to file */
+	tic(clk);
+	ss.str("");
+
+	/* iterate over faces */
+	for(it = boundary.begin(); it != boundary.end(); it++)
+	{
+		/* export the corners of this face */
+		for(i = 0; i < node_corner::NUM_CORNERS_PER_SQUARE; i++)
+		{
+			/* get this corner */
+			corner.set(tree, it->first, i);
+			corner.writeobj(ss, tree);
+		}
+	}
 
 	/* clean up */
+	outfile << ss.str();
 	outfile.close();
 	toc(clk, "Exporting octree corners to OBJ");
 	return 0;
