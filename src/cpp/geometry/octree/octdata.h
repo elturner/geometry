@@ -47,6 +47,9 @@ class octdata_t
 		 * previous techniques. */
 		bool is_carved;
 
+	/* public parameters */
+	public:
+
 		/* the following definitions are used in computing the
 		 * statistics for a given node's data */
 		static constexpr double UNOBSERVED_PROBABILITY = 0.5;

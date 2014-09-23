@@ -50,6 +50,7 @@
 
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
+#include <mesh/surface/node_corner_map.h>
 #include <iostream>
 #include <string>
 
@@ -117,7 +118,7 @@ class sof_io
 		 *
 		 * @return   Returns zero on success, non-zero on failure
 		 */
-		static int writesof_node(const octnode_t* node,
+		static int writesof_node(octnode_t* node,
 				std::ostream& os);
 
 		/**
@@ -139,13 +140,15 @@ class sof_io
 		 *
 		 * @param node    The node to export
 		 * @param os      The stream to export to
-		 * @param res     The resolution of tree's leaf nodes
+		 * @param tree    The originating tree for this node
+		 * @param corners The corner map for this tree
 		 *
 		 * @return        Returns zero on success, non-zero on
 		 *                failure.
 		 */
-		static int writesog_node(const octnode_t* node,
-				std::ostream& os, double res);
+		static int writesog_node(octnode_t* node,
+				std::ostream& os, const octree_t& tree,
+				const node_corner::corner_map_t& corners);
 };
 
 #endif

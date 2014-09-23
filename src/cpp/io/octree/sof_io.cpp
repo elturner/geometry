@@ -2,12 +2,14 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
+#include <mesh/surface/node_corner_map.h>
 #include <util/tictoc.h>
 #include <util/error_codes.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <set>
 
 /**
  * @file    sof_io.cpp
@@ -119,6 +121,7 @@ int sof_io::writesof(const octree_t& tree, const string& filename)
 		
 int sof_io::writesog(const octree_t& tree, const string& filename)
 {
+	node_corner::corner_map_t corner_map;
 	ofstream outfile;
 	tictoc_t clk;
 	int ret;
@@ -135,6 +138,9 @@ int sof_io::writesog(const octree_t& tree, const string& filename)
 		return -1;
 	}
 
+	/* prepare corner map */
+	corner_map.add_all(tree);
+
 	/* write header information */
 	ret = sof_io::writesog_header(tree, outfile);
 	if(ret)
@@ -146,7 +152,7 @@ int sof_io::writesog(const octree_t& tree, const string& filename)
 
 	/* recursively write nodes to tree */
 	ret = sof_io::writesog_node(tree.get_root(), outfile,
-					tree.get_resolution());
+					tree, corner_map);
 	if(ret)
 	{
 		cerr << "[sof_io::writesog]\tCan't write node information "
@@ -178,7 +184,7 @@ int sof_io::writesof_header(const octree_t& tree, ostream& os)
 	return 0;
 }
 
-int sof_io::writesof_node(const octnode_t* node, ostream& os)
+int sof_io::writesof_node(octnode_t* node, ostream& os)
 {
 	unsigned char leafval, v;
 	size_t i;
@@ -267,11 +273,18 @@ int sof_io::writesog_header(const octree_t& tree, ostream& os)
 	return 0;
 }
 		
-int sof_io::writesog_node(const octnode_t* node, ostream& os, double res)
+int sof_io::writesog_node(octnode_t* node, std::ostream& os, 
+			const octree_t& tree,
+			const node_corner::corner_map_t& corners)
 {
+	pair<set<octnode_t*>::const_iterator,
+			set<octnode_t*>::const_iterator> ns;
+	set<octnode_t*>::const_iterator nit;
+	node_corner::corner_t c;
 	unsigned char leafval, v;
 	float vert[3];
-	size_t i;
+	double res, prob;
+	size_t i, num_ns;
 	int ret;
 
 	/* check arguments */
@@ -286,16 +299,37 @@ int sof_io::writesog_node(const octnode_t* node, ostream& os, double res)
 	{
 		/* this is a leaf node */
 		os.write((char*) &LEAF_NODE, sizeof(LEAF_NODE));
-		
+
 		/* write the value at each corner */
 		leafval = 0;
-		v = (node->data->is_interior() ? INSIDE : OUTSIDE);
-		for(i = 0; i < CHILDREN_PER_NODE; i++)
+		for(i = 0; i < node_corner::NUM_CORNERS_PER_CUBE; i++)
+		{
+			/* get the properties for this corner */
+			c.set(tree, node, i);
+			ns = corners.get_nodes_for(c);
+			
+			/* iterate through all nodes that see this
+			 * corner, determining the average prob of
+			 * the field at that corner */
+			prob = 0;
+			num_ns = 0;
+			for(nit = ns.first; nit != ns.second; nit++)
+			{
+				prob += node->data->get_probability();
+				num_ns++;
+			}
+			prob /= num_ns;
+			v = (prob > octdata_t::UNOBSERVED_PROBABILITY 
+					? INSIDE : OUTSIDE);
+
+			/* add its value to this node's value */
 			leafval |= (v << SOF_TO_OCTREE_ORDER[i]);
+		}
 		os.write((char*) &leafval, sizeof(leafval));	
 	
 		/* write floats that represent point at center of
 		 * this leaf node */
+		res = tree.get_resolution();
 		vert[0] = (float) (node->center(0) / res);
 		vert[1] = (float) (node->center(1) / res);
 		vert[2] = (float) (node->center(2) / res);
@@ -315,7 +349,7 @@ int sof_io::writesog_node(const octnode_t* node, ostream& os, double res)
 			ret = sof_io::writesog_node(
 					node->children[
 					SOF_TO_OCTREE_ORDER[i]], os,
-					res);
+					tree, corners);
 			if(ret)
 				return PROPEGATE_ERROR(-1, ret);
 		}
