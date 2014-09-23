@@ -35,6 +35,7 @@ using namespace std;
 /* file extensions to check for */
 
 #define OCT_FILE_EXT   "oct"
+#define PLY_FILE_EXT   "ply"
 #define VOX_FILE_EXT   "vox"
 #define OBJ_FILE_EXT   "obj"
 #define TXT_FILE_EXT   "txt"
@@ -73,7 +74,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"represents the meshed surface of the volume "
 			"described by the input .oct files.  This program "
 			"supports multiple output file formats, including: "
-			".vox, .obj, .sof, .sog, .txt", false, 1);
+			".vox, .obj, .ply, .sof, .sog, .txt", false, 1);
 	args.add(EXPORT_LEAFS_FLAG, "If present, this flag indicates that "
 			"all leaf centers of the octree should be exported "
 			"to the specified OBJ file.  This flag will be "
@@ -84,8 +85,8 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"the output mesh should be the boundary leaf node "
 			"faces without any surface reconstruction.  This "
 			"flag will be ignored if the output file is not "
-			".obj.  If this flag is not present, then the "
-			"mesh will be processed normally.", true, 0);
+			".obj or .ply.  If this flag is not present, then "
+			"the mesh will be processed normally.", true, 0);
 	args.add(EXPORT_REGIONS_FLAG, "If present, this flag indicates "
 			"that the output mesh should be of region geometry."
 			"  This means that the output will be the boundary "
@@ -174,6 +175,8 @@ OUTPUT_FILE_FORMAT octsurf_run_settings_t::get_format(const std::string& fn)
 		return FORMAT_VOX;
 	if(!ext.compare(OBJ_FILE_EXT))
 		return FORMAT_OBJ;
+	if(!ext.compare(PLY_FILE_EXT))
+		return FORMAT_PLY;
 	if(!ext.compare(TXT_FILE_EXT))
 		return FORMAT_TXT;
 	if(!ext.compare(SOF_FILE_EXT))

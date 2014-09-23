@@ -89,6 +89,18 @@ int main(int argc, char** argv)
 				return 5;
 			}
 			break;
+		case FORMAT_PLY:
+			/* export ply file of node faces */
+			octree_padder::pad(tree);
+			ret = tree_exporter::export_node_faces(
+						args.outfile, tree);
+			if(ret)
+			{
+				cerr << "[main]\tError " << ret << ": "
+				     << "Unable to export to ply" << endl;
+				return 6;
+			}
+			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
 			octree_padder::pad(tree);
@@ -112,7 +124,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to obj" << endl;
-				return 6;
+				return 7;
 			}
 			break;
 		case FORMAT_TXT:
@@ -123,7 +135,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to txt" << endl;
-				return 6;
+				return 8;
 			}
 			break;
 	}

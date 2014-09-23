@@ -1,4 +1,5 @@
 #include "tree_exporter.h"
+#include <io/mesh/mesh_io.h>
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octdata.h>
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <map>
 #include <set>
 #include <Eigen/Dense>
 
@@ -39,7 +41,16 @@ int tree_exporter::export_node_faces(const string& filename,
 {
 	octtopo::octtopo_t top;
 	node_boundary_t boundary;
+	facemap_t::const_iterator it;
+	node_corner::corner_t corner;
+	Vector3d p;
+	mesh_io::mesh_t mesh;
+	mesh_io::vertex_t vertex;
+	mesh_io::polygon_t poly;
+	map<node_corner::corner_t, size_t> corner_index_map;
+	pair<map<node_corner::corner_t, size_t>::iterator, bool> ins;
 	tictoc_t clk;
+	size_t ci;
 	int ret;
 
 	/* initialize the octree topology */
@@ -54,12 +65,58 @@ int tree_exporter::export_node_faces(const string& filename,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
-	/* write the surface */
+	/* iterate through the faces, recording corner positions */
 	tic(clk);
-	ret = boundary.writeobj(filename);
+	for(it = boundary.begin(); it != boundary.end(); it++)
+	{
+		/* clear polygon info for this face */
+		poly.clear();
+
+		/* get the corners for this face */
+		for(ci = 0; ci < node_corner::NUM_CORNERS_PER_SQUARE; ci++)
+		{
+			/* add this corner as a vertex to the mesh */ 
+			corner.set(tree, it->first, ci);
+			corner.get_position(tree, p);
+			vertex.x = p(0);
+			vertex.y = p(1);
+			vertex.z = p(2);
+
+			/* record the index of this corner in the mesh.
+			 *
+			 * If the corner already exists in the mesh, then
+			 * this add will fail (which is what we want). */
+			ins = corner_index_map.insert(
+					pair<node_corner::corner_t,
+					size_t>(corner, mesh.num_verts()));
+
+			/* add this corner to the polygon */
+			mesh.add(vertex);
+			poly.vertices.push_back(ins.first->second);
+		}
+
+		/* we want the normal of the polygon to face into
+		 * the interior of the model, so we may need to
+		 * flip the ordering based on the face in question */
+		if(it->first.exterior == NULL 
+				|| it->first.interior->halfwidth
+				<= it->first.exterior->halfwidth)
+			/* orient to face inwards */
+			std::reverse(poly.vertices.begin(), 
+					poly.vertices.end());
+
+		/* now that we've added the corners to the mesh for this
+		 * face, we can add the polygon of this face to the mesh */
+		mesh.add(poly);
+	}
+	toc(clk, "Preparing mesh");
+
+	/* write the mesh to disk */
+	tic(clk);
+	ret = mesh.write(filename);
 	if(ret)
 		return PROPEGATE_ERROR(-3, ret);
-	toc(clk, "Writing OBJ");
+	toc(clk, "Exporting mesh");
 
 	/* success */
 	return 0;

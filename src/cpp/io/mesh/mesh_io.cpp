@@ -208,7 +208,7 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 			case FORMAT_PLY_LE_COLOR:
 				return this->format;
 			default:
-				return FORMAT_PLY_ASCII;
+				return FORMAT_PLY_LE;
 		}
 	}
 
@@ -305,6 +305,7 @@ polygon_t::polygon_t(size_t i, size_t j, size_t k)
 int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const
 {
 	size_t i, n;
+	int v;
 	unsigned char num;
 
 	/* get number of indices to export */
@@ -351,8 +352,10 @@ int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const
 			num = (int) n;
 			os.write((char*) &num, sizeof(num));
 			for(i = 0; i < n; i++)
-				os.write((char*) &(this->vertices[i]),
-						sizeof(this->vertices[i]));
+			{
+				v = this->vertices[i];
+				os.write((char*) &v, sizeof(v));
+			}
 			break;
 	}
 
