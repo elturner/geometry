@@ -146,7 +146,7 @@ namespace node_corner
 			{ return this->faces.size(); };
 
 			/**
-			 * Chcek if a given face is in this structure
+			 * Check if a given face is in this structure
 			 *
 			 * @param f   The face to analyze
 			 *
@@ -154,6 +154,22 @@ namespace node_corner
 			 */
 			inline bool contains(const node_face_t& f) const
 			{ return this->faces.count(f) > 0; };
+	
+			/**
+			 * Beginning iterator for the face set
+			 *
+			 * @return   The begin iterator for the set of faces
+			 */
+			inline faceset_t::const_iterator begin_faces() const
+			{ return this->faces.begin(); };
+
+			/**
+			 * End iterator fot the face set
+			 *
+			 * @return   The end iterator for the set of faces
+			 */
+			inline faceset_t::const_iterator end_faces() const
+			{ return this->faces.end(); };
 	};
 
 	/**
