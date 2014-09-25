@@ -41,3 +41,37 @@ void corner_t::writeobj(std::ostream& os, const octree_t& tree) const
 	this->get_position(tree, p);
 	os << "v " << p.transpose() << endl;
 }
+			
+bool corner_t::within_bounds(const corner_t& min_c,
+					const corner_t& max_c) const
+{
+	/* check that this corner falls within the given bounds */
+	if(this->x_ind < min_c.x_ind || this->x_ind > max_c.x_ind)
+		return false; /* out of bounds in x */
+	if(this->y_ind < min_c.y_ind || this->y_ind > max_c.y_ind)
+		return false; /* out of bounds in y */
+	if(this->z_ind < min_c.z_ind || this->z_ind > max_c.z_ind)
+		return false; /* out of bounds in z */
+	return true; /* in bounds */
+}
+			
+void corner_t::update_bounds(corner_t& min_c, corner_t& max_c) const
+{
+	/* update x-component */
+	if(this->x_ind < min_c.x_ind)
+		min_c.x_ind = this->x_ind;
+	if(this->x_ind > max_c.x_ind)
+		max_c.x_ind = this->x_ind;
+	
+	/* update y-component */
+	if(this->y_ind < min_c.y_ind)
+		min_c.y_ind = this->y_ind;
+	if(this->y_ind > max_c.y_ind)
+		max_c.y_ind = this->y_ind;
+
+	/* update z-component */
+	if(this->z_ind < min_c.z_ind)
+		min_c.z_ind = this->z_ind;
+	if(this->z_ind > max_c.z_ind)
+		max_c.z_ind = this->z_ind;
+}

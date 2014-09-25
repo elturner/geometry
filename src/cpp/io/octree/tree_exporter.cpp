@@ -8,6 +8,7 @@
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/surface/node_corner.h>
+#include <mesh/surface/face_mesher.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -34,7 +35,48 @@
 using namespace std;
 using namespace Eigen;
 
+/*--------------------------*/
 /* function implementations */
+/*--------------------------*/
+	
+int tree_exporter::export_dense_mesh(const std::string& filename,
+	                      const octree_t& tree)
+{
+	octtopo::octtopo_t top;
+	node_boundary_t boundary;
+	face_mesher_t mesher;
+	tictoc_t clk;
+	int ret;
+
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+
+	/* generate mesh from this geometry */
+	tic(clk);
+	ret = mesher.add(tree, boundary);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+	toc(clk, "Generating mesh");
+
+	/* export the mesh */
+	tic(clk);
+	ret = mesher.get_mesh().write(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	toc(clk, "Exporting mesh");
+
+	/* success */
+	return 0;
+}
 	
 int tree_exporter::export_node_faces(const string& filename,
                                      const octree_t& tree)

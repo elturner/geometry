@@ -190,12 +190,6 @@ namespace node_corner
 		/* functions */
 		public:
 
-			/*------------*/
-			/* processing */
-			/*------------*/
-
-			// TODO
-
 			/*-----------*/
 			/* modifiers */
 			/*-----------*/
@@ -240,6 +234,23 @@ namespace node_corner
 			 */
 			void add(const octree_t& tree,
 					const node_face_t& f);
+
+			/**
+			 * Adds the given face to this map
+			 *
+			 * Will add all corners of the given face,
+			 * as well as corners of neighboring faces
+			 * that intersect with this face, to this structure.
+			 * It will also associate this face with each
+			 * corner.
+			 *
+			 * @param tree   The originating tree for f
+			 * @param f      The face to add to this map
+			 * @param neighs The neighbors of this face
+			 */
+			void add(const octree_t& tree,
+					const node_face_t& f,
+					const node_face_info_t& neighs);
 
 			/**
 			 * Adds all faces in the given boundary struct

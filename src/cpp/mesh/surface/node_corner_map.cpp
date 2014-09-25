@@ -83,6 +83,73 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f)
 	}
 }
 			
+void corner_map_t::add(const octree_t& tree, const node_face_t& f,
+					const node_face_info_t& neighs)
+{
+	pair<ccmap_t::iterator, bool> ins;
+	corner_t corner, min_c, max_c;
+	faceset_t::const_iterator fit;
+	double hw;
+	size_t ci;
+
+	/* iterate over the corners of this face */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* construct this corner */ 
+		corner.set(tree, f, ci);
+
+		/* add to this map */
+		ins = this->corners.insert(pair<corner_t, corner_info_t>(
+					corner, corner_info_t()));
+
+		/* Either the corner was just added, or it was already
+		 * present.  In either case, add this face to the info
+		 * for this corner. */
+		ins.first->second.add(f);
+
+		/* record the min and max observed */
+		if(ci == 0)
+			min_c = max_c = corner;
+		else
+			corner.update_bounds(min_c, max_c);
+	}
+
+	/* iterate over the neighboring faces of f, searching
+	 * for smaller faces */
+	hw = f.get_halfwidth();
+	for(fit = neighs.begin(); fit != neighs.end(); fit++)
+	{
+		/* check if the neighbor is smaller */
+		if(hw <= fit->get_halfwidth())
+			continue; /* don't care about this one */
+
+		/* if the neighbor is smaller, then one of the
+		 * neighbor's corners will occur along the edge
+		 * of this face, and we want this face to be associated
+		 * with that corner 
+		 *
+		 * So we need to iterate over the corners of the
+		 * neighbor face, and determine if it is contained
+		 * within the face f */
+		for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+		{
+			/* get this corner of the neighbor face */
+			corner.set(tree, *fit, ci);
+
+			/* check if this corner is in bounds of
+			 * the current face */
+			if(!(corner.within_bounds(min_c, max_c)))
+				continue; /* don't care about this corner */
+				
+			/* add this face to the neighbor's corner */
+			ins = this->corners.insert(
+					pair<corner_t, corner_info_t>(
+					corner, corner_info_t()));
+			ins.first->second.add(f);
+		}
+	}
+}
+			
 void corner_map_t::add(const octree_t& tree,
 			const node_boundary_t& boundary)
 {
@@ -90,7 +157,7 @@ void corner_map_t::add(const octree_t& tree,
 
 	/* iterate through the faces in this object */
 	for(it = boundary.begin(); it != boundary.end(); it++)
-		this->add(tree, it->first); /* add it */
+		this->add(tree, it->first, it->second); /* add it */
 }
 
 pair<set<octnode_t*>::const_iterator, set<octnode_t*>::const_iterator>

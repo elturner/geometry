@@ -276,12 +276,12 @@ namespace node_corner
 
 				/* get tree properties */
 				p -= tree.get_root()->center;
-				res = tree.get_resolution();
+				res = tree.get_resolution() * 0.5;
 
 				/* get discretized coordinates */
-				this->x_ind = (int) round(p(0) / res);
-				this->y_ind = (int) round(p(1) / res);
-				this->z_ind = (int) round(p(2) / res);
+				this->x_ind = (int) floor(p(0) / res);
+				this->y_ind = (int) floor(p(1) / res);
+				this->z_ind = (int) floor(p(2) / res);
 			};
 
 			/**
@@ -341,7 +341,7 @@ namespace node_corner
 				double res;
 
 				/* get the tree resolution */
-				res = tree.get_resolution();
+				res = tree.get_resolution() * 0.5;
 
 				/* set corner position based on tree */
 				pos = tree.get_root()->center;
@@ -349,6 +349,37 @@ namespace node_corner
 				pos(1) += this->y_ind * res;
 				pos(2) += this->z_ind * res;
 			};
+
+			/**
+			 * Checks if this face occurs within the bounding
+			 * box given.
+			 *
+			 * Given a bounding box of corners in 3D space,
+			 * will check if this corner falls within the
+			 * bounding box.
+			 *
+			 * @param min_c   The minimum corner of the bounds
+			 * @param max_c   The maximum corner of the bounds
+			 *
+			 * @return    Returns true if this corner is within
+			 *            the given bounds.
+			 */
+			bool within_bounds(const corner_t& min_c,
+					const corner_t& max_c) const;
+
+			/**
+			 * Will update the bounds specified by the arguments
+			 * to include this corner.
+			 *
+			 * Given some bounds, will modify the min and max
+			 * components so that the bounds include the value
+			 * of this corner
+			 *
+			 * @param min_c   The minimum corner of the bounds
+			 * @param max_c   The maximum corner of the bounds
+			 */
+			void update_bounds(corner_t& min_c, 
+					corner_t& max_c) const;
 
 			/*-----------*/
 			/* operators */

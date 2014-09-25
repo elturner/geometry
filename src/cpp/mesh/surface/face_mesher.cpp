@@ -58,6 +58,7 @@ int face_mesher_t::add(const octree_t& tree,
 	vector<pair<double, size_t> > face_inds; /* <sort value, index> */
 	Vector3d norm, avg_norm, a, b, pos, disp;
 	mesh_io::polygon_t poly;
+	double normmag;
 	size_t i, num_faces;
 
 	/* iterate over the corners given */
@@ -67,6 +68,7 @@ int face_mesher_t::add(const octree_t& tree,
 		avg_norm << 0,0,0; /* reset to zero */
 		face_inds.clear();
 		poly.clear();
+		it->first.get_position(tree, pos);
 
 		/* add all faces to this structure */
 		for(fit = it->second.begin_faces(); 
@@ -83,7 +85,15 @@ int face_mesher_t::add(const octree_t& tree,
 
 		/* compute average normal for all faces */
 		num_faces = face_inds.size();
-		avg_norm /= num_faces;
+		normmag = avg_norm.norm();
+		if(normmag == 0)
+			avg_norm << 0,0,-1; /* arbitrary */
+		else
+			avg_norm /= normmag; /* normalize */
+
+		/* check that we have sufficient faces to make a polygon */
+		if(num_faces < 3)
+			return -1;
 
 		/* the face normals all point outwards (from interior
 		 * to exterior), but we want our polygon's normal
@@ -93,26 +103,26 @@ int face_mesher_t::add(const octree_t& tree,
 		/* make up some coordinate axis for the tangent
 		 * plane of this corner (remember that the corner
 		 * will become a polygon) */
-		if(abs(norm(0)) < abs(norm(1)))
+		if(abs(avg_norm(0)) < abs(avg_norm(1)))
 			a << 1,0,0; /* x-axis less in line with norm */
 		else
 			a << 0,1,0; /* y-axis less in line with norm */
-		b = norm.cross(a);
+		b = avg_norm.cross(a);
 		b.normalize();
-		a = b.cross(norm);
+		a = b.cross(avg_norm);
 
 		/* sort the faces around the corner by their angle
 		 * along these coordinate axes */
-		it->first.get_position(tree, pos);
 		for(i = 0; i < num_faces; i++)
 		{
 			/* get displacement of vertex from corner pos */
 			disp(0) = this->mesh.get_vert(
-					face_inds[i].second).x - pos(0);
+					face_inds[i].second).x;
 			disp(1) = this->mesh.get_vert(
-					face_inds[i].second).y - pos(1);
+					face_inds[i].second).y;
 			disp(2) = this->mesh.get_vert(
-					face_inds[i].second).z - pos(2);
+					face_inds[i].second).z;
+			disp -= pos;
 
 			/* compute angle of this vertex with respect
 			 * to the coordinates (a,b) */

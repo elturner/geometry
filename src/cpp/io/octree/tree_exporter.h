@@ -21,14 +21,28 @@
 namespace tree_exporter
 {
 	/**
-	 * Will export boundary leaf faces to OBJ file
+	 * Exports a dense mesh of the octree to the specified file
+	 *
+	 * Will export the interior/exterior boundary described in the
+	 * specified octree to a topologically connected mesh.
+	 *
+	 * @param filename   The path to the .obj/.ply file to write
+	 * @param tree       The tree to export
+	 *
+	 * @return           Returns zero on success, non-zero on failure.
+	 */
+	int export_dense_mesh(const std::string& filename,
+	                      const octree_t& tree);
+
+	/**
+	 * Will export boundary leaf faces to file (either OBJ or PLY)
 	 *
 	 * Will export the boundary faces of the octree leaf nodes that
 	 * divide interior and exterior nodes.  These faces will be
 	 * exported without any additional surface reconstruction, and
 	 * will render a discretized, cubist surface.
 	 *
-	 * @param filename    The path to the .obj file to write
+	 * @param filename    The path to the .obj/.ply file to write
 	 * @param tree        The tree to export
 	 *
 	 * @return            Returns zero on success, non-zero on failure.

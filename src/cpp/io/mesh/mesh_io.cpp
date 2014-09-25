@@ -159,6 +159,56 @@ int mesh_t::write(const string& filename, FILE_FORMAT f) const
 	return 0;
 }
 			
+void mesh_t::set_color(bool color)
+{
+	if(color)
+	{
+		switch(this->format)
+		{
+			default:
+				/* do nothing */
+				return;
+
+			/* go from non-colored to color */
+			case FORMAT_OBJ:
+				this->format = FORMAT_OBJ_COLOR;
+				break;
+			case FORMAT_PLY_ASCII:
+				this->format = FORMAT_PLY_ASCII_COLOR;
+				break;
+			case FORMAT_PLY_BE:
+				this->format = FORMAT_PLY_BE_COLOR;
+				break;
+			case FORMAT_PLY_LE:
+				this->format = FORMAT_PLY_LE_COLOR;
+				break;
+		}
+	}
+	else
+	{
+		switch(this->format)
+		{
+			default:
+				/* do nothing */
+				return;
+
+			/* go from colored to non-colored */
+			case FORMAT_OBJ_COLOR:
+				this->format = FORMAT_OBJ;
+				break;
+			case FORMAT_PLY_ASCII_COLOR:
+				this->format = FORMAT_PLY_ASCII;
+				break;
+			case FORMAT_PLY_BE_COLOR:
+				this->format = FORMAT_PLY_BE;
+				break;
+			case FORMAT_PLY_LE_COLOR:
+				this->format = FORMAT_PLY_LE;
+				break;
+		}
+	}
+}
+			
 void mesh_t::clear()
 {
 	/* clear values */

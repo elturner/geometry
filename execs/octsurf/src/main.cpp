@@ -92,7 +92,11 @@ int main(int argc, char** argv)
 		case FORMAT_PLY:
 			/* export ply file of node faces */
 			octree_padder::pad(tree);
-			ret = tree_exporter::export_node_faces(
+			if(args.export_node_faces)
+				ret = tree_exporter::export_node_faces(
+						args.outfile, tree);
+			else
+				ret = tree_exporter::export_dense_mesh(
 						args.outfile, tree);
 			if(ret)
 			{
@@ -116,9 +120,12 @@ int main(int argc, char** argv)
 			else if(args.export_corners)
 				ret = tree_exporter::export_corners_to_obj(
 						args.outfile, tree);
-			else
+			else if(false /* TODO do something here */)
 				ret = tree_exporter::
 					export_exterior_cubes_to_obj(
+						args.outfile, tree);
+			else
+				ret = tree_exporter::export_dense_mesh(
 						args.outfile, tree);
 			if(ret)
 			{

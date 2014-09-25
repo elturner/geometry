@@ -269,6 +269,21 @@ namespace mesh_io
 				}
 			};
 
+			/**
+			 * Sets color for the vertices
+			 *
+			 * If 'color' is true, will ensure that
+			 * the vertices are assumed to be represented
+			 * with color.
+			 *
+			 * If 'color' is false, will ensure that
+			 * the vertices are assumed to NOT be represented
+			 * with color.
+			 *
+			 * @param color  Whether to use color or not
+			 */
+			void set_color(bool color);
+
 			/*-----------*/
 			/* modifiers */
 			/*-----------*/
