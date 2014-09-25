@@ -80,14 +80,18 @@ int face_mesher_t::add(const octree_t& tree,
 		
 			/* compute normal for this face */
 			fit->get_normal(norm);
-			avg_norm += norm; /* each face counts equally */
+
+			/* each face counts proportional
+			 * to its surface area when performing
+			 * the weighted average */
+			avg_norm += norm * fit->get_area(); 
 		}
 
 		/* compute average normal for all faces */
 		num_faces = face_inds.size();
 		normmag = avg_norm.norm();
 		if(normmag == 0)
-			avg_norm << 0,0,-1; /* arbitrary */
+			avg_norm << 0,0,1; /* arbitrary */
 		else
 			avg_norm /= normmag; /* normalize */
 

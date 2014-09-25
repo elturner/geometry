@@ -86,7 +86,8 @@ namespace mesh_io
 			/**
 			 * Constructs default (empty) mesh
 			 */
-			mesh_t() {};
+			mesh_t() 
+			{ this->format = FORMAT_UNKNOWN; };
 
 			/**
 			 * Constructs mesh from given other mesh
@@ -95,7 +96,8 @@ namespace mesh_io
 			 */
 			mesh_t(const mesh_t& other)
 				: vertices(other.vertices), 
-				  polygons(other.polygons)
+				  polygons(other.polygons),
+				  format(other.format)
 			{};
 
 			/**

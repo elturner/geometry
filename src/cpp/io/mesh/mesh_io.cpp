@@ -170,6 +170,7 @@ void mesh_t::set_color(bool color)
 				return;
 
 			/* go from non-colored to color */
+			case FORMAT_UNKNOWN:
 			case FORMAT_OBJ:
 				this->format = FORMAT_OBJ_COLOR;
 				break;
@@ -236,9 +237,18 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 		 * formatting options */
 		switch(this->format)
 		{
+			/* check if already an obj */
 			case FORMAT_OBJ:
 			case FORMAT_OBJ_COLOR:
 				return this->format;
+
+			/* check if colored of another format */
+			case FORMAT_PLY_ASCII_COLOR:
+			case FORMAT_PLY_BE_COLOR:
+			case FORMAT_PLY_LE_COLOR:
+				return FORMAT_OBJ_COLOR;
+
+			/* return uncolored obj */
 			default:
 				return FORMAT_OBJ;
 		}
@@ -250,6 +260,7 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 		 * same manner */
 		switch(this->format)
 		{
+			/* check if already a ply format */
 			case FORMAT_PLY_ASCII:
 			case FORMAT_PLY_BE:
 			case FORMAT_PLY_LE:
@@ -257,6 +268,12 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 			case FORMAT_PLY_BE_COLOR:
 			case FORMAT_PLY_LE_COLOR:
 				return this->format;
+
+			/* check if colored of another format */
+			if(FORMAT_OBJ_COLOR)
+				return FORMAT_PLY_LE_COLOR;
+
+			/* return uncolored ply */
 			default:
 				return FORMAT_PLY_LE;
 		}
