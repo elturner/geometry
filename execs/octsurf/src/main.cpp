@@ -120,10 +120,6 @@ int main(int argc, char** argv)
 			else if(args.export_corners)
 				ret = tree_exporter::export_corners_to_obj(
 						args.outfile, tree);
-			else if(false /* TODO do something here */)
-				ret = tree_exporter::
-					export_exterior_cubes_to_obj(
-						args.outfile, tree);
 			else
 				ret = tree_exporter::export_dense_mesh(
 						args.outfile, tree);

@@ -125,11 +125,31 @@ class face_mesher_t
 		 * a new vertex.  If the face already exists in the mesh,
 		 * no operation is performed.
 		 *
+		 * The new vertex will be placed at the face's isosurface
+		 * position.
+		 *
 		 * @param face    The face to add
 		 *
 		 * @return   The index of the vertex defined by this face
 		 */
 		size_t add(const node_face_t& face);
+
+		/**
+		 * Adds the given node face as a vertex in this mesh
+		 *
+		 * Given a node face and the position of the vertex that
+		 * corresponds to this face, will insert it into the mesh
+		 * as a new vertex.  If the face is already present in the
+		 * mesh, then nop operation is performed.
+		 *
+		 * @param face     The face to add
+		 * @param pos      The position of the vertex for this face
+		 *
+		 * @return   Returns the index of the verted defined by this
+		 *           face.
+		 */
+		size_t add(const node_face_t& face,
+		           const Eigen::Vector3d& pos);
 
 		/*-----------*/
 		/* accessors */
@@ -145,6 +165,49 @@ class face_mesher_t
 		 */
 		inline const mesh_io::mesh_t get_mesh() const
 		{ return this->mesh; };
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Computes the vertex position for the given face
+		 *
+		 * Given a face and a populated corner map, will determine
+		 * the best vertex position for this face based on both
+		 * its isosurface position and the interpolated probability
+		 * values at the corners.
+		 *
+		 * @param pos          Where to store the position for the
+		 *                     face's vertex.
+		 * @param tree         The originating octree
+		 * @param face         The face to analyze
+		 * @param corner_map   The corner map to use
+		 */
+		static void get_face_pos(Eigen::Vector3d& pos,
+			const octree_t& tree, const node_face_t& face, 
+			const node_corner::corner_map_t& corner_map);
+
+		/**
+		 * Computes the probability value at the specified corner
+		 *
+		 * Will assume the corner map is populated with faces
+		 * for each corner.  Will get the nodes from these faces
+		 * and perform a weighted average to obtain the probability
+		 * value interpolated at the corner.
+		 *
+		 * The probabilities from each node is weighted inversely
+		 * to the distance of the corner to the node center.
+		 *
+		 * @param corner      The corner to analyze
+		 * @param tree        The originating octree
+		 * @param corner_map  The corner map to use
+		 *
+		 * @return   The interpolated probability value
+		 */
+		static double get_corner_prob(
+			const node_corner::corner_t& corner,
+			const octree_t& tree,
+			const node_corner::corner_map_t& corner_map);
 };
 
 #endif

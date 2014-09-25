@@ -28,6 +28,10 @@ using namespace std;
 using namespace Eigen;
 using namespace node_corner;
 
+/* the following constants are used for computations in this file */
+
+#define APPROX_ZERO  0.00001
+
 /*--------------------------*/
 /* function implementations */
 /*--------------------------*/
@@ -56,7 +60,7 @@ int face_mesher_t::add(const octree_t& tree,
 	ccmap_t::const_iterator it;
 	faceset_t::const_iterator fit;
 	vector<pair<double, size_t> > face_inds; /* <sort value, index> */
-	Vector3d norm, avg_norm, a, b, pos, disp;
+	Vector3d face_pos, norm, avg_norm, a, b, pos, disp;
 	mesh_io::polygon_t poly;
 	double normmag;
 	size_t i, num_faces;
@@ -74,9 +78,12 @@ int face_mesher_t::add(const octree_t& tree,
 		for(fit = it->second.begin_faces(); 
 				fit != it->second.end_faces(); fit++)
 		{
+			/* compute position of this face's center */
+			fit->get_isosurface_pos(face_pos);
+
 			/* add this face */
 			face_inds.push_back(pair<double, size_t>
-					(0.0, this->add(*fit)));
+					(0.0, this->add(*fit, face_pos)));
 		
 			/* compute normal for this face */
 			fit->get_normal(norm);
@@ -147,8 +154,19 @@ int face_mesher_t::add(const octree_t& tree,
 		
 size_t face_mesher_t::add(const node_face_t& face)
 {
-	pair<map<node_face_t, size_t>::iterator, bool> ins;
 	Vector3d pos;
+
+	/* compute isosurface position for this face */
+	face.get_isosurface_pos(pos);
+
+	/* add to mesh */
+	return this->add(face, pos);
+}
+
+size_t face_mesher_t::add(const node_face_t& face,
+		           const Eigen::Vector3d& pos)
+{
+	pair<map<node_face_t, size_t>::iterator, bool> ins;
 	mesh_io::vertex_t vert;
 	size_t ind;
 
@@ -167,7 +185,6 @@ size_t face_mesher_t::add(const node_face_t& face)
 	 *
 	 * For now, compute the isosurface position at the
 	 * center of the face. */
-	face.get_isosurface_pos(pos);
 	vert.x = pos(0);
 	vert.y = pos(1);
 	vert.z = pos(2);
@@ -175,4 +192,152 @@ size_t face_mesher_t::add(const node_face_t& face)
 	/* insert the vertex into the mesh */
 	this->mesh.add(vert);
 	return ind;
+}
+
+/*------------------*/
+/* helper functions */
+/*------------------*/
+
+void face_mesher_t::get_face_pos(Eigen::Vector3d& pos,
+				const octree_t& tree, 
+				const node_face_t& face, 
+				const node_corner::corner_map_t& corner_map)
+{
+	node_corner::corner_t corner[node_corner::NUM_CORNERS_PER_SQUARE];
+	double cval[node_corner::NUM_CORNERS_PER_SQUARE];
+	Vector3d cpos[node_corner::NUM_CORNERS_PER_SQUARE];
+	Vector3d u, v, cnet, fpos;
+	size_t ci;
+	double a, b, c, d, uval, vval;
+
+	/* compute face position */
+	face.get_isosurface_pos(fpos);
+
+	/* iterate over the corners of this face */
+	for(ci = 0; ci < node_corner::NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* get this corner */
+		corner[ci].set(tree, face, ci);
+		corner[ci].get_position(tree, cpos[ci]);
+
+		/* compute probability value at the corner */
+		cval[ci] = face_mesher_t::get_corner_prob(corner[ci], tree,
+						corner_map);
+	}
+
+	/*
+	 * The following graphic demonstrates the location of the 
+	 * corners of this face.
+	 *
+	 * V    [1] .-----<a--.  [0]
+	 * ^        |         ^  
+	 * |        b         d  
+	 * |        v         |  
+	 * |        |         |  
+	 * |    [2] .---c>----.  [3]
+	 * |
+	 * .-----------------------------> U
+	 *
+	 *
+	 * The values a,b,c,d indicate the positions along each edge
+	 * of the 0.5 value when performing linear interpolation between
+	 * probabilities at the corners.
+	 *
+	 * So, if a=0, that means the 0.5 mark occurs at [0], and if a=0.9,
+	 * then the 0.5 mark occurs close to [1].
+	 */
+	a = b = c = d = 0.5;
+	if(abs(cval[0] - cval[1]) > APPROX_ZERO)
+		a = (cval[0] - 0.5) / (cval[0] - cval[1]);
+	if(abs(cval[1] - cval[2]) > APPROX_ZERO)
+		b = (cval[1] - 0.5) / (cval[1] - cval[2]);
+	if(abs(cval[2] - cval[3]) > APPROX_ZERO)
+		c = (cval[2] - 0.5) / (cval[2] - cval[3]);
+	if(abs(cval[3] - cval[0]) > APPROX_ZERO)
+		d = (cval[3] - 0.5) / (cval[3] - cval[0]);
+
+	/* since it may be the case that both values on an edge are
+	 * greater than 0.5 or both are less than 0.5, then we should
+	 * make sure to restrict the output to the range [0,1] */
+	a = min(1.0, max(0.0, a));
+	b = min(1.0, max(0.0, b));
+	c = min(1.0, max(0.0, c));
+	d = min(1.0, max(0.0, d));
+	
+	/* now we want to find the bilinearly interpolated value
+	 * in the surface of the face */
+	u = cpos[0] - cpos[1]; /* the axis shown as horizontal above */
+	v = cpos[1] - cpos[2]; /* the axis shown as vertical above */
+
+	/* now we want to get the displacement of the center
+	 * position from the center of the face, in both the u
+	 * and v directions.
+	 *
+	 * This means that we want to average the horizontal
+	 * edge values (a,c) to get uval and also average the
+	 * vertical edge values (b,d) to get vval.  Since each
+	 * value in each direction goes opposing ways, this average
+	 * will be a simple subtraction.
+	 *
+	 * Also, since we're displacing from the center of the face
+	 * to the edge of the face, there will be an extra division
+	 * by 2 to account for the lengths of u and v. */
+	uval = (c - a) / 2;
+	vval = (d - b) / 2;
+
+	/* compute the 2D lateral displacement from face center */
+	cnet = u*uval + v*vval;
+
+	/* incorporate the best corner position (lateral direction) with
+	 * the face's isosurface position (normal direction) */
+	pos = fpos + cnet;
+}
+
+double face_mesher_t::get_corner_prob(
+				const node_corner::corner_t& corner,
+				const octree_t& tree,
+				const node_corner::corner_map_t& corner_map)
+{
+	pair<faceset_t::const_iterator, faceset_t::const_iterator> range;
+	faceset_t::const_iterator it;
+	set<octnode_t*> nodes;
+	set<octnode_t*>::iterator sit;
+	double num, den, dist;
+	Vector3d cpos;
+
+	/* get position of this corner */
+	corner.get_position(tree, cpos);
+
+	/* get all the faces associated with this corner */
+	range = corner_map.get_faces_for(corner);
+	for(it = range.first; it != range.second; it++)
+	{
+		/* add nodes from this face to the map */
+		nodes.insert(it->interior);
+		nodes.insert(it->exterior);
+	}
+
+	/* iterate over the nodes, generating weighted average */
+	num = den = 0;
+	for(sit = nodes.begin(); sit != nodes.end(); sit++)
+	{
+		/* check value */
+		if(*sit == NULL || (*sit)->data == NULL)
+			continue; /* ignore this one */
+
+		/* get inverse distance of corner to node */
+		dist = 1.0 / (cpos - (*sit)->center).norm();
+
+		/* add the probability value of the current node,
+		 * inversely weighted by its distance */
+		num += dist * (*sit)->data->get_probability();
+		den += dist;
+	}
+
+	/* check edge case of no nodes */
+	if(den == 0)
+		return octdata_t::UNOBSERVED_PROBABILITY;
+
+	/* return the weighted average */
+	return (num / den);
 }
