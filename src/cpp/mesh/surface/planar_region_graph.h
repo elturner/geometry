@@ -391,6 +391,18 @@ class planar_region_info_t
 		{ return this->region; };
 
 		/**
+		 * Retrieves the beginning iterator to neighbor set
+		 */
+		inline faceset_t::const_iterator begin_neighs() const
+		{ return this->neighbor_seeds.begin(); };
+
+		/**
+		 * Retrieves the end iterator for the neighbor set
+		 */
+		inline faceset_t::const_iterator end_neighs() const
+		{ return this->neighbor_seeds.end(); };
+
+		/**
 		 * Get the computed planarity of this region
 		 *
 		 * Will return the cached value for the

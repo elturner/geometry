@@ -206,6 +206,10 @@ class planar_region_t
 		inline size_t num_faces() const
 		{ return this->faces.size(); };
 
+		/*----------*/
+		/* geometry */
+		/*----------*/
+
 		/**
 		 * Computes the surface area of this region
 		 *
@@ -247,6 +251,18 @@ class planar_region_t
 				const Eigen::Vector3d& b,
 				double& a_min, double& a_max,
 				double& b_min, double& b_max) const;
+
+		/**
+		 * Orients the normal vector of this region's plane
+		 *
+		 * Orient's this region's plane's normal vector
+		 * so that it points "inwards".  When the normal
+		 * vector is computed originally for the plane,
+		 * there is an ambiguity whether it is pointing
+		 * inwards or outwards.  This will point it into
+		 * the interior of the environment.
+		 */
+		void orient_normal();
 
 		/*-----------*/
 		/* debugging */

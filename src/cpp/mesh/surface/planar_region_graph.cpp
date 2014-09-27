@@ -127,6 +127,9 @@ int planar_region_graph_t::populate(const node_boundary_t& boundary)
 	 * determine if those neighbors are part of different regions. */
 	for(rit = this->regions.begin(); rit != this->regions.end(); rit++)
 	{
+		/* ensure the normal is oriented for this region */
+		rit->second.region.orient_normal();
+
 		/* iterate over the faces of this region */
 		for(fit = rit->second.region.begin();
 				fit != rit->second.region.end(); fit++)
@@ -525,6 +528,7 @@ int planar_region_graph_t::merge_regions(const planar_region_pair_t& pair)
 
 	/* update region's plane information */
 	fit->second.region.set_plane(pair.plane);
+	fit->second.region.orient_normal(); /* normal points inwards */
 
 	/* remove second region from this graph */
 	this->regions.erase(sit);

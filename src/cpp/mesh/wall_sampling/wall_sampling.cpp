@@ -267,7 +267,7 @@ void wall_sample_info_t::writedq(ostream& os) const
 
 	/* if weight is less than one, don't write out this sample,
 	 * since it's clearly not well represented */
-	if(w == 0)
+	if(w <= 0)
 		return;
 
 	/* export this info to a single line in the

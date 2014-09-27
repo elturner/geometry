@@ -95,6 +95,7 @@ void planar_region_t::find_face_centers(vector<Vector3d,
 			vector<double>& variances, bool useiso) const
 {
 	faceset_t::const_iterator it;
+	double hw;
 	size_t i, n;
 
 	/* resize the vectors appropriately */
@@ -118,9 +119,10 @@ void planar_region_t::find_face_centers(vector<Vector3d,
 		{
 			/* use the grid positions and halfwidth */
 			it->get_center(centers[i]);
-			variances[i] = it->get_area(); /* variance is in
-							* units of area */
-
+			
+			/* use halfwidth as std. dev. */
+			hw = it->get_halfwidth();
+			variances[i] = hw*hw;
 		}
 	}
 }
@@ -171,6 +173,42 @@ void planar_region_t::compute_bounding_box(
 		a_max = max(a_max, coord_a + hw);
 		b_min = min(b_min, coord_b - hw);
 		b_max = max(b_max, coord_b + hw);
+	}
+}
+		
+void planar_region_t::orient_normal()
+{
+	faceset_t::iterator it;
+	Vector3d n;
+	double total;
+
+	/* prepare values.  We will iterate over
+	 * the faces of the region, and get each
+	 * face's vote on the normal direction, which
+	 * will be tallied in 'total' 
+	 *
+	 * A positive value indicates the normal
+	 * is currently pointing out of the environment.
+	 * A negative value indicates it is currently
+	 * inwards. */
+	total = 0;
+	
+	/* iterate over the faces of this region */
+	for(it = this->begin(); it != this->end(); it++)
+	{
+		/* get normal for this face */
+		it->get_normal(n);
+
+		/* add to total, weighted by
+		 * the surface area of the face */
+		total += n.dot(this->plane.normal) * it->get_area();
+	}
+
+	/* check if we want to flip normal */
+	if(total > 0)
+	{
+		/* flip it */
+		this->plane.normal *= -1;
 	}
 }
 
