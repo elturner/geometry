@@ -44,6 +44,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.cpp \
 		$(SOURCEDIR)mesh/wall_sampling/wall_sampling.cpp \
 		src/oct2dq_run_settings.cpp \
+		src/wall_region_info.cpp \
 		src/process.cpp \
 		src/main.cpp
 
@@ -86,6 +87,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.h \
 		$(SOURCEDIR)mesh/wall_sampling/wall_sampling.h \
 		src/oct2dq_run_settings.h \
+		src/wall_region_info.h \
 		src/process.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

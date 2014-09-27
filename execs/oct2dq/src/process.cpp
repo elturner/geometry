@@ -1,5 +1,6 @@
 #include "process.h"
 #include "oct2dq_run_settings.h"
+#include "wall_region_info.h"
 #include <io/data/fss/fss_io.h>
 #include <geometry/shapes/shape_wrapper.h>
 #include <geometry/shapes/linesegment.h>
@@ -116,16 +117,18 @@ int process_t::init(oct2dq_run_settings_t& args)
 		
 int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 {
-	progress_bar_t progbar;
+	map<node_face_t, wall_region_info_t> wall_regions;
+	map<node_face_t, wall_region_info_t>::iterator wit, w1it, w2it;
+	wall_region_info_t wall_info;
 	regionmap_t::const_iterator it;
-	faceset_t::const_iterator fit;
+	faceset_t::const_iterator fit, n1it, n2it;
 	octnode_t* leaf;
 	pair<nodefacemap_t::const_iterator, 
 			nodefacemap_t::const_iterator> range;
-	Vector3d a, b, p;
+	Vector3d p;
 	wall_sample_t ws;
-	plane_t vertical;
-	double strength, a_min, a_max, b_min, b_max, coord_a, coord_b;
+	double coord_a, coord_b;
+	progress_bar_t progbar;
 	tictoc_t clk;
 	size_t i;
 
@@ -146,35 +149,99 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 		/* show status to user */
 		progbar.update(i++, this->region_graph.size());
 
-		/* populate this->region_strengths for each region */
-		strength = this->compute_region_strength(it, args);
-		
+		/* get strength for this region.  stronger means more
+		 * wall-like */
+		wall_info.strength = this->compute_region_strength(it,args);
+	
 		/* only proceed if strength is good enough */
-		if(strength <= 0)
+		if(wall_info.strength <= 0)
 			continue;
 
-		/* get coordinate frame along this planar region */
-		b << 0,0,1;
-		const Vector3d& n 
-			= it->second.get_region().get_plane().normal;
-		a = b.cross(n).normalized(); /* most-horizontal coord */
-		b = n.cross(a); /* most-vertical coord */
-
-		/* get a version of the region plane that's perfectly
-		 * vertical. */
-		vertical = it->second.get_region().get_plane();
-		vertical.normal(2) = 0; /* normal must be horizontal */
-		vertical.normal.normalize();
-
-		/* get bounding box of the planar region */
-		it->second.get_region().compute_bounding_box(a, b,
-				a_min, a_max, b_min, b_max);
+		/* initialize stored values in wall_info struct */
+		wall_info.init(wall_info.strength, it->second.get_region());
 
 		/* compare bounding box to wall height threshold,
 		 * just to make sure we want to use this region */
-		if(b_max - b_min < args.wallheightthresh)
+		if(wall_info.b_max - wall_info.b_min 
+				< args.wallheightthresh)
 			continue; /* don't use region */
 
+		/* we want to use this region, so keep it */
+		wall_regions.insert(pair<node_face_t, wall_region_info_t>(
+					it->first, wall_info));
+	}
+
+	/* iterate over the regions again.  check if a reject
+	 * region has two neighbors that:
+	 * 	- are both wall regions
+	 * 	- AND are facing opposing directions
+	 */
+	for(it = this->region_graph.begin();
+			it != this->region_graph.end(); it++)
+	{
+		/* check if this is already a wall region */
+		if(wall_regions.count(it->first) > 0)
+			continue; /* don't need to do anything */
+
+		/* check that this region still satisfies the verticality
+		 * threshold to be a wall region. */
+		if(abs(it->second.get_region().get_plane().normal(2))
+				>= args.verticalitythresh)
+			continue; /* not vertically aligned */
+
+		/* compute strength of this region, such as it is */
+		wall_info.strength = process_t::compute_region_strength(
+					it, args) + 1; // TODO
+
+		/* iterate over neighboring regions to this region
+		 *
+		 * We want to compare every pair of neighboring regions,
+		 * so this requires a double-iterator (how fun for us) */
+		for(n1it = it->second.begin_neighs();
+				n1it != it->second.end_neighs(); n1it++)
+		{
+			/* we only care about this region if it 
+			 * represents a wall */
+			w1it = wall_regions.find(*n1it);
+			if(w1it == wall_regions.end())
+				continue; /* ignore it */
+
+			/* iterate over the remainder of the neighbors */
+			n2it = n1it;
+			n2it++;
+			for( ; n2it != it->second.end_neighs(); n2it++)
+			{
+				/* check that this neighbor is also a 
+				 * wall region */
+				w2it = wall_regions.find(*n2it);
+				if(w2it == wall_regions.end())
+					continue; /* ignore it */
+
+				/* both of these neighbors are wall
+				 * regions.  We should add this region
+				 * if the two neighbors face opposite
+				 * directions, which indicates
+				 * that it is a very small wall that
+				 * joins two other walls (e.g. a doorway
+				 * frame). */
+				if(w1it->second.vertical.normal.dot(
+					w2it->second.vertical.normal) > 0)
+					continue; /* not opposing */
+			
+				/* the neighbors have opposing normals,
+				 * so we should add this region */
+				wall_info.init(wall_info.strength,
+						it->second.get_region());
+				wall_regions.insert(pair<node_face_t, 
+						wall_region_info_t>(
+						it->first, wall_info));
+			}
+		}
+	}
+
+	/* iterate over all the regions we determined to be walls */
+	for(wit = wall_regions.begin(); wit != wall_regions.end(); wit++)
+	{
 		/* iterate over the plane of the region, adding
 		 * samples taken uniformly.
 		 *
@@ -191,16 +258,21 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 		 * part of the wall, we check each point to make sure
 		 * that it's part of the exterior volume of the model.
 		 */
-		for(coord_a = a_min; coord_a <= a_max; 
+		for(coord_a = wit->second.a_min; 
+				coord_a <= wit->second.a_max; 
 					coord_a += args.dq_resolution)
-			for(coord_b = b_min; coord_b <= b_max;
+			for(coord_b = wit->second.b_min; 
+				coord_b <= wit->second.b_max;
 					coord_b += args.dq_resolution)
 			{
 				/* reconstruct 3D point in world
 				 * coordinates */
-				p = it->second.get_region()
-						.get_plane().point
-					+ (a*coord_a) + (b*coord_b);
+				p = wit->second.vertical.point
+					+ (wit->second.a * coord_a) 
+					+ (wit->second.b * coord_b);
+
+				// TODO debugging export point
+				cerr << "v " << p.transpose() << endl;
 
 				/* get the octnode that contains this
 				 * point. */
@@ -228,12 +300,13 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * snap it to the vertically aligned
 				 * plane that is the adjustment of the
 				 * wall. */
-				vertical.project_onto(p);
+				wit->second.vertical.project_onto(p);
 
 				/* we can now use this point to
 				 * contribute to wall samples */
 				ws = this->sampling.add(p(0), p(1), 
-						p(2), p(2), strength);
+						p(2), p(2), 
+						wit->second.strength);
 		
 				/* store the pairing between this
 				 * wall sample and the given leaf node.
@@ -437,6 +510,9 @@ int process_t::export_data(const oct2dq_run_settings_t& args) const
 		     << endl;
 		return PROPEGATE_ERROR(-1, ret);
 	}
+
+	// TODO debugging
+	this->region_graph.writeobj("/home/elturner/Desktop/regions.obj");
 
 	/* success */
 	toc(clk, "Exporting wall samples");

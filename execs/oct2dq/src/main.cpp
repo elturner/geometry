@@ -36,7 +36,11 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	/* initialize the data to process */
+	/* initialize the data to process 
+	 *
+	 * This will produce planar regions that define surfaces
+	 * in the model.
+	 */
 	ret = process.init(args);
 	if(ret)
 	{
@@ -45,7 +49,7 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
-	/* compute the wall samples */
+	/* compute the wall samples from the discovered planar regions */
 	ret = process.compute_wall_samples(args);
 	if(ret)
 	{
