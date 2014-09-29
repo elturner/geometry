@@ -74,7 +74,7 @@ void wall_sampling_t::set_halfwidth(double hw)
 		this->halfwidth *= 2;
 }
 		
-wall_sample_t wall_sampling_t::add(double x, double y,
+wall_sample_t wall_sampling_t::add(double x, double y, double nx, double ny,
 				double z_min, double z_max, double w)
 {
 	pair<wall_sample_map_t::iterator, bool> ins;
@@ -92,7 +92,7 @@ wall_sample_t wall_sampling_t::add(double x, double y,
 					wall_sample_info_t())).first;
 	
 	/* update the info with the provided sample */
-	it->second.add(x, y, w);
+	it->second.add(x, y, nx, ny, w);
 	it->second.add_zs(z_min, z_max);
 
 	/* update the halfwidth */
@@ -130,6 +130,29 @@ void wall_sampling_t::add(const wall_sample_t& ws, size_t ind)
 	
 	/* update the info with the provided sample */
 	it->second.add_pose(ind);
+}
+		 
+void wall_sampling_t::remove_without_pose()
+{
+	wall_sample_map_t::iterator it, rt;
+
+	/* iterate over this map */
+	for(it = this->samples.begin(); it != this->samples.end(); )
+	{
+		/* check if the current sample has any pose info */
+		if(it->second.poses.empty())
+		{
+			/* remove this pose */
+			rt = it;
+			it++;
+			this->samples.erase(rt);
+		}
+		else
+		{
+			/* keep this pose */
+			it++;
+		}
+	}
 }
 		
 wall_sample_map_t::const_iterator
@@ -225,15 +248,23 @@ void wall_sample_info_t::clear()
 	this->poses.clear();
 }
 		
-void wall_sample_info_t::add(double x, double y, double w)
+void wall_sample_info_t::add(double x, double y, double nx, double ny,
+							double w)
 {
+	double wp;
+
+	/* get the sum of the weights */
+	wp = w + this->total_weight;
+
 	/* perform a weighted average between the existing
 	 * samples and the new sample */
-	this->x_avg = ( (w*x) + (this->total_weight*this->x_avg) )
-			/ (w + this->total_weight);
-	this->y_avg = ( (w*y) + (this->total_weight*this->y_avg) )
-			/ (w + this->total_weight);
-	this->total_weight += w;
+	this->x_avg  = ( (w*x) + (this->total_weight*this->x_avg) ) / wp;
+	this->y_avg  = ( (w*y) + (this->total_weight*this->y_avg) ) / wp;
+	this->x_norm = ( (w*nx) + (this->total_weight*this->x_norm) ) / wp;
+	this->y_norm = ( (w*ny) + (this->total_weight*this->y_norm) ) / wp;
+
+	/* record new weight */
+	this->total_weight = wp;
 }
 		
 void wall_sample_info_t::add_zs(double z0, double z1)
@@ -255,6 +286,20 @@ void wall_sample_info_t::add_zs(double z0, double z1)
 	/* merge the two valid ranges */
 	this->z_min = min(z0, this->z_min);
 	this->z_max = max(z1, this->z_max);
+}
+
+void wall_sample_info_t::get_normal(double& nx, double& ny) const
+{
+	double x2, y2, mag;
+
+	/* compute magnitude */
+	x2 = this->x_norm * this->x_norm;
+	y2 = this->y_norm * this->y_norm;
+	mag = sqrt(x2 + y2);
+
+	/* get normalized values */
+	nx = this->x_norm / mag;
+	ny = this->y_norm / mag;
 }
 
 void wall_sample_info_t::writedq(ostream& os) const

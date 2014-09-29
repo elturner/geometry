@@ -183,13 +183,17 @@ class wall_sampling_t
 		 *
 		 * @param x      The x-position of the sample to add
 		 * @param y      The y-position of the sample to add
+		 * @param nx     The x-component of the normal vector 
+		 *               of this sample
+		 * @param ny     The y-component of the normal vector
+		 *               of this sample
 		 * @param z_min  The minimum z-position of this sample
 		 * @param z_max  The maximum z-position of this sample
 		 * @param w      The weight of this sample
 		 *
 		 * @return    Returns the wall sample that was made/edited.
 		 */
-		wall_sample_t add(double x, double y, 
+		wall_sample_t add(double x, double y, double nx, double ny, 
 				double z_min, double z_max, double w=1.0);
 
 		/**
@@ -223,6 +227,14 @@ class wall_sampling_t
 		 */
 		 void add(const wall_sample_t& ws, size_t ind);
 
+		/**
+		 * Removes all wall samples that have no associated poses
+		 *
+		 * Will iterate through the wall samples.  If any have
+		 * no pose information, will remove them.
+		 */
+		 void remove_without_pose();
+
 		/*-----------*/
 		/* accessors */
 		/*-----------*/
@@ -253,6 +265,22 @@ class wall_sampling_t
 		 */
 		wall_sample_map_t::const_iterator
 					find(double x, double y) const;
+
+		/**
+		 * Retrieves iterator to the first wall sample
+		 *
+		 * @return   Returns the beginning iterator
+		 */
+		inline wall_sample_map_t::const_iterator begin() const
+		{ return this->samples.begin(); };
+
+		/**
+		 * Retrieves iterator to past the end of wall samples
+		 *
+		 * @return   Returns the end iterator
+		 */
+		 inline wall_sample_map_t::const_iterator end() const
+		 { return this->samples.end(); };
 
 		/*-----*/
 		/* i/o */
@@ -449,6 +477,9 @@ class wall_sample_t
 
 class wall_sample_info_t
 {
+	/* security */
+	friend class wall_sampling_t;
+
 	/* parameters */
 	private:
 
@@ -475,6 +506,14 @@ class wall_sample_info_t
 		 */
 		double z_min;
 		double z_max;
+
+		/**
+		 * The normal vector for this sample
+		 *
+		 * The values given will not necessarily be normalized
+		 */
+		double x_norm;
+		double y_norm;
 
 		/**
 		 * The list of poses for this sample
@@ -508,9 +547,11 @@ class wall_sample_info_t
 		 *
 		 * @param x   The x-component to add
 		 * @param y   The y-component to add
+		 * @param nx   The normal x-component to add
+		 * @param ny   The normal y-component to add
 		 * @param w   The weight to add
 		 */
-		void add(double x, double y, double w);
+		void add(double x,double y, double nx,double ny, double w);
 
 		/**
 		 * Adds a z-range to this structure
@@ -527,6 +568,29 @@ class wall_sample_info_t
 		 */
 		inline void add_pose(size_t ind)
 		{ this->poses.insert(ind); };
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Get the weight for this wall sample
+		 *
+		 * @return   Returns the total weight for the wall sample
+		 */
+		inline double get_weight() const
+		{ return this->total_weight; };
+
+		/**
+		 * Get the normal vector for this wall sample
+		 *
+		 * The normal vector will be normalized before being
+		 * returned.
+		 *
+		 * @param nx   Where to store the x-component
+		 * @param ny   Where to store the y-component
+		 */
+		void get_normal(double& nx, double& ny) const;
 
 		/*-----*/
 		/* i/o */
