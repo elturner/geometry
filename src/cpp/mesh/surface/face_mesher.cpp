@@ -60,7 +60,7 @@ int face_mesher_t::add(const octree_t& tree,
 	ccmap_t::const_iterator it;
 	faceset_t::const_iterator fit;
 	vector<pair<double, size_t> > face_inds; /* <sort value, index> */
-	Vector3d face_pos, norm, avg_norm, a, b, pos, disp;
+	Vector3d face_pos, norm, avg_norm, a, b, pos, disp, com;
 	mesh_io::polygon_t poly;
 	double normmag;
 	size_t i, num_faces;
@@ -70,6 +70,7 @@ int face_mesher_t::add(const octree_t& tree,
 	{
 		/* reset values for this corner */
 		avg_norm << 0,0,0; /* reset to zero */
+		com << 0,0,0; /* reset center-of-mass to zero */
 		face_inds.clear();
 		poly.clear();
 		it->first.get_position(tree, pos);
@@ -92,6 +93,7 @@ int face_mesher_t::add(const octree_t& tree,
 			 * to its surface area when performing
 			 * the weighted average */
 			avg_norm += norm * fit->get_area(); 
+			com += face_pos;
 		}
 
 		/* compute average normal for all faces */
@@ -101,10 +103,20 @@ int face_mesher_t::add(const octree_t& tree,
 			avg_norm << 0,0,1; /* arbitrary */
 		else
 			avg_norm /= normmag; /* normalize */
+		com /= num_faces; /* compute center-of-mass */
 
 		/* check that we have sufficient faces to make a polygon */
 		if(num_faces < 3)
-			return -1;
+		{
+			cerr << "[face_mesher_t::add]\tFound corner that "
+			     << "is connected to fewer than three faces!"
+			     << endl 
+			     << "\tCorner pos: " << pos.transpose() << endl
+			     << "\tavg_norm: "   << avg_norm << endl
+			     << "\tNum faces: "  << num_faces << endl
+			     << endl;
+			continue;
+		}
 
 		/* the face normals all point outwards (from interior
 		 * to exterior), but we want our polygon's normal
@@ -133,7 +145,8 @@ int face_mesher_t::add(const octree_t& tree,
 					face_inds[i].second).y;
 			disp(2) = this->mesh.get_vert(
 					face_inds[i].second).z;
-			disp -= pos;
+			disp -= com; /* displacement relative to 
+					center-of-mass */
 
 			/* compute angle of this vertex with respect
 			 * to the coordinates (a,b) */
