@@ -1,0 +1,124 @@
+%
+%	Backpack Config File - backpackTransforms20110825Cad
+%
+%	Holds the transform numbers, serial numbers, and other meta information about the 
+%	configuration of the backpack from revision backpackTransforms20110825Cad.
+%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	SCANNER CONFIGS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% This is the HUL Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = hul
+	&type = UTM30
+	&serialNum = H0807288
+	
+	% Transformation Parameters
+	&rToCommon = [-110 0 -90]                % This is in degrees
+	&tToCommon = [686.94 -234.48 -17.44]     % This is in millimeters
+	
+#endsensor
+
+% This is the VR Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = vr
+	&type = UTM30
+	&serialNum = H1004306
+	
+	% Transformation Parameters
+	&rToCommon = [-90 180 0]                % This is in degrees
+	&tToCommon = [326.93 398.16 -125.37]    % This is in millimeters
+	
+#endsensor
+
+% This is the VL Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = vl
+	&type = UTM30
+	&serialNum = H1004314
+	
+	% Transformation Parameters
+	&rToCommon = [-180 0 -90]                % This is in degrees
+	&tToCommon = [326.93 -179.94 -178.47]    % This is in millimeters
+	
+#endsensor
+
+% This is the VR2 Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = vr2
+	&type = UTM30
+	&serialNum = H1004315
+	
+	% Transformation Parameters
+	&rToCommon = [180 0 90]                  % This is in degrees
+	&tToCommon = [326.93 305.06 -178.47]     % This is in millimeters
+	
+#endsensor
+
+% This is the BOTTOM Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = b
+	&type = UTM30
+	&serialNum = H1100461
+	
+	% Transformation Parameters
+	&rToCommon = [180 -20 180]               % This is in degrees
+	&tToCommon = [235.47 62.56 -505.82]      % This is in millimeters
+	
+#endsensor
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	CAMERA CONFIGS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% This is the LEFT Camera Properties
+#startsensor
+
+	% Meta Information
+	#camera
+	&name = left
+	&serialNum = 11073278
+	&virtualSerialNum = 110732781
+	&K = [612 0 1224 0 612 1024 0 0 1]		 % This is in column major order
+	
+	% Transformation Parameters
+	&rToCommon = [90 20 0]                   % This is in degrees
+	&tToCommon = [317.42 42.06 -403.58]      % This is in millimeters
+
+#endsensor
+
+% This is the RIGHT Camera Properties
+#startsensor
+
+	% Meta Information
+	#camera
+	&name = right
+	&serialNum = 11073269
+	&virtualSerialNum = 110732692
+	&K = [612 0 1224 0 612 1024 0 0 1]		 % This is in column major order
+	
+	% Transformation Parameters
+	&rToCommon = [90 -20 180]                % This is in degrees
+	&tToCommon = [317.42 83.06 -453.58]      % This is in millimeters
+
+#endsensor
+
+
