@@ -81,7 +81,8 @@ def run(dataset_dir, madfile):
         return -2
     
     # run the floorplan generation code
-    args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), fpfile]
+    args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), fpfile, \
+            '-s', '-1']
     ret = subprocess.call(args, executable=FLOORPLAN_EXE, \
         cwd=dataset_dir, stdout=None, stderr=None, stdin=None, shell=False)
     if ret != 0:
