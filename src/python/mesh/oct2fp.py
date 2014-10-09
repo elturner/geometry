@@ -47,9 +47,10 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 #
 # @param dataset_dir  The path to the dataset to process
 # @param madfile      The path to the .mad file of the dataset
+# @param debug        If true, will run code through gdb
 #
 # @return             Returns zero on success, non-zero on failure
-def run(dataset_dir, madfile):
+def run(dataset_dir, madfile, debug):
 
     # check that directories exist
     output_dir = dataset_filepaths.get_carving_fp_dir(dataset_dir)
@@ -73,9 +74,7 @@ def run(dataset_dir, madfile):
     # prepare the command-line arguments for the oct2dq code and run it
     args = [OCT2DQ_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
         pathfile, octfile, dqfile] + fssfiles
-    ret = subprocess.call(args, executable=OCT2DQ_EXE, \
-        cwd=dataset_dir, stdout=None, stderr=None, \
-        stdin=None, shell=False)
+    ret = callproc(OCT2DQ_EXE, args, dataset_dir, debug)
     if ret != 0:
         print "oct2dq program returned error",ret
         return -2
@@ -83,8 +82,7 @@ def run(dataset_dir, madfile):
     # run the floorplan generation code
     args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), fpfile, \
             '-s', '-1']
-    ret = subprocess.call(args, executable=FLOORPLAN_EXE, \
-        cwd=dataset_dir, stdout=None, stderr=None, stdin=None, shell=False)
+    ret = callproc(FLOORPLAN_EXE, args, dataset_dir, debug)
     if ret != 0:
         print "floorplan_gen program returned error",ret
 	return -3
@@ -93,23 +91,49 @@ def run(dataset_dir, madfile):
     return 0
 
 ##
+# Calls a subprocess with the given set of arguments
+#
+# @param exe    The executable to run
+# @param args   The arguments to give to the executable
+# @param cwd    The directory to run in
+# @param debug  Whether to run the process in gdb or not
+#
+# @return    Returns return-code of subprocess
+#
+def callproc(exe, args, cwd, debug):
+
+    # check if we're debugging
+    if debug:
+        exe = 'gdb'
+        args = ['gdb', '--args'] + args
+
+    # call the process
+    ret = subprocess.call(args, executable=exe, \
+        cwd=cwd, stdout=None, stderr=None, stdin=None, shell=False)
+    return ret
+
+
+##
 # The main function
 #
 # This will call the run() function using command-line arguments
 #
 def main():
 
+    # check if we are debugging
+    debug = (len(sys.argv) == 4 and sys.argv[3] == '--debug')
+
     # check command-line arguments
-    if len(sys.argv) != 3:
+    if not debug and len(sys.argv) != 3:
         print ""
         print " Usage:"
         print ""
-        print "\t",sys.argv[0],"<path_to_dataset> <madfile>"
+        print "\t",sys.argv[0],"<path_to_dataset> <madfile> [--debug]"
         print ""
         sys.exit(1)
 
     # run this script with the given arguments
-    ret = run(sys.argv[1], sys.argv[2])
+    ret = run(sys.argv[1], sys.argv[2], debug)
     sys.exit(ret)
 
 ##
