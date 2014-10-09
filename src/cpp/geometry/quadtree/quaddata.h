@@ -131,3 +131,5 @@ class quaddata_t
 		 */
 		void print(std::ostream& os) const;
 };
+
+#endif

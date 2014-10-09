@@ -24,9 +24,9 @@ using namespace Eigen;
 quaddata_t::quaddata_t()
 {
 	/* set all counters to zero */
-	this->average << 0,0,0;
+	this->average << 0,0;
 	this->total_weight = 0;
-	this->normal << 0,0,0;
+	this->normal << 0,0;
 
 	/* set heights to invalid */
 	this->min_z = 1;
@@ -39,7 +39,6 @@ void quaddata_t::add(const Eigen::Vector2d& p,
 			const Eigen::Vector2d& n, double w)
 {
 	double tw;
-	int i;
 
 	/* compute the new total weight */
 	tw = this->total_weight + w;
@@ -93,7 +92,7 @@ quaddata_t* quaddata_t::clone() const
 	
 void quaddata_t::print(ostream& os) const
 {
-	set<unsigned int>::iterator it;
+	set<size_t>::iterator it;
 	size_t num;
 
 	/* convert continuous weight to integer */

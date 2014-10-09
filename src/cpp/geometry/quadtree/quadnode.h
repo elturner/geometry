@@ -31,7 +31,7 @@ class quadnode_t
 		 * The following value indicates the number
 		 * of children per node in this tree.  Since
 		 * this is a quadtree, the value is 4 */
-		static const size_t CHILDREN_PER_NODE = 4;
+		static const size_t CHILDREN_PER_QUADNODE = 4;
 
 		/**
 		 * each node has pointers to its children.
@@ -47,7 +47,7 @@ class quadnode_t
 		 *       2      |      3
 		 *              |
 		 */
-		quadnode_t* children[CHILDREN_PER_NODE];
+		quadnode_t* children[CHILDREN_PER_QUADNODE];
 
 		/**
 		 * quadnodes have geometry, such as center position
@@ -109,7 +109,7 @@ class quadnode_t
 		 *
 		 * @return   Returns true iff this node is empty.
 		 */
-		inline bool isempty() const;
+		bool isempty() const;
 
 		/**
 		 * Initializes the i'th child of this node
@@ -189,7 +189,7 @@ class quadnode_t
 		 */
 		quaddata_t* insert(const Eigen::Vector2d& p, 
 					const Eigen::Vector2d& n,
-					double w, size_t d); 
+					double w, int d); 
 
 		/**
 		 * Retrieves the data at the given point
@@ -202,7 +202,7 @@ class quadnode_t
 		 * @return     Returns node that is a leaf and contains p.
 		 *             Returns NULL on error.
 		 */
-		quadnode_t* retrieve(const Eigen::Vector2d& p) const;
+		const quadnode_t* retrieve(const Eigen::Vector2d& p) const;
 
 		/**
 		 * Gets the nearest neighbor for the given point

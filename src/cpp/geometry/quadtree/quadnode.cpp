@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
+#include <float.h>
 
 /**
  * @file    quadnode.cpp
@@ -26,14 +27,14 @@ using namespace Eigen;
 
 quadnode_t::quadnode_t()
 {
-	int i;
+	size_t i;
 
 	/* set default values */
 	this->halfwidth = -1;
 	this->data = NULL;
 
 	/* set children to null */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		this->children[i] = NULL;
 }
 
@@ -47,7 +48,7 @@ quadnode_t::quadnode_t(const Eigen::Vector2d& c, double hw)
 	this->data = NULL;
 
 	/* set children to null */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		this->children[i] = NULL;
 }
 
@@ -56,7 +57,7 @@ quadnode_t::~quadnode_t()
 	size_t i;
 
 	/* free children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
 		{
 			delete (this->children[i]);
@@ -76,7 +77,7 @@ bool quadnode_t::isleaf() const
 	size_t i;
 
 	/* check if any children aren't null */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
 			return false;
 
@@ -84,7 +85,7 @@ bool quadnode_t::isleaf() const
 	return true;
 }
 	
-inline bool quadnode_t::isempty() const
+bool quadnode_t::isempty() const
 {
 	size_t i;
 
@@ -96,7 +97,7 @@ inline bool quadnode_t::isempty() const
 		return false;
 
 	/* check children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
 			return false; /* child not empty */
 
@@ -110,7 +111,7 @@ void quadnode_t::init_child(size_t i)
 	Vector2d cc;
 
 	/* check if bad argument */
-	if(i >= CHILDREN_PER_NODE)
+	if(i >= CHILDREN_PER_QUADNODE)
 	{
 		cerr << "[quadnode::init_child]\tGiven invalid"
 				" child index: " << i << endl;
@@ -165,7 +166,7 @@ void quadnode_t::init_child(size_t i)
 quadnode_t* quadnode_t::clone() const
 {
 	quadnode_t* c;
-	int i;
+	size_t i;
 
 	/* allocate a new node */
 	c = new quadnode_t(this->center, this->halfwidth);
@@ -175,7 +176,7 @@ quadnode_t* quadnode_t::clone() const
 		c->data = this->data->clone();
 
 	/* copy children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
 			c->children[i] = this->children[i]->clone();
 
@@ -236,7 +237,7 @@ quaddata_t* quadnode_t::insert(const Vector2d& p, const Vector2d& n,
 		     << " the point! d = " << d << endl
 		     << "\tnode center: " << this->center.transpose() 
 		     << endl
-		     << "\tnode hw: " << this->halfwidth << endl;
+		     << "\tnode hw: " << this->halfwidth << endl
 		     << "\tp: " << p.transpose() << endl << endl;
 		return NULL;
 	}
@@ -256,10 +257,10 @@ quaddata_t* quadnode_t::insert(const Vector2d& p, const Vector2d& n,
 		this->init_child(i);
 
 	/* continue insertion */
-	return this->children[i]->insert(p, d-1);
+	return this->children[i]->insert(p, n, w, d-1);
 }
 	
-quadnode_t* quadnode_t::retrieve(const Vector2d& p) const
+const quadnode_t* quadnode_t::retrieve(const Vector2d& p) const
 {
 	int i;
 
@@ -275,7 +276,8 @@ quadnode_t* quadnode_t::retrieve(const Vector2d& p) const
 int quadnode_t::nearest_neighbor(quaddata_t** best_so_far,
 			const Vector2d& p) const
 {
-	int i, ret;
+	size_t i;
+	int ret;
 	double d, d_best;
 	quadnode_t* b;
 
@@ -301,7 +303,7 @@ int quadnode_t::nearest_neighbor(quaddata_t** best_so_far,
 	
 		/* determine the non-empty child that 
 		 * is closest to p */
-		for(i = 0; i < CHILDREN_PER_NODE; i++)
+		for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 			if(this->children[i] != NULL
 				&& !(this->children[i]->isempty()))
 			{
@@ -358,7 +360,7 @@ int quadnode_t::nearest_neighbor(quaddata_t** best_so_far,
 	/* now that we have an approximate solution, check children
 	 * for better possibilites.  Of course, no need to recurse
 	 * into the child that contains best_so_far */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 	{
 		/* only search non-null children */
 		if(this->children[i] == NULL)
@@ -393,7 +395,8 @@ int quadnode_t::nearest_neighbor(quaddata_t** best_so_far,
 int quadnode_t::nodes_in_range(const Vector2d& p, double r,
 				vector<quaddata_t*>& neighs) const
 {
-	int i, ret;
+	size_t i;
+	int ret;
 	double d;
 
 	/* check if leaf */
@@ -415,7 +418,7 @@ int quadnode_t::nodes_in_range(const Vector2d& p, double r,
 	}
 
 	/* recurse over intersecting children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 	{
 		/* only search non-null children */
 		if(this->children[i] == NULL)
@@ -439,10 +442,10 @@ int quadnode_t::nodes_in_range(const Vector2d& p, double r,
 void quadnode_t::raytrace(vector<quaddata_t*>& xings,
 				const linesegment_2d_t& line) const
 {
-	int i;
+	size_t i;
 
 	/* first, check if this ray even intersects this node */
-	if(!(this->intersects_line_segment(line)))
+	if(!(this->intersects(line)))
 		return; /* we're done here */
 
 	/* check if this node had any data to add */
@@ -450,14 +453,14 @@ void quadnode_t::raytrace(vector<quaddata_t*>& xings,
 		xings.push_back(this->data);
 
 	/* recurse for children */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
-			this->children[i]->raytrace(xings, a, b);
+			this->children[i]->raytrace(xings, line);
 }
 
 void quadnode_t::print(ostream& os) const
 {
-	int i;
+	size_t i;
 
 	/* check if we're at a leaf */
 	if(this->isleaf())
@@ -474,7 +477,7 @@ void quadnode_t::print(ostream& os) const
 	}
 
 	/* recurse */
-	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
 		if(this->children[i] != NULL)
 			this->children[i]->print(os);
 }

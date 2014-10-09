@@ -17,13 +17,17 @@
  *
  * @section DESCRIPTION
  *
- * This file defines a quadtree structure.
+ * This file implements a quadtree structure.
  * The quadtree represents all of 2D space, and
  * the bounding box grows as more elements are added.
  */
 
 using namespace std;
 using namespace Eigen;
+
+/* this macro is used to find the relative depth of two sized nodes */
+#define GET_RELATIVE_DEPTH(rootsize, leafsize) \
+            ( (int) round( log((rootsize) / (leafsize)) / log(2.0) ) )
 
 /*--------------------*/
 /* QUADTREE FUNCTIONS */
@@ -50,7 +54,17 @@ quadtree_t::~quadtree_t()
 {
 	this->clear();
 }
-	
+
+void quadtree_t::set(double r, const Eigen::Vector2d& c, double hw)
+{
+	/* clear this */
+	this->clear();
+
+	/* set the values */
+	this->root = new quadnode_t(c, hw);
+	this->max_depth = max(GET_RELATIVE_DEPTH(2.0*hw, r), 0);
+}
+
 void quadtree_t::set_resolution(double r)
 {
 	Eigen::Vector2d c(0,0);
@@ -64,7 +78,7 @@ void quadtree_t::set_resolution(double r)
 	this->max_depth = 0;
 }
 	
-double quadtree_t::get_resolution()
+double quadtree_t::get_resolution() const
 {
 	return (2.0 * this->root->halfwidth) / (1 << this->max_depth);
 }
@@ -195,14 +209,12 @@ quaddata_t* quadtree_t::insert(const Eigen::Vector2d& p,
 	if(ret == NULL)
 	{
 		cerr << "[insert]\tError inserting point into tree" << endl;
-		cerr << "\t\tp = ";
-		p.print(cerr);
-		cerr << endl;
+		cerr << "\t\tp = " << p.transpose() << endl;
 	}
 	return ret;
 }
 	
-quaddata_t* quaddata_t::insert(const Eigen::Vector2d& p,
+quaddata_t* quadtree_t::insert(const Eigen::Vector2d& p,
 				const Eigen::Vector2d& n,
 				double z_min, double z_max, double w)
 {
@@ -237,7 +249,7 @@ quaddata_t* quadtree_t::insert(const Eigen::Vector2d& p, size_t pose_ind)
 quaddata_t* quadtree_t::retrieve(const Eigen::Vector2d& p) const
 {
 	/* just call root's retrieve function */
-	quadnode_t* node = this->root->retrieve(p);
+	const quadnode_t* node = this->root->retrieve(p);
 	if(node == NULL)
 		return NULL;
 	return node->data;
@@ -255,9 +267,7 @@ quaddata_t* quadtree_t::nearest_neighbor(const Eigen::Vector2d& p) const
 	{
 		cerr << "[quadtree_t::nearest_neighbor]\t"
 			"Call failed with error #" << ret << " at"
-			" position: ";
-		p.print(cerr);
-		cerr << endl;
+			" position: " << p.transpose() << endl;
 		return NULL;
 	}
 
@@ -279,7 +289,7 @@ void quadtree_t::raytrace(vector<quaddata_t*>& xings,
 	this->root->raytrace(xings, line);
 }
 
-void quadtree_t::print(ostream& os)
+void quadtree_t::print(ostream& os) const
 {
 	/* set up stream */
 	os << setprecision(9) << fixed;
@@ -297,7 +307,7 @@ void quadtree_t::print(ostream& os)
 int quadtree_t::parse(istream& is)
 {
 	size_t i, num_points, num_poses, pose_ind;
-	double hw, x, y, minz, maxz;
+	double hw, x, y, min_z, max_z;
 	Vector2d center, p, n;
 	quaddata_t* dat;
 

@@ -66,6 +66,19 @@ class quadtree_t
 		/*-----------*/
 
 		/**
+		 * Sets the span of this tree
+		 *
+		 * Will destroy any existing information, and set
+		 * this tree to have the given center, width, and
+		 * resolution.
+		 *
+		 * @param r   The resolution for the tree
+		 * @param c   The center point for the tree
+		 * @param hw  The halfwidth for the tree's root
+		 */
+		void set(double r, const Eigen::Vector2d& c, double hw);
+
+		/**
 		 * Sets the resolution to be the argument.
 		 *
 		 * Will destroy any information in tree.
@@ -139,7 +152,7 @@ class quadtree_t
 		quaddata_t* insert(const Eigen::Vector2d& p,
 					const Eigen::Vector2d& n,
 					double z_min, double z_max,
-					double w);
+					double w=1.0);
 
 		/**
 		 * Inserts pose indices into the tree.
@@ -266,7 +279,7 @@ class quadtree_t
 		 *
 		 * @return     Returns 0 on success, non-zero on failure.
 		 */
-		int parse(istream& is);
+		int parse(std::istream& is);
 };
 
 #endif
