@@ -317,7 +317,11 @@ int quadtree_t::parse(istream& is)
 	
 		/* verify */
 		if(num_points <= 0)
+		{
+			cerr << "[quadtree::parse]\tError!  Cell has "
+			     << "invalid weight: " << num_points << endl;
 			return -3;
+		}
 		if(num_poses < 0)
 			return -4;
 
