@@ -15,6 +15,7 @@ typedef enum FILETYPE
 	idf_file,
 	mad_file,
 	vox_file,
+	xml_file,
 	dq_file,
 	fp_file,
 	edge_file,

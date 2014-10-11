@@ -14,7 +14,6 @@
 #include <vector>
 #include <ostream>
 #include "quadtree.h"
-#include "path.h"
 #include "../rooms/tri_rep.h"
 #include "../util/constants.h"
 

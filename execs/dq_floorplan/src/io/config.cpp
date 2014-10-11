@@ -22,6 +22,7 @@ int parseargs(int argc, char** argv, config_t& conf)
 	/* set default config */
 	conf.dq_infile = NULL;
 	conf.mad_infile = NULL;
+	conf.xml_infile = NULL;
 	conf.outfile = NULL;
 	conf.output_type = unknown_file;
 	conf.simplify_threshold = DEFAULT_SIMPLIFY_THRESHOLD;
@@ -113,12 +114,27 @@ int parseargs(int argc, char** argv, config_t& conf)
 						conf.dq_infile = argv[i];
 					}
 					break;
+				case xml_file:
+					if(conf.xml_infile != NULL)
+					{
+						PRINT_WARNING("Multiple"
+							" xml files "
+							"specified, "
+							"using:");
+						PRINT_WARNING(
+							conf.xml_infile);
+						PRINT_WARNING("");
+					}
+					else
+					{
+						conf.xml_infile = argv[i];
+					}
+					break;
 
 				/* check for outfiles */
 				case obj_file:
 				case fp_file:
 				case ply_file:
-				case idf_file:
 				case edge_file:
 					if(conf.outfile != NULL)
 					{
@@ -200,10 +216,14 @@ void print_usage(char* prog_name)
 	       "\t           one must be specified.\n\n");
 	printf("\t<madfile>  The input *.mad file.  Exactly\n"
 	       "\t           one must be specified.\n\n");
+	printf("\t<xmlfile>  An optional input *.xml file.  If provided,\n"
+	       "\t           will use the sensor extrinsics specified to\n"
+	       "\t           make starting point of ray tracing more\n"
+	       "\t           accurate.\n\n");
 	printf("\t<outfile>  The output file to write floorplan to.\n"
 	       "\t           If multiple are specified, only the first\n"
 	       "\t           will be used.  Valid formats are:\n\n"
-	       "\t           *.obj, *.ply, *.fp, *.idf, *.edge\n\n");
+	       "\t           *.obj, *.ply, *.fp, *.edge\n\n");
 	printf("\n");
 }
 

@@ -16,6 +16,7 @@ typedef struct config
 	/* the list of input point-cloud files */
 	char* dq_infile; /* the location of the input dq file */
 	char* mad_infile; /* location of input mad file */
+	char* xml_infile; /* optional backpack extrinsics */
 
 	/*** output files configuration ***/
 

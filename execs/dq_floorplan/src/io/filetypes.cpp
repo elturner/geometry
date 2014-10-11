@@ -48,7 +48,11 @@ filetype_t filetype_of(char* filename)
 	/* check if backpack configuration file */
 	if(!strcmp(ext4, "bcfg"))
 		return bcfg_file;
-	
+
+	/* check if xml file */
+	if(!strcmp(ext3, "xml"))
+		return xml_file;
+
 	/* check if xyz */
 	if(!strcmp(ext3, "xyz"))
 		return xyz_file;

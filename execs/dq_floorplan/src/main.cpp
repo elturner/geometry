@@ -9,12 +9,14 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+
+#include <geometry/system_path.h>
 
 #include "process/generate_boundary.h"
 #include "process/simplify_graph.h"
 #include "process/export_data.h"
 #include "structs/quadtree.h"
-#include "structs/path.h"
 #include "structs/cell_graph.h"
 #include "rooms/tri_rep.h"
 #include "io/dq_io.h"
@@ -27,7 +29,7 @@ int main(int argc, char** argv)
 {
 	config_t conf;
 	quadtree_t tree;
-	path_t path;
+	system_path_t path;
 	cell_graph_t graph;
 	tri_rep_t trirep;
 	tictoc_t clk;
@@ -50,7 +52,7 @@ int main(int argc, char** argv)
 		     << "\tError: " << ret << endl;
 		return 1;
 	}
-	ret = path.readmad(conf.mad_infile);
+	ret = path.readmad(string(conf.mad_infile));
 	if(ret)
 	{
 		cerr << "Unable to read mad file: "
@@ -58,11 +60,27 @@ int main(int argc, char** argv)
 		     << "\tError: " << ret << endl;
 		return 1;
 	}
+	if(conf.xml_infile != NULL)
+	{
+		/* import sensor extrinsics as xml config file */
+		ret = path.parse_hardware_config(string(conf.xml_infile));
+		if(ret)
+		{
+			cerr << "Unable to read xml file: "
+			     << conf.xml_infile << endl
+			     << "\tError: " << ret << endl;
+			return 1;
+		}
+	}
 	toc(clk, "Importing data");
 
 	/* optionally limit path to number of poses specified */
 	if(conf.num_poses > 0)
-		path.pl.resize(conf.num_poses);
+	{
+		/* we don't do this anymore */
+		cerr << "Feature No Longer Supported: "
+		     << "cannot limit num poses" << endl;
+	}
 
 	/* create graph from tree, forming watertight boundary */
 	ret = generate_boundary(graph, trirep, tree, path, 

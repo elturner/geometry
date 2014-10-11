@@ -1,13 +1,32 @@
 CC = g++
-CFLAGS = -g -O2 -W -Wall -Wextra -ansi -pedantic
+CFLAGS = -g -O2 -W -Wall -Wextra -ansi
 LFLAGS = -lm #-lpthread
 PFLAGS = #-pg
-BUILDDIR = build
+SOURCEDIR = ../../src/cpp/
+EIGENDIR = /usr/include/eigen3/
+IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
+BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/floorplan_gen
 
 # defines for the program
 
-SOURCES =	src/util/tictoc.cpp \
+SOURCES =	$(SOURCEDIR)util/range_list.cpp \
+		$(SOURCEDIR)util/rotLib.cpp \
+		$(SOURCEDIR)io/carve/noisypath_io.cpp \
+		$(SOURCEDIR)config/backpackConfig.cpp \
+		$(SOURCEDIR)config/cameraProp.cpp \
+		$(SOURCEDIR)config/imuProp.cpp \
+		$(SOURCEDIR)config/laserProp.cpp \
+		$(SOURCEDIR)config/tofProp.cpp \
+		$(SOURCEDIR)xmlreader/tinystr.cpp \
+		$(SOURCEDIR)xmlreader/tinyxml.cpp \
+		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
+		$(SOURCEDIR)xmlreader/tinyxmlparser.cpp \
+		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
+		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
+		$(SOURCEDIR)geometry/system_path.cpp \
+		$(SOURCEDIR)geometry/transform.cpp \
+		src/util/tictoc.cpp \
 		src/util/progress_bar.cpp \
 		src/io/filetypes.cpp \
 		src/io/config.cpp \
@@ -17,7 +36,6 @@ SOURCES =	src/util/tictoc.cpp \
 		src/io/fp_io.cpp \
 		src/structs/quadtree.cpp \
 		src/structs/point.cpp \
-		src/structs/path.cpp \
 		src/structs/cell_graph.cpp \
 		src/structs/triple.cpp \
 		src/delaunay/insertion.cpp \
@@ -33,7 +51,25 @@ SOURCES =	src/util/tictoc.cpp \
 		src/test/test_trirep.cpp \
 		src/main.cpp
 
-HEADERS =	src/util/error_codes.h \
+HEADERS =	$(SOURCEDIR)util/range_list.h \
+		$(SOURCEDIR)util/error_codes.h \
+		$(SOURCEDIR)util/endian.h \
+		$(SOURCEDIR)util/rotLib.h \
+		$(SOURCEDIR)util/binary_search.h \
+		$(SOURCEDIR)io/carve/noisypath_io.h \
+		$(SOURCEDIR)config/backpackConfig.h \
+		$(SOURCEDIR)config/cameraProp.h \
+		$(SOURCEDIR)config/imuProp.h \
+		$(SOURCEDIR)config/laserProp.h \
+		$(SOURCEDIR)config/sensorProp.h \
+		$(SOURCEDIR)config/tofProp.h \
+		$(SOURCEDIR)xmlreader/tinystr.h \
+		$(SOURCEDIR)xmlreader/tinyxml.h \
+		$(SOURCEDIR)xmlreader/tinyxmltools.h \
+		$(SOURCEDIR)xmlreader/xmlsettings.h \
+		$(SOURCEDIR)geometry/system_path.h \
+		$(SOURCEDIR)geometry/transform.h \
+		src/util/error_codes.h \
 		src/util/tictoc.h \
 		src/util/progress_bar.h \
 		src/util/constants.h \
@@ -46,7 +82,6 @@ HEADERS =	src/util/error_codes.h \
 		src/io/fp_io.h \
 		src/structs/quadtree.h \
 		src/structs/point.h \
-		src/structs/path.h \
 		src/structs/normal.h \
 		src/structs/parameters.h \
 		src/structs/cell_graph.h \
@@ -71,15 +106,15 @@ all: $(SOURCES) $(EXECUTABLE)
 	make --no-builtin-rules --no-builtin-variables $(EXECUTABLE)
 
 simple:
-	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
+	$(CC) $(CFLAGS) $(IFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS)
+	$(CC) $(OBJECTS) -o $@ $(LFLAGS) $(PFLAGS) $(IFLAGS)
 
 $(BUILDDIR)/%.o : %.cpp
 	@mkdir -p $(shell dirname $@)		# ensure folder exists
 	@g++ -MM -MF $(patsubst %.o,%.d,$@) -MT $@ $< # recalc depends
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(IFLAGS) $< -o $@
 
 # helper commands
 

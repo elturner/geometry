@@ -11,9 +11,11 @@
  */
 
 #include <set>
+
+#include <geometry/system_path.h>
+
 #include "../structs/cell_graph.h"
 #include "../structs/quadtree.h"
-#include "../structs/path.h"
 #include "../structs/triple.h"
 #include "../rooms/tri_rep.h"
 #include "../delaunay/triangulation/triangulation.h"
@@ -44,7 +46,7 @@ using namespace std;
  * 	Returns zero on success, non-zero on failure.
  */
 int generate_boundary(cell_graph_t& graph, tri_rep_t& trirep,
-				quadtree_t& tree, path_t& path,
+				quadtree_t& tree, system_path_t& path,
 				bool carve_through);
 
 /************* HELPER FUNCTIONS ******************/
@@ -105,7 +107,7 @@ int triangulate_graph(triangulation_t& tri, cell_graph_t& graph);
  * 	Returns zero on success, non-zero on failure.
  */
 int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
-				path_t& path,
+				system_path_t& path,
 				cell_graph_t& graph, triangulation_t& tri,
 				quadtree_t& tree, bool carve_through); 
 

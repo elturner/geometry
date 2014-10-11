@@ -1,11 +1,17 @@
 #include "generate_boundary.h"
-#include <set>
+
+#include <string>
 #include <vector>
+#include <map>
+#include <set>
 #include <float.h>
+
+#include <geometry/system_path.h>
+#include <geometry/transform.h>
+
 #include "../structs/cell_graph.h"
 #include "../structs/quadtree.h"
 #include "../structs/normal.h"
-#include "../structs/path.h"
 #include "../structs/parameters.h"
 #include "../delaunay/insertion.h"
 #include "../delaunay/reordering.h"
@@ -18,7 +24,7 @@
 using namespace std;
 
 int generate_boundary(cell_graph_t& graph, tri_rep_t& trirep,
-				quadtree_t& tree, path_t& path,
+				quadtree_t& tree, system_path_t& path,
 				bool carve_through)
 {
 	set<triple_t> interior;
@@ -159,10 +165,14 @@ int triangulate_graph(triangulation_t& tri, cell_graph_t& graph)
 }
 
 int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
-				path_t& path,
+				system_path_t& path,
 				cell_graph_t& graph, triangulation_t& tri,
 				quadtree_t& tree, bool carve_through)
 {
+	map<string, transform_t*>::const_iterator tit; 
+	pose_t* pose;
+	transform_t system2world, sensor2world;
+	
 	vector< set<cell_t*> > pose_map;
 	set<cell_t>::iterator it;
 	set<cell_t*>::iterator cit;
@@ -171,14 +181,15 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 	vector<quaddata_t*>::iterator xit;
 	unsigned int i, n;
 	vertex_t start, end;
-	point_t pp;
+	point_t pp, sensor_point;
 	normal_t ray;
 	triple_t st, et;
 	double d, d_min, min_z, max_z;
 	int ret;
 
 	/* check arguments */
-	if(path.pl.empty())
+	n = path.num_poses();
+	if(n == 0)
 		return -1;
 	interior.clear();
 	visited.clear();
@@ -189,7 +200,6 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 
 	/* iterate over the cells in graph, to populate the pose_map,
 	 * which denotes which cells each pose sees */
-	n = path.pl.size();
 	pose_map.resize(n);
 	for(it = graph.V.begin(); it != graph.V.end(); it++)
 	{
@@ -199,11 +209,16 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 		{
 			/* prepare variables */
 			i = *pit;
-			if(i >= path.pl.size())
+			if(i >= n)
 				continue; /* references non-existant pose */
+			pose = path.get_pose(i);
 			
 			/* check if pose in bounds of this level */
-			if(path.pl[i].z < min_z || path.pl[i].z > max_z)
+			if(pose->T(2) < min_z || pose->T(2) > max_z)
+				continue;
+
+			/* check if pose is in black-listed timezone */
+			if(path.is_blacklisted(pose->timestamp))
 				continue;
 
 			/* add to map */
@@ -222,19 +237,24 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 			 * pose-to-pose line segments */
 			continue;
 		}
+		
+		/* get pose information */
+		pose = path.get_pose(i);
+		system2world.T = pose->T;
+		system2world.R = pose->R.toRotationMatrix();
 
 		/* get position of i'th pose and vertex and as point */
-		vertex_set(&start, path.pl[i].x, path.pl[i].y);
-		pp.set(0, path.pl[i].x);
-		pp.set(1, path.pl[i].y);
+		vertex_set(&start, pose->T(0), pose->T(1));
+		pp.set(0, pose->T(0));
+		pp.set(1, pose->T(1));
 
 		/* iterate over the cells seen by this pose */
 		for(cit = pose_map[i].begin(); cit != pose_map[i].end(); 
 								cit++)
 		{
-			/* get cell pos as vertex and point */
+			/* get cell pos as vertex end point */
 			vertex_set(&end, (*cit)->get_data()->average.get(0),
-					(*cit)->get_data()->average.get(0));
+					(*cit)->get_data()->average.get(1));
 			
 			/* prepare to ray trace through quadtree, to
 			 * determine if any occlusions occur */
@@ -242,6 +262,34 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 
 			/* perform ray-tracing from pose to cell */ 
 			tree.raytrace(xings,pp,(*cit)->get_data()->average);
+		
+			/* Check if extrinsics were provided for the
+			 * sensors.  If they were, then we should trace
+			 * from all available positions on the backpack,
+			 * not just the center position. 
+			 *
+			 * This is important to try to avoid "over-carving",
+			 * where an occluding object is missed because
+			 * we carved from the wrong spot. */
+			for(tit = path.begin_transforms(); 
+					tit != path.end_transforms(); tit++)
+			{
+				/* get the world-position of each scanner at
+				 * this pose */
+				sensor2world = *(tit->second);
+				sensor2world.cat(system2world);
+
+				/* convert transform to a point we can
+				 * trace with */
+				sensor_point.set(0, sensor2world.T(0));
+				sensor_point.set(1, sensor2world.T(1));
+
+				/* trace from this point to the wall
+				 * sample, in order to check from additional
+				 * occlusions from this angle */
+				tree.raytrace(xings,sensor_point,
+					(*cit)->get_data()->average);
+			}
 
 			/* get line-of-sight for this trace */
 			if(carve_through)
@@ -301,9 +349,10 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 			continue;
 		if(pose_map[i+1].empty())
 			continue;
+		pose = path.get_pose(i+1);
 
 		/* ray-trace path from i to i+1 */
-		vertex_set(&end, path.pl[i+1].x, path.pl[i+1].y);
+		vertex_set(&end, pose->T(0), pose->T(1));
 		ret = raytrace_triangulation(interior, tri,
 				start, end, st, et);
 		if(ret)
