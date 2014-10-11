@@ -125,4 +125,4 @@ int laserProp::assign_props(std::map<std::string,std::string>& property_map) {
 */
 std::string laserProp::type_tag() const {
 	return "lasers";
-};
+}

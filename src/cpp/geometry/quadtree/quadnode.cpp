@@ -467,10 +467,7 @@ void quadnode_t::print(ostream& os) const
 	{
 		/* print data if it exists */
 		if(this->data != NULL)
-		{
 			this->data->print(os);
-			os << endl;
-		}
 
 		/* we're done here */
 		return;

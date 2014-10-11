@@ -107,9 +107,7 @@ namespace binary_search
 		}
 	}
 
-};
-
-
+}
 
 #endif
 

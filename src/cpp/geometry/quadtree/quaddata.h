@@ -120,7 +120,7 @@ class quaddata_t
 		 * Prints the information in this struct to the
 		 * given stream.
 		 *
-		 * Does NOT print a new line.
+		 * Prints a new line.
 		 *
 		 * format:
 		 *

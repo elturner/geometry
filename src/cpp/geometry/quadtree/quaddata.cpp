@@ -95,8 +95,12 @@ void quaddata_t::print(ostream& os) const
 	set<size_t>::iterator it;
 	size_t num;
 
-	/* convert continuous weight to integer */
-	num = (size_t) (this->total_weight);
+	/* don't export if weight is bad */
+	if(this->total_weight <= 0 || this->pose_inds.empty())
+		return;
+	
+	/* convert continuous weight to positive integer */
+	num = (size_t) (this->total_weight) + 1;
 
 	/* print static info */
 	os << this->average(0)   << " "
@@ -109,4 +113,7 @@ void quaddata_t::print(ostream& os) const
 	/* write poses */
 	for(it = this->pose_inds.begin(); it != this->pose_inds.end(); it++)
 		os << " " << (*it);
+
+	/* write new line */
+	os << endl;
 }

@@ -125,5 +125,5 @@ int tofProp::assign_props(std::map<std::string,std::string>& property_map) {
 */
 std::string tofProp::type_tag() const {
 	return "tof_cameras";
-};
+}
 

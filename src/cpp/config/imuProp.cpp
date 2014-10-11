@@ -106,4 +106,4 @@ int imuProp::assign_props(std::map<std::string,std::string>& property_map) {
 */
 std::string imuProp::type_tag() const {
 	return "imus";
-};
+}

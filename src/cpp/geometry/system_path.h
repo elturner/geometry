@@ -284,6 +284,44 @@ class system_path_t
 		 */
 		pose_t* get_pose(size_t i) const;
 
+		/**
+		 * Retrieves the beginning iterator to the map of transforms
+		 *
+		 * All transforms for the various sensors on the backpack
+		 * are stored in a map in this structure.  This call will
+		 * return the iterator to the first element in this map.
+		 *
+		 * The iterators reference a pair for each transform:
+		 *
+		 * 	string:                name of sensor
+		 * 	transform_t pointer:   The transform from sensor
+		 * 	                       to backpack center
+		 *
+		 * @return    The beginning iterator to the transforms.
+		 */
+		inline std::map<std::string, transform_t*>::const_iterator
+				begin_transforms() const
+		{ return this->transform_map.begin(); };
+
+		/**
+		 * Retrieves the ending iterator to the map of transforms
+		 *
+		 * All transforms for the various sensors on the backpack
+		 * are stored in a map in this structure.  This call will
+		 * return the iterator to the first element in this map.
+		 *
+		 * The iterators reference a pair for each transform:
+		 *
+		 * 	string:                name of sensor
+		 * 	transform_t pointer:   The transform from sensor
+		 * 	                       to backpack center
+		 *
+		 * @return    The beginning iterator to the transforms.
+		 */
+		inline std::map<std::string, transform_t*>::const_iterator
+				end_transforms() const
+		{ return this->transform_map.end(); };
+
 	/* helper functions */
 	public:
 
