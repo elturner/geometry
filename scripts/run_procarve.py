@@ -75,20 +75,25 @@ def run(dataset_dir, madfile):
 	if ret != 0:
 		return -4 # an error occurred
 
+        # generate wall samples and floorplan from carving
+        ret = oct2fp.run(dataset_dir, madfile);
+        if ret != 0:
+		return -5 # an error occurred
+        
 	# run the fp optimization program on resulting octree
 	ret = fp_optimizer.run(dataset_dir)
 	if ret != 0:
-		return -5 # an error occurred
+		return -6 # an error occurred
 
 	# merge the floorplans and carving into one file
 	ret = merge_fp_oct.run(dataset_dir)
 	if ret != 0:
-		return -6 # an error ocurred
+		return -7 # an error ocurred
 
 	# run the octsurf program to generate mesh
 	ret = octsurf.run(dataset_dir)
 	if ret != 0:
-		return -7 # an error occurred
+		return -8 # an error occurred
 
 	# success
 	return 0

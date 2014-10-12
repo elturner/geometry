@@ -50,7 +50,7 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 # @param debug        If true, will run code through gdb
 #
 # @return             Returns zero on success, non-zero on failure
-def run(dataset_dir, madfile, debug):
+def run(dataset_dir, madfile, debug=False):
 
     # check that directories exist
     output_dir = dataset_filepaths.get_carving_fp_dir(dataset_dir)
