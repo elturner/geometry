@@ -120,6 +120,33 @@ class oct2dq_run_settings_t
 		double wallheightthresh;
 
 		/**
+		 * Minimum room feature length
+		 *
+		 * This value indicates the range to check across for
+		 * the best wall sample along a given ray.  This value
+		 * should be no larger than the samllest width of a room,
+		 * so that we don't accidently choose another valid wall
+		 * behind a given wall.
+		 *
+		 * units: meters
+		 */
+		double minroomsize;
+
+		/**
+		 * The minimum percentage of poses that choose a valid
+		 * wall sample
+		 *
+		 * Each wall sample is chosen based on how many poses see it
+		 * as the best wall smaple for a given direction.  This
+		 * value indicates the percentage of poses that chose it
+		 * over other possible samples.  This threshold is meant
+		 * to select the best samples.
+		 *
+		 * units:  unitless, range [0,1]
+		 */
+		double choiceratiothresh;
+
+		/**
 		 * Specifies the output DQ resolution to export
 		 *
 		 * units: meters

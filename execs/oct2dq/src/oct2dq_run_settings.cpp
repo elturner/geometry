@@ -43,6 +43,8 @@ using namespace std;
 #define XML_VERTICALITYTHRESH    "oct2dq_verticalitythresh"
 #define XML_SURFACEAREATHRESH    "oct2dq_surfaceareathresh"
 #define XML_WALLHEIGHTTHRESH     "oct2dq_wallheightthresh"
+#define XML_MINROOMSIZE          "oct2dq_minroomsize"
+#define XML_CHOICERATIOTHRESH    "oct2dq_choiceratiothresh"
 #define XML_DQ_RESOLUTION        "oct2dq_dq_resolution"
 
 /* function implementations */
@@ -62,6 +64,8 @@ oct2dq_run_settings_t::oct2dq_run_settings_t()
 	this->verticalitythresh    = 0.08;
 	this->surfaceareathresh    = 1.0;
 	this->wallheightthresh     = 2.5;
+	this->minroomsize          = 1.5;
+	this->choiceratiothresh    = 0.1;
 	this->dq_resolution        = -1.0;
 }
 
@@ -192,6 +196,12 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_WALLHEIGHTTHRESH))
 		this->wallheightthresh
 			= settings.getAsDouble(XML_WALLHEIGHTTHRESH);
+	if(settings.is_prop(XML_MINROOMSIZE))
+		this->minroomsize
+			= settings.getAsDouble(XML_MINROOMSIZE);
+	if(settings.is_prop(XML_CHOICERATIOTHRESH))
+		this->choiceratiothresh
+			= settings.getAsDouble(XML_CHOICERATIOTHRESH);
 	if(settings.is_prop(XML_DQ_RESOLUTION))
 		this->dq_resolution
 			= settings.getAsDouble(XML_DQ_RESOLUTION);

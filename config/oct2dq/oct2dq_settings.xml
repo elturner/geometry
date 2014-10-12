@@ -91,6 +91,31 @@
 	     units: meters -->
 	<oct2dq_wallheightthresh>1.0</oct2dq_wallheightthresh>
 
+	<!-- PARAMETERS FOR CREATING WALL SAMPLES -->
+
+	<!-- Minimum room feature length
+
+	     This value indicates the range to check across for
+	     the best wall sample along a given ray.  This value
+	     should be no larger than the smallest width of a room,
+	     so that we don't accidently choose another valid wall
+	     behind a given wall.
+
+	     units: meters -->
+	<oct2dq_minroomsize>1.5</oct2dq_minroomsize>
+
+	<!-- The minimum percentage of poses that choose a wall sample
+	     for that sample to be considered valid.
+
+	     Each wall sample is chosen based on how many poses see it
+	     as the best wall sample for a given direction.  This value
+	     indicates the percentage of poses that chose it over other
+	     possible samples.  This threshold is meant to select
+	     the best samples.
+
+	     units:  unitless, range [0,1] -->
+	<oct2dq_choiceratiothresh>0.1</oct2dq_choiceratiothresh>
+
 	<!-- The following specifies the output resolution of the
 	     wall sampling to generate.  If not specified, or if
 	     the value specified is negative, then the resolution

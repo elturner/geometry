@@ -17,9 +17,11 @@
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <iostream>
+#include <cmath>
 #include <Eigen/Dense>
 
 /**
@@ -198,7 +200,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 
 		/* compute strength of this region, such as it is */
 		wall_info.strength = process_t::compute_region_strength(
-					it, args) + 1; // TODO
+					it, args) + 1;
 
 		/* iterate over neighboring regions to this region
 		 *
@@ -315,7 +317,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * wall. */
 				this->walls[wall_index]
 					.vertical.project_onto(p);
-				
+			
 				/* get the 2D projection of this value,
 				 * so we are able to insert it into the
 				 * 2D structure of the wall samples */
@@ -482,7 +484,8 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 
 				/* analyze this scan point */
 				ret = this->analyze_scan(pose, pose_ind,
-					point_pos, pose_choice_counts);
+					point_pos, pose_choice_counts,
+					args);
 				if(ret)
 				{
 					/* report error */
@@ -510,7 +513,7 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 			/ ((double) pccit->second.second);
 
 		/* check if this wall sample has good pose counts */
-		if(score < 0.1) // TODO
+		if(score < args.choiceratiothresh)
 		{
 			/* bad pose count, so we want to throw
 			 * away this wall sample */
@@ -541,9 +544,6 @@ int process_t::export_data(const oct2dq_run_settings_t& args) const
 	tic(clk);
 	this->sampling.print(outfile);
 	toc(clk, "Exporting wall samples");
-
-	// TODO debugging
-	this->region_graph.writeobj("/home/elturner/Desktop/regions.obj");
 
 	/* success */
 	outfile.close();
@@ -581,7 +581,8 @@ int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
 				const Eigen::Vector3d& point_pos_orig,
 				std::map<quaddata_t*, 
 				std::pair<size_t, size_t> >& 
-				pose_choice_counts)
+				pose_choice_counts,
+				const oct2dq_run_settings_t& args)
 {
 	map<quaddata_t*, pair<size_t, size_t> >::iterator pccit;
 	Vector3d dir, point_pos;
@@ -596,7 +597,9 @@ int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
 	 * objects */
 	dir = (point_pos_orig - pose.T);
 	dir.normalize();
-	point_pos = point_pos_orig + dir*1.5; /* units: meters */ //TODO
+	
+	/* units: meters */
+	point_pos = point_pos_orig + dir*(args.minroomsize); 
 	dir2d << dir(0), dir(1); /* projection of 
 				normal into R^2 */
 

@@ -153,6 +153,7 @@ class process_t
 		 * @param pose_choice_counts    Scorings for how often each
 		 *                              wall sample gets chosen for
 		 *                              a pose
+		 * @param args            The parsed input arguments
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
@@ -160,7 +161,8 @@ class process_t
 				const Eigen::Vector3d& point_pos_orig,
 				std::map<quaddata_t*, 
 				std::pair<size_t, size_t> >& 
-				pose_choice_counts);
+				pose_choice_counts,
+				const oct2dq_run_settings_t& args);
 
 		/**
 		 * Returns true iff the two given wall samples share
