@@ -1,6 +1,8 @@
 <settings>
 <!-- This file contains run settings for the oct2dq program -->
 
+	<!-- PARAMETERS FOR REGION FORMATION -->
+
 	<!-- This value indicates how aggressive planar region
 	     coalescing will be with respect to distance-from-plane.
 
@@ -46,6 +48,8 @@
 	     the discretized grid face position will be used. -->
 	<oct2dq_use_isosurface_pos>0</oct2dq_use_isosurface_pos>
 
+	<!-- PARAMETERS FOR CHOOSING WHICH REGIONS ARE WALLS -->
+
 	<!-- The following specifies the verticality strictness
 	     for determining which surfaces should contribute to
 	     wall samples.
@@ -74,7 +78,7 @@
 	     surface area for each candidate region.
 
 	     units: meters squared -->
-	<oct2dq_surfaceareathresh>1.0</oct2dq_surfaceareathresh>
+	<oct2dq_surfaceareathresh>0.05</oct2dq_surfaceareathresh>
 
 	<!-- The following specifies a minimum height for walls
 
@@ -85,7 +89,7 @@
 	     independently.
 
 	     units: meters -->
-	<oct2dq_wallheightthresh>2.5</oct2dq_wallheightthresh>
+	<oct2dq_wallheightthresh>1.0</oct2dq_wallheightthresh>
 
 	<!-- The following specifies the output resolution of the
 	     wall sampling to generate.  If not specified, or if

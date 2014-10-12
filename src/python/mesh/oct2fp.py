@@ -80,8 +80,8 @@ def run(dataset_dir, madfile, debug):
         return -2
     
     # run the floorplan generation code
-    args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), fpfile, \
-            '-s', '-1']
+    args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), config_xml, \
+            fpfile, '-s', '-1']
     ret = callproc(FLOORPLAN_EXE, args, dataset_dir, debug)
     if ret != 0:
         print "floorplan_gen program returned error",ret

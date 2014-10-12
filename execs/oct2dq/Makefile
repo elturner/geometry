@@ -35,6 +35,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadtree.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadnode.cpp \
+		$(SOURCEDIR)geometry/quadtree/quaddata.cpp \
 		$(SOURCEDIR)geometry/shapes/plane.cpp \
 		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
@@ -75,9 +78,13 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
+		$(SOURCEDIR)geometry/quadtree/quadtree.h \
+		$(SOURCEDIR)geometry/quadtree/quadnode.h \
+		$(SOURCEDIR)geometry/quadtree/quaddata.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)geometry/shapes/shape_wrapper.h \
 		$(SOURCEDIR)geometry/shapes/linesegment.h \
+		$(SOURCEDIR)geometry/shapes/linesegment_2d.h \
 		$(SOURCEDIR)geometry/shapes/plane.h \
 		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \

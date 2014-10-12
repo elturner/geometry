@@ -14,15 +14,17 @@
  */
 
 #include "oct2dq_run_settings.h"
+#include "wall_region_info.h"
 #include <geometry/octree/octree.h>
+#include <geometry/quadtree/quadtree.h>
+#include <geometry/quadtree/quaddata.h>
+#include <geometry/transform.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
-#include <mesh/wall_sampling/wall_sampling.h>
+#include <Eigen/Dense>
+#include <vector>
 #include <map>
 #include <set>
-
-/* the following type is defined for convenience */
-typedef std::map<octdata_t*, std::set<wall_sample_t> > nodewsmap_t;
 
 /**
  * The process_t class contains all necessary data products
@@ -41,26 +43,30 @@ class process_t
 		/* the computed wall samples */
 
 		/**
+		 * The following list represents the details on regions
+		 * that were selected to be representative of walls.
+		 */
+		std::vector<wall_region_info_t> walls;
+
+		/**
 		 * This represents the generated wall samples
 		 *
 		 * This structure contains the wall samples generated
 		 * from the planar regions.  Points along each face
 		 * are added to the structure with varying weight.
 		 */
-		wall_sampling_t sampling;
+		quadtree_t sampling;
 
 		/**
-		 * This mapping goes from boundary octnodes to
-		 * generated wall samples.
+		 * The mapping between the generated wall samples
+		 * and the originating wall regions.  The walls
+		 * are represented by their index in the "walls"
+		 * list.
 		 *
-		 * The purpose of this mapping is to be able to quickly
-		 * identify which octnodes contributed to which wall
-		 * samples.  This information is useful when assigning
-		 * pose index information to the wall samples, since
-		 * that is computed by finding which poses saw which
-		 * octnodes, which in turn determine the wall samples.
+		 * Each quaddata maps to the list of walls that
+		 * contributed to that data sample.
 		 */
-		nodewsmap_t node_ws_map;
+		std::map<quaddata_t*, std::set<size_t> > ws_to_walls;
 
 	/* functions */
 	public:
@@ -136,6 +142,36 @@ class process_t
 				regionmap_t::const_iterator it,
 				const oct2dq_run_settings_t& args) const;
 
+		/**
+		 * Analyzes the given scan to determine if the current
+		 * pose should be associated with wall samples
+		 *
+		 * @param pose            The pose to analyze
+		 * @param pose_ind        The index of the pose to analyze
+		 * @param point_pos_orig  The world-coordinates of the 
+		 *                        scan point
+		 * @param pose_choice_counts    Scorings for how often each
+		 *                              wall sample gets chosen for
+		 *                              a pose
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int analyze_scan(const transform_t& pose, size_t pose_ind,
+				const Eigen::Vector3d& point_pos_orig,
+				std::map<quaddata_t*, 
+				std::pair<size_t, size_t> >& 
+				pose_choice_counts);
+
+		/**
+		 * Returns true iff the two given wall samples share
+		 * an originating wall.
+		 *
+		 * @param a   The first wall sample
+		 * @param b   The second wall sample
+		 *
+		 * @return    Returns true iff the wall samples share a wall
+		 */
+		bool shares_a_wall(quaddata_t* a, quaddata_t* b) const;
 };
 
 #endif

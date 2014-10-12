@@ -4,8 +4,11 @@
 #include <io/data/fss/fss_io.h>
 #include <geometry/shapes/shape_wrapper.h>
 #include <geometry/shapes/linesegment.h>
+#include <geometry/shapes/linesegment_2d.h>
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octtopo.h>
+#include <geometry/quadtree/quadtree.h>
+#include <geometry/quadtree/quaddata.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
 #include <mesh/refine/octree_padder.h>
@@ -14,6 +17,7 @@
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
+#include <vector>
 #include <map>
 #include <iostream>
 #include <Eigen/Dense>
@@ -117,28 +121,28 @@ int process_t::init(oct2dq_run_settings_t& args)
 		
 int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 {
-	map<node_face_t, wall_region_info_t> wall_regions;
-	map<node_face_t, wall_region_info_t>::iterator wit, w1it, w2it;
+	map<node_face_t, size_t> wall_regions;
+	map<node_face_t, size_t>::iterator wit, w1it, w2it;
 	wall_region_info_t wall_info;
 	regionmap_t::const_iterator it;
 	faceset_t::const_iterator fit, n1it, n2it;
 	octnode_t* leaf;
+	quaddata_t* data;
 	pair<nodefacemap_t::const_iterator, 
 			nodefacemap_t::const_iterator> range;
 	Vector3d p;
-	wall_sample_t ws;
-	double coord_a, coord_b;
+	Vector2d p2d, n2d;
+	double coord_a, coord_b, height;
 	progress_bar_t progbar;
 	tictoc_t clk;
-	size_t i;
+	size_t i, wall_index;
 
 	/* initialize */
 	tic(clk);
-	this->sampling.init(args.dq_resolution,
-			this->tree.get_root()->center(0),
-			this->tree.get_root()->center(1),
+	p2d << this->tree.get_root()->center(0),
+	       this->tree.get_root()->center(1);
+	this->sampling.set(args.dq_resolution, p2d,
 			this->tree.get_root()->halfwidth);
-	this->node_ws_map.clear();
 	progbar.set_name("Wall Sampling");
 	i = 0;
 
@@ -162,13 +166,16 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 
 		/* compare bounding box to wall height threshold,
 		 * just to make sure we want to use this region */
-		if(wall_info.b_max - wall_info.b_min 
-				< args.wallheightthresh)
+		height = wall_info.b_max - wall_info.b_min;
+		if(height < args.wallheightthresh)
 			continue; /* don't use region */
 
+		/* add this wall region to our list */
+		this->walls.push_back(wall_info);
+
 		/* we want to use this region, so keep it */
-		wall_regions.insert(pair<node_face_t, wall_region_info_t>(
-					it->first, wall_info));
+		wall_regions.insert(pair<node_face_t, size_t>(
+					it->first, this->walls.size()-1));
 	}
 
 	/* iterate over the regions again.  check if a reject
@@ -224,24 +231,31 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * that it is a very small wall that
 				 * joins two other walls (e.g. a doorway
 				 * frame). */
-				if(w1it->second.vertical.normal.dot(
-					w2it->second.vertical.normal) > 0)
+				if(this->walls[w1it->second]
+						.vertical.normal.dot(
+					this->walls[w2it->second]
+						.vertical.normal) > 0)
 					continue; /* not opposing */
 			
 				/* the neighbors have opposing normals,
 				 * so we should add this region */
 				wall_info.init(wall_info.strength,
 						it->second.get_region());
+				this->walls.push_back(wall_info);
 				wall_regions.insert(pair<node_face_t, 
-						wall_region_info_t>(
-						it->first, wall_info));
+						size_t>(it->first, 
+						this->walls.size()-1));
 			}
 		}
 	}
 
-	/* iterate over all the regions we determined to be walls */
+	/* iterate over all the regions we determined to be walls,
+	 * and actually compute the wall samples to export */
 	for(wit = wall_regions.begin(); wit != wall_regions.end(); wit++)
 	{
+		/* get the wall to insert */
+		wall_index = wit->second;
+
 		/* iterate over the plane of the region, adding
 		 * samples taken uniformly.
 		 *
@@ -258,21 +272,20 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 		 * part of the wall, we check each point to make sure
 		 * that it's part of the exterior volume of the model.
 		 */
-		for(coord_a = wit->second.a_min; 
-				coord_a <= wit->second.a_max; 
+		for(coord_a = this->walls[wall_index].a_min; 
+				coord_a <= this->walls[wall_index].a_max; 
 					coord_a += args.dq_resolution)
-			for(coord_b = wit->second.b_min; 
-				coord_b <= wit->second.b_max;
+			for(coord_b = this->walls[wall_index].b_min; 
+				coord_b <= this->walls[wall_index].b_max;
 					coord_b += args.dq_resolution)
 			{
 				/* reconstruct 3D point in world
 				 * coordinates */
-				p = wit->second.vertical.point
-					+ (wit->second.a * coord_a) 
-					+ (wit->second.b * coord_b);
-
-				// TODO debugging export point
-				cerr << "v " << p.transpose() << endl;
+				p = this->walls[wall_index].vertical.point
+					+ (this->walls[wall_index].a 
+							* coord_a) 
+					+ (this->walls[wall_index].b 
+							* coord_b);
 
 				/* get the octnode that contains this
 				 * point. */
@@ -300,29 +313,39 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * snap it to the vertically aligned
 				 * plane that is the adjustment of the
 				 * wall. */
-				wit->second.vertical.project_onto(p);
+				this->walls[wall_index]
+					.vertical.project_onto(p);
+				
+				/* get the 2D projection of this value,
+				 * so we are able to insert it into the
+				 * 2D structure of the wall samples */
+				p2d << p(0), p(1);
+				n2d << this->walls[wall_index]
+						.vertical.normal(0),
+				       this->walls[wall_index]
+					       .vertical.normal(1);
 
 				/* we can now use this point to
 				 * contribute to wall samples */
-				ws = this->sampling.add(p(0), p(1), 
-						p(2), p(2), 
-						wit->second.strength);
-		
-				/* store the pairing between this
-				 * wall sample and the given leaf node.
-				 *
-				 * Since the data value in a leaf will
-				 * never be null (because we padded the
-				 * tree), then saving the octdata is
-				 * equivalent to saving the node itself
-				 */
-				if(leaf->data != NULL)
-					this->node_ws_map.insert(
-						pair<octdata_t*,
-						set<wall_sample_t> >(
-						leaf->data, 
-						set<wall_sample_t>())
-						).first->second.insert(ws);
+				data = this->sampling.insert(p2d, n2d,
+					p(2), p(2), 
+					this->walls[wall_index].strength);
+				if(data == NULL)
+				{
+					/* error occurred */
+					progbar.clear();
+					cerr << "[process_t::"
+					     << "compute_wall_samples]\t"
+					     << "Unable to insert point "
+					     << "into wall samples: " 
+					     << p2d.transpose()
+					     << endl;
+					return -1;
+				}
+
+				/* keep track of which data came from
+				 * which walls */
+				this->ws_to_walls[data].insert(wall_index);
 			}
 	}
 	
@@ -334,22 +357,31 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 		
 int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 {
+	map<quaddata_t*, pair<size_t, size_t> >::iterator pccit;
 	system_path_t path;
 	fss::reader_t infile;
 	fss::frame_t frame;
 	transform_t pose;
 	Vector3d point_pos;
-	linesegment_t lineseg;
-	shape_wrapper_t shapewrap;
-	nodewsmap_t::iterator wsit;
-	set<wall_sample_t>::iterator sit;
 	progress_bar_t progbar;
 	tictoc_t clk;
+	double score;
+	size_t pt_ind, num_pts;
 	size_t file_ind, num_files, frame_ind, num_frames;
-	size_t pt_ind, num_pts, node_ind, num_nodes;
 	size_t pose_ind;
 	int ret;
 	
+	/* when assigning pose indices to wall samples, we want to keep
+	 * track of which samples get a lot of poses, and which don't.
+	 *
+	 * The following structure keeps track of the ratio of times
+	 * a wall sample was chosen, over the total number of times
+	 * it was considered to hold a pose.
+	 *
+	 * Thanks goes to Nick for suggesting this idea.
+	 */
+	map<quaddata_t*, pair<size_t, size_t> > pose_choice_counts;
+
 	/* read in the path information */
 	tic(clk);
 	ret = path.readnoisypath(args.pathfile);
@@ -448,39 +480,17 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 				point_pos(2) = frame.points[pt_ind].z;
 				pose.apply(point_pos);
 
-				/* prepare the line segment */
-				lineseg.init(pose.T, point_pos);
-
-				/* find the nodes that it intersects */
-				shapewrap.find_in_tree(lineseg, this->tree);
-
-				/* iterate through the intersected
-				 * nodes, and record this pose with any
-				 * associated wall samples */
-				num_nodes = shapewrap.data.size();
-				for(node_ind = 0; node_ind < num_nodes;
-							node_ind++)
+				/* analyze this scan point */
+				ret = this->analyze_scan(pose, pose_ind,
+					point_pos, pose_choice_counts);
+				if(ret)
 				{
-					/* ignore nodes with null data */
-					if(shapewrap.data[node_ind] == NULL)
-						continue;
-
-					/* retrieve any wall samples
-					 * for this node data */
-					wsit = this->node_ws_map.find(
-						shapewrap.data[node_ind]);
-					if(wsit == this->node_ws_map.end())
-						continue; /* no samples 
-						           * here */
-
-					/* iterate over samples at this
-					 * node */
-					for(sit = wsit->second.begin();
-						sit != wsit->second.end();
-							sit++)
-						/* add pose to sample */
-						this->sampling.add(*sit,
-								pose_ind);
+					/* report error */
+					progbar.clear();
+					cerr << "[process_t::compute_pose"
+					     << "_inds]\tUnable to process "
+					     << "scan." << endl;
+					return PROPEGATE_ERROR(-6, ret);
 				}
 			}
 		}
@@ -491,31 +501,52 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 		toc(clk, "Computing pose indices");
 	}
 
+	/* remove any wall samples that have low pose information */
+	for(pccit = pose_choice_counts.begin(); 
+			pccit != pose_choice_counts.end(); pccit++)
+	{
+		/* get the ratio for the pose counts for this wall sample */
+		score = ((double) pccit->second.first) 
+			/ ((double) pccit->second.second);
+
+		/* check if this wall sample has good pose counts */
+		if(score < 0.1) // TODO
+		{
+			/* bad pose count, so we want to throw
+			 * away this wall sample */
+			pccit->first->total_weight = 0.0;
+		}
+	}
+
 	/* success */
 	return 0;
 }
 		
 int process_t::export_data(const oct2dq_run_settings_t& args) const
 {
+	ofstream outfile;
 	tictoc_t clk;
-	int ret;
+
+	/* prepare dq file to write to */
+	outfile.open(args.dqfile.c_str());
+	if(!(outfile.is_open()))
+	{
+		/* unable to write to disk */
+		cerr << "[process_t::export_data]\tUnable to open file "
+		     << "for writing: " << args.dqfile << endl;
+		return -1;
+	}
 
 	/* write the wall samples to the specified dq file */
 	tic(clk);
-	ret = this->sampling.writedq(args.dqfile);
-	if(ret)
-	{
-		cerr << "[process_t::export_data]\tUnable to write "
-		     << "wall samples to dq file: " << args.dqfile
-		     << endl;
-		return PROPEGATE_ERROR(-1, ret);
-	}
+	this->sampling.print(outfile);
+	toc(clk, "Exporting wall samples");
 
 	// TODO debugging
 	this->region_graph.writeobj("/home/elturner/Desktop/regions.obj");
 
 	/* success */
-	toc(clk, "Exporting wall samples");
+	outfile.close();
 	return 0;
 }
 
@@ -544,4 +575,149 @@ double process_t::compute_region_strength(regionmap_t::const_iterator it,
 
 	/* compute strength for this region */
 	return area * planarity * (1 - verticality);
+}
+		
+int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
+				const Eigen::Vector3d& point_pos_orig,
+				std::map<quaddata_t*, 
+				std::pair<size_t, size_t> >& 
+				pose_choice_counts)
+{
+	map<quaddata_t*, pair<size_t, size_t> >::iterator pccit;
+	Vector3d dir, point_pos;
+	Vector2d dir2d;
+	linesegment_2d_t lineseg;
+	vector<quaddata_t*> xings;
+	double score, best_score;
+	size_t node_ind, num_nodes, best_ind;
+	
+	/* extend the line segment by some distance,
+	 * to try to intersect any walls behind 
+	 * objects */
+	dir = (point_pos_orig - pose.T);
+	dir.normalize();
+	point_pos = point_pos_orig + dir*1.5; /* units: meters */ //TODO
+	dir2d << dir(0), dir(1); /* projection of 
+				normal into R^2 */
+
+	/* prepare the line segment */
+	lineseg.init(pose.T, point_pos);
+
+	/* find the nodes that it intersects 
+	 * in the 2D representation of the 
+	 * environment */
+	xings.clear();
+	this->sampling.raytrace(xings, lineseg);
+
+	/* iterate through the intersected
+	 * nodes, and record this pose with the
+	 * associated wall sample that had the
+	 * best score out of any that were
+	 * intersected */
+	best_score = 0;
+	num_nodes = xings.size();
+	best_ind = num_nodes;
+	for(node_ind = 0; node_ind < num_nodes; node_ind++)
+	{
+		/* ignore nodes with null data */
+		if(xings[node_ind] == NULL)
+			continue;
+	
+		/* augment score by normal analysis,
+		 * We only want to count walls
+		 * that have their normals facing
+		 * the scanner (where the below
+		 * dot-product would be negative) */
+		if(xings[node_ind]->normal.dot(dir2d) >= 0)
+			continue;
+
+		/* check against best */
+		score = xings[node_ind]->total_weight;
+		if(score > best_score)
+		{
+			/* we found a new best */
+			best_score = score;
+			best_ind = node_ind;
+		}
+	}
+
+	/* check if we found anything */
+	if(best_ind >= num_nodes)
+		return 0; /* no good nodes, don't bother with this scan */
+
+	/* apply this pose index to wall sample 
+	 * with best score */
+	xings[best_ind]->pose_inds.insert(pose_ind);
+			
+	/* iterate through each wall sample
+	 * that was considered for this pose,
+	 * and update its choice counts.
+	 *
+	 * These counts record how many times
+	 * a sample was chosen over how many
+	 * times it was considered. */
+	for(node_ind = 0; node_ind < num_nodes; node_ind++)
+	{
+		/* ignore wall samples that
+		 * were facing away from the
+		 * scanner */
+		if(xings[node_ind]->normal.dot(dir2d) >= 0)
+			continue;
+
+		/* get the pair that represents
+		 * this ratio.
+		 *
+		 * The following call will get
+		 * the existing ratio if it exists,
+		 * or insert a new ratio in the
+		 * map if it doesn't. */
+		pccit = pose_choice_counts.insert(
+				pair<quaddata_t*, pair<size_t,size_t> >(
+				xings[node_ind], pair<size_t,size_t>(0,0)))
+				.first;
+
+		/* update this ratio */
+		if(xings[node_ind]->normal.dot(dir2d) >= 0)
+			continue;
+		pccit->second.second ++;
+		
+		/* we want to count this sample as used if it is part
+		 * of the same wall that was actually chosen */
+		if(this->shares_a_wall(xings[node_ind], xings[best_ind]))
+			pccit->second.first++;
+	}
+
+	/* success */
+	return 0;
+}
+		
+bool process_t::shares_a_wall(quaddata_t* a, quaddata_t* b) const
+{
+	map<quaddata_t*, std::set<size_t> >::const_iterator ita, itb;
+	vector<size_t> intersection;
+	vector<size_t>::iterator xit;
+	size_t s;
+
+	/* check trivial case */
+	if(a == b)
+		return true;
+
+	/* find these wall samples in the map */
+	s = 0;
+	ita = this->ws_to_walls.find(a);
+	if(ita == this->ws_to_walls.end())
+		return false;
+	s += ita->second.size();
+	itb = this->ws_to_walls.find(b);
+	if(itb == this->ws_to_walls.end())
+		return false;
+	s += itb->second.size();
+	intersection.resize(s);
+
+	/* find the set intersection of the two sets of originating
+	 * walls for these samples */
+	xit = set_intersection(ita->second.begin(), ita->second.end(),
+			itb->second.begin(), itb->second.end(),
+			intersection.begin());
+	return (xit - intersection.begin() > 0);
 }
