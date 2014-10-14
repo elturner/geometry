@@ -30,6 +30,7 @@ import chunker
 import procarve
 import octsurf
 sys.path.append(os.path.join(PYTHON_SRC_LOC, 'mesh'))
+import oct2fp
 import fp_optimizer
 import merge_fp_oct
 sys.path.append(os.path.join(PYTHON_SRC_LOC, 'files'))
