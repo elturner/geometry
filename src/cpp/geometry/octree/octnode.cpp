@@ -472,3 +472,155 @@ int octnode_t::parse(std::istream& is)
 	/* success */
 	return 0;
 }
+
+int octnode_t::verify() const
+{
+	size_t i, j;
+	bool leaf;
+	int ret;
+
+	/* check basics about this node's geometry */
+	if(this->halfwidth <= 0)
+	{
+		cerr << "[octnode_t::verify]\tFound node with negative "
+		     << "halfwidth.  HW = " << this->halfwidth << endl;
+		return -1;
+	}
+	if(std::isnan(this->halfwidth))
+	{
+		cerr << "[octnode_t::verify]\tFound node with invalid "
+		     << "halfwidth.  HW = " << this->halfwidth << endl;
+		return -2;
+	}
+
+	/* check if this is a leaf in a reasonable way.
+	 *
+	 * We expect leaf nodes to have data, and non-leaf nodes to not
+	 * have data
+	 */
+	leaf = this->isleaf();
+	if(leaf && this->data == NULL)
+	{
+		/* report error */
+		cerr << "[octnode_t::verify]\tFound leaf node without data!"
+		     << endl;
+		return -3;
+	}
+	if(!leaf && this->data != NULL)
+	{
+		/* report error */
+		cerr << "[octnode_t::verify]\tFound non-leaf with data!"
+		     << endl << "\tsubnodes = " << this->get_num_nodes() 
+		     << endl;
+		return -4;
+	}
+
+	/* if this is a leaf, then check validity of data */
+	if(leaf)
+	{
+		/* check room */
+		if(!(this->data->get_fp_room() >= -1))
+		{
+			cerr << "[octnode_t::verify]\tBad fp_room value: "
+			     << this->data->get_fp_room() << endl;
+			return -5;
+		}
+
+		/* check that all probabilities are in valid range */
+		if(!(this->data->get_prob_sum() >= 0.0))
+		{
+			cerr << "[octnode_t::verify]\tBad prob_sum: "
+			     << this->data->get_prob_sum() << endl;
+			return -6;
+		}
+		if(!(this->data->get_prob_sum_sq() >= 0.0))
+		{
+			cerr << "[octnode_t::verify]\tBad prob_sum: "
+			     << this->data->get_prob_sum() << endl;
+			return -7;
+		}
+		if(!(this->data->get_probability() >= 0.0
+				&& this->data->get_probability() <= 1.0))
+		{
+			cerr << "[octnode_t::verify]\tBad probability: "
+			     << this->data->get_probability() << endl;
+			return -8;
+		}
+		if(!(this->data->get_uncertainty() >= 0.0))
+		{
+			cerr << "[octnode_t::verify]\tBad uncertainty: "
+			     << this->data->get_uncertainty() << endl
+			     << "\tprob_sum = " 
+			     << this->data->get_prob_sum() << endl
+			     << "\tprob_sum_sq = " 
+			     << this->data->get_prob_sum_sq() << endl
+			     << "\tcount = " 
+			     << this->data->get_count() << endl;
+			return -9;
+		}
+		if(!(this->data->get_surface_prob() >= 0.0
+				&& this->data->get_surface_prob() <= 1.0))
+		{
+			cerr << "[octnode_t::verify]\tBad surface prob: "
+			     << this->data->get_surface_prob() << endl;
+			return -10;
+		}
+		if(!(this->data->get_planar_prob() >= 0.0
+				&& this->data->get_planar_prob() <= 1.0))
+		{
+			cerr << "[octnode_t::verify]\tBad planar prob: "
+			     << this->data->get_planar_prob() << endl;
+			return -11;
+		}
+		if(!(this->data->get_corner_prob() >= 0.0
+				&& this->data->get_corner_prob() <= 1.0))
+		{
+			cerr << "[octnode_t::verify]\tBad corner prob: "
+			     << this->data->get_corner_prob() << endl;
+			return -12;
+		}
+	}
+
+	/* check geometry of children with respect to this node */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* check if child exists */
+		if(this->children[i] == NULL)
+			continue;
+
+		/* check geometry */
+		j = this->contains(this->children[i]->center);
+		if(i != j)
+		{
+			cerr << "[octnode_t::verify]\tChild center in "
+			     << "wrong octant! i = " << i << ", j = " << j
+			     << endl;
+			return -13;
+		}
+		if(this->children[i]->halfwidth 
+					<= 0.49*(this->halfwidth)
+				|| this->children[i]->halfwidth 
+					>= 0.51*(this->halfwidth))
+		{
+			cerr << "[octnode_t::verify]\tChild has wrong size"
+			     << endl << "\tthis->halfwidth = " 
+			     << this->halfwidth << endl
+			     << "\tthis->children[" << i << "]->halfwidth "
+			     << "= " << this->children[i]->halfwidth 
+			     << endl;
+			return -14;
+		}
+
+		/* verify this child */
+		ret = this->children[i]->verify();
+		if(ret)
+		{
+			cerr << "[octnode_t::verify]\tChild #" << i 
+			     << " had error " << ret << endl;
+			return -15;
+		}
+	}
+
+	/* success */
+	return 0;
+}

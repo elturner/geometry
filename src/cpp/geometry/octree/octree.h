@@ -244,8 +244,10 @@ class octree_t
 		 * @return    Returns zero on success, non-zero on failure
 		 */
 		int insert(shape_t& s);
-		
+
+		/*-----*/
 		/* i/o */
+		/*-----*/
 
 		/**
 		 * Serializes data structure to binary file.
@@ -274,6 +276,22 @@ class octree_t
 		 * @return     Returns 0 on success, non-zero on failure.
 		 */
 		int parse(const std::string& fn);
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Verifies that this tree is well-formed
+		 *
+		 * Will recursively iterate through the nodes of the
+		 * tree, making sure that each node is legitimately formed.
+		 *
+		 * If an error is encountered, will print to stderr.
+		 *
+		 * @return   Returns zero on success, non-zero on failure
+		 */
+		int verify() const;
 };
 
 #endif

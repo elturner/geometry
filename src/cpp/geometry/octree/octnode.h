@@ -25,7 +25,7 @@
  */ 
 class octnode_t
 {
-	/*** parameters ***/
+	/* parameters */
 	public:
 
 		/* each node has pointers to its children.
@@ -42,10 +42,12 @@ class octnode_t
 		/* each node also stored data elements */
 		octdata_t* data; /* only non-null for leaves */
 
-	/*** functions ***/
+	/* functions */
 	public:
 
+		/*--------------*/
 		/* constructors */
+		/*--------------*/
 		
 		/* eigen constructions must be properly aligned */
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -73,7 +75,9 @@ class octnode_t
 		 */
 		void clear();
 
+		/*-----------*/
 		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Returns true iff this node is a leaf.
@@ -104,7 +108,9 @@ class octnode_t
 		 */
 		octnode_t* clone() const;
 
+		/*----------*/
 		/* geometry */
+		/*----------*/
 	
 		/**
 		 * Checks if a given point is within the volume of this node
@@ -138,7 +144,9 @@ class octnode_t
 		 */
 		bool simplify();
 	
+		/*-----------------*/
 		/* recursive calls */
+		/*-----------------*/
 
 		/**
 		 * Will recursively simplify this node and its subnodes
@@ -227,7 +235,9 @@ class octnode_t
 		 */
 		unsigned int get_num_nodes() const;
 
+		/*-----*/
 		/* i/o */
+		/*-----*/
 
 		/**
 		 * Will serialize this node to specified binary stream
@@ -256,6 +266,24 @@ class octnode_t
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int parse(std::istream& is);
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Runs various sanity checks to verify that the
+		 * invarients of this structure are met by this octnode
+		 *
+		 * Will recursively verify this node and its subnodes to
+		 * make sure that this part of the octree is valid and
+		 * well-formed.
+		 *
+		 * If an error is found, it will print to stderr.
+		 *
+		 * @return    Returns zero on success, non-zero on failure
+		 */
+		int verify() const;
 };
 
 /***** Helper Functions *****/

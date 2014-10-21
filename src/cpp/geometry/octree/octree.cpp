@@ -363,3 +363,32 @@ int octree_t::parse(const string& fn)
 	infile.close();
 	return 0;
 }
+		
+int octree_t::verify() const
+{
+	int ret;
+
+	/* first, check if tree is empty */
+	if(this->root == NULL)
+		return 0; /* nothing to do */
+
+	/* if tree is non-empty, then the depth must be non-negative */
+	if(this->max_depth < 0)
+	{
+		cerr << "[octree_t::verify]\tBad max depth: "
+		     << this->max_depth << endl;
+		return -1;
+	}
+
+	/* check the rest of the tree */
+	ret = this->root->verify();
+	if(ret)
+	{
+		cerr << "[octree_t::verify]\tTree not well-formed, error "
+		     << ret << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}

@@ -164,6 +164,18 @@ class octdata_t
 		{ return this->count; };
 
 		/**
+		 * Returns the prob_sum parameter
+		 */
+		inline double get_prob_sum() const
+		{ return this->prob_sum; };
+
+		/**
+		 * Returns the prob_sum_sq parameter
+		 */
+		inline double get_prob_sum_sq() const
+		{ return this->prob_sum_sq; };
+
+		/**
 		 * Returns the best estimate of recorded probability
 		 *
 		 * Will average all samples seen, and return the best
@@ -205,9 +217,9 @@ class octdata_t
 
 			/* get unbiased estimate of the variance, 
 			 * by using Bessel's correction: */
-			m = this->prob_sum; /* sum of samples */
+			m = this->prob_sum / n; /* mean of samples */
 			m2 = this->prob_sum_sq; /* sum of squared samples */
-			return (m2 - (m*m/n)) / (n-1);
+			return (m2 - (m*m)) / (n-1);
 		};
 		
 		/**
