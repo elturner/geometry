@@ -44,6 +44,26 @@ typedef std::set<node_face_t>                   faceset_t;
  */
 class node_boundary_t
 {
+	/* enumerations */
+	public:
+
+		/**
+		 * The mode of the node boundary represents how
+		 * the nodes of the tree are partitioned into
+		 * "interior" and "exterior" sets, which affects
+		 * where the boundary is placed.
+		 *
+		 * These different modalities allow for the boundary
+		 * to be around all interior nodes, only object nodes,
+		 * only building-surface nodes, etc.
+		 */
+		enum SEG_SCHEME
+		{
+			SEG_ALL, /* use interior/exterior of octdata */
+			SEG_OBJECTS, /* only object nodes are exterior */
+			SEG_ROOM  /* only non-room nodes are exterior */
+		};
+
 	/* parameters */
 	private:
 
@@ -67,6 +87,14 @@ class node_boundary_t
 		 * it touches.
 		 */
 		facemap_t faces;
+
+		/**
+		 * The segmentation scheme used for this boundary
+		 *
+		 * This value indicates how to separate the nodes
+		 * into "interior" and "exterior" sets.
+		 */
+		SEG_SCHEME scheme;
 
 	/* functions */
 	public:
@@ -92,10 +120,15 @@ class node_boundary_t
 		 *
 		 * @param topo   The octree topology to use to populate this
 		 *               object.
+		 * @param segscheme   The segmentation scheme to use.  By
+		 *                    default, nodes will be segmented as
+		 *                    'interior' and 'exterior' based on
+		 *                    the octdata_t.is_interior() function.
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int populate(const octtopo::octtopo_t& topo);
+		int populate(const octtopo::octtopo_t& topo,
+				SEG_SCHEME segscheme=SEG_ALL);
 
 		/**
 		 * Clears all info stored in this boundary.
@@ -107,7 +140,12 @@ class node_boundary_t
 		{
 			this->node_face_map.clear();
 			this->faces.clear();
+			this->scheme = SEG_ALL;
 		};
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Returns an iterator to the beginning of the set of faces
@@ -125,6 +163,23 @@ class node_boundary_t
 		/*------------*/
 		/* processing */
 		/*------------*/
+
+		/**
+		 * Will specify if a given node is interior, based on
+		 * the current segmentation scheme.
+		 *
+		 * The current segmentation scheme is specified by
+		 * this->scheme.  It specifies whether to use the
+		 * natural interior/exterior segmentation of the nodes,
+		 * or to count only object nodes as exterior, or only
+		 * non-room nodes as exterior, etc.
+		 *
+		 * @param node   The node to analyze
+		 *
+		 * @return       Returns true iff 'node' is considered
+		 *               interior under the current scheme.
+		 */
+		bool node_is_interior(octnode_t* node) const;
 
 		/**
 		 * Retrieves a faces that neighbor a node

@@ -103,7 +103,7 @@ int tree_exporter::export_node_faces(const string& filename,
 	toc(clk, "Initializing topology");
 
 	/* extract the boundary nodes using the generated topology */
-	ret = boundary.populate(top);
+	ret = boundary.populate(top, node_boundary_t::SEG_ALL);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 

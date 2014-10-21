@@ -22,7 +22,6 @@
 #include "node_set.h"
 #include <geometry/octree/octtopo.h>
 #include <util/error_codes.h>
-#include <util/union_find.h>
 #include <Eigen/Dense>
 #include <string>
 #include <vector>

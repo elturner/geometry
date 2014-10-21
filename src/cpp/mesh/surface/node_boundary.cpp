@@ -43,17 +43,22 @@ using namespace Eigen;
 /*--------------------------*/
 		
 node_boundary_t::node_boundary_t()
-{}
+{
+	this->scheme = SEG_ALL;
+}
 
 node_boundary_t::~node_boundary_t()
 { 
 	this->clear();
 }
 
-int node_boundary_t::populate(const octtopo_t& topo)
+int node_boundary_t::populate(const octtopo_t& topo, SEG_SCHEME segscheme)
 {
 	tictoc_t clk;
 	int ret;
+
+	/* set the segmentation scheme */
+	this->scheme = segscheme;
 
 	/* populate the faces structure */
 	tic(clk);
@@ -69,6 +74,48 @@ int node_boundary_t::populate(const octtopo_t& topo)
 	/* success */
 	toc(clk, "Populating boundary faces");
 	return 0;
+}
+		
+bool node_boundary_t::node_is_interior(octnode_t* node) const
+{
+	/* whether this node is interior or exterior depends
+	 * on the current segmentation scheme for this boundary
+	 * object. */
+	switch(this->scheme)
+	{
+		default:
+		case SEG_ALL:
+			/* this is the default segmentation for
+			 * the octnodes */
+			if(node == NULL)
+				return false;
+			if(node->data == NULL)
+				return false;
+			return node->data->is_interior();
+
+		case SEG_OBJECTS:
+			/* we only want to model objects in
+			 * the environment to be exterior */
+			if(node == NULL)
+				return true;
+			if(node->data == NULL)
+				return true;
+			if(node->data->get_fp_room() < 0)
+				return true;
+			return node->data->is_interior();
+
+		case SEG_ROOM:
+			/* we want to treat objects in the environment
+			 * as 'interior', and only treat large fixtures
+			 * as 'exterior' */
+			if(node == NULL)
+				return false;
+			if(node->data == NULL)
+				return false;
+			if(node->data->get_fp_room() >= 0)
+				return true;
+			return node->data->is_interior();
+	}
 }
 		
 int node_boundary_t::get_nearby_faces(const octtopo_t& topo,
@@ -224,8 +271,8 @@ int node_boundary_t::writeobj_cliques(const std::string& filename) const
 			{
 				progbar.clear();
 				cerr << "[node_boundary_t::"
-				     << "writeobj_cliques]\tFound selfcycle"
-				     << endl;
+				     << "writeobj_cliques]\t"
+				     << "Found selfcycle" << endl;
 				continue;
 			}
 
@@ -276,7 +323,7 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 		progbar.update(j++, num_nodes);
 
 		/* ignore exterior nodes */
-		if(!(octtopo_t::node_is_interior(it->first)))
+		if(!(this->node_is_interior(it->first)))
 			continue;
 
 		/* iterate over faces, looking for exterior neighbors */
@@ -305,7 +352,7 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 			for(i = 0; i < n; i++)
 			{
 				/* ignore if interior */
-				if(octtopo_t::node_is_interior(neighs[i]))
+				if(this->node_is_interior(neighs[i]))
 					continue;
 				found_exterior = true; /* i'th neighbor
 				                        * exterior */
