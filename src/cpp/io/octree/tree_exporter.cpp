@@ -261,10 +261,24 @@ void export_leafs_to_obj_recur(ostream& os, const octnode_t* node)
 		   << endl;
 	}
 
+	/* check if leaf */
+	if(node->isleaf())
+		return;
+
 	/* recurse through the node's children */
 	for(i = 0; i < CHILDREN_PER_NODE; i++)
 		if(node->children[i] != NULL)
 			export_leafs_to_obj_recur(os, node->children[i]);
+		else if(node->data != NULL)
+		{
+			/* export temp node to where child would have 
+			 * been */
+			Vector3d cp = relative_child_pos(i)
+					*node->halfwidth/2
+					+ node->center;
+			os << "v " << cp(0) << " " << cp(1) << " " << cp(2)
+			   << " 255 255 0" << endl;
+		}
 }
 
 int tree_exporter::export_leafs_to_obj(const string& filename,

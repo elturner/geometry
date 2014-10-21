@@ -44,7 +44,7 @@ void octree_padder::pad_recur(octnode_t* node)
 		return;
 
 	/* also stop if we reach a leaf node */
-	if(node->data != NULL || node->isleaf())
+	if(node->isleaf())
 		return;
 
 	/* now that we've confirmed the node is not a leaf, if

@@ -92,7 +92,9 @@ octneighbors_t& octneighbors_t::operator = (const octneighbors_t& other)
 	return (*this);
 }
 
+/*------------------------------------*/
 /* octtopo_t function implementations */
+/*------------------------------------*/
 
 int octtopo_t::init(const octree_t& tree)
 {
@@ -605,7 +607,7 @@ int octtopo_t::remove_nonleafs()
 	{
 		/* check if this node is a leaf */
 		isleaf = it->first->isleaf();
-			
+
 		/* we will want to remove this node */
 		if(!isleaf)
 			to_remove.insert(it->first);
