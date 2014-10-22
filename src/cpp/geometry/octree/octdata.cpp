@@ -87,9 +87,37 @@ octdata_t* octdata_t::clone() const
 	c->corner_sum  = this->corner_sum;
 	c->planar_sum  = this->planar_sum;
 	c->fp_room     = this->fp_room;
+	c->is_carved   = this->is_carved;
 
 	/* return new data */
 	return c;
+}
+		
+void octdata_t::subdivide(unsigned int n)
+{
+	unsigned int newcount;
+	double ratio;
+
+	/* check arguments */
+	if(n <= 1 || this->count == 0)
+		return; /* do nothing */
+
+	/* get the new count after subdivision */
+	newcount = std::max((unsigned int) 1, this->count / n);
+
+	/* compute ratio. This will account for integer division
+	 * issues.  We want most of all to keep the ratios of the
+	 * floating point values to be the same */
+	ratio = ((double) newcount) / ((double) this->count);
+
+	/* update other values */
+	this->count        = newcount;
+	this->prob_sum    *= ratio;
+	this->prob_sum_sq *= ratio;
+	this->surface_sum *= ratio;
+	this->corner_sum  *= ratio;
+	this->planar_sum  *= ratio;
+	/* other values don't change */
 }
 
 void octdata_t::serialize(ostream& os) const

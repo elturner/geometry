@@ -297,6 +297,32 @@ int octree_t::insert(shape_t& s)
 	/* success */
 	return 0;
 }
+		
+int octree_t::subdivide(const shape_t& s)
+{	
+	Vector3d p;
+	unsigned int i, n;
+	int ret;
+
+	/* make sure all of shape is contained within this tree's domain */
+	n = s.num_verts();
+	for(i = 0; i < n; i++)
+	{
+		/* get vertex as a point */
+		p = s.get_vertex(i);
+
+		/* extend tree if necessary */
+		ret = this->include_in_domain(p);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* carve the tree */
+	this->root->subdivide(s, this->max_depth);
+
+	/* success */
+	return 0;
+}
 
 /* The following defines are used for reading and writing files */
 #define OCTFILE_MAGIC_NUMBER "octfile"

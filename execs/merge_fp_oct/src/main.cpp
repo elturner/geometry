@@ -219,13 +219,25 @@ int import_fp(const std::string& fpfile, octree_t& tree,
 		/* create shape */
 		poly.init(f, num_rooms + i, i);
 	
+		/* subdivide tree to make sure boundary of room is
+		 * preserved at high-res */
+		poly.set_hollow(true);
+		ret = tree.subdivide(poly);
+		if(ret)
+		{
+			/* an error occurred during subdivision */
+			progbar.clear();
+			return PROPEGATE_ERROR(-2, ret);
+		}
+
 		/* import into tree */
+		poly.set_hollow(false);
 		ret = tree.insert(poly);
 		if(ret)
 		{
 			/* an error occurred during insert */
 			progbar.clear();
-			return PROPEGATE_ERROR(-2, ret);
+			return PROPEGATE_ERROR(-3, ret);
 		}
 
 		/* simplify tree, since inserting this room may

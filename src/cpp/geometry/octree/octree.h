@@ -157,7 +157,9 @@ class octree_t
 		inline octnode_t* get_root() const
 		{ return this->root; };
 
+		/*----------*/
 		/* geometry */
+		/*----------*/
 
 		/**
 		 * Will increase the domain of octree so point is contained
@@ -221,6 +223,8 @@ class octree_t
 		 * each of these nodes found, the apply_to_leaf() function
 		 * of the shape will be called on it.
 		 *
+		 * This function will NOT create any new nodes in the tree.
+		 * 
 		 * @param s   The shape to test
 		 */
 		void find(shape_t& s);
@@ -235,6 +239,10 @@ class octree_t
 		 * tree may be extended so that the full shape
 		 * is contained within the tree.
 		 *
+		 * Nodes that already exist and already have data will
+		 * not be subdivided further, but their data may be
+		 * changed by this call.
+		 *
 		 * After this call, all leaf nodes in the tree that
 		 * are intersected by this line segment will be modified
 		 * by the input shape.
@@ -244,6 +252,24 @@ class octree_t
 		 * @return    Returns zero on success, non-zero on failure
 		 */
 		int insert(shape_t& s);
+
+		/**
+		 * Will subdivide the tree to the max depth based on its
+		 * intersection with the given shape.
+		 *
+		 * Even if nodes already exist with data, they will be
+		 * subdivided by this shape if an intersection occurs.
+		 *
+		 * Unlike both find(s) and insert(s), this function will
+		 * NOT call s.apply_to_leaf() on any leaves encountered.
+		 * In order to get that functionality, just call find(s)
+		 * after this call.
+		 *
+		 * @param s   The shape to use to subdivide the tree
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int subdivide(const shape_t& s);
 
 		/*-----*/
 		/* i/o */

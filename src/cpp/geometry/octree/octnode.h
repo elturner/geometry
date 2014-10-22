@@ -225,6 +225,27 @@ class octnode_t
 		void insert(shape_t& s, int d);
 
 		/**
+		 * Will subdivide this tree based on intersections with
+		 * the given shape.
+		 *
+		 * This function will partion any encountered nodes by
+		 * d levels if they intersect the given shape.  This
+		 * occurs regardless of whether the nodes already contain
+		 * data or not. If data already exist in the node, then
+		 * it will be evenly distributed over the newly created
+		 * subnodes.
+		 *
+		 * Unlike find(s) or insert(s), s.apply_to_leaf() will
+		 * NOT be called on the data that are intersected.  In
+		 * order to get that functionality, call find(s) after
+		 * this call.
+		 *
+		 * @param s     The shape to subdivide with
+		 * @param d     The depth to subdivide to
+		 */
+		void subdivide(const shape_t& s, int d);
+
+		/**
 		 * Returns the count of this node and all its subnodes
 		 *
 		 * Will recursively count the number of subnodes under

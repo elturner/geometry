@@ -26,29 +26,49 @@ class extruded_poly_t : public shape_t
 	/* parameters */
 	private:
 
-		/* this represents the global index of the room, which is
-		 * unique across all rooms across all floorplans */
+		/**
+		 * this represents the global index of the room, which is
+		 * unique across all rooms across all floorplans 
+		 */
 		int room_index; /* index starts at zero, neg => invalid */
 
-		/* these values indicate the floor and ceiling height
+		/**
+		 * these values indicate the floor and ceiling height
 		 * of the room, which are useful for fast culling when
-		 * determining intersections */
+		 * determining intersections 
+		 */
 		double floor_height; /* units: meters */
 		double ceiling_height; /* units: meters */
 
-		/* the list of 3D vertices that represent the floor
+		/**
+		 * the list of 3D vertices that represent the floor
 		 * vertices.  To generate ceiling vertices, take a floor
 		 * vertex and add (ceiling_height - floor_height) to the
-		 * z-component */
+		 * z-component 
+		 */
 		Eigen::MatrixXd verts; /* dimensions: 3 x num verts */
 
-		/* the following denote the topology of the room,
+		/**
+		 * the following denote the topology of the room,
 		 * which is represented by a list of 2D triangles
-		 * making up the floor plan. */
+		 * making up the floor plan. 
+		 */
 		Eigen::MatrixXi tris; /* dimensions: 3 x num triangles */
 
-		/* The list of boundary edges of this triangulation */
+		/**
+		 * The list of boundary edges of this triangulation 
+		 */
 		Eigen::MatrixXi edges; /* dimensions: 2 x num edges */
+
+		/**
+		 * if true, then this shape is considered hollow, where
+		 * the shape consists of only the boundary surface and
+		 * not the full volume.
+		 *
+		 * By default, this value is false, so the full volume
+		 * is considered.
+		 */
+		bool ishollow;
 
 	/* functions */
 	public:
@@ -84,9 +104,10 @@ class extruded_poly_t : public shape_t
 		 * @param f     The floorplan to reference
 		 * @param gi    The global index of room
 		 * @param ri    The room index to use
+		 * @param ih    Specify if the shape is hollow
 		 */
 		void init(const fp::floorplan_t& f,
-		          unsigned int gi, unsigned int ri);
+		          unsigned int gi, unsigned int ri, bool ih=false);
 		
 		/**
 		 * Initialize shape from floorplan with manual heights
@@ -98,11 +119,12 @@ class extruded_poly_t : public shape_t
 		 * @param f     The floorplan to reference
 		 * @param gi    The global index of room
 		 * @param ri    The room index to use
+		 * @param ih    Specifies if the shape is hollow
 		 * @param fh    The floor height to use
 		 * @param ch    The ceiling height to use
 		 */
 		void init(const fp::floorplan_t& f,
-		          unsigned int gi, unsigned int ri,
+		          unsigned int gi, unsigned int ri, bool ih,
 		          double fh, double ch);
 
 		/*-----------*/
@@ -133,6 +155,21 @@ class extruded_poly_t : public shape_t
 		 * @return    Returns the i'th vertex's position
 		 */
 		Eigen::Vector3d get_vertex(unsigned int i) const;
+
+		/**
+		 * Sets the shape to be hollow or not
+		 *
+		 * If the shape is set to hollow, then only the boundary
+		 * surface of the extruded polygon will be considered
+		 * for intersections; the interior volume will not be.
+		 *
+		 * If the shape is set to be not hollow, then the entire
+		 * volume will be considered for intersection tests.
+		 *
+		 * @param h   Whether to set the shape as hollow or not
+		 */
+		inline void set_hollow(bool h)
+		{ this->ishollow = h; };
 
 		/*----------*/
 		/* geometry */

@@ -29,17 +29,18 @@ extruded_poly_t::extruded_poly_t()
 {
 	/* set default values */
 	this->room_index = -1;
+	this->ishollow = false;
 }
 
 void extruded_poly_t::init(const fp::floorplan_t& f,
-		           unsigned int gi, unsigned int ri)
+		           unsigned int gi, unsigned int ri, bool ih)
 {
 	/* initialize with room's default heights */
-	this->init(f, gi, ri, f.rooms[ri].min_z, f.rooms[ri].max_z);
+	this->init(f, gi, ri, ih, f.rooms[ri].min_z, f.rooms[ri].max_z);
 }
 
 void extruded_poly_t::init(const fp::floorplan_t& f,
-		           unsigned int gi, unsigned int ri,
+		           unsigned int gi, unsigned int ri, bool ih,
                            double fh, double ch)
 {
 	map<int, unsigned int> vert_map;
@@ -49,6 +50,9 @@ void extruded_poly_t::init(const fp::floorplan_t& f,
 	vector<fp::edge_t> orig_edges;
 	unsigned int ei, vii, num_tris, ti, num_edges;
 	int vi;
+
+	/* save hollow info */
+	this->ishollow = ih;
 
 	/* save global room index */
 	this->room_index = gi;
@@ -176,7 +180,20 @@ bool extruded_poly_t::intersects(const Vector3d& c, double hw) const
 		                        bounds_x, bounds_y))
 			return true; /* intersects with edge */
 	}
-		
+	
+	/* check edge case of hollow shape */
+	if(this->ishollow)
+	{
+		/* if we're hollow and have gotten here, then
+		 * either the box doesn't intersect, or it intersects
+		 * the floor or the ceiling.  Check heights again. 
+		 *
+		 * The below is only true if the box intersects
+		 * the floor or the ceiling. */
+		return (c(2) - hw <= this->floor_height)
+				|| (c(2) + hw >= this->ceiling_height);
+	}
+
 	/* since no vertices and no edges intersect, then the only
 	 * way an intersection could occur is if the box is entirely
 	 * contained within the polygon.  Check if the center of the box

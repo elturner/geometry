@@ -63,7 +63,9 @@ class octdata_t
 		 *########################################################
 		 */
 
+		/*--------------*/
 		/* constructors */
+		/*--------------*/
 
 		/**
 		 * Initializes empty octdata object
@@ -81,7 +83,9 @@ class octdata_t
 		 */
 		~octdata_t();
 
+		/*-----------*/
 		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Merges the given data into this object
@@ -108,7 +112,38 @@ class octdata_t
 		 */
 		octdata_t* clone() const;
 
+		/**
+		 * Will subdivide this data value by some factor.
+		 *
+		 * This function is the pseudo-inverse of "merge".  Merge
+		 * increases the counts of various fields in this structure
+		 * based on the given data object.  This call will reduce
+		 * the counts as if by dividing them evenly among N seperate
+		 * objects.
+		 *
+		 * Consider the following example:
+		 *
+		 * 	octdata_t* a, *a1, *a2, *b;
+		 *	a = // init a
+		 *	
+		 *	a1 = a->clone();
+		 *	a1->subdivide(2);
+		 *	a2 = a->clone();
+		 *	a2->subdivide(2);
+		 *
+		 *	b = a1->clone();
+		 *	b->merge(a2);
+		 *
+		 *	// now a and b should be equal
+		 *
+		 * @param n  The number by which to divide the values
+		 *           in this structure.
+		 */
+		void subdivide(unsigned int n);
+
+		/*-----*/
 		/* i/o */
+		/*-----*/
 
 		/**
 		 * Serializes these data to binary stream

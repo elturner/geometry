@@ -363,7 +363,86 @@ void octnode_t::insert(shape_t& s, int d)
 		/* recurse */
 		this->children[i]->insert(s, d-1);
 	}
-}	
+}
+
+void octnode_t::subdivide(const shape_t& s, int d)
+{
+	Vector3d child_center;
+	unsigned int i;
+	double chw;
+
+	/* check if we reached final depth (in which case we want 
+	 * to stop carving deeper). */
+	if(d <= 0)
+		return;
+
+	/* check if the shape intersects this node */
+	if(!s.intersects(this->center, this->halfwidth))
+		return; /* doesn't intersect, don't do anything */
+
+	/* since it intersects this node, we need to subdivide it */
+	chw = this->halfwidth / 2; /* children are half the width */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* check if child already exists */
+		if(this->children[i] != NULL)
+			continue;
+
+		/* we need to allocate this child */
+		child_center = relative_child_pos(i)*chw + this->center; 
+		this->children[i] = new octnode_t(child_center,chw);
+	}
+
+	/* check if the node has data that need to be distributed to
+	 * the children */
+	if(this->data != NULL)
+	{
+		/* this node has data, so we need to distribute it to
+		 * its children.  But we don't want to simply make
+		 * eight copies of the original data, since that will
+		 * increate the total count number.  Instead, we want
+		 * to subdivide the existing data amongst the children.
+		 *
+		 * Compute the subdivided data */
+		this->data->subdivide(CHILDREN_PER_NODE);
+
+		/* distribute the newly divided data to children */
+		for(i = 0; i < CHILDREN_PER_NODE; i++)
+		{
+			/* check if child already has data */
+			if(this->children[i]->data == NULL)
+			{
+				/* the child doesn't have any existing
+				 * data, so we can just subdivide the
+				 * current node's */
+				this->children[i]->data 
+						= this->data->clone();
+			}
+			else
+			{
+				/* the child already has data, so
+				 * merge the subdivided stuff with
+				 * its existing stuff */
+				this->children[i]->data->merge(this->data);
+			}
+		}
+
+		/* since this node is no longer a leaf, we want to
+		 * remove its data */
+		delete (this->data);
+		this->data = NULL;
+	}
+
+	/* recurse over children */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+	{
+		/* intersection of this child will be checked
+		 * within its own subdivide() call */
+
+		/* recurse */
+		this->children[i]->subdivide(s, d-1);
+	}
+}
 		
 unsigned int octnode_t::get_num_nodes() const
 {
