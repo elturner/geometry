@@ -119,13 +119,13 @@ class extruded_poly_t : public shape_t
 		 * @param f     The floorplan to reference
 		 * @param gi    The global index of room
 		 * @param ri    The room index to use
-		 * @param ih    Specifies if the shape is hollow
 		 * @param fh    The floor height to use
 		 * @param ch    The ceiling height to use
+		 * @param ih    Specifies if the shape is hollow
 		 */
 		void init(const fp::floorplan_t& f,
-		          unsigned int gi, unsigned int ri, bool ih,
-		          double fh, double ch);
+		          unsigned int gi, unsigned int ri,
+		          double fh, double ch, bool ih=false);
 
 		/*-----------*/
 		/* accessors */

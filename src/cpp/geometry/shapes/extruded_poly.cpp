@@ -36,12 +36,12 @@ void extruded_poly_t::init(const fp::floorplan_t& f,
 		           unsigned int gi, unsigned int ri, bool ih)
 {
 	/* initialize with room's default heights */
-	this->init(f, gi, ri, ih, f.rooms[ri].min_z, f.rooms[ri].max_z);
+	this->init(f, gi, ri, f.rooms[ri].min_z, f.rooms[ri].max_z, ih);
 }
 
 void extruded_poly_t::init(const fp::floorplan_t& f,
-		           unsigned int gi, unsigned int ri, bool ih,
-                           double fh, double ch)
+		           unsigned int gi, unsigned int ri,
+                           double fh, double ch, bool ih)
 {
 	map<int, unsigned int> vert_map;
 	map<int, unsigned int>::iterator vmit;
