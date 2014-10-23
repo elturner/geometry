@@ -45,7 +45,15 @@ void octree_padder::pad_recur(octnode_t* node)
 
 	/* also stop if we reach a leaf node */
 	if(node->isleaf())
+	{
+		/* since this node is a leaf, it should
+		 * have some data */
+		if(node->data == NULL)
+			node->data = new octdata_t();
+		
+		/* since it's a leaf, we don't need to proceed */
 		return;
+	}
 
 	/* now that we've confirmed the node is not a leaf, if
 	 * any of its children are null, then we know some of the
@@ -55,19 +63,11 @@ void octree_padder::pad_recur(octnode_t* node)
 	{
 		/* check if child exists */
 		if(node->children[i] == NULL)
-		{
-			/* pad this child */
-			node->init_child(i);
+			node->init_child(i); /* pad this child */
 
-			/* give the child node some dummy data */
-			node->children[i]->data = new octdata_t();
-		}
-		else
-		{
-			/* child isn't null, so we
-			 * need to recurse to explore the full
-			 * tree */
-			octree_padder::pad_recur(node->children[i]);
-		}
+		/* child isn't null, so we
+		 * need to recurse to explore the full
+		 * tree */
+		octree_padder::pad_recur(node->children[i]);
 	}
 }
