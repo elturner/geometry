@@ -13,6 +13,7 @@
  */
 
 #include <geometry/octree/octree.h>
+#include <mesh/surface/node_boundary.h>
 #include <string>
 
 /**
@@ -44,11 +45,14 @@ namespace tree_exporter
 	 *
 	 * @param filename    The path to the .obj/.ply file to write
 	 * @param tree        The tree to export
+	 * @param scheme      Specifies whether to export the whole scene,
+	 *                    just the objects, or just the rooms
 	 *
 	 * @return            Returns zero on success, non-zero on failure.
 	 */
 	int export_node_faces(const std::string& filename,
-	                      const octree_t& tree);
+	                      const octree_t& tree,
+	                      node_boundary_t::SEG_SCHEME scheme);
 
 	/**
 	 * Will export coalesced regions to OBJ file
@@ -63,11 +67,14 @@ namespace tree_exporter
 	 *
 	 * @param filename    The path to the .obj file to write
 	 * @param tree        The tree to export
+	 * @param scheme      Specifies whether to export the whole scene,
+	 *                    just the objects, or just the rooms
 	 *
 	 * @return            Returns zero on success, non-zero on failure.
 	 */
 	int export_regions(const std::string& filename,
-				const octree_t& tree);
+				const octree_t& tree,
+				node_boundary_t::SEG_SCHEME scheme);
 
 	/**
 	 * Will export the center of each leaf node as a vertex in OBJ

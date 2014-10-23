@@ -29,6 +29,8 @@ using namespace std;
 #define OUTPUT_FLAG       "-o" /* where to store the output file */
 #define EXPORT_LEAFS_FLAG "-l" /* export leafs to OBJ */
 #define EXPORT_FACES_FLAG "--node_faces" /* export node faces to OBJ */
+#define EXPORT_OBJECTS_FLAG "--objects"  /* export objects only */
+#define EXPORT_ROOM_FLAG    "--room"     /* export rooms only */
 #define EXPORT_REGIONS_FLAG "--regions"  /* export planar region geometry */
 #define EXPORT_CORNERS    "--corners" /* export node corners */
 
@@ -95,6 +97,16 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			".obj file.  If this flag is not present, then the "
 			"output will be processed normally.",
 			true, 0);
+	args.add(EXPORT_OBJECTS_FLAG, "If present, then will only export "
+			"geometry that represents objects within the rooms "
+			"of the model, such as furniture.  The output model"
+			" will not contain the room geometry itself, such "
+			"as floors, walls, and ceilings.", true, 0);
+	args.add(EXPORT_ROOM_FLAG, "If present, then will only export "
+			"geometry that represents the rooms of the "
+			"environment, such as floors, walls, and ceilings. "
+			"Will not export the object geometry, such as "
+			"furniture in those rooms.", true, 0);
 	args.add(EXPORT_CORNERS, "If present, this flag indicates "
 			"that the output should be a set of verticess that "
 			"represent the corners of the tree nodes.",true,0);
@@ -123,6 +135,8 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 		= octsurf_run_settings_t::get_format(this->outfile);
 	this->export_obj_leafs  = args.tag_seen(EXPORT_LEAFS_FLAG);
 	this->export_node_faces = args.tag_seen(EXPORT_FACES_FLAG);
+	this->export_objects    = args.tag_seen(EXPORT_OBJECTS_FLAG);
+	this->export_room       = args.tag_seen(EXPORT_ROOM_FLAG);
 	this->export_regions    = args.tag_seen(EXPORT_REGIONS_FLAG);
 	this->export_corners    = args.tag_seen(EXPORT_CORNERS);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);

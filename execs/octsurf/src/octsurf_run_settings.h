@@ -73,6 +73,18 @@ class octsurf_run_settings_t
 		bool export_node_faces;
 
 		/**
+		 * Specifies that only the objects in the scene should
+		 * be exported, not the room geometry
+		 */
+		bool export_objects;
+
+		/**
+		 * Specifies that only the room geometry in the scene
+		 * should be exported, not the objects within the rooms
+		 */
+		bool export_room;
+
+		/**
 		 * If exporting to OBJ, this option indicates that
 		 * the output should represent the node faces, and they
 		 * should be colored based on their planar region.
