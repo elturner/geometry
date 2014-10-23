@@ -713,7 +713,7 @@ double node_face_t::get_area() const
 
 double node_face_t::get_planarity() const
 {	
-	double mu_i, planar_i, mu_e, planar_e, s;
+	double mu_i, planar_i, hw_i, mu_e, planar_e, hw_e, splitval, s;
 	
 	/* check validity of this face */
 	if(this->interior == NULL || this->interior->data == NULL
@@ -727,20 +727,43 @@ double node_face_t::get_planarity() const
 	}
 	
 	/* get the values we need from the originating octdata structs */
-	mu_i = this->interior->data->get_probability();
+	mu_i     = this->interior->data->get_probability();
 	planar_i = this->interior->data->get_planar_prob();
+	hw_i     = this->interior->halfwidth;
 	if(this->exterior == NULL)
 	{
 		/* exterior is a null node, which should be counted
-		 * as an unobserved external node */
-		mu_e     = 0.5; /* value given to unobserved nodes */
-		planar_e = planar_i; /* just use the same value */
+		 * as an unobserved external node.
+		 *
+		 * This means that our only planarity estimate is
+		 * from the interior node, so just use that. */
+		return planar_i;
 	}
 	else
 	{
 		/* exterior node exists, get its data */
 		mu_e     = this->exterior->data->get_probability();
 		planar_e = this->exterior->data->get_planar_prob();
+		hw_e     = this->exterior->halfwidth;
+	}
+
+	/* set the probability value at which we expect the face
+	 * to lie at.  If this face is separating an interior node
+	 * and an exterior node, then this value should be the
+	 * probability threshold between these two sets (i.e. 0.5).
+	 *
+	 * However, if this faces separates two interior nodes or
+	 * two exterior nodes, then we should use a different value */
+	splitval = 0.5;
+	if( (mu_e < splitval) == (mu_i < splitval) )
+	{
+		/* both sides are exterior or both sides are interior,
+		 * so it doesn't make sense to perform the split
+		 * using the probability value.  For this situation,
+		 * just take the weighted average planarity based
+		 * on the distance of each node from the face. */
+		return ( (hw_e * planar_i) + (hw_i * planar_e) )
+					/ (hw_e + hw_i);
 	}
 
 	/* In order to get the planarity value for the face,
@@ -755,7 +778,7 @@ double node_face_t::get_planarity() const
 	 * Where s is the weighting for the exterior node, and (1-s)
 	 * is the weighting for the interior node.
 	 */
-	s = (mu_i - 0.5) / (mu_i - mu_e);
+	s = (mu_i - splitval) / (mu_i - mu_e);
 
 	/* weight the node's values */
 	return s*planar_e + (1-s)*planar_i; 
@@ -763,7 +786,7 @@ double node_face_t::get_planarity() const
 		 
 void node_face_t::get_isosurface_pos(Vector3d& p) const
 {
-	double mu_i, int_hw, mu_e, ext_hw, mu_s;
+	double mu_i, int_hw, mu_e, ext_hw, mu_s, splitval;
 	Vector3d normal;
 
 	/* check validity of argument */
@@ -796,6 +819,18 @@ void node_face_t::get_isosurface_pos(Vector3d& p) const
 	
 	/* get properties of the face */
 	this->get_center(p);
+	splitval = 0.5; /* we want to split on threshold probability val */
+	if( (mu_e < splitval) == (mu_i < splitval) )
+	{
+		/* this face separates two interior nodes or two
+		 * exterior nodes, so it does not make sense to
+		 * find the split location based on probability.
+		 *
+		 * Just report the face position as the geometric center */
+		return;
+	}
+
+	/* retrieve the remaining properties of the face */
 	octtopo::cube_face_normals(this->direction, normal);
 	p -= int_hw * normal; /* aligned with interior node center */
 
@@ -824,14 +859,14 @@ void node_face_t::get_isosurface_pos(Vector3d& p) const
 	 *
 	 * So we can set the actual isosurface position to be:
 	 */
-	mu_s = (mu_i - 0.5) / (mu_i - mu_e);
+	mu_s = (mu_i - splitval) / (mu_i - mu_e);
 	p += normal*mu_s*(int_hw + ext_hw);
 }
 
 double node_face_t::get_pos_variance() const
 {
 	double mu_i, var_i, int_hw, mu_e, var_e, ext_hw, mu_s, var_s;
-	double ss, var_p;
+	double splitval, ss, var_p;
 
 	/* check validity of argument */
 	if(this->interior == NULL || this->interior->data == NULL
@@ -843,6 +878,7 @@ double node_face_t::get_pos_variance() const
 		     << "Given invalid face" << endl;
 		return DBL_MAX;
 	}
+	splitval = 0.5; /* value given to unobserved nodes */
 
 	/* get the values we need from the originating octdata structs */
 	mu_i  = this->interior->data->get_probability(); /* mean interior
@@ -854,7 +890,7 @@ double node_face_t::get_pos_variance() const
 	{
 		/* exterior is a null node, which should be counted
 		 * as an unobserved external node */
-		mu_e   = 0.5; /* value given to unobserved nodes */
+		mu_e   = splitval;
 		var_e  = 1.0; /* maximum variance for a value in [0,1] */
 		ext_hw = 0;
 	}
@@ -864,6 +900,23 @@ double node_face_t::get_pos_variance() const
 		mu_e   = this->exterior->data->get_probability();
 		var_e  = this->exterior->data->get_uncertainty();
 		ext_hw = this->exterior->halfwidth;
+	}
+
+	/* check if this face is hidden or not */
+	if( (mu_i < splitval) == (mu_e < splitval) )
+	{
+		/* This is a hidden face, which means it separates
+		 * two nodes that are both either interior or exterior.
+		 * This means that using their probability values to
+		 * separate them doesn't make sense.  Instead, we should
+		 * assume that the center position can be anywhere in
+		 * the domain of these nodes.
+		 *
+		 * Treated as a continuous uniform random variable
+		 * over the range [-int_hw, ext_hw], we can compute
+		 * the variance of this position. */
+		var_p = (ext_hw - int_hw);
+		return (var_p * var_p / 12.0);
 	}
 
 	/* the face's position is based on where we expect the 0.5 value
@@ -894,7 +947,7 @@ double node_face_t::get_pos_variance() const
 	 *
 	 * 	var_s = (1-mu_s^2)*var_i + mu_s^2*var_e
 	 */
-	mu_s = (mu_i - 0.5) / (mu_i - mu_e);
+	mu_s = (mu_i - splitval) / (mu_i - mu_e);
 	ss = mu_s*mu_s;
 	var_s = (1-ss)*var_i + ss*var_e;
 

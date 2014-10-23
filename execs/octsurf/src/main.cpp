@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 					args.outfile, tree, scheme);
 			else
 				ret = tree_exporter::export_dense_mesh(
-						args.outfile, tree);
+						args.outfile, tree, scheme);
 			if(ret)
 			{
 				cerr << "[main]\tError " << ret << ": "
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 						args.outfile, tree);
 			else
 				ret = tree_exporter::export_dense_mesh(
-						args.outfile, tree);
+						args.outfile, tree, scheme);
 			if(ret)
 			{
 				cerr << "[main]\tError " << ret << ": "

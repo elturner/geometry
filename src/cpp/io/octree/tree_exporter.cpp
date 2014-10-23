@@ -40,7 +40,8 @@ using namespace Eigen;
 /*--------------------------*/
 	
 int tree_exporter::export_dense_mesh(const std::string& filename,
-	                      const octree_t& tree)
+                                     const octree_t& tree,
+                                     node_boundary_t::SEG_SCHEME scheme)
 {
 	octtopo::octtopo_t top;
 	node_boundary_t boundary;
@@ -56,7 +57,7 @@ int tree_exporter::export_dense_mesh(const std::string& filename,
 	toc(clk, "Initializing topology");
 
 	/* extract the boundary nodes using the generated topology */
-	ret = boundary.populate(top);
+	ret = boundary.populate(top, scheme);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 

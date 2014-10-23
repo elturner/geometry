@@ -29,11 +29,14 @@ namespace tree_exporter
 	 *
 	 * @param filename   The path to the .obj/.ply file to write
 	 * @param tree       The tree to export
+	 * @param scheme      Specifies whether to export the whole scene,
+	 *                    just the objects, or just the rooms
 	 *
 	 * @return           Returns zero on success, non-zero on failure.
 	 */
 	int export_dense_mesh(const std::string& filename,
-	                      const octree_t& tree);
+	                      const octree_t& tree,
+	                      node_boundary_t::SEG_SCHEME scheme);
 
 	/**
 	 * Will export boundary leaf faces to file (either OBJ or PLY)
