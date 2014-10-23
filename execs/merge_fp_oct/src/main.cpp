@@ -61,7 +61,16 @@ int main(int argc, char** argv)
 	}
 	toc(clk, "Importing octree");
 
-	/* merge floorplan info into tree */
+	/* pad the tree to make further processing easier */
+	tic(clk);
+	octree_padder::pad(tree);
+	toc(clk, "Padding octree");
+	
+	/* Merge floorplan info into tree 
+	 *
+	 * We need to do this in order to determine which volumes
+	 * need to be refined.
+	 */
 	ret = import_all_fps(tree, args);
 	if(ret)
 	{
@@ -95,8 +104,14 @@ int main(int argc, char** argv)
 			     << "Unable to refine octree." << endl;
 			return 5;
 		}
+	
+		/* pad the tree to make further processing easier */
+		tic(clk);
+		octree_padder::pad(tree);
+		toc(clk, "Padding octree");
 
-		/* once again, merge floorplan info into tree */
+		/* once again, merge floorplan info into tree, in
+		 * order to relabel the volumes that were refined */
 		ret = import_all_fps(tree, args);
 		if(ret)
 		{
@@ -107,11 +122,6 @@ int main(int argc, char** argv)
 		}
 	}
 
-	/* pad the tree to make further processing easier */
-	tic(clk);
-	octree_padder::pad(tree);
-	toc(clk, "Padding octree");
-	
 	/* export the octree to destination */
 	tic(clk);
 	ret = tree.serialize(args.output_octfile);
