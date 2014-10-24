@@ -31,11 +31,11 @@ import noisypath_gen
 import wedge_gen
 import chunker
 import procarve
-import octsurf
 sys.path.append(os.path.join(PYTHON_SRC_LOC, 'mesh'))
 import oct2fp
 import fp_optimizer
 import merge_fp_oct
+import octsurf
 sys.path.append(os.path.join(PYTHON_SRC_LOC, 'files'))
 import dataset_filepaths
 

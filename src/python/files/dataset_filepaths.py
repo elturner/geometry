@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 ##
-# @file dataset_filepaths.py
+# @file   dataset_filepaths.py
 # @author Eric Turner <elturner@eecs.berkeley.edu>
-# @brief Stores expected locations of files in datasets
+# @brief  Stores expected locations of files in datasets
 # 
 # @section DESCRIPTION
 #
@@ -382,12 +382,6 @@ def get_chunklist(dataset_dir):
 def get_octree(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "carving.oct")
 
-##
-# Returns the expected location of the carved obj file
-#
-def get_carved_obj_file(dataset_dir):
-	return os.path.join(get_carving_dir(dataset_dir), "mesh.obj")
-
 #----------- Files generated from oct -> floorplan -------------------
 
 ##
@@ -447,4 +441,33 @@ def get_aligned_fp_files(dataset_dir):
 #
 def get_refined_octree(dataset_dir):
 	return os.path.join(get_merged_dir(dataset_dir), "refined.oct")
+
+#--------------- File generated from meshing ----------------------
+
+##
+# Returns the directory containing all generated meshes and submeshes
+#
+def get_mesh_dir(dataset_dir):
+	return os.path.join(get_carving_dir(dataset_dir), "mesh")
+
+##
+# Returns the expected location of the carved mesh file
+#
+def get_full_mesh_file(dataset_dir):
+	return os.path.join(get_mesh_dir(dataset_dir), "mesh_all.ply")
+
+##
+# Returns the expected location of the mesh file that represents
+# objects in the environment (such as furniture), but not room surfaces
+#
+def get_object_mesh_file(dataset_dir):
+	return os.path.join(get_mesh_dir(dataset_dir), "mesh_objects.ply")
+
+##
+# Returns the expected location of the mesh file that represents
+# room surfaces in the environment (floors, walls, ceilings, etc), but
+# not objects.
+#
+def get_room_mesh_file(dataset_dir):
+	return os.path.join(get_mesh_dir(dataset_dir), "mesh_room.ply")
 
