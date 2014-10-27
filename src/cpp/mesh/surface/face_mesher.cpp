@@ -62,7 +62,7 @@ int face_mesher_t::add(const octree_t& tree,
 	vector<pair<double, size_t> > face_inds; /* <sort value, index> */
 	Vector3d face_pos, norm, avg_norm, a, b, pos, disp, com;
 	mesh_io::polygon_t poly;
-	double normmag;
+	double normmag, total_weight, area;
 	size_t i, num_faces;
 
 	/* iterate over the corners given */
@@ -74,6 +74,7 @@ int face_mesher_t::add(const octree_t& tree,
 		face_inds.clear();
 		poly.clear();
 		it->first.get_position(tree, pos);
+		total_weight = 0;
 
 		/* add all faces to this structure */
 		for(fit = it->second.begin_faces(); 
@@ -92,28 +93,31 @@ int face_mesher_t::add(const octree_t& tree,
 			/* each face counts proportional
 			 * to its surface area when performing
 			 * the weighted average */
-			avg_norm += norm * fit->get_area(); 
-			com += face_pos;
+			area = fit->get_area();
+			avg_norm += norm * area;
+			com += face_pos * area;
+			total_weight += area;
 		}
 
 		/* compute average normal for all faces */
-		num_faces = face_inds.size();
 		normmag = avg_norm.norm();
-		if(normmag == 0)
+		if(normmag < APPROX_ZERO)
 			avg_norm << 0,0,1; /* arbitrary */
 		else
 			avg_norm /= normmag; /* normalize */
-		com /= num_faces; /* compute center-of-mass */
+		com /= total_weight; /* compute center-of-mass */
 
 		/* check that we have sufficient faces to make a polygon */
+		num_faces = face_inds.size();
 		if(num_faces < 3)
 		{
 			cerr << "[face_mesher_t::add]\tFound corner that "
 			     << "is connected to fewer than three faces!"
 			     << endl 
 			     << "\tCorner pos: " << pos.transpose() << endl
-			     << "\tavg_norm: "   << avg_norm << endl
-			     << "\tNum faces: "  << num_faces << endl
+			     << "\tavg_norm: "     << avg_norm << endl
+			     << "\tNum faces: "    << num_faces << endl
+			     << "\ttotal weight: " << total_weight << endl
 			     << endl;
 			continue;
 		}
@@ -155,10 +159,18 @@ int face_mesher_t::add(const octree_t& tree,
 		std::sort(face_inds.begin(), face_inds.end());
 
 		/* add a polygon about this corner from all the vertices
-		 * from these faces */
-		for(i = 0; i < num_faces; i++)
+		 * from these faces
+		 *
+		 * We want to export triangles, rather than n-sided 
+		 * polygons, so split the current poly into triangles */
+		for(i = 1; i < num_faces-1; i++)
+		{
+			poly.clear();
+			poly.vertices.push_back(face_inds[0].second);
 			poly.vertices.push_back(face_inds[i].second);
-		this->mesh.add(poly);
+			poly.vertices.push_back(face_inds[i+1].second);
+			this->mesh.add(poly);
+		}
 	}
 
 	/* success */
