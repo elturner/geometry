@@ -56,6 +56,33 @@ typedef std::map<node_face_t, node_face_t>          seedmap_t;
  */
 class planar_region_graph_t
 {
+	/* constants */
+	public:
+
+		/**
+		 * The following enumeration represents which
+		 * technique will be used to measure error distance
+		 * for region coalescing.
+		 */
+		enum COALESCING_STRATEGY
+		{
+			/**
+			 * Use the L2 norm to measure
+			 * distance of each node face to
+			 * the plane geometry, and report
+			 * error as the mean squared error.
+			 */
+			COALESCE_WITH_L2_NORM,
+
+			/**
+			 * Use the L_inf norm to measure
+			 * distance of node faces to the plane
+			 * geometry, and report the maximum error
+			 * found for each region.
+			 */
+			COALESCE_WITH_L_INF_NORM
+		};
+
 	/* parameters */
 	private:
 
@@ -123,6 +150,12 @@ class planar_region_graph_t
 		 */
 		bool fit_to_isosurface;
 
+		/**
+		 * Represents the algorithmic coalescing stragety
+		 * to use when combining regions.
+		 */
+		COALESCING_STRATEGY strategy;
+
 	/* functions */
 	public:
 
@@ -152,8 +185,10 @@ class planar_region_graph_t
 		 *                      units of standard deviations.
 		 * @param fitiso        Specifies whether to fit to the
 		 *                      isosurface or not.
+		 * @param strat         The coalescing strategy to employ
 		 */
-		void init(double planethresh,double distthresh,bool fitiso);
+		void init(double planethresh,double distthresh,bool fitiso,
+			COALESCING_STRATEGY strat=COALESCE_WITH_L_INF_NORM);
 
 		/*-----------*/
 		/* accessors */
@@ -239,10 +274,13 @@ class planar_region_graph_t
 		 * export the node faces for each region to this file.
 		 *
 		 * @param filename    Where to write the file
+		 * @param project   If true, will project the mesh
+		 *                  onto the plane geometry.
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int writeobj(const std::string& filename) const;
+		int writeobj(const std::string& filename, 
+				bool project=false) const;
 
 		/**
 		 * Writes OBJ geometry representing region linkages

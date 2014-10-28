@@ -275,8 +275,10 @@ class planar_region_t
 		 * to the given output stream.
 		 *
 		 * @param os   The output stream to write to
+		 * @param project   If true, will project the mesh
+		 *                  onto the plane geometry.
 		 */
-		void writeobj(std::ostream& os) const;
+		void writeobj(std::ostream& os, bool project=false) const;
 };
 
 #endif

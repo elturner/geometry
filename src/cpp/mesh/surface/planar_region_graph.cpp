@@ -52,15 +52,17 @@ planar_region_graph_t::planar_region_graph_t()
 {
 	this->init(DEFAULT_PLANARITY_THRESHOLD,
 			DEFAULT_DISTANCE_THRESHOLD,
-			DEFAULT_FIT_TO_ISOSURFACE);
+			DEFAULT_FIT_TO_ISOSURFACE,
+			COALESCE_WITH_L_INF_NORM);
 }
 
 void planar_region_graph_t::init(double planethresh, double distthresh,
-				bool fitiso)
+				bool fitiso, COALESCING_STRATEGY strat)
 {
 	this->planarity_threshold = planethresh;
-	this->distance_threshold = distthresh;
-	this->fit_to_isosurface = fitiso;
+	this->distance_threshold  = distthresh;
+	this->fit_to_isosurface   = fitiso;
+	this->strategy            = strat;
 }
 	
 regionmap_t::const_iterator planar_region_graph_t::lookup_face(
@@ -333,7 +335,8 @@ int planar_region_graph_t::coalesce_regions()
 	return 0;
 }
 		
-int planar_region_graph_t::writeobj(const std::string& filename) const
+int planar_region_graph_t::writeobj(const std::string& filename,
+					bool project) const
 {
 	ofstream outfile;
 	regionmap_t::const_iterator it;
@@ -345,7 +348,8 @@ int planar_region_graph_t::writeobj(const std::string& filename) const
 
 	/* write the faces for each region */
 	for(it = this->regions.begin(); it != this->regions.end(); it++)
-		it->second.region.writeobj(outfile); /* write to file */
+		it->second.region.writeobj(outfile, project); 
+					/* write to file */
 	
 	/* success */
 	outfile.close();
@@ -456,9 +460,34 @@ int planar_region_graph_t::compute_planefit(planar_region_pair_t& pair)
 		else
 			d = pair.plane.distance_to(centers[i]) / sqrt(v);
 
-		/* check if this is the maximum */
-		if(d > pair.err)
-			pair.err = d;
+		/* incorporate this error value into the total
+		 * error for the planar region */
+		switch(this->strategy)
+		{
+			default:
+			case COALESCE_WITH_L_INF_NORM:
+				/* check if this is the maximum */
+				if(d > pair.err)
+					pair.err = d;
+				break;
+
+			case COALESCE_WITH_L2_NORM:
+				pair.err += d*d;
+				break;
+		}
+	}
+
+	/* finalize the error based on our stragety */
+	switch(this->strategy)
+	{
+		default:
+			/* don't need to do anything */
+			break;
+
+		case COALESCE_WITH_L2_NORM:
+			/* we want the root-mean-squared-error */
+			pair.err = sqrt(pair.err / pair.num_faces);
+			break;
 	}
 
 	/* success */

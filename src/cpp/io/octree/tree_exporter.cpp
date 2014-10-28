@@ -197,7 +197,9 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* coalesce regions */
 	tic(clk);
-	region_graph.init(0.5, 2.0, false); // TODO debugging
+	region_graph.init(0.0, 2.0, false, 
+			planar_region_graph_t::COALESCE_WITH_L_INF_NORM); 
+			// TODO debugging
 	ret = region_graph.coalesce_regions();
 	if(ret)
 		return PROPEGATE_ERROR(-4, ret);
@@ -205,7 +207,7 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* export regions to file */
 	tic(clk);
-	ret = region_graph.writeobj(filename);
+	ret = region_graph.writeobj(filename, true);
 	if(ret)
 		return PROPEGATE_ERROR(-5, ret);
 	toc(clk, "Writing OBJ");

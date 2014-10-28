@@ -1,5 +1,6 @@
 #include "planar_region.h"
 #include <mesh/surface/node_boundary.h>
+#include <mesh/surface/node_corner.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octtopo.h>
 #include <iostream>
@@ -212,17 +213,75 @@ void planar_region_t::orient_normal()
 	}
 }
 
-void planar_region_t::writeobj(ostream& os) const
+void planar_region_t::writeobj(ostream& os, bool project) const
 {
 	faceset_t::iterator it;
 	int r, g, b;
+	size_t corner_ind, cii;
+	bool use_interior;
+	octtopo::CUBE_FACE f;
+	octnode_t* node;
+	Vector3d corner_pos;
 
 	/* generate a random color */
-	r = 128 + (rand() % 64);
-	g = 128 + (rand() % 64);
-	b = 128 + (rand() % 64);
+	r = 64 + (rand() % 128);
+	g = 64 + (rand() % 128);
+	b = 64 + (rand() % 128);
 
 	/* write the faces with this color */
 	for(it = this->faces.begin(); it != this->faces.end(); it++)
-		it->writeobj(os, r, g, b);
+	{
+		/* check if we should write the face as the original
+		 * octnode face, or projected onto the plane geometry */
+		if(!project)
+		{
+			it->writeobj(os, r, g, b);
+			continue;
+		}
+
+		/* check whether the face's interior node or
+		 * its exterior node is smaller */
+		use_interior = (it->exterior == NULL 
+				|| (it->exterior->halfwidth 
+				>= it->interior->halfwidth));
+		f = (use_interior ? it->direction 
+			: octtopo::get_opposing_face(it->direction));
+		node = (use_interior ? it->interior : it->exterior);
+
+		/* we want to project the face onto the plane geometry,
+		 * so we need to write out the face from scratch 
+		 *
+		 * Start by iterating over the face corners, getting
+		 * their 3D position */
+		for(cii = 0; cii < node_corner::NUM_CORNERS_PER_SQUARE; 
+							cii++)
+		{
+			/* get position of this corner on cube */
+			corner_ind = node_corner::get_face_corner(f, cii);
+			corner_pos = node_corner::get_corner_pos(node,
+							corner_ind);
+			
+			/* project the corner onto the plane */
+			this->plane.project_onto(corner_pos);
+
+			/* write to file */
+			os << "v " << corner_pos(0)
+			   <<  " " << corner_pos(1)
+			   <<  " " << corner_pos(2)
+			   <<  " " << r
+			   <<  " " << g
+			   <<  " " << b << endl;
+		}
+
+		/* write surface using the above vertices 
+		 *
+		 * The vertices are ordered to be counter-clockwise
+		 * via the interior node's face.  But we want to look
+		 * from the interior to the exterior, which flips its
+		 * direction. */
+		if(use_interior)
+			os << "f -1 -2 -3 -4" << endl;
+		else
+			os << "f -4 -3 -2 -1" << endl;
+	}
 }
