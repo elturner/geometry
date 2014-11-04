@@ -218,6 +218,38 @@ void mesh_t::clear()
 	this->format = FORMAT_UNKNOWN;
 }
 			
+void mesh_t::add(const mesh_t& other)
+{
+	size_t index_offset, i, j, num_verts, num_polys;
+	polygon_t poly;
+
+	/* the following is the index offset from the other mesh to
+	 * its elements being copied into this mesh */
+	index_offset = this->vertices.size();
+	num_verts = other.num_verts();
+	num_polys = other.num_polys();
+
+	/* iterate over the vertices of the other mesh, adding them */
+	for(i = 0; i < num_verts; i++)
+		this->add(other.get_vert(i));
+
+	/* now add the polygons from the other mesh, making sure
+	 * to update the referenced vertex indices */
+	for(i = 0; i < num_polys; i++)
+	{
+		/* get polygon from other mesh */
+		poly.set(other.get_poly(i).vertices);
+		
+		/* update vertex indices */
+		num_verts = poly.vertices.size();
+		for(j = 0; j < num_verts; j++)
+			poly.vertices[j] += index_offset;
+
+		/* store polygon in this mesh */
+		this->add(poly);
+	}
+}
+			
 FILE_FORMAT mesh_t::get_format(const string& filename) const
 {
 	size_t p;

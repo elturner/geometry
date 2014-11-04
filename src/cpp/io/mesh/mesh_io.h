@@ -321,7 +321,18 @@ namespace mesh_io
 			 */
 			inline void add(const polygon_t& p)
 			{ this->polygons.push_back(p); };
-	
+
+			/**
+			 * Adds all the elements from the given
+			 * mesh to this one.
+			 *
+			 * The vertex indices will be appropriately
+			 * modified to ensure unique indexing.
+			 *
+			 * @param other   The other mesh to add to this one
+			 */
+			void add(const mesh_t& other);
+
 		/* helper functions */
 		private:
 
