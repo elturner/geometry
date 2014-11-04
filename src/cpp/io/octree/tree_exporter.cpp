@@ -198,7 +198,7 @@ int tree_exporter::export_regions(const std::string& filename,
 	/* coalesce regions */
 	tic(clk);
 	region_graph.init(0.0, 2.0, false, 
-			planar_region_graph_t::COALESCE_WITH_L_INF_NORM); 
+			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
 			// TODO debugging
 	ret = region_graph.coalesce_regions();
 	if(ret)

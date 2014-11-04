@@ -43,6 +43,7 @@ using namespace Eigen;
 #define DEFAULT_PLANARITY_THRESHOLD 0.5
 #define DEFAULT_DISTANCE_THRESHOLD  1.0
 #define DEFAULT_FIT_TO_ISOSURFACE   false
+#define APPROX_ZERO                 0.00001
 
 /*--------------------------*/
 /* function implementations */
@@ -358,7 +359,7 @@ int planar_region_graph_t::writeobj(const std::string& filename,
 		
 void planar_region_graph_t::writeobj_linkages(ostream& os) const
 {
-	regionmap_t::const_iterator it;
+	regionmap_t::const_iterator it, nit;
 	faceset_t::const_iterator fit;
 	Vector3d p, n;
 	int num_verts;
@@ -367,8 +368,8 @@ void planar_region_graph_t::writeobj_linkages(ostream& os) const
 	for(it = this->regions.begin(); it != this->regions.end(); it++)
 	{
 		/* write vertex for this region */
-		it->first.get_isosurface_pos(p);
-		octtopo::cube_face_normals(it->first.direction, n);
+		p = it->second.region.get_plane().point;
+		n = it->second.region.get_plane().normal;
 		n = p + 0.1*n;
 		os << "v " << p.transpose() << " 0 255 0" << endl
 		   << "v " << n.transpose() << " 255 255 255" << endl;
@@ -378,8 +379,19 @@ void planar_region_graph_t::writeobj_linkages(ostream& os) const
 		for(fit = it->second.neighbor_seeds.begin();
 			fit != it->second.neighbor_seeds.end(); fit++)
 		{
+			/* get neighbor region info */
+			nit = this->regions.find(*fit);
+			if(nit == this->regions.end())
+				continue; /* region doesn't exist */
+
+			/* filter linkages based on region normals */
+			if(abs(it->second.region.get_plane().normal.dot(
+				nit->second.region.get_plane().normal))
+					< 0.7) // TODO
+				continue; /* ignore this one */
+
 			/* get center position for this neighbor seed */
-			fit->get_isosurface_pos(p);
+			p = nit->second.region.get_plane().point;
 
 			/* write arrow from this region to the neighbor */
 			os << "v " << p.transpose() << " 255 0 0" << endl

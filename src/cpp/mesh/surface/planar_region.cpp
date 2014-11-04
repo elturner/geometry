@@ -89,6 +89,9 @@ void planar_region_t::floodfill(const node_face_t& seed,
 		for(it = range.first; it != range.second; it++)
 			to_check.push(*it);
 	}
+
+	/* make sure the normal direction is consistent */
+	this->orient_normal();
 }
 		
 void planar_region_t::find_face_centers(vector<Vector3d,
