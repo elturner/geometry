@@ -384,12 +384,6 @@ void planar_region_graph_t::writeobj_linkages(ostream& os) const
 			if(nit == this->regions.end())
 				continue; /* region doesn't exist */
 
-			/* filter linkages based on region normals */
-			if(abs(it->second.region.get_plane().normal.dot(
-				nit->second.region.get_plane().normal))
-					< 0.7) // TODO
-				continue; /* ignore this one */
-
 			/* get center position for this neighbor seed */
 			p = nit->second.region.get_plane().point;
 
