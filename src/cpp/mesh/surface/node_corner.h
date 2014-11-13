@@ -48,7 +48,7 @@ namespace node_corner
 	 * consistent with the placement of child nodes of a parent
 	 * node.
 	 *
-	 *
+	 * <pre>
 	 *    z
 	 *    ^
 	 *    .
@@ -63,6 +63,7 @@ namespace node_corner
  	 *    |  /     |  /                                          
  	 *    |/_______|/........................> x                 
  	 *   6          7                      
+	 * </pre>
 	 */
 	inline Eigen::Vector3d get_corner_pos(const octnode_t* node,
 						size_t corner_index)  

@@ -40,6 +40,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/surface/node_corner.cpp \
 		$(SOURCEDIR)mesh/surface/node_corner_map.cpp \
 		$(SOURCEDIR)mesh/surface/face_mesher.cpp \
+		$(SOURCEDIR)mesh/surface/region_mesher.cpp \
 		src/octsurf_run_settings.cpp \
 		src/main.cpp
 
@@ -73,6 +74,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/surface/node_corner.h \
 		$(SOURCEDIR)mesh/surface/node_corner_map.h \
 		$(SOURCEDIR)mesh/surface/face_mesher.h \
+		$(SOURCEDIR)mesh/surface/region_mesher.h \
 		src/octsurf_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

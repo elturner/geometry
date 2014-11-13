@@ -8,7 +8,9 @@
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/surface/node_corner.h>
+#include <mesh/surface/node_corner_map.h>
 #include <mesh/surface/face_mesher.h>
+#include <mesh/surface/region_mesher.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <stdlib.h>
@@ -172,7 +174,9 @@ int tree_exporter::export_regions(const std::string& filename,
 {
 	octtopo::octtopo_t top;
 	node_boundary_t boundary;
+	node_corner::corner_map_t corner_map;
 	planar_region_graph_t region_graph;
+	region_mesher::mesher_t mesher;
 	tictoc_t clk;
 	int ret;
 
@@ -188,6 +192,11 @@ int tree_exporter::export_regions(const std::string& filename,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
+	/* extract the corners of the model from this boundary */
+	tic(clk);
+	corner_map.add(tree, boundary);
+	toc(clk, "Computing corners");
+
 	/* form planar regions from these boundary faces */
 	tic(clk);
 	ret = region_graph.populate(boundary);
@@ -195,21 +204,30 @@ int tree_exporter::export_regions(const std::string& filename,
 		return PROPEGATE_ERROR(-3, ret);
 	toc(clk, "Forming regions");
 
-	/* coalesce regions */
+	/* coalesce regions (use arbitrary parameters) */
 	tic(clk);
 	region_graph.init(0.0, 2.0, false, 
 			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
-			// TODO debugging
 	ret = region_graph.coalesce_regions();
 	if(ret)
 		return PROPEGATE_ERROR(-4, ret);
 	toc(clk, "Coalesce regions");
 
+	/* mesh the region graph */
+	tic(clk);
+	ret = mesher.init(tree, region_graph, corner_map);
+	if(ret)
+		return PROPEGATE_ERROR(-5, ret);
+	toc(clk, "Meshing regions");
+
+	// TODO
+	mesher.writeobj_vertices(cerr);
+
 	/* export regions to file */
 	tic(clk);
 	ret = region_graph.writeobj(filename, true);
 	if(ret)
-		return PROPEGATE_ERROR(-5, ret);
+		return PROPEGATE_ERROR(-6, ret);
 	toc(clk, "Writing OBJ");
 
 	/* success */
