@@ -6,6 +6,7 @@
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/surface/node_corner_map.h>
 #include <mesh/surface/node_corner.h>
+#include <image/color.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -56,13 +57,15 @@ int mesher_t::init(const octree_t& tree,
 			const planar_region_graph_t& region_graph,
 			const corner_map_t& corner_map)
 {
-	pair<planemap_t::iterator, bool> ins;
-	regionmap_t::const_iterator rit, sit;
+	pair<planemap_t::iterator, bool> ins; /* access this->regions */
+	planemap_t::iterator pit; /* access this->regions */
+	regionmap_t::const_iterator rit, sit; /* access region_graph */
+	pair<vertmap_t::iterator, bool> vins; /* access this->vertices */
+	vertmap_t::iterator vit; /* access this->vertices */
 	faceset_t::const_iterator fit, nit;
 	pair<faceset_t::const_iterator, faceset_t::const_iterator> faces;
 	corner_t c;
 	vertex_info_t vinfo;
-	pair<vertmap_t::iterator, bool> vins;
 	size_t ci;
 
 	/* clear any existing data */
@@ -141,13 +144,29 @@ int mesher_t::init(const octree_t& tree,
 					vins.first->second.add(vinfo);
 					continue;
 				}
-
-				/* if this corner wasn't seen before, then
-				 * add it to the info structure for
-				 * this region. */
-				ins.first->second.boundaries[0]
-							.push_back(c);
 			}
+		}
+	}
+
+	/* for each of the vertices we just added, we need to add
+	 * them to their respective regions, so that each region can
+	 * know which vertices it contains.
+	 *
+	 * For now, we don't care about getting the order right, just
+	 * that the list is complete.
+	 */
+	for(vit=this->vertices.begin(); vit!=this->vertices.end(); vit++)
+	{
+		/* iterate over the regions that intersect this vertex */
+		for(fit=vit->second.begin(); fit!=vit->second.end(); fit++)
+		{
+			/* get the region info for the current seed face */
+			pit = this->regions.find(*fit);
+			if(pit == this->regions.end())
+				return -3; /* this region SHOULD exist */
+
+			/* add the current vertex to this region */
+			pit->second.boundaries[0].push_back(vit->first);
 		}
 	}
 
@@ -166,13 +185,53 @@ int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
 	return -1; // TODO implement me
 }
 			
-void mesher_t::writeobj_vertices(std::ostream& os) const
+int mesher_t::writeobj_vertices(std::ostream& os) const
 {
-	vertmap_t::const_iterator it;
+	planemap_t::const_iterator pit;
+	vertmap_t::const_iterator vit;
+	faceset_t::const_iterator fit;
+	Vector3d p;
+	color_t c;
+	int i, n;
+	
+	for(vit=this->vertices.begin(); vit!=this->vertices.end(); vit++)
+	{
+		/* export vertex center */
+		c.set_random();
+		p = vit->second.position;
+		os << "v " << p.transpose() 
+		   <<  " " << c.get_red_int()
+		   <<  " " << c.get_green_int()
+		   <<  " " << c.get_blue_int() << endl;
 
-	/* iterate over the vertices in this structure */
-	for(it = this->vertices.begin(); it != this->vertices.end(); it++)
-		os << "v " << it->second.position.transpose() << endl;
+		/* iterate over the regions that intersect this vertex */
+		for(fit=vit->second.begin(); fit!=vit->second.end(); fit++)
+		{
+			/* get the region info for the current seed face */
+			pit = this->regions.find(*fit);
+			if(pit == this->regions.end())
+				return -1; /* this region SHOULD exist */
+
+			/* project the point onto this region's plane */
+			p = vit->second.position;
+			pit->second.plane.project_onto(p);
+
+			/* export it */
+			os << "v " << p.transpose()
+			   << " 255 255 255" << endl;
+		}
+
+		/* export some triangles */
+		n = (int) vit->second.size();
+		for(i = -1; i >= -n; i--)
+			os << "f " << (-n-1) 
+			   <<  " " << i
+			   <<  " " << (i == -n ? -1 : i-1)
+			   << endl;
+	}
+
+	/* success */
+	return 0;
 }
 
 /*----------------------------------------*/

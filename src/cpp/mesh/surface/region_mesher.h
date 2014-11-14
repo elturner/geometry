@@ -161,8 +161,11 @@ namespace region_mesher
 			 * in Wavefront OBJ format.
 			 *
 			 * @param os   The output stream to write to
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
 			 */
-			void writeobj_vertices(std::ostream& os) const;
+			int writeobj_vertices(std::ostream& os) const;
 	};
 	
 	/**
@@ -220,7 +223,7 @@ namespace region_mesher
 			~vertex_info_t();
 
 			/*-----------*/
-			/* accessors */
+			/* modifiers */
 			/*-----------*/
 			
 			/**
@@ -252,6 +255,10 @@ namespace region_mesher
 			{ this->regions.insert(other.regions.begin(),
 					other.regions.end()); };
 
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
 			/**
 			 * Get the number of regions represented
 			 * by this info structure.
@@ -263,6 +270,26 @@ namespace region_mesher
 			 */
 			inline size_t size() const
 			{ return this->regions.size(); };
+
+			/**
+			 * Returns the beginning iterator to the list
+			 * of seed faces for the regions described in
+			 * this structure.
+			 *
+			 * @return   Returns the begin iterator
+			 */
+			inline faceset_t::const_iterator begin() const
+			{ return this->regions.begin(); };
+
+			/**
+			 * Returns the ending iterator to the list
+			 * of seed faces for the regions described in
+			 * this structure.
+			 *
+			 * @return   Returns the ending iterator
+			 */
+			inline faceset_t::const_iterator end() const
+			{ return this->regions.end(); };
 
 			/*-----------*/
 			/* operators */

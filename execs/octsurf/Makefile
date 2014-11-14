@@ -75,6 +75,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/surface/node_corner_map.h \
 		$(SOURCEDIR)mesh/surface/face_mesher.h \
 		$(SOURCEDIR)mesh/surface/region_mesher.h \
+		$(SOURCEDIR)image/color.h \
 		src/octsurf_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
