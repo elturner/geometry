@@ -219,6 +219,7 @@ int tree_exporter::export_regions(const std::string& filename,
 	if(ret)
 		return PROPEGATE_ERROR(-5, ret);
 	toc(clk, "Meshing regions");
+	mesher.writeobj_vertices(cerr); // TODO
 
 	/* export regions to file */
 	tic(clk);

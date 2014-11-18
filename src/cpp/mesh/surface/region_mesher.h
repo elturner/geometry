@@ -84,7 +84,23 @@ namespace region_mesher
 			 * region.
 			 */
 			planemap_t regions;
-	
+
+			/* the following members represent parameters
+			 * of this algorithm */
+
+			/**
+			 * The following threshold parameter is used to
+			 * determine when two neighboring planes are
+			 * close enough to parallel to be considered
+			 * the same surface when finding the vertex
+			 * positions on this mesh.
+			 *
+			 * This value represents the minimum singular
+			 * value of the SVD decomposition of plane normals
+			 * that still indicates valid geometry.
+			 */
+			double min_singular_value;
+
 		/* functions */
 		public:
 
@@ -166,6 +182,27 @@ namespace region_mesher
 			 *             failure.
 			 */
 			int writeobj_vertices(std::ostream& os) const;
+
+		/* helper functions */
+		private:
+
+			/**
+			 * Computes the ideal position of the given vertex
+			 * based on the set of regions that intersect it.
+			 *
+			 * This computes the geometric intersection between
+			 * the planes of the regions that intersect the
+			 * given vertex. However, it also accounts for
+			 * the fact that if two regions have planes that
+			 * are nearly parallel, then the intersection
+			 * should not be counted.
+			 *
+			 * @param vit   The iterator to this vertex
+			 *
+			 * @return      Returns zero on success, non-zero
+			 *              on failure.
+			 */
+			int compute_vertex_pos(vertmap_t::iterator vit);
 	};
 	
 	/**
@@ -378,6 +415,16 @@ namespace region_mesher
 			 * Frees all memory and resources
 			 */
 			~region_info_t();
+
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
+			/**
+			 * Retrieve the plane of this region
+			 */
+			inline const plane_t& get_plane() const
+			{ return this->plane; };
 	};
 }
 

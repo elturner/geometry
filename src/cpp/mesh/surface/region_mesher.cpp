@@ -7,6 +7,7 @@
 #include <mesh/surface/node_corner_map.h>
 #include <mesh/surface/node_corner.h>
 #include <image/color.h>
+#include <util/error_codes.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -37,7 +38,8 @@ using namespace node_corner;
 			
 mesher_t::mesher_t()
 {
-	/* don't need to do anything here */
+	/* set default parameters */
+	this->min_singular_value = 0.1;
 }
 			
 mesher_t::~mesher_t()
@@ -67,6 +69,7 @@ int mesher_t::init(const octree_t& tree,
 	corner_t c;
 	vertex_info_t vinfo;
 	size_t ci;
+	int ret;
 
 	/* clear any existing data */
 	this->clear();
@@ -168,6 +171,13 @@ int mesher_t::init(const octree_t& tree,
 			/* add the current vertex to this region */
 			pit->second.boundaries[0].push_back(vit->first);
 		}
+
+		/* now that we have prepared this vertex, we can compute
+		 * its ideal 3D position based on the set of regions
+		 * that intersect it. */
+		ret = this->compute_vertex_pos(vit);
+		if(ret)
+			return PROPEGATE_ERROR(-4, ret);
 	}
 
 	/* at this point, all the corners know which regions they
@@ -175,6 +185,105 @@ int mesher_t::init(const octree_t& tree,
 	 * but the regions do NOT yet know what the appropriate order
 	 * of their boundary vertices is yet. */
 	// TODO
+
+	/* success */
+	return 0;
+}
+			
+int mesher_t::compute_vertex_pos(vertmap_t::iterator vit)
+{
+	faceset_t::const_iterator fit;
+	planemap_t::const_iterator rit;
+	size_t i, num_regions, num_dims;
+	double thresh, s;
+	Vector3d x, v;
+
+	/* how we project this vertex position is based on 
+	 * how many regions intersect it.
+	 *
+	 * If we make the normal vectors of all of these planes
+	 * into the rows of a matrix, the null space of that matrix
+	 * represents the variance */
+	num_dims = 3;
+	num_regions = vit->second.size();
+	MatrixXd N(num_regions, num_dims);
+	VectorXd P(num_regions);
+	for(fit=vit->second.begin(), i=0; fit!=vit->second.end(); fit++,i++)
+	{
+		/* get the information for this region */
+		rit = this->regions.find(*fit);
+		if(rit == this->regions.end())
+			return -1;
+
+		/* add the normal vector of this plane to our matrix */
+		N.block<1,3>(i,0) 
+			= rit->second.get_plane().normal.transpose();
+	
+		/* add the plane offset to the RHS of the equation */
+		P(i) = rit->second.get_plane().normal.dot(
+				rit->second.get_plane().point);
+	}
+
+	/* Solve for the null space of this matrix by taking the SVD.
+	 * Since the columns of the U matrix are ordered in descending
+	 * order, all the small (or zero) eigenvalues will be at the end
+	 */
+	JacobiSVD<MatrixXd> svd(N, 
+			Eigen::ComputeFullV | Eigen::ComputeThinU);
+
+	/* The number of "large" eigenvalues determines the number of
+	 * constraints on this vertex position.
+	 *
+	 * 	1 "large" eigenvalue  --> a plane
+	 * 	2 "large" eigenvalues --> a line (intersect two planes)
+	 * 	3 "large" eigenvalues --> a point (intesect three planes)
+	 *
+	 * Large is determined by the threshold min_singular_value
+	 *
+	 * We iterate over the basis vectors described in V in order
+	 * to have the kernel contribute to the least-squares solution
+	 * for the intersection position.
+	 */
+	VectorXd S = svd.singularValues();
+	MatrixXd U = svd.matrixU();
+
+	/* first initialize our threshold values and output vector
+	 * to prepare for the least-squares solution */
+	thresh = this->min_singular_value * S(0);
+	x << 0,0,0;
+
+	/* iterate over the basis vectors in order to exercise the
+	 * null space to get our svd solution as close to the initial
+	 * condition as possible */
+	for(i = 0; i < num_dims; i++)
+	{
+		/* get current basis vector */
+		v = svd.matrixV().block<3,1>(0,i);
+		s = (S.rows() <= (int) i) ? 0.0 : S(i);
+
+		/* Is this basis vector part of (our definition of)
+		 * the null space? */
+		if(s < thresh)
+		{
+			/* part of the null space, so this basis vector
+			 * should NOT contribute to the intersection
+			 * position.  Instead, we should try to emulate
+			 * the original corner position in this dimension.
+			 */
+			x += vit->second.position.dot(v) * v;
+		}
+		else
+		{
+			/* this vector is part of the kernal, and
+			 * should contribute to the least-squares
+			 * solution */
+			VectorXd u = U.block(0,i,num_regions,1);
+			x += (P.dot(u) / s) * v;
+		}
+	}
+
+	/* set the vertex position to be the value computed */
+	vit->second.position = x;
 
 	/* success */
 	return 0;
