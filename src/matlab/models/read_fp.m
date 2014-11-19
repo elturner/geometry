@@ -1,5 +1,5 @@
 function floorplan = read_fp(filename)
-	% floorplan = read_fp(filename)
+	% floorplan = READ_FP(filename)
 	%
 	%	Reads the *.fp file specified, and stores
 	%	the values in the output struct
