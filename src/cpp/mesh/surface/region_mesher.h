@@ -183,6 +183,21 @@ namespace region_mesher
 			 */
 			int writeobj_vertices(std::ostream& os) const;
 
+			/**
+			 * Exports all regions to the specified CSV stream.
+			 *
+			 * Will export all regions to the given comma-
+			 * separated variables stream.  Each region
+			 * is represented by its vertices' arranged
+			 * in boundary rings.  Each ring is a line.
+			 *
+			 * @param os   The output stream
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
+			 */
+			int writecsv(std::ostream& os) const;
+
 		/* helper functions */
 		private:
 
@@ -328,6 +343,14 @@ namespace region_mesher
 			inline faceset_t::const_iterator end() const
 			{ return this->regions.end(); };
 
+			/**
+			 * Retrieve the position of this vertex
+			 *
+			 * @return   A const reference to the position
+			 */
+			const Eigen::Vector3d& get_position() const
+			{ return this->position; };
+
 			/*-----------*/
 			/* operators */
 			/*-----------*/
@@ -432,6 +455,35 @@ namespace region_mesher
 			 */
 			inline const plane_t& get_plane() const
 			{ return this->plane; };
+
+			/*-----------*/
+			/* debugging */
+			/*-----------*/
+
+			/**
+			 * Exports this region information to a
+			 * Comma-Separated Variable file stream (csv)
+			 *
+			 * Will export the vertices of this region
+			 * to the specified csv stream, where each
+			 * bounary is represented by a line in the
+			 * stream.
+			 *
+			 * format:
+			 *
+			 * 	<x11>,<y11>,<z11>,...<x1n>,<y1n>,<z1n>
+			 * 	<x21>,<y21>,<z21>,...<x2n>,<y2n>,<z2n>
+			 * 	...
+			 *
+			 * @params os   The stream to export to
+			 * @param  vm   The vertex map to get the info
+			 *              about each vertex
+			 *
+			 * @return      Returns zero on success, non-zero on
+			 *              failure.
+			 */
+			int writecsv(std::ostream& os, 
+					const vertmap_t& vm) const;
 	};
 }
 

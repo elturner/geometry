@@ -97,9 +97,7 @@ int mesher_t::init(const octree_t& tree,
 			for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 			{
 				/* get the value of this corner */
-				c.set(tree, *fit,
-					node_corner::get_face_corner(
-						fit->direction, ci));
+				c.set(tree, *fit, ci);
 
 				/* prepare info for this corner */
 				vinfo.clear();
@@ -342,6 +340,24 @@ int mesher_t::writeobj_vertices(std::ostream& os) const
 	/* success */
 	return 0;
 }
+			
+int mesher_t::writecsv(std::ostream& os) const
+{
+	planemap_t::const_iterator pit;
+	int ret;
+
+	/* iterate over the regions */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* export this region */
+		ret = pit->second.writecsv(os, this->vertices);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* success */
+	return 0;
+}
 
 /*----------------------------------------*/
 /* vertex_info_t function implementations */
@@ -351,7 +367,7 @@ vertex_info_t::vertex_info_t()
 { /* don't need to do anything here */ }
 
 vertex_info_t::~vertex_info_t()
-{ this->clear() }
+{ this->clear(); }
 			
 void vertex_info_t::clear()
 {
@@ -374,4 +390,40 @@ region_info_t::~region_info_t()
 void region_info_t::clear()
 {
 	this->boundaries.clear();
+}
+			
+int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
+{
+	vertmap_t::const_iterator vit;
+	size_t bi, vi, num_boundaries, num_verts;
+
+	/* iterate over the boundaries in this region */
+	num_boundaries = this->boundaries.size();
+	for(bi = 0; bi < num_boundaries; bi++)
+	{
+		/* iterate over the vertices in this boundary */
+		num_verts = this->boundaries[bi].size();
+		for(vi = 0; vi < num_verts; vi++)
+		{
+			/* get info for this vertex */
+			vit = vm.find(this->boundaries[bi][vi]);
+			if(vit == vm.end())
+				return -1;
+
+			/* add info to stream */
+			os << vit->second.get_position()(0) << ","
+			   << vit->second.get_position()(1) << ","
+			   << vit->second.get_position()(2);
+			
+			/* add comma if we're not at end */
+			if(vi < num_verts-1)
+				os << ",";
+		}
+
+		/* end the line */
+		os << endl;
+	}
+
+	/* success */
+	return 0;
 }
