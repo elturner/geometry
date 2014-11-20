@@ -348,14 +348,10 @@ int mesher_t::writeobj_vertices(std::ostream& os) const
 /*----------------------------------------*/
 			
 vertex_info_t::vertex_info_t()
-{
-	// TODO
-}
+{ /* don't need to do anything here */ }
 
 vertex_info_t::~vertex_info_t()
-{
-	// TODO
-}
+{ this->clear() }
 			
 void vertex_info_t::clear()
 {
@@ -368,12 +364,14 @@ void vertex_info_t::clear()
 /*----------------------------------------*/
 			
 region_info_t::region_info_t()
-{
-	// TODO
-}
+{ /* don't need to do anything here */ }
 
 region_info_t::~region_info_t()
 {
-	// TODO
+	this->clear();
 }
 
+void region_info_t::clear()
+{
+	this->boundaries.clear();
+}

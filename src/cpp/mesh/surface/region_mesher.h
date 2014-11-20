@@ -421,6 +421,13 @@ namespace region_mesher
 			/*-----------*/
 
 			/**
+			 * Clears all memory and resources
+			 *
+			 * This will clear any vertex information
+			 */
+			void clear();
+
+			/**
 			 * Retrieve the plane of this region
 			 */
 			inline const plane_t& get_plane() const
