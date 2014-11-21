@@ -221,6 +221,25 @@ pair<faceset_t::const_iterator, faceset_t::const_iterator>
 	return p;
 }
 			
+pair<cornerset_t::const_iterator, cornerset_t::const_iterator>
+			corner_map_t::get_edges_for(const corner_t& c) const
+{
+	pair<cornerset_t::const_iterator, cornerset_t::const_iterator> p;
+	ccmap_t::const_iterator it;
+
+	/* look up this corner */
+	it = this->corners.find(c);
+	if(it == this->corners.end())
+		return p;
+
+	/* get the edges for this corner */
+	p.first  = it->second.edges.begin();
+	p.second = it->second.edges.end();
+
+	/* success */
+	return p;
+}
+			
 void corner_map_t::add_all(const octree_t& tree, octnode_t* node)
 {
 	size_t i;

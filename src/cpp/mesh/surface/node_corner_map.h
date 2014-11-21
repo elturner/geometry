@@ -374,7 +374,7 @@ namespace node_corner
 			 * Given a corner that is stored in this map,
 			 * will perform the look-up to find all
 			 * node_face_t that touch this corner.  The
-			 * reutrn value is the begin/end iterator pair
+			 * return value is the begin/end iterator pair
 			 * to cycle through these faces.
 			 *
 			 * @param c    The corner to analyze
@@ -387,6 +387,26 @@ namespace node_corner
 					get_faces_for(const corner_t& c)
 						const;
 
+			/**
+			 * Gets the iterators for the neighboring edges
+			 * of the given corner.
+			 *
+			 * Given a corner that is stored in this map,
+			 * will perform the look-up to find all
+			 * the corner_t objects that share an edge with
+			 * the given corner.  The return value is the
+			 * begin/end iterator pair to cycle through these
+			 * edges.
+			 *
+			 * @param c   The corner to analyze
+			 *
+			 * @return    Returns iterators to neighboring
+			 *            edges of this corner.
+			 */
+			std::pair<cornerset_t::const_iterator,
+				cornerset_t::const_iterator>
+					get_edges_for(const corner_t& c)
+						const;
 
 		/* helper functions */
 		private:

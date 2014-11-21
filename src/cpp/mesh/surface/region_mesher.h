@@ -147,6 +147,8 @@ namespace region_mesher
 			    const planar_region_graph_t& region_graph,
 			    const node_corner::corner_map_t& corner_map);
 
+			// TODO simplification
+
 			/*-----*/
 			/* i/o */
 			/*-----*/
@@ -391,6 +393,11 @@ namespace region_mesher
 		private:
 
 			/**
+			 * This represents all vertices on this region
+			 */
+			node_corner::cornerset_t vertices;
+
+			/**
 			 * This represents the ordered list of boundary
 			 * vertices for this region.  Each boundary is
 			 * oriented in counter-clockwise order (assuming
@@ -451,10 +458,44 @@ namespace region_mesher
 			void clear();
 
 			/**
+			 * Adds a vertex to this region
+			 *
+			 * @param v   The corner representing a vertex
+			 */
+			inline void add(const node_corner::corner_t& v)
+			{ this->vertices.insert(v); };
+
+			/**
 			 * Retrieve the plane of this region
 			 */
 			inline const plane_t& get_plane() const
 			{ return this->plane; };
+
+			/*------------*/
+			/* processing */
+			/*------------*/
+
+			/**
+			 * Will use the vertices to generate an ordered
+			 * boundary for this region.
+			 *
+			 * Given a populated set of vertices, will generate
+			 * the 'boundary' list.  This list represents a list
+			 * of rings, where each ring is a closed, disjoint
+			 * ordering of vertices.
+			 *
+			 * The elements in this->vertices will be unchanged
+			 * by this call, but the elements in 
+			 * this->boundaries will be repopulated.
+			 *
+			 * @param cm   The corner map to use to analyze
+			 *             the region's vertices
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
+			 */
+			int populate_boundaries(
+				const node_corner::corner_map_t& cm);
 
 			/*-----------*/
 			/* debugging */

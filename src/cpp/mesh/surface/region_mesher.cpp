@@ -84,10 +84,6 @@ int mesher_t::init(const octree_t& tree,
 		if(!(ins.second))
 			return -1; /* unable to insert region info */
 
-		/* initialize the list of vertices of this region to
-		 * be empty */
-		ins.first->second.boundaries.resize(1);
-
 		/* for each region, iterate through its faces, in
 		 * order to iterate through its corners */
 		for(fit = rit->second.get_region().begin();
@@ -167,7 +163,7 @@ int mesher_t::init(const octree_t& tree,
 				return -3; /* this region SHOULD exist */
 
 			/* add the current vertex to this region */
-			pit->second.boundaries[0].push_back(vit->first);
+			pit->second.add(vit->first);
 		}
 
 		/* now that we have prepared this vertex, we can compute
@@ -182,7 +178,13 @@ int mesher_t::init(const octree_t& tree,
 	 * touch, and all the regions know which corners they touch,
 	 * but the regions do NOT yet know what the appropriate order
 	 * of their boundary vertices is yet. */
-	// TODO
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* analyze this region to find its boundary */
+		ret = pit->second.populate_boundaries(corner_map);
+		if(ret)
+			return PROPEGATE_ERROR(-5, ret);
+	}
 
 	/* success */
 	return 0;
@@ -390,6 +392,66 @@ region_info_t::~region_info_t()
 void region_info_t::clear()
 {
 	this->boundaries.clear();
+}
+			
+int region_info_t::populate_boundaries(
+				const node_corner::corner_map_t& cm)
+{
+	pair<cornerset_t::const_iterator, 
+				cornerset_t::const_iterator> range;
+	cornerset_t::const_iterator nit;
+	cornerset_t unused;
+	corner_t c;
+	size_t curr_ring;
+	bool foundnext;
+	
+	/* clear any existing boundary info */
+	this->boundaries.clear();
+	unused.insert(this->vertices.begin(), this->vertices.end());
+
+	/* as long as we have corners left unused, take
+	 * the next corner and start a new boundary ring */
+	while(!(unused.empty()))
+	{
+		/* start a new boundary ring */
+		curr_ring = this->boundaries.size();
+		this->boundaries.resize(curr_ring+1);
+
+		/* pick the next corner to start this ring */
+		c = *(unused.begin());
+		foundnext = true;
+
+		/* iterate over the current ring as long as we can */
+		while(foundnext)
+		{
+			/* add this corner to the boundary */
+			this->boundaries[curr_ring].push_back(c);
+			unused.erase(c);
+
+			/* get the neighbors of this corner */
+			range = cm.get_edges_for(c);
+
+			/* search for the next valid corner in set 
+			 * of neighbors */
+			foundnext = false;
+			for(nit = range.first; nit != range.second; nit++)
+			{
+				/* check if this neighbor corner is
+				 * one of our unused vertices */
+				if(unused.count(*nit) == 0)
+					continue; /* it's not */
+
+				/* this neighbor is part of the region,
+				 * and not yet used, so we should continue
+				 * the boundary in this direction */
+				c = *nit;
+				foundnext = true;
+			}
+		}
+	}
+	
+	/* success */
+	return 0;
 }
 			
 int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
