@@ -26,6 +26,17 @@ using namespace node_corner;
 /*----------------------------------------*/
 /* corner_info_t function implementations */
 /*----------------------------------------*/
+			
+void corner_info_t::add(const faceset_t& fs)
+{ 
+	this->faces.insert(fs.begin(), fs.end());
+}
+			
+void corner_info_t::add(const node_face_t& f)
+{
+	/* add the face */
+	this->faces.insert(f);
+}
 
 /*---------------------------------------*/
 /* corner_map_t function implementations */
@@ -87,7 +98,8 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 					const node_face_info_t& neighs)
 {
 	pair<ccmap_t::iterator, bool> ins;
-	corner_t corner, min_c, max_c;
+	corner_t c[NUM_CORNERS_PER_SQUARE];
+	corner_t min_c, max_c;
 	faceset_t::const_iterator fit;
 	double hw;
 	size_t ci;
@@ -96,22 +108,32 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 	{
 		/* construct this corner */ 
-		corner.set(tree, f, ci);
+		c[ci].set(tree, f, ci);
+	}
 
+	/* add each corner to this map */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
 		/* add to this map */
 		ins = this->corners.insert(pair<corner_t, corner_info_t>(
-					corner, corner_info_t()));
+					c[ci], corner_info_t()));
 
 		/* Either the corner was just added, or it was already
 		 * present.  In either case, add this face to the info
 		 * for this corner. */
 		ins.first->second.add(f);
 
+		/* add the neighboring corners to this corner info,
+		 * so that we store the edges as well as faces */
+		ins.first->second.add(c[ (ci+1) % NUM_CORNERS_PER_SQUARE ]);
+		ins.first->second.add(c[ (ci+NUM_CORNERS_PER_SQUARE-1) 
+					% NUM_CORNERS_PER_SQUARE ]);
+
 		/* record the min and max observed */
 		if(ci == 0)
-			min_c = max_c = corner;
+			min_c = max_c = c[ci];
 		else
-			corner.update_bounds(min_c, max_c);
+			c[ci].update_bounds(min_c, max_c);
 	}
 
 	/* iterate over the neighboring faces of f, searching
@@ -134,17 +156,17 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 		for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 		{
 			/* get this corner of the neighbor face */
-			corner.set(tree, *fit, ci);
+			c[ci].set(tree, *fit, ci);
 
 			/* check if this corner is in bounds of
 			 * the current face */
-			if(!(corner.within_bounds(min_c, max_c)))
+			if(!(c[ci].within_bounds(min_c, max_c)))
 				continue; /* don't care about this corner */
 				
 			/* add this face to the neighbor's corner */
 			ins = this->corners.insert(
 					pair<corner_t, corner_info_t>(
-					corner, corner_info_t()));
+					c[ci], corner_info_t()));
 			ins.first->second.add(f);
 		}
 	}

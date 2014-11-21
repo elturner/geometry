@@ -33,6 +33,7 @@ namespace node_corner
 
 	/* the following type definitions are useful for these classes */
 	typedef std::map<corner_t, corner_info_t> ccmap_t;
+	typedef std::set<corner_t>                cornerset_t;
 
 	/**
 	 * The corner_info_t class is used to store all faces
@@ -55,6 +56,12 @@ namespace node_corner
 			 * The set of faces that touch this corner
 			 */
 			faceset_t faces;
+
+			/**
+			 * The set of edges (represented by another
+			 * corner) that touch this corner.
+			 */
+			cornerset_t edges;
 
 		/* functions */
 		public:
@@ -104,16 +111,22 @@ namespace node_corner
 			 *
 			 * @param fs   The set of faces to add
 			 */
-			inline void add(const faceset_t& fs)
-			{ this->faces.insert(fs.begin(), fs.end()); };
+			void add(const faceset_t& fs);
 
 			/**
 			 * Adds a face to this structure
 			 *
 			 * @param f    The face to add
 			 */
-			inline void add(const node_face_t& f)
-			{ this->faces.insert(f); };
+			void add(const node_face_t& f);
+
+			/**
+			 * Adds an edge (as a corner) to this structure
+			 *
+			 * @param c    The corner to add
+			 */
+			inline void add(corner_t& c)
+			{ this->edges.insert(c); };
 
 			/*-----------*/
 			/* accessors */
@@ -154,7 +167,7 @@ namespace node_corner
 			 */
 			inline bool contains(const node_face_t& f) const
 			{ return this->faces.count(f) > 0; };
-	
+
 			/**
 			 * Beginning iterator for the face set
 			 *
@@ -170,6 +183,47 @@ namespace node_corner
 			 */
 			inline faceset_t::const_iterator end_faces() const
 			{ return this->faces.end(); };
+			
+			/**
+			 * Retrieves the number of edges in this structure
+			 *
+			 * @return   Number of edges stored here
+			 */
+			inline size_t num_edges() const
+			{ return this->edges.size(); };
+
+			/**
+			 * Check if a given edge is in this structure
+			 *
+			 * The edge is represented by this corner and
+			 * the argument corner.
+			 *
+			 * @param c   The other corner of the edge
+			 *
+			 * @return    REturns true iff c is in structure
+			 */
+			inline bool contains(const corner_t& c) const
+			{ return this->edges.count(c) > 0; };
+
+			/**
+			 * Beginning iterator for the edge set
+			 *
+			 * @return   The begin iterator for the set
+			 *           of corners that, along with this
+			 *           corner, define edges.
+			 */
+			inline cornerset_t::const_iterator 
+						begin_edges() const
+			{ return this->edges.begin(); };
+
+			/**
+			 * Ending iterator for the edge set
+			 *
+			 * @return  The end iterator for set of edges
+			 */
+			inline cornerset_t::const_iterator end_edges() const
+			{ return this->edges.end(); };
+
 	};
 
 	/**
