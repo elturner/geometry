@@ -128,6 +128,8 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 		ins.first->second.add(c[ (ci+1) % NUM_CORNERS_PER_SQUARE ]);
 		ins.first->second.add(c[ (ci+NUM_CORNERS_PER_SQUARE-1) 
 					% NUM_CORNERS_PER_SQUARE ]);
+		// TODO check edges against neighbor faces before adding them
+
 
 		/* record the min and max observed */
 		if(ci == 0)

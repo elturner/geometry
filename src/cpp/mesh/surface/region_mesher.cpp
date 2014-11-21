@@ -8,6 +8,7 @@
 #include <mesh/surface/node_corner.h>
 #include <image/color.h>
 #include <util/error_codes.h>
+#include <util/set_ops.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -79,8 +80,7 @@ int mesher_t::init(const octree_t& tree,
 	{
 		/* store this region information */
 		ins = this->regions.insert(pair<node_face_t, region_info_t>(
-			rit->first, region_info_t(
-				rit->second.get_region().get_plane())));
+			rit->first, region_info_t(rit)));
 		if(!(ins.second))
 			return -1; /* unable to insert region info */
 
@@ -169,7 +169,7 @@ int mesher_t::init(const octree_t& tree,
 		/* now that we have prepared this vertex, we can compute
 		 * its ideal 3D position based on the set of regions
 		 * that intersect it. */
-		ret = this->compute_vertex_pos(vit);
+//TODO 		ret = this->compute_vertex_pos(vit);
 		if(ret)
 			return PROPEGATE_ERROR(-4, ret);
 	}
@@ -323,7 +323,7 @@ int mesher_t::writeobj_vertices(std::ostream& os) const
 
 			/* project the point onto this region's plane */
 			p = vit->second.position;
-			pit->second.plane.project_onto(p);
+			pit->second.get_plane().project_onto(p);
 
 			/* export it */
 			os << "v " << p.transpose()
@@ -381,9 +381,6 @@ void vertex_info_t::clear()
 /* region_info_t function implementations */
 /*----------------------------------------*/
 			
-region_info_t::region_info_t()
-{ /* don't need to do anything here */ }
-
 region_info_t::~region_info_t()
 {
 	this->clear();
@@ -391,14 +388,18 @@ region_info_t::~region_info_t()
 
 void region_info_t::clear()
 {
+	this->vertices.clear();
 	this->boundaries.clear();
 }
 			
 int region_info_t::populate_boundaries(
 				const node_corner::corner_map_t& cm)
 {
+	faceset_t common_faces, common_region_faces; 
 	pair<cornerset_t::const_iterator, 
 				cornerset_t::const_iterator> range;
+	pair<faceset_t::const_iterator, faceset_t::const_iterator>
+				my_faces, neigh_faces;
 	cornerset_t::const_iterator nit;
 	cornerset_t unused;
 	corner_t c;
@@ -430,6 +431,7 @@ int region_info_t::populate_boundaries(
 
 			/* get the neighbors of this corner */
 			range = cm.get_edges_for(c);
+			my_faces = cm.get_faces_for(c);
 
 			/* search for the next valid corner in set 
 			 * of neighbors */
@@ -440,6 +442,26 @@ int region_info_t::populate_boundaries(
 				 * one of our unused vertices */
 				if(unused.count(*nit) == 0)
 					continue; /* it's not */
+
+				/* check if this neighbor actually forms
+				 * a valid BOUNDARY edge for this region,
+				 * which requires these two corners to
+				 * only share one face in the region */
+				neigh_faces = cm.get_faces_for(*nit);
+				set_ops::intersect(common_faces,
+						my_faces.first,
+						my_faces.second,
+						neigh_faces.first,
+						neigh_faces.second);
+				set_ops::intersect(common_region_faces,
+					common_faces.begin(), 
+					common_faces.end(), 
+					this->region_it->
+						second.get_region().begin(),
+					this->region_it->
+						second.get_region().end());
+				if(common_region_faces.size() > 1)
+					continue;
 
 				/* this neighbor is part of the region,
 				 * and not yet used, so we should continue
@@ -456,7 +478,7 @@ int region_info_t::populate_boundaries(
 			
 int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 {
-	vertmap_t::const_iterator vit;
+	vertmap_t::const_iterator vit, vit_first;
 	size_t bi, vi, num_boundaries, num_verts;
 
 	/* iterate over the boundaries in this region */
@@ -471,21 +493,27 @@ int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 			vit = vm.find(this->boundaries[bi][vi]);
 			if(vit == vm.end())
 				return -1;
+			if(vi == 0)
+				vit_first = vit;
 
 			/* add info to stream */
 			os << vit->second.get_position()(0) << ","
 			   << vit->second.get_position()(1) << ","
-			   << vit->second.get_position()(2);
-			
-			/* add comma if we're not at end */
-			if(vi < num_verts-1)
-				os << ",";
+			   << vit->second.get_position()(2) << ",";	
 		}
 
-		/* end the line */
-		os << endl;
+		/* end the line by repeating first vertex */
+		if(num_verts > 0)
+			os << vit_first->second.get_position()(0) << ","
+			   << vit_first->second.get_position()(1) << ","
+			   << vit_first->second.get_position()(2);
+			
+		/* add comma if we're not at end of region */
+		if(bi < num_boundaries-1)
+			os << ",";
 	}
 
 	/* success */
+	os << endl;
 	return 0;
 }

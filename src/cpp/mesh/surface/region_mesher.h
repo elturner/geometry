@@ -409,12 +409,10 @@ namespace region_mesher
 				boundaries;
 
 			/**
-			 * The plane geometry of this regions is copied
-			 * here for convenience.  This should be the
-			 * same information as is stored in the original
-			 * planar_region_graph_t.
+			 * The original information for this region,
+			 * such as plane geometry, originating faces, etc.
 			 */
-			plane_t plane;
+			regionmap_t::const_iterator region_it;
 
 		/* functions */
 		public:
@@ -428,17 +426,13 @@ namespace region_mesher
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 			
 			/**
-			 * Constructs empty region info object
-			 */
-			region_info_t();
-
-			/**
 			 * Constructs empty region with given plane
 			 * geometry.
 			 *
-			 * @param p   The plane of this region
+			 * @param rit   The reference for this region info
 			 */
-			region_info_t(const plane_t& p) : plane(p)
+			region_info_t(regionmap_t::const_iterator rit) 
+				: region_it(rit)
 			{};
 
 			/**
@@ -469,7 +463,11 @@ namespace region_mesher
 			 * Retrieve the plane of this region
 			 */
 			inline const plane_t& get_plane() const
-			{ return this->plane; };
+			{ 
+				return this->region_it->
+						second.get_region()
+							.get_plane();
+			};
 
 			/*------------*/
 			/* processing */

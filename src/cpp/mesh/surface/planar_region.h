@@ -206,6 +206,16 @@ class planar_region_t
 		inline size_t num_faces() const
 		{ return this->faces.size(); };
 
+		/**
+		 * Checks if this region contains this face
+		 *
+		 * @param f   The face to analyze
+		 *
+		 * @return    Returns true iff f is in this region
+		 */
+		inline bool contains(const node_face_t& f) const
+		{ return (this->faces.count(f) > 0); };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/

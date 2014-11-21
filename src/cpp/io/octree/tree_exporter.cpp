@@ -223,7 +223,7 @@ int tree_exporter::export_regions(const std::string& filename,
 	/* export regions to file */
 	tic(clk);
 	mesher.writecsv(cerr); // TODO
-	ret = region_graph.writeobj(filename, true);
+	ret = region_graph.writeobj(filename, false);
 	if(ret)
 		return PROPEGATE_ERROR(-6, ret);
 	toc(clk, "Writing OBJ");
