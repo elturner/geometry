@@ -51,6 +51,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/progress_bar.h \
 		$(SOURCEDIR)util/union_find.h \
 		$(SOURCEDIR)util/set_ops.h \
+		$(SOURCEDIR)util/sgn.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \

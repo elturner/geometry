@@ -60,6 +60,9 @@ namespace node_corner
 			/**
 			 * The set of edges (represented by another
 			 * corner) that touch this corner.
+			 *
+			 * This member is only populated if populate_edges()
+			 * is called on the corner_map_t.
 			 */
 			cornerset_t edges;
 
@@ -125,7 +128,7 @@ namespace node_corner
 			 *
 			 * @param c    The corner to add
 			 */
-			inline void add(corner_t& c)
+			inline void add(const corner_t& c)
 			{ this->edges.insert(c); };
 
 			/*-----------*/
@@ -318,6 +321,27 @@ namespace node_corner
 			 */
 			void add(const octree_t& tree,
 					const node_boundary_t& boundary);
+
+			/*------------*/
+			/* processing */
+			/*------------*/
+
+			/**
+			 * Populates all edges in this map
+			 *
+			 * This should be called only after all faces have
+			 * been added to the structure, since it uses 
+			 * existing faces and corners in the computation
+			 *
+			 * This call will populate the corner_info_t.edges
+			 * member for each element in the map.
+			 *
+			 * @param tree   The originating octree
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int populate_edges(const octree_t& tree);
 
 			/*-----------*/
 			/* accessors */

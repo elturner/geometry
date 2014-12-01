@@ -98,7 +98,7 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 					const node_face_info_t& neighs)
 {
 	pair<ccmap_t::iterator, bool> ins;
-	corner_t c[NUM_CORNERS_PER_SQUARE];
+	corner_t c;
 	corner_t min_c, max_c;
 	faceset_t::const_iterator fit;
 	double hw;
@@ -108,34 +108,22 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 	{
 		/* construct this corner */ 
-		c[ci].set(tree, f, ci);
-	}
-
-	/* add each corner to this map */
-	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
-	{
+		c.set(tree, f, ci);
+		
 		/* add to this map */
-		ins = this->corners.insert(pair<corner_t, corner_info_t>(
-					c[ci], corner_info_t()));
+		ins = this->corners.insert(pair<corner_t, 
+				corner_info_t>(c, corner_info_t()));
 
 		/* Either the corner was just added, or it was already
 		 * present.  In either case, add this face to the info
 		 * for this corner. */
 		ins.first->second.add(f);
 
-		/* add the neighboring corners to this corner info,
-		 * so that we store the edges as well as faces */
-		ins.first->second.add(c[ (ci+1) % NUM_CORNERS_PER_SQUARE ]);
-		ins.first->second.add(c[ (ci+NUM_CORNERS_PER_SQUARE-1) 
-					% NUM_CORNERS_PER_SQUARE ]);
-		// TODO check edges against neighbor faces before adding them
-
-
 		/* record the min and max observed */
 		if(ci == 0)
-			min_c = max_c = c[ci];
+			min_c = max_c = c;
 		else
-			c[ci].update_bounds(min_c, max_c);
+			c.update_bounds(min_c, max_c);
 	}
 
 	/* iterate over the neighboring faces of f, searching
@@ -158,17 +146,17 @@ void corner_map_t::add(const octree_t& tree, const node_face_t& f,
 		for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 		{
 			/* get this corner of the neighbor face */
-			c[ci].set(tree, *fit, ci);
+			c.set(tree, *fit, ci);
 
 			/* check if this corner is in bounds of
 			 * the current face */
-			if(!(c[ci].within_bounds(min_c, max_c)))
+			if(!(c.within_bounds(min_c, max_c)))
 				continue; /* don't care about this corner */
 				
 			/* add this face to the neighbor's corner */
 			ins = this->corners.insert(
 					pair<corner_t, corner_info_t>(
-					c[ci], corner_info_t()));
+					c, corner_info_t()));
 			ins.first->second.add(f);
 		}
 	}
@@ -182,6 +170,94 @@ void corner_map_t::add(const octree_t& tree,
 	/* iterate through the faces in this object */
 	for(it = boundary.begin(); it != boundary.end(); it++)
 		this->add(tree, it->first, it->second); /* add it */
+}
+
+int corner_map_t::populate_edges(const octree_t& tree)
+{
+	ccmap_t::iterator cit, eit, eit_best;
+	faceset_t::iterator fit;
+	corner_t e;
+	size_t ci;
+
+	/* iterate over every corner stored in this map */
+	for(cit = this->corners.begin(); cit != this->corners.end(); cit++)
+	{
+		/* We want to find every edge that attaches to this corner.
+		 * In order to do this, we can iterate over the faces that
+		 * adjoin this corner, and search the edges of these faces.
+		 *
+		 * We need to use the neighboring
+		 * faces in order to make sure that each edge we add 
+		 * is the minimal edge (and doesn't get overlayed by 
+		 * another, smaller edge). 
+		 */
+		for(fit = cit->second.begin_faces(); 
+				fit != cit->second.end_faces(); fit++)
+		{
+			/* iterate over the corners of the current face */
+			for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+			{
+				/* get position of ci'th corner */
+				e.set(tree, *fit, ci);
+
+				/* we only care about corners that are
+				 * along a manhattan edge with *cit.  We
+				 * can test this by looking at the hamming
+				 * distance between the two corners.  If
+				 * the hamming distance is zero, then they
+				 * are the same corner.  If the hamming
+				 * distance is greater than one, then the
+				 * corners differ by more than one axis,
+				 * and we don't care about it. */
+				if(cit->first.hamming_dist(e) != 1)
+					break;
+				
+				/* get this corner in our map.  Note, this
+				 * corner SHOULD be in our map, since the
+				 * face is in our map */
+				eit_best = this->corners.find(e);
+				if(eit_best == this->corners.end())
+					return -1;
+
+				/* Check that they form minimal edges by 
+				 * iterating down the edge.  We can do 
+				 * this because corners are stored via 
+				 * indices in each dimension.
+				 *
+				 * For each discrete position along the 
+				 * edge, check if that position is stored
+				 * as a corner in this map. If so, then 
+				 * that corner must touch this face and so
+				 * the one closest to cit must form an edge
+				 * with cit.
+				 */
+				for(e.increment_towards(cit->first); 
+					e != cit->first;
+					e.increment_towards(cit->first))
+				{
+					/* check if e exists in this map */
+					eit = this->corners.find(e);
+					if(eit == this->corners.end())
+						continue;
+
+					/* if got here, then we found a 
+					 * valid corner along the path of 
+					 * e that's closer than the original
+					 * value of e, so we want to use 
+					 * this one instead */
+					eit_best = eit;
+				}
+
+				/* we want to assign an edge between *cit
+				 * and *eit_best */
+				cit->second.add(eit_best->first);
+				eit_best->second.add(cit->first);
+			}
+		}
+	}
+
+	/* success */
+	return 0;
 }
 
 pair<set<octnode_t*>::const_iterator, set<octnode_t*>::const_iterator>

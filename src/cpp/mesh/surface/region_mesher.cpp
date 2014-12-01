@@ -169,7 +169,7 @@ int mesher_t::init(const octree_t& tree,
 		/* now that we have prepared this vertex, we can compute
 		 * its ideal 3D position based on the set of regions
 		 * that intersect it. */
-//TODO 		ret = this->compute_vertex_pos(vit);
+//TODO debugging 		ret = this->compute_vertex_pos(vit);
 		if(ret)
 			return PROPEGATE_ERROR(-4, ret);
 	}
@@ -509,8 +509,9 @@ int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 			   << vit_first->second.get_position()(2);
 			
 		/* add comma if we're not at end of region */
-		if(bi < num_boundaries-1)
-			os << ",";
+		os << endl; // TODO
+//		if(bi < num_boundaries-1)
+//			os << ",";
 	}
 
 	/* success */

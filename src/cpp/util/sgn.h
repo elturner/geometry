@@ -9,6 +9,8 @@
  * @section DESCRIPTION
  *
  * This file contains the implementation for the sgn() function.
+ *
+ * Written November 26, 2014
  */
 
 /**

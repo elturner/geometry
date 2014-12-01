@@ -195,13 +195,16 @@ int tree_exporter::export_regions(const std::string& filename,
 	/* extract the corners of the model from this boundary */
 	tic(clk);
 	corner_map.add(tree, boundary);
+	ret = corner_map.populate_edges(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
 	toc(clk, "Computing corners");
 
 	/* form planar regions from these boundary faces */
 	tic(clk);
 	ret = region_graph.populate(boundary);
 	if(ret)
-		return PROPEGATE_ERROR(-3, ret);
+		return PROPEGATE_ERROR(-4, ret);
 	toc(clk, "Forming regions");
 
 	/* coalesce regions (use arbitrary parameters) */
@@ -210,22 +213,22 @@ int tree_exporter::export_regions(const std::string& filename,
 			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
 	ret = region_graph.coalesce_regions();
 	if(ret)
-		return PROPEGATE_ERROR(-4, ret);
+		return PROPEGATE_ERROR(-5, ret);
 	toc(clk, "Coalesce regions");
 
 	/* mesh the region graph */
 	tic(clk);
 	ret = mesher.init(tree, region_graph, corner_map);
 	if(ret)
-		return PROPEGATE_ERROR(-5, ret);
+		return PROPEGATE_ERROR(-6, ret);
 	toc(clk, "Meshing regions");
 
 	/* export regions to file */
 	tic(clk);
-	mesher.writecsv(cerr); // TODO
+//	mesher.writecsv(cerr); // TODO
 	ret = region_graph.writeobj(filename, false);
 	if(ret)
-		return PROPEGATE_ERROR(-6, ret);
+		return PROPEGATE_ERROR(-7, ret);
 	toc(clk, "Writing OBJ");
 
 	/* success */

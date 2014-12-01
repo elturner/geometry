@@ -20,6 +20,7 @@
 #include <geometry/octree/octnode.h>
 #include <geometry/octree/octtopo.h>
 #include <mesh/surface/node_boundary.h>
+#include <util/sgn.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <cmath>
@@ -382,6 +383,48 @@ namespace node_corner
 			void update_bounds(corner_t& min_c, 
 					corner_t& max_c) const;
 
+			/**
+			 * Computes the number of axis that this corner
+			 * is aligned with the given corner by.
+			 *
+			 * Determines the number of axis coordinates that
+			 * the two corners differ by.  For example, if 
+			 * two corners varied only by their x index, then
+			 * the returned value would be 1.
+			 *
+			 * @param other   The other corner to analyze
+			 * 
+			 * @return     Number of axis differed
+			 */
+			inline size_t hamming_dist(
+					const corner_t& other) const
+			{
+				size_t count = 0;
+				count += (this->x_ind != other.x_ind);
+				count += (this->y_ind != other.y_ind);
+				count += (this->z_ind != other.z_ind);
+				return count;
+			};
+
+			/**
+			 * Increments this corner towards the argument.
+			 *
+			 * Modifies this corner's position to move one step
+			 * closer to the given corner's position in each 
+			 * dimenison.
+			 *
+			 * Performs a no-op if the corners are equal.
+			 *
+			 * @param goal   The corner to move towards
+			 */
+			inline void increment_towards(const corner_t& goal)
+			{
+				/* modify each dimension */
+				this->x_ind += sgn(goal.x_ind-this->x_ind);
+				this->y_ind += sgn(goal.y_ind-this->y_ind);
+				this->z_ind += sgn(goal.z_ind-this->z_ind);
+			};
+
 			/*-----------*/
 			/* operators */
 			/*-----------*/
@@ -418,8 +461,25 @@ namespace node_corner
 				/* the corners are equal if their
 				 * discretized positions are equal */
 				return ( (this->x_ind == other.x_ind)
-					|| (this->y_ind == other.y_ind)
-					|| (this->z_ind == other.z_ind) );
+					&& (this->y_ind == other.y_ind)
+					&& (this->z_ind == other.z_ind) );
+			};
+
+			/**
+			 * Checks if two corners are not equal
+			 *
+			 * @param other   The other corner to compare to
+			 *
+			 * @return        Returns true iff the two corners
+			 *                are NOT equal.
+			 */
+			inline bool operator != (
+						const corner_t& other) const
+			{
+				/* equal only if their indices are equal */
+				return ( (this->x_ind != other.x_ind)
+					|| (this->y_ind != other.y_ind)
+					|| (this->z_ind != other.z_ind) );
 			};
 
 			/**
@@ -463,6 +523,17 @@ namespace node_corner
 			 */
 			void writeobj(std::ostream& os,
 					const octree_t& tree) const;
+
+			/**
+			 * Exports this corner to a Comma-Separated-Variable
+			 * file stream
+			 *
+			 * Useful for debugging.  Exports this corner
+			 * index to the csv.
+			 *
+			 * @param os   Where to write the CSV vlaues
+			 */
+			void writecsv(std::ostream& os) const;
 	};
 }
 #endif

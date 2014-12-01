@@ -42,6 +42,13 @@ void corner_t::writeobj(std::ostream& os, const octree_t& tree) const
 	os << "v " << p.transpose() << endl;
 }
 			
+void corner_t::writecsv(std::ostream& os) const
+{
+	os << this->x_ind << ","
+	   << this->y_ind << ","
+	   << this->z_ind << ",";
+}
+			
 bool corner_t::within_bounds(const corner_t& min_c,
 					const corner_t& max_c) const
 {
