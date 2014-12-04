@@ -432,6 +432,20 @@ namespace node_corner
 					get_edges_for(const corner_t& c)
 						const;
 
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+			/**
+			 * Exports the edges stored in this map
+			 * to the specified wavefront OBJ file stream.
+			 *
+			 * @param os    The output stream to write to
+			 * @param tree  The originating octree
+			 */
+			void writeobj_edges(std::ostream& os,
+					const octree_t& tree) const;
+
 		/* helper functions */
 		private:
 

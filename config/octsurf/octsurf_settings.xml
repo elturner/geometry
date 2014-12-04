@@ -1,0 +1,64 @@
+<settings>
+<!-- This file contains run settings for the octsurf program -->
+
+	<!-- PARAMETERS FOR REGION FORMATION -->
+
+	<!-- This value indicates how aggressive planar region
+	     coalescing will be with respect to distance-from-plane.
+
+	     The specified value indicates the number of standard
+	     deviations away from the fitting plane a face center
+	     can be for that face to still be considered an inlier.
+
+	     Regions are formed by fitting a plane to a set of faces
+	     and merging them together into one planar object.  If
+	     a plane's face is too far from the best-fit plane, then
+	     it should be considered an inlier.
+
+	     Each face has its own statistics, including a variance
+	     on its position.  The specified value will be multiplied
+	     by the standard deviation of the face's position to
+	     determine a distance threshold to use to determine if
+	     that face is an inlier.
+
+	     units:  standard deviations. -->
+	<octsurf_coalesce_distthresh>2.0</octsurf_coalesce_distthresh>
+
+	<!-- This value indicates how restrictive planar region
+	     coalescing should be with respect to planarity of
+	     the merged elements.
+
+	     This value specifies a minimum allowed planarity.  Each
+	     node face has a planarity value, which is 0 if the face
+	     is not at all planar, and 1 if the face is perfectly flat.
+	     Any face with a planarity below the specified value will
+	     not be merged in the region growing process.
+
+	     units:  unitless probability (in range [0,1]) -->
+	<octsurf_coalesce_planethresh>0.0</octsurf_coalesce_planethresh>
+
+	<!-- This boolean indicates which part of each node face should
+	     be used to determine its position.
+
+	     If the specified value is true (anything non-zero), then
+	     the isosurface position will be computed from the node
+	     face.
+
+	     If the specified value is false (i.e. 0), then
+	     the discretized grid face position will be used. -->
+	<octsurf_use_isosurface_pos>0</octsurf_use_isosurface_pos>
+
+	<!-- The minimum allowed magnitude for singular values
+	     when decomposing the intersections of planes.
+
+	     This value is used when determine when a set of planes
+	     intersect.  If two or more planes are close to being
+	     parallel, the singular value of the matrix made up
+	     of the plane normals will be very small.  This threshold
+	     indicates how small it can get before the two parallel
+	     planes will be processed as if they were one plane.
+
+	     range:  [0,1] (please keep it small) -->
+	<octsurf_min_singular_value>0.1</octsurf_min_singular_value>
+
+</settings>

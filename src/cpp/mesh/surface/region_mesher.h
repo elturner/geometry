@@ -89,6 +89,29 @@ namespace region_mesher
 			 * of this algorithm */
 
 			/**
+			 * The coalescing distance threshold to use
+			 * when forming regions for this mesher
+			 *
+			 * units:  std devs
+			 */
+			double coalesce_distthresh;
+
+			/**
+			 * The coalescing plane threshold to use
+			 * when forming regions for this mesher
+			 *
+			 * range: [0,1]
+			 */
+			double coalesce_planethresh;
+
+			/**
+			 * Whether or not to use the isosurface
+			 * position of each node face's center
+			 * when forming the plane positions.
+			 */
+			bool use_isosurface_pos;
+
+			/**
 			 * The following threshold parameter is used to
 			 * determine when two neighboring planes are
 			 * close enough to parallel to be considered
@@ -126,7 +149,22 @@ namespace region_mesher
 			 * Clears all memory and resources
 			 */
 			void clear();
-	
+
+			/**
+			 * Imports the settings specified in the given
+			 * .xml file into this structure.
+			 *
+			 * This should be performed before calling init(),
+			 * since that call will use these settings.
+			 *
+			 * @param xml_settings   The xml settings file to
+			 *                       read from
+			 *
+			 * @return     Returns zero on success, non-zero 
+			 *             on failure
+			 */
+			int import(const std::string& xml_settings);
+
 			/**
 			 * Initializes this structure from the given planar
 			 * region graph.
@@ -146,6 +184,42 @@ namespace region_mesher
 			int init(const octree_t& tree,
 			    const planar_region_graph_t& region_graph,
 			    const node_corner::corner_map_t& corner_map);
+
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
+			/**
+			 * Retrieves the value for coalescing distance
+			 * threshold.
+			 */
+			inline double get_coalesce_distthresh() const
+			{ return this->coalesce_distthresh; };
+
+			/**
+			 * Retrieves the value for coalescing plane
+			 * threshold.
+			 */
+			inline double get_coalesce_planethresh() const
+			{ return this->coalesce_planethresh; };
+
+			/**
+			 * Retrieves the flag for whether to use
+			 * the isosurface position for face centers.
+			 */
+			inline bool get_use_isosurface_pos() const
+			{ return this->use_isosurface_pos; };
+
+			/**
+			 * Retrieves the flag for minimum singular
+			 * value threshold.
+			 */
+			inline double get_min_singular_value() const
+			{ return this->min_singular_value; };
+
+			/*------------*/
+			/* processing */
+			/*------------*/
 
 			// TODO simplification
 

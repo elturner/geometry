@@ -68,16 +68,18 @@ namespace tree_exporter
 	 * what region they are assigned to.
 	 *
 	 *
-	 * @param filename    The path to the .obj file to write
-	 * @param tree        The tree to export
-	 * @param scheme      Specifies whether to export the whole scene,
-	 *                    just the objects, or just the rooms
+	 * @param filename      The path to the .obj file to write
+	 * @param tree          The tree to export
+	 * @param scheme        Specifies whether to export the whole scene,
+	 *                      just the objects, or just the rooms
+	 * @param xml_settings  The (optional) xml settings file.
 	 *
 	 * @return            Returns zero on success, non-zero on failure.
 	 */
 	int export_regions(const std::string& filename,
 				const octree_t& tree,
-				node_boundary_t::SEG_SCHEME scheme);
+				node_boundary_t::SEG_SCHEME scheme,
+				const std::string& xml_settings);
 
 	/**
 	 * Will export the center of each leaf node as a vertex in OBJ

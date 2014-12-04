@@ -210,7 +210,7 @@ int corner_map_t::populate_edges(const octree_t& tree)
 				 * corners differ by more than one axis,
 				 * and we don't care about it. */
 				if(cit->first.hamming_dist(e) != 1)
-					break;
+					continue;
 				
 				/* get this corner in our map.  Note, this
 				 * corner SHOULD be in our map, since the
@@ -316,6 +316,36 @@ pair<cornerset_t::const_iterator, cornerset_t::const_iterator>
 
 	/* success */
 	return p;
+}
+			
+void corner_map_t::writeobj_edges(std::ostream& os, 
+				const octree_t& tree) const
+{
+	ccmap_t::const_iterator cit;
+	cornerset_t::const_iterator eit;
+	Vector3d p;
+
+	/* iterate over the corners in this map */
+	for(cit = this->corners.begin(); cit != this->corners.end(); cit++)
+	{
+		/* iterate over the edges connected to this corner */
+		for(eit = cit->second.edges.begin();
+				eit != cit->second.edges.end(); eit++)
+		{
+			/* print out the edge defined between the corners
+			 * of cit and eit */
+			eit->get_position(tree, p);
+			os << "v " << p.transpose() << " 0 255 0" << endl;
+			cit->first.get_position(tree, p);
+			os << "v " << p.transpose() << " 255 0 0" << endl;
+			p += Vector3d(0.001,0.001,0.001);
+			os << "v " << p.transpose() << " 255 255 255"
+				<< endl;
+
+			/* draw a triangle between these corners */
+			os << "f -1 -2 -3" << endl;
+		}
+	}
 }
 			
 void corner_map_t::add_all(const octree_t& tree, octnode_t* node)

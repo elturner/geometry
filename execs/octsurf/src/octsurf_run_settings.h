@@ -60,6 +60,14 @@ class octsurf_run_settings_t
 		OUTPUT_FILE_FORMAT output_format;
 
 		/**
+		 * The location of the xml settings file
+		 *
+		 * If the settings file is not provided, this will
+		 * be the empty string.
+		 */
+		std::string xml_settings;
+
+		/**
 		 * If exporting to OBJ, this option indicates whether
 		 * to export all leaf node centers or to export a mesh
 		 */

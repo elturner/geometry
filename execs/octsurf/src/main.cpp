@@ -120,7 +120,8 @@ int main(int argc, char** argv)
 					args.outfile, tree, scheme);
 			else if(args.export_regions)
 				ret = tree_exporter::export_regions(
-						args.outfile, tree, scheme);
+						args.outfile, tree, scheme,
+						args.xml_settings);
 			else if(args.export_obj_leafs)
 				ret = tree_exporter::export_leafs_to_obj(
 						args.outfile, tree);

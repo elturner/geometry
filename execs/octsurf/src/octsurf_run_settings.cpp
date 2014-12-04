@@ -58,7 +58,6 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 {
 	cmd_args_t args;
 	XmlSettings settings;
-	string settings_file;
 	tictoc_t clk;
 	int ret;
 
@@ -70,13 +69,12 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			" program.");
 	args.add(SETTINGS_FLAG, "A .xml settings file for this program.  "
 			"This file should contain run parameters for how "
-			"to generate chunks and where to store them on "
-			"disk.", true, 1);
+			"to perform various meshing approaches.", true, 1);
 	args.add(OUTPUT_FLAG, "Where to store the output file, which "
 			"represents the meshed surface of the volume "
 			"described by the input .oct files.  This program "
 			"supports multiple output file formats, including: "
-			".vox, .obj, .ply, .sof, .sog, .txt", false, 1);
+			"\n\n\t.vox, .obj, .ply, .sof, .sog, .txt",false,1);
 	args.add(EXPORT_LEAFS_FLAG, "If present, this flag indicates that "
 			"all leaf centers of the octree should be exported "
 			"to the specified OBJ file.  This flag will be "
@@ -145,17 +143,18 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	if(args.tag_seen(SETTINGS_FLAG))
 	{
 		/* retrieve the specified file */
-		settings_file = args.get_val(SETTINGS_FLAG);
+		this->xml_settings = args.get_val(SETTINGS_FLAG);
 	
 		/* attempt to open and parse the settings file */
-		if(!settings.read(settings_file))
+		if(!settings.read(this->xml_settings))
 		{
 			/* unable to open or parse settings file.  Inform
 			 * user and quit. */
 			ret = PROPEGATE_ERROR(-2, ret);
 			cerr << "[octsurf_run_settings_t::parse]\t"
 			     << "Error " << ret << ":  Unable to parse "
-			     << "settings file: " << settings_file << endl;
+			     << "settings file: " 
+			     << this->xml_settings << endl;
 			return ret;
 		}
 	
@@ -163,8 +162,10 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 		 * file, then the default settings that were set in this
 		 * object's constructor will be used. */
 
-		// No settings needed
+		// No settings needed here
 	}
+	else
+		this->xml_settings = "";
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

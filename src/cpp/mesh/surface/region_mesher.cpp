@@ -1,5 +1,6 @@
 #include "region_mesher.h"
 #include <io/mesh/mesh_io.h>
+#include <xmlreader/xmlsettings.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octree.h>
 #include <mesh/surface/node_boundary.h>
@@ -33,6 +34,13 @@ using namespace Eigen;
 using namespace region_mesher;
 using namespace node_corner;
 
+/* the following defines are used to access parameters stored
+ * in the .xml settings file. */
+#define XML_COALESCE_DISTTHRESH  "octsurf_coalesce_distthresh"
+#define XML_COALESCE_PLANETHRESH "octsurf_coalesce_planethresh"
+#define XML_USE_ISOSURFACE_POS   "octsurf_use_isosurface_pos"
+#define XML_MIN_SINGULAR_VALUE   "octsurf_min_singular_value"
+
 /*-----------------------------------*/
 /* mesher_t function implementations */
 /*-----------------------------------*/
@@ -40,7 +48,7 @@ using namespace node_corner;
 mesher_t::mesher_t()
 {
 	/* set default parameters */
-	this->min_singular_value = 0.1;
+	this->import(string(""));
 }
 			
 mesher_t::~mesher_t()
@@ -54,6 +62,48 @@ void mesher_t::clear()
 	/* clear all elements */
 	this->vertices.clear();
 	this->regions.clear();
+}
+			
+int mesher_t::import(const std::string& xml_settings)
+{
+	XmlSettings settings;
+
+	/* check if the file is empty */
+	if(xml_settings.empty())
+	{
+		/* no file provided, use default settings */
+		this->coalesce_distthresh = 2.0;
+		this->coalesce_planethresh = 0.0;
+		this->use_isosurface_pos = false;
+		this->min_singular_value = 0.1;
+		return 0;
+	}
+
+	/* open and parse xml file */
+	if(!settings.read(xml_settings))
+	{
+		/* unable to open file */
+		cerr << "[mesher_t::import]\tUnable to import xml settings "
+		     << "from: " << xml_settings << endl;
+		return -1;
+	}
+
+	/* read in the settings information */
+	if(settings.is_prop(XML_COALESCE_DISTTHRESH))
+		this->coalesce_distthresh = settings.getAsDouble(
+					XML_COALESCE_DISTTHRESH);
+	if(settings.is_prop(XML_COALESCE_PLANETHRESH))
+		this->coalesce_planethresh = settings.getAsDouble(
+					XML_COALESCE_PLANETHRESH);
+	if(settings.is_prop(XML_USE_ISOSURFACE_POS))
+		this->use_isosurface_pos = settings.getAsUint(
+					XML_USE_ISOSURFACE_POS);
+	if(settings.is_prop(XML_MIN_SINGULAR_VALUE))
+		this->min_singular_value = settings.getAsDouble(
+					XML_MIN_SINGULAR_VALUE);
+
+	/* success */
+	return 0;
 }
 			
 int mesher_t::init(const octree_t& tree,
@@ -460,14 +510,15 @@ int region_info_t::populate_boundaries(
 						second.get_region().begin(),
 					this->region_it->
 						second.get_region().end());
-				if(common_region_faces.size() > 1)
-					continue;
+				if(common_region_faces.size() != 1)
+					continue; /* too many shared */
 
 				/* this neighbor is part of the region,
 				 * and not yet used, so we should continue
 				 * the boundary in this direction */
 				c = *nit;
 				foundnext = true;
+				break;
 			}
 		}
 	}
