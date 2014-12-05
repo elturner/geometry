@@ -227,6 +227,21 @@ namespace node_corner
 			inline cornerset_t::const_iterator end_edges() const
 			{ return this->edges.end(); };
 
+			/*-----------*/
+			/* debugging */
+			/*-----------*/
+
+			/**
+			 * Writes the edges connected to this corner
+			 * to the specified Wavefront OBJ file.
+			 *
+			 * @param os     The output file stream to write to
+			 * @param tree   The original tree for this model
+			 * @param mypos  Position of this corner
+			 */
+			void writeobj_edges(std::ostream& os,
+					const octree_t& tree,
+					const Eigen::Vector3d& mypos) const;
 	};
 
 	/**
@@ -445,6 +460,19 @@ namespace node_corner
 			 */
 			void writeobj_edges(std::ostream& os,
 					const octree_t& tree) const;
+
+			/**
+			 * Exports the edges connected to the specified
+			 * corner to the specified Wavefront OBJ file
+			 * stream.
+			 *
+			 * @param os    The output stream to write to
+			 * @param tree  The originating octree
+			 * @param c     The corner to analyze
+			 */
+			void writeobj_edges(std::ostream& os,
+					const octree_t& tree,
+					const corner_t& c) const;
 
 		/* helper functions */
 		private:

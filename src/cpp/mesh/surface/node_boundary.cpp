@@ -367,9 +367,9 @@ int node_boundary_t::populate_faces(const octtopo_t& topo)
 					/* unable to insert face */
 					progbar.clear();
 					cerr << "[node_boundary_t::"
-					     << "populate_faces]\tSomehow, "
-					     << "current face was already "
-					     << "inserted!?" << endl;
+					     << "populate_faces]\tSomehow,"
+					     << " current face was already"
+					     << " inserted!?" << endl;
 					return -1;
 				}
 
@@ -452,6 +452,11 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 			if(face == *nit)
 				continue; /* don't want self-linkages */
 
+			/* can't be neighbors if they don't share
+			 * an edge */
+			if(!(face.shares_edge_with(*nit)))
+				continue;
+
 			/* check if they have the same interior or exterior
 			 * nodes.  If so, then they are definitely
 			 * candidates to be linked */
@@ -459,15 +464,7 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 			{
 				/* guaranteed to link if their exteriors
 				 * neighbor */
-				if(!(topo.are_neighbors(face.exterior,
-							nit->exterior)))
-				{
-					/* have to check geometry
-					 * bounding */
-					if(!(face.shares_edge_with(*nit)))
-						continue;
-				}
-					
+				
 				/* if got here, then the two faces
 				 * share an edge, and should be 
 				 * linked */
@@ -477,13 +474,6 @@ int node_boundary_t::populate_face_linkages(const octtopo_t& topo)
 			{
 				/* guaranteed to link if their interiors
 				 * are neighbors */
-				if(!(topo.are_neighbors(face.interior,
-							nit->interior)))
-				{
-					/* have to check geometry */
-					if(!(face.shares_edge_with(*nit)))
-						continue;
-				}
 				
 				/* if got here, then the two faces
 				 * share an edge, and should be 
@@ -553,7 +543,7 @@ bool node_face_t::shares_edge_with(const node_face_t& other) const
 	
 	/* the following initialize the variables that may
 	 * be used */
-	ax[0] = ax[1] = ay[0] = ay[1] = bx[0] = bx[1] = by[0] = by[1] = 0.0;
+	ax[0]=ax[1] = ay[0]=ay[1] = bx[0]=bx[1] = by[0]=by[1] = 0.0;
 	hw  = this->get_halfwidth();
 	ohw = other.get_halfwidth();
 	this->get_center(center);
@@ -620,10 +610,10 @@ bool node_face_t::shares_edge_with(const node_face_t& other) const
 	manhat = norm*ohw - othernorm*hw;
 	
 	/* the faces, if they are touching, can either be bending inward
-	 * or outward.  We can check if it is one of these two possibilities
-	 * with the following: */
+	 * or outward.  We can check if it is one of these two
+	 * possibilities with the following: */
 	if((manhat - disp_perp).squaredNorm() > APPROX_ZERO
-			&& (manhat + disp_perp).squaredNorm() > APPROX_ZERO)
+		&& (manhat + disp_perp).squaredNorm() > APPROX_ZERO)
 	{
 		/* neither scenario checks out, so this cannot
 		 * be a shared edge */

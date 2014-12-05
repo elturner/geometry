@@ -210,6 +210,10 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* form planar regions from these boundary faces */
 	tic(clk);
+	region_graph.init(mesher.get_coalesce_planethresh(),
+			mesher.get_coalesce_distthresh(), 
+			mesher.get_use_isosurface_pos(), 
+			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
 	ret = region_graph.populate(boundary);
 	if(ret)
 		return PROPEGATE_ERROR(-5, ret);
@@ -217,14 +221,10 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* coalesce regions (use arbitrary parameters) */
 	tic(clk);
-	region_graph.init(mesher.get_coalesce_planethresh(),
-			mesher.get_coalesce_distthresh(), 
-			mesher.get_use_isosurface_pos(), 
-			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
 	ret = region_graph.coalesce_regions();
 	if(ret)
 		return PROPEGATE_ERROR(-6, ret);
-	toc(clk, "Coalesce regions");
+	toc(clk, "Coalescing regions");
 
 	/* mesh the region graph */
 	tic(clk);
@@ -235,8 +235,7 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* export regions to file */
 	tic(clk);
-	mesher.writecsv(cerr); // TODO
-	ret = region_graph.writeobj(filename, false);
+	ret = region_graph.writeobj(filename, true);
 	if(ret)
 		return PROPEGATE_ERROR(-8, ret);
 	toc(clk, "Writing OBJ");

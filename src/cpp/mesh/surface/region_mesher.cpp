@@ -219,7 +219,7 @@ int mesher_t::init(const octree_t& tree,
 		/* now that we have prepared this vertex, we can compute
 		 * its ideal 3D position based on the set of regions
 		 * that intersect it. */
-//TODO debugging 		ret = this->compute_vertex_pos(vit);
+ 		ret = this->compute_vertex_pos(vit);
 		if(ret)
 			return PROPEGATE_ERROR(-4, ret);
 	}
@@ -410,6 +410,16 @@ int mesher_t::writecsv(std::ostream& os) const
 	/* success */
 	return 0;
 }
+			
+void mesher_t::writeobj_edges(std::ostream& os, const octree_t& tree,
+				const node_corner::corner_map_t& cm) const
+{
+	planemap_t::const_iterator pit;
+
+	/* iterate over the regions */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+		pit->second.writeobj_edges(os, tree, cm);
+}
 
 /*----------------------------------------*/
 /* vertex_info_t function implementations */
@@ -559,13 +569,24 @@ int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 			   << vit_first->second.get_position()(1) << ","
 			   << vit_first->second.get_position()(2);
 			
-		/* add comma if we're not at end of region */
-		os << endl; // TODO
-//		if(bi < num_boundaries-1)
-//			os << ",";
+		/* add newline between boundaries within a region */
+		os << endl;
 	}
 
 	/* success */
 	os << endl;
 	return 0;
+}
+			
+void region_info_t::writeobj_edges(std::ostream& os, const octree_t& tree,
+				const node_corner::corner_map_t& cm) const
+{
+	cornerset_t::const_iterator cit;
+
+	/* iterate over the vertices of this region's boundary */
+	for(cit=this->vertices.begin(); cit != this->vertices.end(); cit++)
+	{
+		/* write out corner edge info */
+		cm.writeobj_edges(os, tree, *cit);
+	}
 }

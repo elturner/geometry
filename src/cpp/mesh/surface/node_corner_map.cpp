@@ -37,6 +37,32 @@ void corner_info_t::add(const node_face_t& f)
 	/* add the face */
 	this->faces.insert(f);
 }
+			
+void corner_info_t::writeobj_edges(std::ostream& os,
+				const octree_t& tree,
+				const Eigen::Vector3d& mypos) const
+{
+	cornerset_t::const_iterator eit;
+	Vector3d p, off;
+	
+	/* compute a position offset from mypos */
+	off << 0.003,0.003,0.003;
+	off += mypos;
+
+	/* iterate over the edges connected to this corner */
+	for(eit = this->edges.begin(); eit != this->edges.end(); eit++)
+	{
+		/* print out the edge defined between the corners
+		 * of this and eit */
+		eit->get_position(tree, p);
+		os << "v " << p.transpose() << " 0 255 0" << endl;
+		os << "v " << mypos.transpose() << " 255 0 0" << endl;
+		os << "v " << off.transpose() << " 255 255 255" << endl;
+
+		/* draw a triangle between these corners */
+		os << "f -1 -2 -3" << endl;
+	}
+}
 
 /*---------------------------------------*/
 /* corner_map_t function implementations */
@@ -322,30 +348,35 @@ void corner_map_t::writeobj_edges(std::ostream& os,
 				const octree_t& tree) const
 {
 	ccmap_t::const_iterator cit;
-	cornerset_t::const_iterator eit;
-	Vector3d p;
+	Vector3d mypos;
 
 	/* iterate over the corners in this map */
 	for(cit = this->corners.begin(); cit != this->corners.end(); cit++)
 	{
-		/* iterate over the edges connected to this corner */
-		for(eit = cit->second.edges.begin();
-				eit != cit->second.edges.end(); eit++)
-		{
-			/* print out the edge defined between the corners
-			 * of cit and eit */
-			eit->get_position(tree, p);
-			os << "v " << p.transpose() << " 0 255 0" << endl;
-			cit->first.get_position(tree, p);
-			os << "v " << p.transpose() << " 255 0 0" << endl;
-			p += Vector3d(0.001,0.001,0.001);
-			os << "v " << p.transpose() << " 255 255 255"
-				<< endl;
+		/* compute the position of this corner */
+		cit->first.get_position(tree, mypos);
 
-			/* draw a triangle between these corners */
-			os << "f -1 -2 -3" << endl;
-		}
+		/* export its edges */
+		cit->second.writeobj_edges(os, tree, mypos);
 	}
+}
+			
+void corner_map_t::writeobj_edges(std::ostream& os, const octree_t& tree,
+					const corner_t& c) const
+{
+	ccmap_t::const_iterator cit;
+	Vector3d mypos;
+
+	/* find this corner */
+	cit = this->corners.find(c);
+	if(cit == this->corners.end())
+		return;
+		
+	/* compute the position of this corner */
+	cit->first.get_position(tree, mypos);
+
+	/* export its edges */
+	cit->second.writeobj_edges(os, tree, mypos);
 }
 			
 void corner_map_t::add_all(const octree_t& tree, octnode_t* node)

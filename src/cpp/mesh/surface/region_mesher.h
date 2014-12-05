@@ -274,6 +274,19 @@ namespace region_mesher
 			 */
 			int writecsv(std::ostream& os) const;
 
+			/**
+			 * Exports all corner map edges connected to
+			 * region boundary vertices to the specified
+			 * Wavefront OBJ output stream.
+			 *
+			 * @param os    The output stream to write to
+			 * @param tree  The original tree of this model
+			 * @param cm    The corner map of this model
+			 */
+			void writeobj_edges(std::ostream& os,
+				const octree_t& tree,
+				const node_corner::corner_map_t& cm) const;
+
 		/* helper functions */
 		private:
 
@@ -597,6 +610,19 @@ namespace region_mesher
 			 */
 			int writecsv(std::ostream& os, 
 					const vertmap_t& vm) const;
+	
+			/**
+			 * Writes the edges connected to each vertex
+			 * of this region to the specified Wavefront
+			 * OBJ file stream.
+			 *
+			 * @param os    The output stream to write to
+			 * @param tree  The original tree for this model
+			 * @param cm    The corner map for this model
+			 */
+			void writeobj_edges(std::ostream& os,
+				const octree_t& tree,
+				const node_corner::corner_map_t& cm) const;
 	};
 }
 
