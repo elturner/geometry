@@ -34,6 +34,20 @@ class config_t
 		 * Can be empty, which means no windows specified
 		 */
 		std::vector<std::string> windows_infiles;
+		
+		/**
+		 * Provided lights files
+		 *
+		 * Can be empty, which means no lights specified
+		 */
+		std::vector<std::string> lights_infiles;
+		
+		/**
+		 * Provided plugloads files
+		 *
+		 * Can be empty, which means no plugloads specified
+		 */
+		std::vector<std::string> plugloads_infiles;
 
 		/** 
 		 * The list of output files

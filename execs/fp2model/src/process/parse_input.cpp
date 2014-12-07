@@ -30,6 +30,26 @@ int parse_input(building_model_t& bim, const config_t& conf)
 			return PROPEGATE_ERROR(-2, ret);
 	}
 
+	/* read lights info, if available */
+	n = conf.lights_infiles.size();
+	for(i = 0; i < n; i++)
+	{
+		/* import lights from file */
+		ret = bim.import_lights(conf.lights_infiles[i]);
+		if(ret)
+			return PROPEGATE_ERROR(-3, ret);
+	}
+	
+	/* read plugloads info, if available */
+	n = conf.plugloads_infiles.size();
+	for(i = 0; i < n; i++)
+	{
+		/* import plugloads from file */
+		ret = bim.import_plugloads(conf.plugloads_infiles[i]);
+		if(ret)
+			return PROPEGATE_ERROR(-4, ret);
+	}
+
 	/* success */
 	toc(clk, "Parsing input");
 	return 0;

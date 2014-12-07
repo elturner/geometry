@@ -20,6 +20,8 @@ using namespace std;
 
 #define FLOORPLAN_FILE_EXT "fp"
 #define WINDOWS_FILE_EXT   "windows"
+#define LIGHTS_FILE_EXT    "lights"
+#define PLUGLOADS_FILE_EXT "plugloads"
 
 #define OBJ_FILE_EXT       "obj"
 #define IDF_FILE_EXT       "idf"
@@ -39,6 +41,8 @@ int config_t::parse(int argc, char** argv)
 	/* set default config */
 	this->fp_infile = "";
 	this->windows_infiles.clear();
+	this->lights_infiles.clear();
+	this->plugloads_infiles.clear();
 	this->outfile_obj.clear();
 	this->outfile_idf.clear();
 	this->outfile_wrl.clear();
@@ -51,6 +55,10 @@ int config_t::parse(int argc, char** argv)
 		"other formats.");
 	args.add_required_file_type(WINDOWS_FILE_EXT, 0, "Specifies "
 		"location of windows relative to the given floorplan.");
+	args.add_required_file_type(LIGHTS_FILE_EXT, 0, "Specifies "
+		"light power usages for each room.");
+	args.add_required_file_type(PLUGLOADS_FILE_EXT, 0, "Specifies "
+		"wattages of plug loads in each room of the floorplan.");
 	args.add_required_file_type(FLOORPLAN_FILE_EXT, 1, "Specifies "
 		"floorplan geometry to convert and export.  If multiple "
 		"files are given, only the first will be used.");
@@ -95,7 +103,9 @@ int config_t::parse(int argc, char** argv)
 		return -2;
 	}
 	this->fp_infile = fp_infile_list[0];
-	args.files_of_type(WINDOWS_FILE_EXT, this->windows_infiles);
+	args.files_of_type(WINDOWS_FILE_EXT,   this->windows_infiles);
+	args.files_of_type(LIGHTS_FILE_EXT,    this->lights_infiles);
+	args.files_of_type(PLUGLOADS_FILE_EXT, this->plugloads_infiles);
 	args.files_of_type(OBJ_FILE_EXT, this->outfile_obj);
 	args.files_of_type(IDF_FILE_EXT, this->outfile_idf);
 	args.files_of_type(WRL_FILE_EXT, this->outfile_wrl);
