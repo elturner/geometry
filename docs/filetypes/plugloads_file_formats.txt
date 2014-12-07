@@ -1,0 +1,49 @@
+
+*********************************************
+* Format Specification for .plugloads Files *
+*********************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+December 7, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the format for .plugloads files.  These files
+represent the wattage of plugloads for rooms described by a .fp 
+floorplan file.  
+
+The geometry of the plugloads is not stored, only the power distribution.
+
+***************
+* Conventions *
+***************
+
+This file format is in ASCII
+Files of this type MUST have the suffix of *.plugloads
+
+**********
+* Format *
+**********
+
+Each line of this file represents a room in the original floorplan.  The
+value at each line indicates the sum of the power consumption of all the
+plugloads in that given room, in units of Watts.
+
+There must be exactly NUMBER_OF_ROOMS lines in the .plugloads file.
+
+***********
+* Example *
+***********
+
+For a floorplan with three rooms, the following is the example contents
+of a .plugloads file:
+
+	60.5
+	2000.0
+	312.4
+
+In this file, the first room has 60.5 Watts worth of plugloads, the second
+room has 2000 Watts, and the third room has 312.4 Watts worth of plugloads.
