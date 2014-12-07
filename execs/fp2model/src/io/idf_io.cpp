@@ -116,11 +116,77 @@ void writeroom(ofstream& outfile, const building_model_t& bm,
 		<< "    autocalculate, !- Ceiling Height {m}" << endl
 		<< "    autocalculate; !- volume {m3}" << endl << endl;
 
+	/* write ceiling lights, plug loads, and equipment information */
+	writelightsandplugloads(outfile, bm, r.ind, zonename.str());
+
 	/* write floor and ceiling geometry for room */
 	writefloorandceiling(outfile, bm, r, zonename.str());
 
 	/* write wall geometry for room */
 	writewalls(outfile, bm, r, zonename.str());
+}
+
+void writelightsandplugloads(std::ostream& outfile, 
+			const building_model_t& bm, 
+			size_t ri, const string& zonename)
+{
+	double floorarea, watts;
+
+	/* compute the floor area for this room */
+	floorarea = bm.floorplan.compute_room_area(ri);
+	
+	/* check if any lights are defined */
+	if(bm.lights.size() > 0)
+	{
+		/* get the wattage for this room */
+		watts = bm.lights.get_room(ri);
+
+		/* export stats */
+		outfile << "  Lights," << endl
+		        << "    " << zonename << " Lights 1,  "
+				<< "!- Name" << endl
+		        << "    " << zonename << ",           "
+				<< "!- Zone Name" << endl
+		        << "    LIGHTS-1,   !- Schedule Name" << endl
+			<< "    LightingLevel,    "
+				<< "!- Design Level Calc Method" << endl
+			<< "    " << watts << "   "
+				<< "!- Design Level {Watts}" << endl
+			<< "    " << (watts/floorarea) << "    "
+				<< "!- Watts per floor area {W/m2}" << endl
+			<< "    ,    !- Watts per Person {w/person}" << endl
+			<< "    0.2, !- Return Air Fraction" << endl
+			<< "    0.6,   !- Fraction Radiant" << endl
+			<< "    0.2,   !- Fraction Visible" << endl
+			<< "    0,     !- Fraction Replaceable" << endl
+			<< "    GeneralLights;    "
+				<< "!- End-Use Subcategory" << endl << endl;
+	}
+
+	/* check if any plug loads are defined */
+	if(bm.plugloads.size() > 0)
+	{
+		/* get the wattage for this room */
+		watts = bm.plugloads.get_room(ri);
+
+		/* export stats */
+		outfile << "  ElectricEquipment," << endl
+		        << "    " << zonename << " ElecEq 1,  "
+				<< "!- Name" << endl
+		        << "    " << zonename << ",           "
+				<< "!- Zone Name" << endl
+		        << "    EQUIP-1,   !- Schedule Name" << endl
+			<< "    EquipmentLevel,    "
+				<< "!- Design Level Calc Method" << endl
+			<< "    " << watts << "   "
+				<< "!- Design Level {Watts}" << endl
+			<< "    " << (watts/floorarea) << "    "
+				<< "!- Watts per floor area {W/m2}" << endl
+			<< "    ,    !- Watts per Person {w/person}" << endl
+			<< "    0,   !- Fraction Latent" << endl
+			<< "    0.3, !- Fraction Radiant" << endl
+			<< "    0;   !- Fraction Lost" << endl << endl;
+	}
 }
 
 void writefloorandceiling(ofstream& outfile, const building_model_t& bm,

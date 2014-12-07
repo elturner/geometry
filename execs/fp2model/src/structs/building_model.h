@@ -16,6 +16,8 @@
 
 #include <mesh/floorplan/floorplan.h>
 #include "window.h"
+#include "lights.h"
+#include "plugloads.h"
 #include <iostream>
 #include <string>
 
@@ -45,6 +47,22 @@ class building_model_t
 		 * of the floorplan structure.
 		 */
 		windowlist_t windows;
+
+		/**
+		 * This list describes the wattages of lights
+		 *
+		 * Each room has a wattage value that indicates ceiling
+		 * light usage.
+		 */
+		lights_t lights;
+
+		/**
+		 * This list describes the wattages of plugloads
+		 *
+		 * Each room has a wattage value that indicates plug-
+		 * load usage.
+		 */
+		plugloads_t plugloads;
 
 	/* functions */
 	public:
@@ -89,6 +107,24 @@ class building_model_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int import_windows(const std::string& filename);
+
+		/**
+		 * Will read the specified file as an input lights list.
+		 *
+		 * @param filename   The location of the .lights file
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int import_lights(const std::string& filename);
+
+		/**
+		 * Will read the specified file as an input plugloads list.
+		 *
+		 * @return filename   The location of the .plugloads file
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int import_plugloads(const std::string& filename);
 
 		/**
 		 * Exports this model to the specified Wavefront OBJ file.

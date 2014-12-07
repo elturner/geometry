@@ -40,6 +40,7 @@ using namespace node_corner;
 #define XML_COALESCE_PLANETHRESH "octsurf_coalesce_planethresh"
 #define XML_USE_ISOSURFACE_POS   "octsurf_use_isosurface_pos"
 #define XML_MIN_SINGULAR_VALUE   "octsurf_min_singular_value"
+#define XML_MAX_COLINEARITY      "octsurf_max_colinearity"
 
 /*-----------------------------------*/
 /* mesher_t function implementations */
@@ -76,6 +77,7 @@ int mesher_t::import(const std::string& xml_settings)
 		this->coalesce_planethresh = 0.0;
 		this->use_isosurface_pos = false;
 		this->min_singular_value = 0.1;
+		this->max_colinearity = 0.99;
 		return 0;
 	}
 
@@ -101,6 +103,9 @@ int mesher_t::import(const std::string& xml_settings)
 	if(settings.is_prop(XML_MIN_SINGULAR_VALUE))
 		this->min_singular_value = settings.getAsDouble(
 					XML_MIN_SINGULAR_VALUE);
+	if(settings.is_prop(XML_MAX_COLINEARITY))
+		this->max_colinearity = settings.getAsDouble(
+					XML_MAX_COLINEARITY);
 
 	/* success */
 	return 0;
@@ -334,6 +339,151 @@ int mesher_t::compute_vertex_pos(vertmap_t::iterator vit)
 
 	/* set the vertex position to be the value computed */
 	vit->second.position = x;
+
+	/* success */
+	return 0;
+}
+			
+int mesher_t::simplify()
+{
+	map<corner_t, size_t> simplify_counts;
+	map<corner_t, size_t>::iterator cit;
+	cornerset_t to_remove;
+	cornerset_t::iterator rit;
+	planemap_t::iterator pit;
+	vertmap_t::const_iterator vit, vit_prev, vit_next;
+	vector<corner_t>::iterator bit, bitalt;
+	Vector3d edge_prev, edge_next;
+	size_t bi, num_boundaries, vi, vi_prev, vi_next, num_verts;
+	double c_ang;
+
+	/* prep the map of simplification counts.  This map
+	 * stores how many regions vote to simplify each vertex.
+	 *
+	 * If all the regions that are connected to a vertex vote to
+	 * simplify it, then it will be simplified. */
+	for(vit=this->vertices.begin(); vit != this->vertices.end(); vit++)
+		simplify_counts.insert(
+			pair<corner_t, size_t>(vit->first, 0));
+
+	/* iterate over the regions */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* iterate over the boundaries of this region */
+		num_boundaries = pit->second.boundaries.size();
+		for(bi = 0; bi < num_boundaries; bi++)
+		{
+			/* iterate over the vertices of this boundary */
+			num_verts = pit->second.boundaries[bi].size();
+			for(vi = 0; vi < num_verts; vi++)
+			{
+				/* get the info for this vertex */
+				vit = this->vertices.find(
+					pit->second.boundaries[bi][vi]);
+				if(vit == this->vertices.end())
+					return -1; /* bad vertex */
+
+				/* for this vertex, we want to check
+				 * if it is shared by at most two
+				 * regions (including this one) */
+				if(vit->second.size() > 2)
+					continue; /* don't simplify 
+						   * corners */
+
+				/* now we must check this vertex's
+				 * position against its neighbors */
+
+				/* get neighbors */
+				vi_prev = (vi + num_verts - 1) % num_verts;
+				vi_next = (vi + 1)             % num_verts;
+
+				/* retrieve neighbor info */
+				vit_prev = this->vertices.find(
+						pit->second.boundaries[
+							bi][vi_prev]);
+				if(vit_prev == this->vertices.end())
+					return -2;
+				vit_next = this->vertices.find(
+						pit->second.boundaries[
+							bi][vi_next]);
+				if(vit_next == this->vertices.end())
+					return -3;
+
+				/* check how colinear these points are 
+				 * by computing the magnitude of the
+				 * cosine between their vectors */
+				edge_prev = 
+					(vit_prev->second.get_position() 
+					- vit->second.get_position());
+				edge_prev.normalize();
+				edge_next = 
+					(vit_next->second.get_position() 
+					- vit->second.get_position());
+				edge_next.normalize();
+				c_ang = abs(edge_prev.dot(edge_next)); 
+				
+				/* check this value against our threshold */
+				if(c_ang < this->max_colinearity)
+					continue; /* can't simplify */
+
+				/* this region votes to simplify this
+				 * vertex out of existence, so we update
+				 * the vote map */
+				simplify_counts[vit->first]++;
+			}
+		}
+	}
+
+	/* iterate over the map of simplification votes, and find
+	 * which vertices can be simplified */
+	for(cit = simplify_counts.begin(); 
+			cit != simplify_counts.end(); cit++)
+	{
+		/* get this vertex's info */
+		vit = this->vertices.find(cit->first);
+		if(vit == this->vertices.end())
+			return -4;
+
+		/* check if all regions that contain this vertex
+		 * voted to have it simplified */
+		if(vit->second.size() > cit->second)
+			continue; /* not enough votes */
+
+		/* this vertex has been voted off the island. */
+		to_remove.insert(cit->first);
+	}
+
+	/* iterate through the regions, removing these vertices */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* iterate over the boundaries of this region */
+		num_boundaries = pit->second.boundaries.size();
+		for(bi = 0; bi < num_boundaries; bi++)
+		{
+			/* iterate over the vertices of this boundary */
+			for(bit = pit->second.boundaries[bi].begin(); 
+				bit != pit->second.boundaries[bi].end(); ) 
+			{
+				/* check if this vertex should be removed */
+				// TODO code breaks here for some reason
+				if(to_remove.count(*bit) > 0)
+				{
+					/* remove the vertex from this
+					 * boundary */
+					bitalt = bit;
+					bit++;
+					pit->second.boundaries[bi].erase(
+							bitalt);
+				}
+				else
+					bit++;
+			}
+		}
+
+		/* remove the vertices from this region */
+		for(rit = to_remove.begin(); rit != to_remove.end(); rit++)
+			pit->second.vertices.erase(*rit);
+	}
 
 	/* success */
 	return 0;

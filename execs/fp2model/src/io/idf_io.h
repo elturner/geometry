@@ -56,6 +56,22 @@ void writeroom(std::ofstream& outfile, const building_model_t& bm,
                const fp::room_t& r);
 
 /**
+ * Writes the light and plugload information for the given zone
+ *
+ * Given the BIM and the room index, will write out the necessary
+ * statistics about ceiling lights and plugload information for this
+ * room.
+ *
+ * @param outfile    Where to export the data
+ * @param bm         The building model to export
+ * @param ri         The room index to analyze
+ * @param zonename    The name of the zone to associate these surfaces to
+ */
+void writelightsandplugloads(std::ostream& outfile, 
+			const building_model_t& bm, 
+			size_t ri, const std::string& zonename);
+
+/**
  * Writes the floor and ceiling geometry information for the given room
  *
  * Given a building model and a particular room, will export

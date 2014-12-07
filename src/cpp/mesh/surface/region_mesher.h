@@ -124,6 +124,20 @@ namespace region_mesher
 			 */
 			double min_singular_value;
 
+			/**
+			 * When performing region boundary simplification,
+			 * the colinearity of neighboring vertices is
+			 * considered when removing unnecessary geometry.
+			 *
+			 * This value indicates the required colinearity
+			 * of neighboring pixels.  Any edges whose dot
+			 * product's absolute value is greater than this
+			 * threshold will not be simplified.
+			 *
+			 * units:  unitless (range [0,1])
+			 */
+			double max_colinearity;
+
 		/* functions */
 		public:
 
@@ -221,7 +235,19 @@ namespace region_mesher
 			/* processing */
 			/*------------*/
 
-			// TODO simplification
+			/**
+			 * Attempts to simplify the geometry for each region
+			 * by selectively removing unnecessary vertices.
+			 *
+			 * Only vertices that are shared by at most two
+			 * regions will be removed, and only if they are
+			 * along a straight line with their neighboring
+			 * vertices for all regions that share them.
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int simplify();
 
 			/*-----*/
 			/* i/o */

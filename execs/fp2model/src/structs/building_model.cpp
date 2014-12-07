@@ -54,7 +54,51 @@ int building_model_t::import_windows(const string& filename)
 	/* success */
 	return 0;
 }
+
+int building_model_t::import_lights(const string& filename)
+{
+	int ret;
+
+	/* assume lights list file */
+	ret = this->lights.import(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* check that number of rooms are consistent */
+	if(this->lights.size() != this->floorplan.rooms.size())
+	{
+		cerr << "[building_model_t::import_lights]\tThe "
+		     << "imported lights file contains a different "
+		     << "number of rooms than the floorplan." << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}
+
+int building_model_t::import_plugloads(const string& filename)
+{
+	int ret;
+
+	/* assume plug loads list file */
+	ret = this->plugloads.import(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
 	
+	/* check that number of rooms are consistent */
+	if(this->plugloads.size() != this->floorplan.rooms.size())
+	{
+		cerr << "[building_model_t::import_plugloads]\tThe "
+		     << "imported plug-loads file contains a different "
+		     << "number of rooms than the floorplan." << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}
+
 int building_model_t::export_obj(const string& filename) const
 {
 	vector<edge_t> edges;

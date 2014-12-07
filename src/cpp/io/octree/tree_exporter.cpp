@@ -233,11 +233,19 @@ int tree_exporter::export_regions(const std::string& filename,
 		return PROPEGATE_ERROR(-7, ret);
 	toc(clk, "Meshing regions");
 
-	/* export regions to file */
+	/* simplify it */
 	tic(clk);
-	ret = region_graph.writeobj(filename, true);
+	ret = mesher.simplify();
 	if(ret)
 		return PROPEGATE_ERROR(-8, ret);
+	toc(clk, "Simplifying regions");
+
+	/* export regions to file */
+	tic(clk);
+	mesher.writecsv(cerr); // TODO
+	ret = region_graph.writeobj(filename, true);
+	if(ret)
+		return PROPEGATE_ERROR(-9, ret);
 	toc(clk, "Writing OBJ");
 
 	/* success */

@@ -61,4 +61,25 @@
 	     range:  [0,1] (please keep it small) -->
 	<octsurf_min_singular_value>0.1</octsurf_min_singular_value>
 
+	<!-- The maximum allowed dot-product magnitude of adjacent
+	     edges during the region boundary simplification process.
+
+	     If the dot product between two edges are below this value,
+	     then they are candidates for simplification.  Edges whose
+	     dot product magnitude is greater than this value will
+	     not be simplified.
+
+	     Note that the dot product uses normalized edge lengths,
+	     so this value represents the cosine of the max allowed
+	     angle.
+
+	     Here are some common mappings for cosine:
+	     	
+			5 degrees 	0.9962
+			8 degrees	0.9902
+			10 degrees      0.9848
+
+	     range:  [0,1] -->
+	<octsurf_max_colinearity>0.999</octsurf_max_colinearity>
+
 </settings>
