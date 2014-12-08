@@ -534,6 +534,21 @@ namespace node_corner
 			 * @param os   Where to write the CSV vlaues
 			 */
 			void writecsv(std::ostream& os) const;
-	};
+
+			/**
+			 * Checks if this corner is in reasonable bounds
+			 */
+			inline bool isbad() const
+			{ 
+				if(abs(this->x_ind) > 10000)
+					return true;
+				if(abs(this->y_ind) > 10000)
+					return true;
+				if(abs(this->z_ind) > 10000)
+					return true;
+				return false;
+			};
+	};			
 }
+
 #endif

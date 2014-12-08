@@ -373,8 +373,14 @@ int mesher_t::simplify()
 		num_boundaries = pit->second.boundaries.size();
 		for(bi = 0; bi < num_boundaries; bi++)
 		{
-			/* iterate over the vertices of this boundary */
+			/* check if boundary is big enough to be 
+			 * simplified.  Note that you need at least
+			 * three elements to make a non-trivial boundary */
 			num_verts = pit->second.boundaries[bi].size();
+			if(num_verts < 3)
+				continue;
+			
+			/* iterate over the vertices of this boundary */
 			for(vi = 0; vi < num_verts; vi++)
 			{
 				/* get the info for this vertex */
@@ -465,15 +471,13 @@ int mesher_t::simplify()
 				bit != pit->second.boundaries[bi].end(); ) 
 			{
 				/* check if this vertex should be removed */
-				// TODO code breaks here for some reason
 				if(to_remove.count(*bit) > 0)
 				{
 					/* remove the vertex from this
 					 * boundary */
 					bitalt = bit;
-					bit++;
-					pit->second.boundaries[bi].erase(
-							bitalt);
+					bit = pit->second.boundaries
+							[bi].erase(bitalt);
 				}
 				else
 					bit++;
@@ -631,14 +635,14 @@ int region_info_t::populate_boundaries(
 		/* pick the next corner to start this ring */
 		c = *(unused.begin());
 		foundnext = true;
-
+		
 		/* iterate over the current ring as long as we can */
 		while(foundnext)
 		{
 			/* add this corner to the boundary */
 			this->boundaries[curr_ring].push_back(c);
 			unused.erase(c);
-
+		
 			/* get the neighbors of this corner */
 			range = cm.get_edges_for(c);
 			my_faces = cm.get_faces_for(c);
