@@ -67,7 +67,7 @@ void writeroom(std::ofstream& outfile, const building_model_t& bm,
  * @param ri         The room index to analyze
  * @param zonename    The name of the zone to associate these surfaces to
  */
-void writelightsandplugloads(std::ostream& outfile, 
+void writelightspeopleandplugloads(std::ostream& outfile, 
 			const building_model_t& bm, 
 			size_t ri, const std::string& zonename);
 
@@ -247,6 +247,8 @@ void writeconstruction(std::ofstream& outfile, const std::string& name,
 		const std::string* layers, int num_layers);
 void writescheduletypelimit(std::ofstream& outfile, const std::string& name,
 		double lower, double upper, const std::string& type);
+void writescheduletypecompact(std::ofstream& outfile, 
+		const std::string& name);
 void writeholiday(std::ofstream& outfile, const std::string& name, 
 		const std::string& start, int duration,
 		const std::string& type);

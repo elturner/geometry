@@ -77,6 +77,28 @@ int building_model_t::import_lights(const string& filename)
 	return 0;
 }
 
+int building_model_t::import_people(const string& filename)
+{
+	int ret;
+
+	/* assume people list file */
+	ret = this->people.import(filename);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* check that number of rooms are consistent */
+	if(this->people.size() != this->floorplan.rooms.size())
+	{
+		cerr << "[building_model_t::import_people]\tThe "
+		     << "imported people file contains a different "
+		     << "number of rooms than the floorplan." << endl;
+		return -2;
+	}
+
+	/* success */
+	return 0;
+}
+
 int building_model_t::import_plugloads(const string& filename)
 {
 	int ret;

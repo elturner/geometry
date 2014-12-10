@@ -17,6 +17,7 @@
 #include <mesh/floorplan/floorplan.h>
 #include "window.h"
 #include "lights.h"
+#include "people.h"
 #include "plugloads.h"
 #include <iostream>
 #include <string>
@@ -55,6 +56,14 @@ class building_model_t
 		 * light usage.
 		 */
 		lights_t lights;
+
+		/**
+		 * This list describes the counts for people in each room
+		 *
+		 * Each room can house a number of people, and these values
+		 * dictate our estimate.
+		 */
+		people_t people;
 
 		/**
 		 * This list describes the wattages of plugloads
@@ -116,6 +125,15 @@ class building_model_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int import_lights(const std::string& filename);
+
+		/**
+		 * Will read the specified file as an input people list.
+		 *
+		 * @param filename   The location of the .people file
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int import_people(const std::string& filename);
 
 		/**
 		 * Will read the specified file as an input plugloads list.

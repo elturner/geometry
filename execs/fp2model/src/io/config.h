@@ -41,7 +41,14 @@ class config_t
 		 * Can be empty, which means no lights specified
 		 */
 		std::vector<std::string> lights_infiles;
-		
+	
+		/**
+		 * Provided people files
+		 *
+		 * Can be empty, which means no people specified.
+		 */
+		std::vector<std::string> people_infiles;
+
 		/**
 		 * Provided plugloads files
 		 *

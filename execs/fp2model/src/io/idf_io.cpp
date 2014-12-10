@@ -117,7 +117,7 @@ void writeroom(ofstream& outfile, const building_model_t& bm,
 		<< "    autocalculate; !- volume {m3}" << endl << endl;
 
 	/* write ceiling lights, plug loads, and equipment information */
-	writelightsandplugloads(outfile, bm, r.ind, zonename.str());
+	writelightspeopleandplugloads(outfile, bm, r.ind, zonename.str());
 
 	/* write floor and ceiling geometry for room */
 	writefloorandceiling(outfile, bm, r, zonename.str());
@@ -126,15 +126,41 @@ void writeroom(ofstream& outfile, const building_model_t& bm,
 	writewalls(outfile, bm, r, zonename.str());
 }
 
-void writelightsandplugloads(std::ostream& outfile, 
+void writelightspeopleandplugloads(std::ostream& outfile, 
 			const building_model_t& bm, 
 			size_t ri, const string& zonename)
 {
 	double floorarea, watts;
+	size_t people;
 
 	/* compute the floor area for this room */
 	floorarea = bm.floorplan.compute_room_area(ri);
-	
+
+	/* check if any people are defined */
+	if(bm.people.size() > 0)
+	{
+		/* get the people count for this room */
+		people = bm.people.get_room(ri);
+
+		/* export stats */
+		outfile << "  People," << endl
+		        << "    " << zonename << " People 1, !- Name"<<endl
+		        << "    " << zonename << ", !- Zone name" << endl
+		        << "    OCCUPY-1, !- Schedule name" << endl
+		        << "    people,   !- Calculation method" << endl
+		        << "    " << people << ", !- Number of people"<<endl
+		        << "    " << (people/floorarea) 
+				<< ", !- people per area {person/m2}"<<endl
+		        << "    " <<  (floorarea/people)
+				<< ", !- area per person {m2/person}"<<endl
+		        << "    0.3, !- Fraction Radiant " << endl
+		        << "    , !- Sensible Heat Fraction" << endl
+		        << "    ActSchd; !- Activity Level Schedule Name" 
+			<< endl << endl;
+	}
+	else
+		people = 1;
+
 	/* check if any lights are defined */
 	if(bm.lights.size() > 0)
 	{
@@ -154,11 +180,12 @@ void writelightsandplugloads(std::ostream& outfile,
 				<< "!- Design Level {Watts}" << endl
 			<< "    " << (watts/floorarea) << "    "
 				<< "!- Watts per floor area {W/m2}" << endl
-			<< "    ,    !- Watts per Person {w/person}" << endl
-			<< "    0.2, !- Return Air Fraction" << endl
-			<< "    0.6,   !- Fraction Radiant" << endl
-			<< "    0.2,   !- Fraction Visible" << endl
-			<< "    0,     !- Fraction Replaceable" << endl
+			<< "    " << (watts/people) << ",    "
+				<< "!- Watts per Person {w/person}" << endl
+			<< "    0, !- Return Air Fraction" << endl
+			<< "    0.42,   !- Fraction Radiant" << endl
+			<< "    0.18,   !- Fraction Visible" << endl
+			<< "    1,     !- Fraction Replaceable" << endl
 			<< "    GeneralLights;    "
 				<< "!- End-Use Subcategory" << endl << endl;
 	}
@@ -178,11 +205,12 @@ void writelightsandplugloads(std::ostream& outfile,
 		        << "    EQUIP-1,   !- Schedule Name" << endl
 			<< "    EquipmentLevel,    "
 				<< "!- Design Level Calc Method" << endl
-			<< "    " << watts << "   "
+			<< "    " << watts << ",   "
 				<< "!- Design Level {Watts}" << endl
-			<< "    " << (watts/floorarea) << "    "
+			<< "    " << (watts/floorarea) << ",    "
 				<< "!- Watts per floor area {W/m2}" << endl
-			<< "    ,    !- Watts per Person {w/person}" << endl
+			<< "    " << (watts/people) << ",    "
+				<< "!- Watts per Person {w/person}" << endl
 			<< "    0,   !- Fraction Latent" << endl
 			<< "    0.3, !- Fraction Radiant" << endl
 			<< "    0;   !- Fraction Lost" << endl << endl;
@@ -577,6 +605,11 @@ void writedefaultschedule(ofstream& outfile)
 	outfile << "  ScheduleTypeLimits," << endl
 	        << "    Number; !- Name" << endl << endl;
 
+	/* write schedule for people, lights, plugloads, etc. */
+	writescheduletypecompact(outfile, "OCCUPY-1");
+	writescheduletypecompact(outfile, "LIGHTS-1");
+	writescheduletypecompact(outfile, "EQUIP-1");
+
 	/* write Run Period Control, and holidays */
 	writesection(outfile, 
 		"ALL OBJECTS IN CLASS: RUNPERIODCONTROL:SPECIALDAYS");
@@ -757,6 +790,31 @@ void writescheduletypelimit(ofstream& outfile, const string& name,
 		<< "    " << lower << ", !- Lower Limit Value {A3}" << endl
 		<< "    " << upper << ", !- Upper Limit Value {A3}" << endl
 		<< "    " << type << "; !- Numeric Type" << endl << endl;
+}
+
+void writescheduletypecompact(std::ofstream& outfile, 
+		const std::string& name)
+{
+	outfile << "  Schedule:Compact," << endl
+	        << "    " << name << ",      !- Name" << endl
+	        << "    Fraction,          !- Schedule Type Limits Name"
+			<< endl
+	        << "    Through: 12/31,    !- Field 1" << endl
+	        << "    For: "
+			<< "WeekDays SummerDesignDay "
+			<< "CustomDay1 CustomDay2, !- Field 2" << endl
+	        << "    Until: 8:00,0.05,  !- Field 3" << endl
+	        << "    Until: 11:00,1.00, !- Field 5" << endl
+	        << "    Until: 12:00,0.80, !- Field 7" << endl
+	        << "    Until: 13:00,0.40, !- Field 9" << endl
+	        << "    Until: 14:00,0.80, !- Field 11" << endl
+	        << "    Until: 18:00,1.00, !- Field 13" << endl
+	        << "    Until: 19:00,0.50, !- Field 15" << endl
+	        << "    Until: 24:00,0.0,  !- Field 17" << endl
+	        << "    For: " 
+			<< "Weekends WinterDesignDay Holiday, "
+			<< "!- Field 25" << endl
+	        << "    Until: 24:00,0.05; !- Field 26" << endl << endl;
 }
 
 /* the building model can specify special days for scheduling purposes.

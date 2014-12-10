@@ -1,0 +1,48 @@
+
+******************************************
+* Format Specification for .people Files *
+******************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+December 7, 2014
+
+***********
+* Purpose *
+***********
+
+This document describes the format for .people files.  These files
+represent the number of people for each rooms described by a .fp 
+floorplan file.  
+
+***************
+* Conventions *
+***************
+
+This file format is in ASCII
+Files of this type MUST have the suffix of *.people
+
+**********
+* Format *
+**********
+
+Each line of this file represents a room in the original floorplan.  The
+value at each line indicates the estimate of the number of people in the
+room.  This can be a noisy estimate, so for instance the number of computers
+in the room works well.
+
+There must be exactly NUMBER_OF_ROOMS lines in the .people file.
+
+***********
+* Example *
+***********
+
+For a floorplan with three rooms, the following is the example contents
+of a .people file:
+
+	6
+	2
+	3
+
+In this file, the first room has 6 people, the second room has 2 people, 
+and the third room has 3 people.

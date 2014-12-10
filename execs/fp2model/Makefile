@@ -23,6 +23,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		src/structs/building_model.cpp \
 		src/structs/window.cpp \
 		src/structs/lights.cpp \
+		src/structs/people.cpp \
 		src/structs/plugloads.cpp \
 		src/process/parse_input.cpp \
 		src/process/subdivide_room.cpp \
@@ -43,6 +44,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		src/structs/building_model.h \
 		src/structs/window.h \
 		src/structs/lights.h \
+		src/structs/people.h \
 		src/structs/plugloads.h \
 		src/process/parse_input.h \
 		src/process/subdivide_room.h \
