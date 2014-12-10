@@ -151,15 +151,17 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		        << "    " << people << ", !- Number of people"<<endl
 		        << "    " << (people/floorarea) 
 				<< ", !- people per area {person/m2}"<<endl
-		        << "    " <<  (floorarea/people)
-				<< ", !- area per person {m2/person}"<<endl
+		        << "    ";
+		if(people > 0)
+			outfile << (floorarea/people);
+		outfile 	<< ", !- area / person {m2/person}" << endl
 		        << "    0.3, !- Fraction Radiant " << endl
 		        << "    , !- Sensible Heat Fraction" << endl
 		        << "    ActSchd; !- Activity Level Schedule Name" 
 			<< endl << endl;
 	}
 	else
-		people = 1;
+		people = 0;
 
 	/* check if any lights are defined */
 	if(bm.lights.size() > 0)
@@ -180,7 +182,10 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 				<< "!- Design Level {Watts}" << endl
 			<< "    " << (watts/floorarea) << "    "
 				<< "!- Watts per floor area {W/m2}" << endl
-			<< "    " << (watts/people) << ",    "
+			<< "    ";
+		if(people > 0)
+			outfile << (watts/people);
+		outfile         << ",    "
 				<< "!- Watts per Person {w/person}" << endl
 			<< "    0, !- Return Air Fraction" << endl
 			<< "    0.42,   !- Fraction Radiant" << endl
@@ -209,7 +214,10 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 				<< "!- Design Level {Watts}" << endl
 			<< "    " << (watts/floorarea) << ",    "
 				<< "!- Watts per floor area {W/m2}" << endl
-			<< "    " << (watts/people) << ",    "
+			<< "    ";
+		if(people > 0)
+			outfile << (watts/people);
+		outfile         << ",    "
 				<< "!- Watts per Person {w/person}" << endl
 			<< "    0,   !- Fraction Latent" << endl
 			<< "    0.3, !- Fraction Radiant" << endl
