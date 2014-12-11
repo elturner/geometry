@@ -80,6 +80,97 @@ int tree_exporter::export_dense_mesh(const std::string& filename,
 	/* success */
 	return 0;
 }
+
+int tree_exporter::export_planar_mesh(const std::string& filename,
+	                      const octree_t& tree,
+	                      node_boundary_t::SEG_SCHEME scheme,
+                              const std::string& xml_settings)
+{
+	octtopo::octtopo_t top;
+	node_boundary_t boundary;
+	node_corner::corner_map_t corner_map;
+	planar_region_graph_t region_graph;
+	region_mesher::mesher_t mesher;
+	mesh_io::mesh_t mesh;
+	tictoc_t clk;
+	int ret;
+
+	/* read in settings information */
+	tic(clk);
+	ret = mesher.import(xml_settings);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Importing xml file");
+
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the boundary nodes using the generated topology */
+	ret = boundary.populate(top, scheme);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+
+	/* extract the corners of the model from this boundary */
+	tic(clk);
+	corner_map.add(tree, boundary);
+	ret = corner_map.populate_edges(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	toc(clk, "Computing corners");
+
+	/* form planar regions from these boundary faces */
+	tic(clk);
+	region_graph.init(mesher.get_coalesce_planethresh(),
+			mesher.get_coalesce_distthresh(), 
+			mesher.get_use_isosurface_pos(), 
+			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
+	ret = region_graph.populate(boundary);
+	if(ret)
+		return PROPEGATE_ERROR(-5, ret);
+	toc(clk, "Forming regions");
+
+	/* coalesce regions (use arbitrary parameters) */
+	tic(clk);
+	ret = region_graph.coalesce_regions();
+	if(ret)
+		return PROPEGATE_ERROR(-6, ret);
+	toc(clk, "Coalescing regions");
+
+	/* mesh the region graph */
+	tic(clk);
+	ret = mesher.init(tree, region_graph, corner_map);
+	if(ret)
+		return PROPEGATE_ERROR(-7, ret);
+	toc(clk, "Meshing regions");
+
+	/* simplify it */
+	tic(clk);
+	ret = mesher.simplify();
+	if(ret)
+		return PROPEGATE_ERROR(-8, ret);
+	toc(clk, "Simplifying regions");
+
+	/* generate the topologically watertight mesh */
+	tic(clk);
+	ret = mesher.compute_mesh(mesh);
+	if(ret)
+		return PROPEGATE_ERROR(-9, ret);
+	toc(clk, "Generating mesh");
+
+	/* export the mesh to disk */
+	tic(clk);
+	ret = mesh.write(filename);	
+	if(ret)
+		return PROPEGATE_ERROR(-10, ret);
+	toc(clk, "Writing mesh");
+
+	/* success */
+	return 0;
+}
 	
 int tree_exporter::export_node_faces(const string& filename,
                                      const octree_t& tree,
@@ -226,26 +317,11 @@ int tree_exporter::export_regions(const std::string& filename,
 		return PROPEGATE_ERROR(-6, ret);
 	toc(clk, "Coalescing regions");
 
-	/* mesh the region graph */
-	tic(clk);
-	ret = mesher.init(tree, region_graph, corner_map);
-	if(ret)
-		return PROPEGATE_ERROR(-7, ret);
-	toc(clk, "Meshing regions");
-
-	/* simplify it */
-	tic(clk);
-	ret = mesher.simplify();
-	if(ret)
-		return PROPEGATE_ERROR(-8, ret);
-	toc(clk, "Simplifying regions");
-
 	/* export regions to file */
 	tic(clk);
-	mesher.writecsv(cerr); // TODO
 	ret = region_graph.writeobj(filename, true);
 	if(ret)
-		return PROPEGATE_ERROR(-9, ret);
+		return PROPEGATE_ERROR(-7, ret);
 	toc(clk, "Writing OBJ");
 
 	/* success */

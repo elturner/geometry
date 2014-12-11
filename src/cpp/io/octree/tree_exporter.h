@@ -25,7 +25,9 @@ namespace tree_exporter
 	 * Exports a dense mesh of the octree to the specified file
 	 *
 	 * Will export the interior/exterior boundary described in the
-	 * specified octree to a topologically connected mesh.
+	 * specified octree to a topologically connected mesh.  This
+	 * mesh is based off a variant of dual contouring, and gives
+	 * a fairly smooth and organic appearance.
 	 *
 	 * @param filename   The path to the .obj/.ply file to write
 	 * @param tree       The tree to export
@@ -37,6 +39,27 @@ namespace tree_exporter
 	int export_dense_mesh(const std::string& filename,
 	                      const octree_t& tree,
 	                      node_boundary_t::SEG_SCHEME scheme);
+
+	/**
+	 * Exports a planar mesh of the octree to the specified file
+	 *
+	 * Will export the interior/exterior boundary described in the
+	 * specified octree to a topologically connected mesh.  This
+	 * mesh works well for modeling planar surfaces, and preserves
+	 * sharp edges while using an efficient number of triangles for
+	 * flat areas.
+	 *
+	 * @param filename   The path to the .obj/.ply file to write
+	 * @param tree       The tree to export
+	 * @param scheme      Specifies whether to export the whole scene,
+	 *                    just the objects, or just the rooms
+	 *
+	 * @return           Returns zero on success, non-zero on failure.
+	 */
+	int export_planar_mesh(const std::string& filename,
+	                      const octree_t& tree,
+	                      node_boundary_t::SEG_SCHEME scheme,
+                              const std::string& xml_settings);
 
 	/**
 	 * Will export boundary leaf faces to file (either OBJ or PLY)

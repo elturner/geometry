@@ -495,7 +495,51 @@ int mesher_t::simplify()
 			
 int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
 {
-	return -1; // TODO implement me
+	planemap_t::const_iterator pit;
+	cornerset_t::const_iterator cit;
+	vertmap_t::const_iterator vit;
+	map<corner_t, size_t> vert_inds;
+	pair<map<corner_t, size_t>::iterator, bool> ins;
+	mesh_io::vertex_t v;
+
+	/* iterate over the regions.  We want to find the
+	 * vertices that are going to be exported with them. */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* iterate over the vertices of this region */
+		for(cit = pit->second.vertices.begin(); 
+				cit != pit->second.vertices.end(); cit++)
+		{
+			/* attempt to add this vertex to our map */
+			ins = vert_inds.insert(pair<corner_t, size_t>(
+						*cit, vert_inds.size()));
+			if(!(ins.second))
+				continue; /* already in map */
+
+			/* this is a new vertex, so go ahead and
+			 * add it to our mesh.
+			 *
+			 * First, we need to get its position */
+			vit = this->vertices.find(*cit);
+			if(vit == this->vertices.end())
+				return -1;
+
+			/* copy the position to the vertex structure */
+			v.x = vit->second.position(0);
+			v.y = vit->second.position(1);
+			v.z = vit->second.position(2);
+
+			/* insert into mesh */
+			mesh.add(v);
+		}
+	}
+
+	/* now that we've inserted all the vertices, we can go
+	 * through the regions and add triangles */
+	// TODO
+
+	/* success */
+	return 0;
 }
 			
 int mesher_t::writeobj_vertices(std::ostream& os) const

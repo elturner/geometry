@@ -100,7 +100,11 @@ int main(int argc, char** argv)
 			break;
 		case FORMAT_PLY:
 			/* export ply file of node faces */
-			if(args.export_node_faces)
+			if(args.export_planar)
+				ret = tree_exporter::export_planar_mesh(
+						args.outfile, tree, scheme,
+						args.xml_settings);
+			else if(args.export_node_faces)
 				ret = tree_exporter::export_node_faces(
 					args.outfile, tree, scheme);
 			else
@@ -115,7 +119,11 @@ int main(int argc, char** argv)
 			break;
 		case FORMAT_OBJ:
 			/* export basic obj file */
-			if(args.export_node_faces)
+			if(args.export_planar)
+				ret = tree_exporter::export_planar_mesh(
+						args.outfile, tree, scheme,
+						args.xml_settings);
+			else if(args.export_node_faces)
 				ret = tree_exporter::export_node_faces(
 					args.outfile, tree, scheme);
 			else if(args.export_regions)
