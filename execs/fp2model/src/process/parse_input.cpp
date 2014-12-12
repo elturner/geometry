@@ -40,6 +40,16 @@ int parse_input(building_model_t& bim, const config_t& conf)
 			return PROPEGATE_ERROR(-3, ret);
 	}
 	
+	/* read people info, if available */
+	n = conf.people_infiles.size();
+	for(i = 0; i < n; i++)
+	{
+		/* import people from file */
+		ret = bim.import_people(conf.people_infiles[i]);
+		if(ret)
+			return PROPEGATE_ERROR(-4, ret);
+	}
+	
 	/* read plugloads info, if available */
 	n = conf.plugloads_infiles.size();
 	for(i = 0; i < n; i++)
@@ -47,7 +57,7 @@ int parse_input(building_model_t& bim, const config_t& conf)
 		/* import plugloads from file */
 		ret = bim.import_plugloads(conf.plugloads_infiles[i]);
 		if(ret)
-			return PROPEGATE_ERROR(-4, ret);
+			return PROPEGATE_ERROR(-5, ret);
 	}
 
 	/* success */

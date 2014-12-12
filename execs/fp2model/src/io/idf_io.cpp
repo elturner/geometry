@@ -65,11 +65,11 @@ int writeidf(const string& filename, const building_model_t& bm,
 	writecommonconstructions(outfile);
 
 	/* more optional paramters */
+	writedefaultschedule(outfile);
 	if(verbose)
 	{
 		/* these optional fields specify HVAC and scheduling
 		 * information in the building */
-		writedefaultschedule(outfile);
 		writethermostat(outfile,
 			"Constant Setpoint Thermostat", 20, 25); 
 		writedictionary(outfile);
@@ -104,17 +104,17 @@ void writeroom(ofstream& outfile, const building_model_t& bm,
 
 	/* create a zone for this room */
 	writesection(outfile, "ROOM GEOMETRY");
-	outfile << "  Zone," << endl
-	        << "    " << zonename.str() << ", !- Name" << endl
+	outfile << "  Zone," << "\r\n"
+	        << "    " << zonename.str() << ", !- Name" << "\r\n"
 		<< "    0.0,           !- Direction of Relative "
-		<< "North {deg}" << endl
-		<< "    0.0,           !- X Origin {m}" << endl
-		<< "    0.0,           !- Y Origin {m}" << endl
-		<< "    0.0,           !- Z Origin {m}" << endl
-		<< "    ,              !- Type" << endl
-		<< "    1,             !- Multiplier" << endl
-		<< "    autocalculate, !- Ceiling Height {m}" << endl
-		<< "    autocalculate; !- volume {m3}" << endl << endl;
+		<< "North {deg}" << "\r\n"
+		<< "    0.0,           !- X Origin {m}" << "\r\n"
+		<< "    0.0,           !- Y Origin {m}" << "\r\n"
+		<< "    0.0,           !- Z Origin {m}" << "\r\n"
+		<< "    ,              !- Type" << "\r\n"
+		<< "    1,             !- Multiplier" << "\r\n"
+		<< "    autocalculate, !- Ceiling Height {m}" << "\r\n"
+		<< "    autocalculate; !- volume {m3}" << "\r\n" << "\r\n";
 
 	/* write ceiling lights, plug loads, and equipment information */
 	writelightspeopleandplugloads(outfile, bm, r.ind, zonename.str());
@@ -143,22 +143,22 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		people = bm.people.get_room(ri);
 
 		/* export stats */
-		outfile << "  People," << endl
-		        << "    " << zonename << " People 1, !- Name"<<endl
-		        << "    " << zonename << ", !- Zone name" << endl
-		        << "    OCCUPY-1, !- Schedule name" << endl
-		        << "    people,   !- Calculation method" << endl
-		        << "    " << people << ", !- Number of people"<<endl
+		outfile << "  People," << "\r\n"
+		        << "    " << zonename << " People 1, !- Name"<<"\r\n"
+		        << "    " << zonename << ", !- Zone name" << "\r\n"
+		        << "    OCCUPY-1, !- Schedule name" << "\r\n"
+		        << "    people,   !- Calculation method" << "\r\n"
+		        << "    " << people << ", !- Number of people"<<"\r\n"
 		        << "    " << (people/floorarea) 
-				<< ", !- people per area {person/m2}"<<endl
+				<< ", !- people per area {person/m2}"<<"\r\n"
 		        << "    ";
 		if(people > 0)
 			outfile << (floorarea/people);
-		outfile 	<< ", !- area / person {m2/person}" << endl
-		        << "    0.3, !- Fraction Radiant " << endl
-		        << "    , !- Sensible Heat Fraction" << endl
+		outfile 	<< ", !- area / person {m2/person}" << "\r\n"
+		        << "    0.3, !- Fraction Radiant " << "\r\n"
+		        << "    , !- Sensible Heat Fraction" << "\r\n"
 		        << "    ActSchd; !- Activity Level Schedule Name" 
-			<< endl << endl;
+			<< "\r\n" << "\r\n";
 	}
 	else
 		people = 0;
@@ -170,29 +170,29 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		watts = bm.lights.get_room(ri);
 
 		/* export stats */
-		outfile << "  Lights," << endl
+		outfile << "  Lights," << "\r\n"
 		        << "    " << zonename << " Lights 1,  "
-				<< "!- Name" << endl
+				<< "!- Name" << "\r\n"
 		        << "    " << zonename << ",           "
-				<< "!- Zone Name" << endl
-		        << "    LIGHTS-1,   !- Schedule Name" << endl
+				<< "!- Zone Name" << "\r\n"
+		        << "    LIGHTS-1,   !- Schedule Name" << "\r\n"
 			<< "    LightingLevel,    "
-				<< "!- Design Level Calc Method" << endl
+				<< "!- Design Level Calc Method" << "\r\n"
 			<< "    " << watts << "   "
-				<< "!- Design Level {Watts}" << endl
+				<< "!- Design Level {Watts}" << "\r\n"
 			<< "    " << (watts/floorarea) << "    "
-				<< "!- Watts per floor area {W/m2}" << endl
+				<< "!- Watts per floor area {W/m2}" << "\r\n"
 			<< "    ";
 		if(people > 0)
 			outfile << (watts/people);
 		outfile         << ",    "
-				<< "!- Watts per Person {w/person}" << endl
-			<< "    0, !- Return Air Fraction" << endl
-			<< "    0.42,   !- Fraction Radiant" << endl
-			<< "    0.18,   !- Fraction Visible" << endl
-			<< "    1,     !- Fraction Replaceable" << endl
+				<< "!- Watts per Person {w/person}" << "\r\n"
+			<< "    0, !- Return Air Fraction" << "\r\n"
+			<< "    0.42,   !- Fraction Radiant" << "\r\n"
+			<< "    0.18,   !- Fraction Visible" << "\r\n"
+			<< "    1,     !- Fraction Replaceable" << "\r\n"
 			<< "    GeneralLights;    "
-				<< "!- End-Use Subcategory" << endl << endl;
+				<< "!- End-Use Subcategory" << "\r\n" << "\r\n";
 	}
 
 	/* check if any plug loads are defined */
@@ -202,26 +202,26 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		watts = bm.plugloads.get_room(ri);
 
 		/* export stats */
-		outfile << "  ElectricEquipment," << endl
+		outfile << "  ElectricEquipment," << "\r\n"
 		        << "    " << zonename << " ElecEq 1,  "
-				<< "!- Name" << endl
+				<< "!- Name" << "\r\n"
 		        << "    " << zonename << ",           "
-				<< "!- Zone Name" << endl
-		        << "    EQUIP-1,   !- Schedule Name" << endl
+				<< "!- Zone Name" << "\r\n"
+		        << "    EQUIP-1,   !- Schedule Name" << "\r\n"
 			<< "    EquipmentLevel,    "
-				<< "!- Design Level Calc Method" << endl
+				<< "!- Design Level Calc Method" << "\r\n"
 			<< "    " << watts << ",   "
-				<< "!- Design Level {Watts}" << endl
+				<< "!- Design Level {Watts}" << "\r\n"
 			<< "    " << (watts/floorarea) << ",    "
-				<< "!- Watts per floor area {W/m2}" << endl
+				<< "!- Watts per floor area {W/m2}" << "\r\n"
 			<< "    ";
 		if(people > 0)
 			outfile << (watts/people);
 		outfile         << ",    "
-				<< "!- Watts per Person {w/person}" << endl
-			<< "    0,   !- Fraction Latent" << endl
-			<< "    0.3, !- Fraction Radiant" << endl
-			<< "    0;   !- Fraction Lost" << endl << endl;
+				<< "!- Watts per Person {w/person}" << "\r\n"
+			<< "    0,   !- Fraction Latent" << "\r\n"
+			<< "    0.3, !- Fraction Radiant" << "\r\n"
+			<< "    0;   !- Fraction Lost" << "\r\n" << "\r\n";
 	}
 }
 
@@ -259,18 +259,18 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 	/* create a floor for this room */
 	floorname << zonename << ":Flr" << surfnum;
 	n = boundary_list[0].size();
-	outfile << "  BuildingSurface:Detailed," << endl
-	        << "    " << floorname.str() << ", !- Name" << endl
-		<< "    Floor,         !- Surface Type" << endl
-		<< "    Interior Floor,!- Construction Name" << endl
-		<< "    " << zonename << ", !- Zone Name" << endl
+	outfile << "  BuildingSurface:Detailed," << "\r\n"
+	        << "    " << floorname.str() << ", !- Name" << "\r\n"
+		<< "    Floor,         !- Surface Type" << "\r\n"
+		<< "    Interior Floor,!- Construction Name" << "\r\n"
+		<< "    " << zonename << ", !- Zone Name" << "\r\n"
 		<< "    Surface,       !- Outside Boundary Condition"
-			<< endl
-		<< "    , !- Outside Boundary Condition Object" << endl
-		<< "    NoSun,         !- Sun Exposure" << endl
-		<< "    NoWind,        !- Wind Exposure" << endl
-		<< "    1.0,           !- View Factor to Ground" << endl
-		<< "    " << n << ",   !- Number of Vertices" << endl;
+			<< "\r\n"
+		<< "    , !- Outside Boundary Condition Object" << "\r\n"
+		<< "    NoSun,         !- Sun Exposure" << "\r\n"
+		<< "    NoWind,        !- Wind Exposure" << "\r\n"
+		<< "    1.0,           !- View Factor to Ground" << "\r\n"
+		<< "    " << n << ",   !- Number of Vertices" << "\r\n";
 
 	/* define geometry of floor */
 	for(i = 0; i < n; i++)
@@ -281,24 +281,24 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		        << bm.floorplan.verts[boundary_list[0][i]].y << ","
 		        << r.min_z
 			<< (i == n-1 ? ";" : ",")
-			<< "   !- Vertex " << i << " {m}" << endl;
+			<< "   !- Vertex " << i << " {m}" << "\r\n";
 	}
-	outfile << endl;
+	outfile << "\r\n";
 	
 	/* create a ceiling for this room */
 	ceilname << zonename << ":Ceil" << surfnum;
-	outfile << "  BuildingSurface:Detailed," << endl
-	        << "    " << ceilname.str() << ", !- Name" << endl
-		<< "    Ceiling,         !- Surface Type" << endl
-		<< "    Interior Ceiling,!- Construction Name" << endl
-		<< "    " << zonename << ", !- Zone Name" << endl
+	outfile << "  BuildingSurface:Detailed," << "\r\n"
+	        << "    " << ceilname.str() << ", !- Name" << "\r\n"
+		<< "    Ceiling,         !- Surface Type" << "\r\n"
+		<< "    Interior Ceiling,!- Construction Name" << "\r\n"
+		<< "    " << zonename << ", !- Zone Name" << "\r\n"
 		<< "    Outdoors,         !- Outside Boundary Condition"
-			<< endl
-		<< "    , !- Outside Boundary Condition Object" << endl
-		<< "    NoSun,           !- Sun Exposure" << endl
-		<< "    NoWind,          !- Wind Exposure" << endl
-		<< "    0,             !- View Factor to Ground" << endl
-		<< "    " << n << ",     !- Number of Vertices" << endl;
+			<< "\r\n"
+		<< "    , !- Outside Boundary Condition Object" << "\r\n"
+		<< "    NoSun,           !- Sun Exposure" << "\r\n"
+		<< "    NoWind,          !- Wind Exposure" << "\r\n"
+		<< "    0,             !- View Factor to Ground" << "\r\n"
+		<< "    " << n << ",     !- Number of Vertices" << "\r\n";
 
 	/* define geometry of ceiling */
 	for(i = n; i >= 1; i--)
@@ -309,9 +309,9 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		   << bm.floorplan.verts[boundary_list[0][i-1]].y << ","
 		   << r.max_z
 		   << (i == 1 ? ";" : ",")
-		   << "   !- Vertex " << (n-i) << " {m}" << endl;
+		   << "   !- Vertex " << (n-i) << " {m}" << "\r\n";
 	}
-	outfile << endl;
+	outfile << "\r\n";
 }
 
 void writewalls(ofstream& outfile, const building_model_t& bm,
@@ -375,27 +375,27 @@ void writesubwall(ofstream& outfile, double x1, double y1,
 	 * thermal simulation */
 
 	/* make a wall */
-	outfile << "  BuildingSurface:Detailed," << endl
-	        << "    " << name << ", !- Name" << endl
-		<< "    Wall,          !- Surface Type" << endl
-		<< "    Interior Wall, !- Construction Name" << endl
-		<< "    " << zonename << ", !- Zone name" << endl
+	outfile << "  BuildingSurface:Detailed," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    Wall,          !- Surface Type" << "\r\n"
+		<< "    Interior Wall, !- Construction Name" << "\r\n"
+		<< "    " << zonename << ", !- Zone name" << "\r\n"
 		<< "    Surface,       !- Outside Boundary Condition" 
-			<< endl
-		<< "    , !- Outside Boundary Condition Object" << endl 
-		<< "    NoSun,         !- Sun Exposure" << endl
-		<< "    NoWind,        !- Wind Exposure" << endl
-		<< "    ,              !- View Factor to Ground" << endl
-		<< "    4,             !- Number of Vertices" << endl	
+			<< "\r\n"
+		<< "    , !- Outside Boundary Condition Object" << "\r\n" 
+		<< "    NoSun,         !- Sun Exposure" << "\r\n"
+		<< "    NoWind,        !- Wind Exposure" << "\r\n"
+		<< "    ,              !- View Factor to Ground" << "\r\n"
+		<< "    4,             !- Number of Vertices" << "\r\n"	
 		<< "    " << x1 << "," << y1 << "," << min_z
-			<< ", !- Vertex 1, lower right {m}" << endl
+			<< ", !- Vertex 1, lower right {m}" << "\r\n"
 		<< "    " << x1 << "," << y1 << "," << max_z
-			<< ", !- Vertex 2, upper right {m}" << endl
+			<< ", !- Vertex 2, upper right {m}" << "\r\n"
 		<< "    " << x2 << "," << y2 << "," << max_z
-			<< ", !- Vertex 3, upper left {m}" << endl
+			<< ", !- Vertex 3, upper left {m}" << "\r\n"
 		<< "    " << x2 << "," << y2 << "," << min_z
-			<< "; !- Vertex 4, lower left {m}" << endl
-		<< endl;
+			<< "; !- Vertex 4, lower left {m}" << "\r\n"
+		<< "\r\n";
 }
 
 void writewindow(ofstream& outfile, double x1, double y1,
@@ -403,27 +403,27 @@ void writewindow(ofstream& outfile, double x1, double y1,
 		unsigned int num, const string& wallname)
 {
 	/* make a wall */
-	outfile << "  FenestrationSurface:Detailed," << endl
+	outfile << "  FenestrationSurface:Detailed," << "\r\n"
 	        << "    " << wallname << ":Window" << num 
-			<< ", !- Name" << endl
-		<< "    Window,          !- Surface Type" << endl
-		<< "    Exterior Window, !- Construction Name" << endl
-		<< "    " << wallname << ", !- Building Surface Name"<< endl
-		<< "    , !- Outside Boundary Condition Object" << endl 
-		<< "    , !- View Factor to Ground" << endl
-		<< "    , !- Shading Control Name" << endl
-		<< "    , !- Frame and Divider Name" << endl
-		<< "    , !- Multiplier" << endl
-		<< "    4, !- Number of Vertices" << endl	
+			<< ", !- Name" << "\r\n"
+		<< "    Window,          !- Surface Type" << "\r\n"
+		<< "    Exterior Window, !- Construction Name" << "\r\n"
+		<< "    " << wallname << ", !- Building Surface Name"<< "\r\n"
+		<< "    , !- Outside Boundary Condition Object" << "\r\n" 
+		<< "    , !- View Factor to Ground" << "\r\n"
+		<< "    , !- Shading Control Name" << "\r\n"
+		<< "    , !- Frame and Divider Name" << "\r\n"
+		<< "    , !- Multiplier" << "\r\n"
+		<< "    4, !- Number of Vertices" << "\r\n"	
 		<< "    " << x1 << "," << y1 << "," << min_z
-			<< ", !- Vertex 1, lower right {m}" << endl
+			<< ", !- Vertex 1, lower right {m}" << "\r\n"
 		<< "    " << x1 << "," << y1 << "," << max_z
-			<< ", !- Vertex 2, upper right {m}" << endl
+			<< ", !- Vertex 2, upper right {m}" << "\r\n"
 		<< "    " << x2 << "," << y2 << "," << max_z
-			<< ", !- Vertex 3, upper left {m}" << endl
+			<< ", !- Vertex 3, upper left {m}" << "\r\n"
 		<< "    " << x2 << "," << y2 << "," << min_z
-			<< "; !- Vertex 4, lower left {m}" << endl
-		<< endl;
+			<< "; !- Vertex 4, lower left {m}" << "\r\n"
+		<< "\r\n";
 }
 
 /**************** implementation of helper functions ******************/
@@ -432,7 +432,7 @@ void writewindow(ofstream& outfile, double x1, double y1,
 void writeversion(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: VERSION");
-	outfile << "  Version,8.0;" << endl << endl;
+	outfile << "  Version,8.0;" << "\r\n" << "\r\n";
 }
 
 /* writes information about the building described in a model */
@@ -440,37 +440,37 @@ void writebuilding(ofstream& outfile, const string& name)
 {
 	/* write building information */
 	writesection(outfile, "ALL OBJECTS IN CLASS: BUILDING");
-	outfile << "  Building," << endl
-	        << "    " << name << ", !- Name" << endl
-		<< "    0.0, !- North Axis {deg}" << endl
-		<< "    City, !- Terrain" << endl
-		<< "    0.04, !- Loads Convergence Tolerance Value" << endl
+	outfile << "  Building," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    0.0, !- North Axis {deg}" << "\r\n"
+		<< "    City, !- Terrain" << "\r\n"
+		<< "    0.04, !- Loads Convergence Tolerance Value" << "\r\n"
 		<< "    0.4, !- Temperature Convergence Tolerance Value "
-		<< "{deltaC}" << endl
+		<< "{deltaC}" << "\r\n"
 		<< "    FullInteriorAndExterior, !- Solar Distribution"
-		<< endl
+		<< "\r\n"
 		<< "    25; !- Maximum Number of Warmup Days"
-		<< endl << endl;
+		<< "\r\n" << "\r\n";
 }
 
 /* writes the default simulation timestep for the file */
 void writetimestep(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: TIMESTEP");
-	outfile << "  Timestep,4;" << endl << endl;
+	outfile << "  Timestep,4;" << "\r\n" << "\r\n";
 }
 
 /* writes the simulation controls for the .idf file */
 void writesimulationcontrol(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: SIMULATIONCONTROL");
-	outfile << "  SimulationControl," << endl
-	        << "    No,   !- Do Zone Sizing Calculation" << endl
-		<< "    No,   !- Do System Sizing Calculation" << endl
-		<< "    No,   !- Do Plant Sizing Calculation" << endl
-		<< "    Yes,  !- Run Simulation for Sizing Periods" << endl
+	outfile << "  SimulationControl," << "\r\n"
+	        << "    No,   !- Do Zone Sizing Calculation" << "\r\n"
+		<< "    No,   !- Do System Sizing Calculation" << "\r\n"
+		<< "    No,   !- Do Plant Sizing Calculation" << "\r\n"
+		<< "    Yes,  !- Run Simulation for Sizing Periods" << "\r\n"
 		<< "    Yes;  !- Run Simulation for Weather File "
-		<< "Run Periods" << endl << endl;
+		<< "Run Periods" << "\r\n" << "\r\n";
 }
 
 /* writes the building location.  Since this program is unable to
@@ -479,20 +479,20 @@ void writesimulationcontrol(ofstream& outfile)
 void writelocation(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: LOCATION");
-	outfile << "  Site:Location," << endl
-	        << "    CHICAGO_IL_USA TMY2-94846, !- Name" << endl
-		<< "    41.78,   !- Latitude  {deg}" << endl
-		<< "    -87.75,  !- Longitude {deg}" << endl
-		<< "    -6.0,    !- Time Zone {hr}" << endl
-		<< "    190.00;  !- Elevation {m}" << endl
-		<< endl
-		<< "  GlobalGeometryRules," << endl
+	outfile << "  Site:Location," << "\r\n"
+	        << "    CHICAGO_IL_USA TMY2-94846, !- Name" << "\r\n"
+		<< "    41.78,   !- Latitude  {deg}" << "\r\n"
+		<< "    -87.75,  !- Longitude {deg}" << "\r\n"
+		<< "    -6.0,    !- Time Zone {hr}" << "\r\n"
+		<< "    190.00;  !- Elevation {m}" << "\r\n"
+		<< "\r\n"
+		<< "  GlobalGeometryRules," << "\r\n"
 		<< "    UpperLeftCorner,    "
-		<< "!- Starting Vertex Position" << endl
+		<< "!- Starting Vertex Position" << "\r\n"
 		<< "    Counterclockwise,   "
-		<< "!- Vertex Entry Direction" << endl
+		<< "!- Vertex Entry Direction" << "\r\n"
 		<< "    Absolute;           "
-		<< "!- Coordinate System" << endl << endl;
+		<< "!- Coordinate System" << "\r\n" << "\r\n";
 }
 
 /* writes common materials to an .idf file */
@@ -603,15 +603,15 @@ void writedefaultschedule(ofstream& outfile)
 {
 	/* write the schedule type limits */
 	writesection(outfile, "ALL OBJECTS IN CLASS: SCHEDULETYPELIMITS");
-	outfile << "  ScheduleTypeLimits," << endl 
-	        << "    Any Number; !- Name" << endl << endl;
+	outfile << "  ScheduleTypeLimits," << "\r\n" 
+	        << "    Any Number; !- Name" << "\r\n" << "\r\n";
 	writescheduletypelimit(outfile, "Fraction",0.0,1.0,"CONTINUOUS");
 	writescheduletypelimit(outfile, "Temperature",-60,200,"CONTINUOUS");
 	writescheduletypelimit(outfile, "On/Off",0,1,"DISCRETE");
 	writescheduletypelimit(outfile, "Control Type",0,4,"DISCRETE");
 	writescheduletypelimit(outfile, "Humidity",10,90,"CONTINUOUS");
-	outfile << "  ScheduleTypeLimits," << endl
-	        << "    Number; !- Name" << endl << endl;
+	outfile << "  ScheduleTypeLimits," << "\r\n"
+	        << "    Number; !- Name" << "\r\n" << "\r\n";
 
 	/* write schedule for people, lights, plugloads, etc. */
 	writescheduletypecompact(outfile, "OCCUPY-1");
@@ -638,36 +638,36 @@ void writedefaultschedule(ofstream& outfile)
 		1, "Holiday");
 
 	/* specify daylight savings time */
-	outfile << "  RunPeriodControl:DaylightSavingTime," << endl
-	        << "    2nd Sunday in March, !- Start Date" << endl
-		<< "    1st Sunday in November; !- End Date" << endl 
-		<< endl;
+	outfile << "  RunPeriodControl:DaylightSavingTime," << "\r\n"
+	        << "    2nd Sunday in March, !- Start Date" << "\r\n"
+		<< "    1st Sunday in November; !- End Date" << "\r\n" 
+		<< "\r\n";
 }
 
 void writedictionary(ofstream& outfile)
 {
 	writesection(outfile, 
 		"ALL OBJECTS IN CLASS: OUTPUT:VARIABLEDICTIONARY");
-	outfile << "  Output:VariableDictionary,IDF;" << endl << endl;
+	outfile << "  Output:VariableDictionary,IDF;" << "\r\n" << "\r\n";
 }
 
 void writefooter(ofstream& outfile)
 {
 	writesection(outfile, "OUTPUT VARIABLES");
 	outfile << "  Output:Meter,Photovoltaic:ElectricityProduced,"
-	        << "runperiod;" << endl << endl;
-	outfile << "  OutputControl:Table:Style," << endl
-	        << "    TabAndHTML;         !- Column Separator" << endl
-		<< endl;
-	outfile << "  Output:Table:SummaryReports," << endl
-	        << "    AllSummary;         !- Report 1 Name" << endl
-		<< endl;
+	        << "runperiod;" << "\r\n" << "\r\n";
+	outfile << "  OutputControl:Table:Style," << "\r\n"
+	        << "    TabAndHTML;         !- Column Separator" << "\r\n"
+		<< "\r\n";
+	outfile << "  Output:Table:SummaryReports," << "\r\n"
+	        << "    AllSummary;         !- Report 1 Name" << "\r\n"
+		<< "\r\n";
 }
 
 /* writes a full-line comment to an .idf file */
 void writesection(ofstream& outfile, const string& text)
 {
-	outfile << " !- === " << text << " ===" << endl << endl;
+	outfile << " !- === " << text << " ===" << "\r\n" << "\r\n";
 }
 
 /* writes one material to an .idf file with the specified properties */
@@ -677,31 +677,31 @@ void writemat(ofstream& outfile, const string& name,
 		double specific_heat, double thermal_absorptance,
 		double solar_absorptance, double visible_absorptance)
 {
-	outfile << "  Material," << endl
-		<< "    " << name << ", !- Name" << endl
-		<< "    " << roughness << ", !- Roughness" << endl
-		<< "    " << thickness << ", !- Thickness {m}" << endl
+	outfile << "  Material," << "\r\n"
+		<< "    " << name << ", !- Name" << "\r\n"
+		<< "    " << roughness << ", !- Roughness" << "\r\n"
+		<< "    " << thickness << ", !- Thickness {m}" << "\r\n"
 		<< "    " << conductivity << ", !- Conductivity {W/m-K}" 
-		<< endl
-		<< "    " << density << ", !- Density {kg/m3}" << endl
+		<< "\r\n"
+		<< "    " << density << ", !- Density {kg/m3}" << "\r\n"
 		<< "    " << specific_heat << ", !- Specific Heat {J/kg-K}"
-		<< endl
+		<< "\r\n"
 		<< "    " << thermal_absorptance 
-		<< ", !- Thermal Absorptance" << endl
+		<< ", !- Thermal Absorptance" << "\r\n"
 		<< "    " << solar_absorptance << ", !- Solar Absorptance"
-		<< endl
+		<< "\r\n"
 		<< "    " << visible_absorptance 
-		<< "; !- Visible Absorptance" << endl << endl;
+		<< "; !- Visible Absorptance" << "\r\n" << "\r\n";
 }
 
 /* writes one material for gas (a.k.a. air) */
 void writeairgap(ofstream& outfile, const string& name, 
 		double thermal_resistance)
 {
-	outfile << "  Material:AirGap," << endl
-	        << "    " << name << ", !- Name" << endl
+	outfile << "  Material:AirGap," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
 		<< "    " << thermal_resistance
-		<< "; !- Thermal Resistance {m2-K/W}" << endl << endl;
+		<< "; !- Thermal Resistance {m2-K/W}" << "\r\n" << "\r\n";
 }
 
 /* writes window glazing to file, which describes the reflectance
@@ -719,40 +719,40 @@ void writewindowglazing(ofstream& outfile, const string& name,
 		double back_infrared_emissivity,
 		double conductivity)
 {
-	outfile << "  WindowMaterial:Glazing," << endl
-	        << "    " << name << ", !- Name" << endl
+	outfile << "  WindowMaterial:Glazing," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
 		<< "    " << optical_data_type << ", !- Optical Data Type"
-		<< endl
-		<< "    " << dataset_name << ", !- Data Set Name" << endl
-		<< "    " << thickness << ", !- Thickness {m}" << endl
+		<< "\r\n"
+		<< "    " << dataset_name << ", !- Data Set Name" << "\r\n"
+		<< "    " << thickness << ", !- Thickness {m}" << "\r\n"
 		<< "    " << solar_transmittance
-		<< ", !- Solar Transmittance at Normal Incidence" << endl
+		<< ", !- Solar Transmittance at Normal Incidence" << "\r\n"
 		<< "    " << front_solar_reflectance
 		<< ", !- Front Side Solar Reflectance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << back_solar_reflectance
 		<< ", !- Back Side Solar Reflectance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << visible_transmittance
 		<< ", !- Visible Transmittance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << front_visible_reflectance
 		<< ", !- Front Side Visible Reflectance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << back_visible_reflectance
 		<< ", !- Back Side Visible Reflectance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << infrared_transmittance
 		<< ", !- Infrared Transmittance at Normal Incidence"
-		<< endl
+		<< "\r\n"
 		<< "    " << front_infrared_emissivity
 		<< ", !- Front Side Infrared Hemispherical Emissivity"
-		<< endl
+		<< "\r\n"
 		<< "    " << back_infrared_emissivity
 		<< ", !- Back Side Infrared Hemispherical Emissivity"
-		<< endl
+		<< "\r\n"
 		<< "    " << conductivity << "; !- Conductivity {W/m-K}"
-		<< endl << endl;
+		<< "\r\n" << "\r\n";
 }
 
 /* writes window gas to .idf file, which describes the air gap within
@@ -760,11 +760,11 @@ void writewindowglazing(ofstream& outfile, const string& name,
 void writewindowgas(ofstream&outfile, const string& name, 
 		const string& type, double thickness)
 {
-	outfile << "  WindowMaterial:Gas," << endl
-	        << "    " << name << ", !- Name" << endl
-		<< "    " << type << ", !- Type" << endl
+	outfile << "  WindowMaterial:Gas," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    " << type << ", !- Type" << "\r\n"
 		<< "    " << thickness << "; !- Thickness {m}"
-		<< endl << endl;
+		<< "\r\n" << "\r\n";
 }
 
 /* writes one construction to file.  This represents a set of materials,
@@ -775,17 +775,17 @@ void writeconstruction(ofstream& outfile, const string& name,
 	int i;
 
 	/* write name */
-	outfile << "  Construction," << endl
-	        << "    " << name << ", !- Name" << endl;
+	outfile << "  Construction," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n";
 	
 	/* write layers */
 	for(i = 0; i < num_layers-1; i++)
 		outfile << "    " << layers[i] << ", !- Layer " 
-			<< (i+1) << endl;
+			<< (i+1) << "\r\n";
 
 	/* write last layer */
 	outfile << "    " << layers[num_layers-1] 
-		<< "; !- Inner Layer" << endl << endl;
+		<< "; !- Inner Layer" << "\r\n" << "\r\n";
 }
 
 /* write a schedule type limit, which specifies upper and lower bounds
@@ -794,35 +794,35 @@ void writescheduletypelimit(ofstream& outfile, const string& name,
 		double lower, double upper, const string& type)
 {
 	outfile << "  ScheduleTypeLimits,"
-	        << "    " << name << ", !- Name" << endl
-		<< "    " << lower << ", !- Lower Limit Value {A3}" << endl
-		<< "    " << upper << ", !- Upper Limit Value {A3}" << endl
-		<< "    " << type << "; !- Numeric Type" << endl << endl;
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    " << lower << ", !- Lower Limit Value {A3}" << "\r\n"
+		<< "    " << upper << ", !- Upper Limit Value {A3}" << "\r\n"
+		<< "    " << type << "; !- Numeric Type" << "\r\n" << "\r\n";
 }
 
 void writescheduletypecompact(std::ofstream& outfile, 
 		const std::string& name)
 {
-	outfile << "  Schedule:Compact," << endl
-	        << "    " << name << ",      !- Name" << endl
+	outfile << "  Schedule:Compact," << "\r\n"
+	        << "    " << name << ",      !- Name" << "\r\n"
 	        << "    Fraction,          !- Schedule Type Limits Name"
-			<< endl
-	        << "    Through: 12/31,    !- Field 1" << endl
+			<< "\r\n"
+	        << "    Through: 12/31,    !- Field 1" << "\r\n"
 	        << "    For: "
 			<< "WeekDays SummerDesignDay "
-			<< "CustomDay1 CustomDay2, !- Field 2" << endl
-	        << "    Until: 8:00,0.05,  !- Field 3" << endl
-	        << "    Until: 11:00,1.00, !- Field 5" << endl
-	        << "    Until: 12:00,0.80, !- Field 7" << endl
-	        << "    Until: 13:00,0.40, !- Field 9" << endl
-	        << "    Until: 14:00,0.80, !- Field 11" << endl
-	        << "    Until: 18:00,1.00, !- Field 13" << endl
-	        << "    Until: 19:00,0.50, !- Field 15" << endl
-	        << "    Until: 24:00,0.0,  !- Field 17" << endl
+			<< "CustomDay1 CustomDay2, !- Field 2" << "\r\n"
+	        << "    Until: 8:00,0.05,  !- Field 3" << "\r\n"
+	        << "    Until: 11:00,1.00, !- Field 5" << "\r\n"
+	        << "    Until: 12:00,0.80, !- Field 7" << "\r\n"
+	        << "    Until: 13:00,0.40, !- Field 9" << "\r\n"
+	        << "    Until: 14:00,0.80, !- Field 11" << "\r\n"
+	        << "    Until: 18:00,1.00, !- Field 13" << "\r\n"
+	        << "    Until: 19:00,0.50, !- Field 15" << "\r\n"
+	        << "    Until: 24:00,0.0,  !- Field 17" << "\r\n"
 	        << "    For: " 
 			<< "Weekends WinterDesignDay Holiday, "
-			<< "!- Field 25" << endl
-	        << "    Until: 24:00,0.05; !- Field 26" << endl << endl;
+			<< "!- Field 25" << "\r\n"
+	        << "    Until: 24:00,0.05; !- Field 26" << "\r\n" << "\r\n";
 }
 
 /* the building model can specify special days for scheduling purposes.
@@ -830,12 +830,12 @@ void writescheduletypecompact(std::ofstream& outfile,
 void writeholiday(ofstream& outfile, const string& name, 
 		const string& start, int duration, const string& type)
 {
-	outfile << "  RunPeriodControl:SpecialDays," << endl
-	        << "    " << name << ", !- Name" << endl
-		<< "    " << start << ", !- Start Date" << endl
-		<< "    " << duration << ", !- Duration {days}" << endl
-		<< "    " << type << "; !- Special Day Type" << endl 
-		<< endl;
+	outfile << "  RunPeriodControl:SpecialDays," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    " << start << ", !- Start Date" << "\r\n"
+		<< "    " << duration << ", !- Duration {days}" << "\r\n"
+		<< "    " << type << "; !- Special Day Type" << "\r\n" 
+		<< "\r\n";
 }
 
 /* specifies thermostat levels */
@@ -843,12 +843,12 @@ void writethermostat(ofstream& outfile, const string& name,
 		double heating_set, double cooling_set)
 {
 	writesection(outfile, "HVACTemplate:Thermostat");
-	outfile << "  HVACTemplate:Thermostat," << endl
-	        << "    " << name << ", !- Name" << endl
-		<< "    , !- Heating Setpoint Schedule Name" << endl
+	outfile << "  HVACTemplate:Thermostat," << "\r\n"
+	        << "    " << name << ", !- Name" << "\r\n"
+		<< "    , !- Heating Setpoint Schedule Name" << "\r\n"
 		<< "    " << heating_set 
-		<< ", !- Constant Heating Setpoint {C}" << endl
-		<< "    , !- Cooling Setpoint Schedule Name" << endl
+		<< ", !- Constant Heating Setpoint {C}" << "\r\n"
+		<< "    , !- Cooling Setpoint Schedule Name" << "\r\n"
 		<< "    " << cooling_set 
-		<< "; !- Constant Cooling Setpoint {C}" << endl << endl;
+		<< "; !- Constant Cooling Setpoint {C}" << "\r\n" << "\r\n";
 }
