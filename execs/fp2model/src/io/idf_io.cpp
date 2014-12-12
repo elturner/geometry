@@ -432,7 +432,7 @@ void writewindow(ofstream& outfile, double x1, double y1,
 void writeversion(ofstream& outfile)
 {
 	writesection(outfile, "ALL OBJECTS IN CLASS: VERSION");
-	outfile << "  Version,7.2;" << endl << endl;
+	outfile << "  Version,8.0;" << endl << endl;
 }
 
 /* writes information about the building described in a model */
