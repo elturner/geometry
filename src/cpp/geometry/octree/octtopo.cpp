@@ -199,7 +199,7 @@ int octtopo_t::remove_outliers(double neigh_thresh)
 	progress_bar_t progbar;
 	tictoc_t clk;
 	size_t num_seen, fi, ni, num_neighs;
-	double count, myarea, neigharea, conf_ratio;
+	double count, myarea, neigharea;
 	bool current_in;
 
 	/* if a threshold is given outside the valid
@@ -292,20 +292,9 @@ int octtopo_t::remove_outliers(double neigh_thresh)
 						it->first->halfwidth);
 				neigharea = 4*neigharea*neigharea;
 
-				/* we also want to include a ratio
-				 * of the confidence values of these
-				 * two nodes, since we want neighbors
-				 * that have a lower uncertainty
-				 * to have more of a vote. */
-				conf_ratio = 
-					it->first->data->get_uncertainty()
-					/ ns[ni]->data->get_uncertainty();
-
 				/* weight this neighbor's vote based
-				 * on the amount of shared surface area,
-				 * as well as the ratio of their
-				 * confidences. */
-				count += neigharea * conf_ratio;
+				 * on the amount of shared surface area */
+				count += neigharea;
 			}
 		count /= myarea; /* normalize by total surface area */
 

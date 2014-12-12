@@ -22,7 +22,7 @@
 	     Values > 1 indicate that no flips will be made.
 
 	     range: (0.5,1] -->
-	<octsurf_node_outlierthresh>0.6</octsurf_node_outlierthresh>
+	<octsurf_node_outlierthresh>0.66</octsurf_node_outlierthresh>
 
 	<!-- PARAMETERS FOR REGION FORMATION -->
 

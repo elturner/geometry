@@ -284,7 +284,6 @@ int planar_region_graph_t::coalesce_regions()
 			continue;
 		}
 
-
 		/* use checksum to see if we need to recalc plane */
 		num_faces = rit->second.region.num_faces()
 				+ sit->second.region.num_faces();
