@@ -109,17 +109,22 @@ int tree_exporter::export_planar_mesh(const std::string& filename,
 		return PROPEGATE_ERROR(-2, ret);
 	toc(clk, "Initializing topology");
 
+	/* remove outliers from topology */
+	ret = top.remove_outliers(mesher.get_node_outlierthresh());
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+
 	/* extract the boundary nodes using the generated topology */
 	ret = boundary.populate(top, scheme);
 	if(ret)
-		return PROPEGATE_ERROR(-3, ret);
+		return PROPEGATE_ERROR(-4, ret);
 
 	/* extract the corners of the model from this boundary */
 	tic(clk);
 	corner_map.add(tree, boundary);
 	ret = corner_map.populate_edges(tree);
 	if(ret)
-		return PROPEGATE_ERROR(-4, ret);
+		return PROPEGATE_ERROR(-5, ret);
 	toc(clk, "Computing corners");
 
 	/* form planar regions from these boundary faces */
@@ -130,42 +135,54 @@ int tree_exporter::export_planar_mesh(const std::string& filename,
 			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
 	ret = region_graph.populate(boundary);
 	if(ret)
-		return PROPEGATE_ERROR(-5, ret);
+		return PROPEGATE_ERROR(-6, ret);
 	toc(clk, "Forming regions");
 
 	/* coalesce regions (use arbitrary parameters) */
 	tic(clk);
 	ret = region_graph.coalesce_regions();
 	if(ret)
-		return PROPEGATE_ERROR(-6, ret);
+		return PROPEGATE_ERROR(-7, ret);
 	toc(clk, "Coalescing regions");
 
 	/* mesh the region graph */
 	tic(clk);
 	ret = mesher.init(tree, region_graph, corner_map);
 	if(ret)
-		return PROPEGATE_ERROR(-7, ret);
+		return PROPEGATE_ERROR(-8, ret);
 	toc(clk, "Meshing regions");
+	
+	// TODO DEBUGGING-------------
+	ret = mesher.writeobj_boundary(cerr);
+	if(ret)
+	{
+		cout << "SOMETHING BAD HAPPENED: " << ret << endl;
+	}
+	ret = region_graph.writeobj(filename, false);
+	if(ret)
+		cout << "UNABLE TO EXPORT REGION GRAPH" << endl;
+	return 0;
+	// TODO END DEBUGGING ------------------
 
 	/* simplify it */
 	tic(clk);
 	ret = mesher.simplify();
 	if(ret)
-		return PROPEGATE_ERROR(-8, ret);
+		return PROPEGATE_ERROR(-9, ret);
 	toc(clk, "Simplifying regions");
-
+	
 	/* generate the topologically watertight mesh */
 	tic(clk);
 	ret = mesher.compute_mesh(mesh);
 	if(ret)
-		return PROPEGATE_ERROR(-9, ret);
+		return PROPEGATE_ERROR(-10, ret);
 	toc(clk, "Generating mesh");
 
 	/* export the mesh to disk */
 	tic(clk);
 	ret = mesh.write(filename);	
 	if(ret)
-		return PROPEGATE_ERROR(-10, ret);
+		return PROPEGATE_ERROR(-11, ret);
 	toc(clk, "Writing mesh");
 
 	/* success */

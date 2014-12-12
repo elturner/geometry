@@ -1,6 +1,29 @@
 <settings>
 <!-- This file contains run settings for the octsurf program -->
 
+	<!-- PARAMETERS FOR NODE OUTLIER REMOVAL/SMOOTHING -->
+
+	<!-- This value indicates the percentage of an octnode's
+	     surface area that has to be touching neighboring nodes
+	     with an opposite flag for that node's flag to change.
+
+	     In other words, if an interior node was completely
+	     surrounded by exterior nodes, and this value was less
+	     than or equal to 1.0, then the interior node would
+	     be flipped and counted as an exterior node.
+
+	     Another example:  if an exterior node is 2/3rds surrounded
+	     by interior nodes, but this value is 0.75, then the
+	     exterior node would not change.  But, in the same
+	     scenario, if this value was 0.5, then the exterior
+	     node would be flipped.
+
+	     Note values <= 0.5 are not stable, and should be avoided.
+	     Values > 1 indicate that no flips will be made.
+
+	     range: (0.5,1] -->
+	<octsurf_node_outlierthresh>0.6</octsurf_node_outlierthresh>
+
 	<!-- PARAMETERS FOR REGION FORMATION -->
 
 	<!-- This value indicates how aggressive planar region

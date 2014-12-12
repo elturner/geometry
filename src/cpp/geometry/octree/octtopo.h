@@ -409,6 +409,36 @@ namespace octtopo
 			bool are_neighbors(octnode_t* a,
 			                   octnode_t* b) const;
 
+			/*------------*/
+			/* processing */
+			/*------------*/
+
+			/**
+			 * Modifies node probability values to reduce 
+			 * outliers.
+			 *
+			 * Analyzes each node's interior/exterior flag
+			 * with respect to its neighbors, and attempts
+			 * to remove outlier nodes by selectively flipping
+			 * probability values.
+			 *
+			 * The input parameter to this function specifies
+			 * the threshold on whether nodes are considered
+			 * an outlier.  If a given node has at least
+			 * this much of its surface area covered by
+			 * neighboring nodes with the opposite flag,
+			 * then it will be considered an outlier.
+			 *
+			 * Valid Range:  (0.5, 1.0]
+			 *
+			 * @param neigh_thresh   Threshold on neighbors for
+			 *                       outlier nodes.
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int remove_outliers(double neigh_thresh);
+
 			/*-----------*/
 			/* debugging */
 			/*-----------*/

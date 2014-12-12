@@ -36,6 +36,7 @@ using namespace node_corner;
 
 /* the following defines are used to access parameters stored
  * in the .xml settings file. */
+#define XML_NODE_OUTLIERTHRESH   "octsurf_node_outlierthresh"
 #define XML_COALESCE_DISTTHRESH  "octsurf_coalesce_distthresh"
 #define XML_COALESCE_PLANETHRESH "octsurf_coalesce_planethresh"
 #define XML_USE_ISOSURFACE_POS   "octsurf_use_isosurface_pos"
@@ -73,6 +74,7 @@ int mesher_t::import(const std::string& xml_settings)
 	if(xml_settings.empty())
 	{
 		/* no file provided, use default settings */
+		this->node_outlierthresh = 1.0;
 		this->coalesce_distthresh = 2.0;
 		this->coalesce_planethresh = 0.0;
 		this->use_isosurface_pos = false;
@@ -91,6 +93,9 @@ int mesher_t::import(const std::string& xml_settings)
 	}
 
 	/* read in the settings information */
+	if(settings.is_prop(XML_NODE_OUTLIERTHRESH))
+		this->node_outlierthresh = settings.getAsDouble(
+					XML_NODE_OUTLIERTHRESH);
 	if(settings.is_prop(XML_COALESCE_DISTTHRESH))
 		this->coalesce_distthresh = settings.getAsDouble(
 					XML_COALESCE_DISTTHRESH);
@@ -178,7 +183,7 @@ int mesher_t::init(const octree_t& tree,
 				 * regions) */
 				if(vinfo.size() < 2)
 					continue; /* don't care */
-
+				
 				/* if there are multiple regions touching
 				 * this corner, then we should record it
 				 *
@@ -501,6 +506,7 @@ int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
 	map<corner_t, size_t> vert_inds;
 	pair<map<corner_t, size_t>::iterator, bool> ins;
 	mesh_io::vertex_t v;
+	int ret;
 
 	/* iterate over the regions.  We want to find the
 	 * vertices that are going to be exported with them. */
@@ -536,8 +542,14 @@ int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
 
 	/* now that we've inserted all the vertices, we can go
 	 * through the regions and add triangles */
-	// TODO
-
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* make triangles for this region */
+		ret = pit->second.compute_mesh(mesh, vert_inds);
+		if(ret)
+			return PROPEGATE_ERROR(-2, ret);
+	}
+		
 	/* success */
 	return 0;
 }
@@ -601,6 +613,24 @@ int mesher_t::writecsv(std::ostream& os) const
 	{
 		/* export this region */
 		ret = pit->second.writecsv(os, this->vertices);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	}
+
+	/* success */
+	return 0;
+}
+			
+int mesher_t::writeobj_boundary(std::ostream& os) const
+{
+	planemap_t::const_iterator pit;
+	int ret;
+
+	/* iterate over the regions */
+	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	{
+		/* export this region */
+		ret = pit->second.writeobj_boundary(os, this->vertices);
 		if(ret)
 			return PROPEGATE_ERROR(-1, ret);
 	}
@@ -735,6 +765,13 @@ int region_info_t::populate_boundaries(
 	return 0;
 }
 			
+int region_info_t::compute_mesh(mesh_io::mesh_t& mesh,
+				const std::map<node_corner::corner_t,
+						size_t>& vert_ind) const
+{
+	return -1; // TODO implement me
+}
+			
 int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 {
 	vertmap_t::const_iterator vit, vit_first;
@@ -769,6 +806,81 @@ int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
 			
 		/* add newline between boundaries within a region */
 		os << endl;
+	}
+
+	/* success */
+	os << endl;
+	return 0;
+}
+			
+int region_info_t::writeobj_boundary(ostream& os, const vertmap_t& vm) const
+{
+	vertmap_t::const_iterator vit, vit_first;
+	size_t bi, vi, num_boundaries, num_verts;
+	color_t mycolor;
+
+	/* pick a random color for this region */
+	mycolor.set_random();
+
+	/* iterate over the boundaries in this region */
+	num_boundaries = this->boundaries.size();
+	for(bi = 0; bi < num_boundaries; bi++)
+	{
+		/* iterate over the vertices in this boundary */
+		num_verts = this->boundaries[bi].size();
+		if(num_verts <= 1)
+			continue;
+		for(vi = 0; vi < num_verts; vi++)
+		{
+			/* get info for this vertex */
+			vit = vm.find(this->boundaries[bi][vi]);
+			if(vit == vm.end())
+				return -1;
+			if(vi == 0)
+				vit_first = vit;
+
+			/* add info to stream */
+			os << "v "
+			   << vit->second.get_position()(0) << " "
+			   << vit->second.get_position()(1) << " "
+			   << vit->second.get_position()(2) << " "
+			   << mycolor.get_red_int()         << " "
+			   << mycolor.get_green_int()       << " "
+			   << mycolor.get_blue_int()        << endl;
+
+			/* write a point really close to this one */
+			os << "v "
+			   << (vit->second.get_position()(0)
+			   +((double)(rand()%2000-1000)/100000.0)) << " "
+			   << (vit->second.get_position()(1)
+			   +((double)(rand()%2000-1000)/100000.0)) << " "
+			   << (vit->second.get_position()(2)
+			   +((double)(rand()%2000-1000)/100000.0)) << " "
+			   << mycolor.get_red_int()         << " "
+			   << mycolor.get_green_int()       << " "
+			   << mycolor.get_blue_int()        << endl;
+		}
+
+		/* write triangles connecting the boundary vertices */
+		for(vi = 0; vi < num_verts-1; vi++)
+		{
+			os << "f " << ((int)(2*vi+0) - (int)(2*num_verts) )
+			   << " "  << ((int)(2*vi+1) - (int)(2*num_verts) )
+			   << " "  << ((int)(2*vi+2) - (int)(2*num_verts) )
+			   << endl
+			   << "f " << ((int)(2*vi+1) - (int)(2*num_verts) )
+			   << " "  << ((int)(2*vi+3) - (int)(2*num_verts) )
+			   << " "  << ((int)(2*vi+2) - (int)(2*num_verts) )
+			   << endl;
+		}
+		os << "f " << (-2) 
+		   << " "  << (-1)
+		   << " "  << (0 - (int)(2*num_verts) )
+		   << endl
+		   << "f " << (-1)
+		   << " "  << (1 - (int)(2*num_verts) )
+		   << " "  << (0 - (int)(2*num_verts) )
+		   << endl;
 	}
 
 	/* success */

@@ -89,6 +89,18 @@ namespace region_mesher
 			 * of this algorithm */
 
 			/**
+			 * The threshold to use when smoothing
+			 * the octtopo via outlier removal.
+			 *
+			 * Indicates percentage of surface area
+			 * of node that has to disagree with node's
+			 * flag for it to be flipped.
+			 *
+			 * range: (0.5, 1.0]
+			 */
+			double node_outlierthresh;
+
+			/**
 			 * The coalescing distance threshold to use
 			 * when forming regions for this mesher
 			 *
@@ -204,6 +216,13 @@ namespace region_mesher
 			/*-----------*/
 
 			/**
+			 * Retrieves the value for the node outlier
+			 * threshold.
+			 */
+			inline double get_node_outlierthresh() const
+			{ return this->node_outlierthresh; };
+			
+			/**
 			 * Retrieves the value for coalescing distance
 			 * threshold.
 			 */
@@ -299,6 +318,21 @@ namespace region_mesher
 			 *             failure.
 			 */
 			int writecsv(std::ostream& os) const;
+
+			/**
+			 * Exports all region boundary edges to
+			 * the specified Wavefront OBJ stream.
+			 *
+			 * These edges represent the output of the
+			 * processing by this structure, including
+			 * any simplification.
+			 *
+			 * @param os   The output stream
+			 *
+			 * @return    Returns zero on success, non-zero on
+			 *            failure.
+			 */
+			int writeobj_boundary(std::ostream& os) const;
 
 			/**
 			 * Exports all corner map edges connected to
@@ -608,6 +642,27 @@ namespace region_mesher
 			int populate_boundaries(
 				const node_corner::corner_map_t& cm);
 
+			/**
+			 * Will triangulate the topology of this region
+			 * and store the results in the provided mesh.
+			 *
+			 * Given a mesh and a mapping between vertices
+			 * and indices, will form triangles that represent
+			 * this region that reference the appropriate
+			 * vertex indices, and store those triangles in
+			 * the given mesh structure.
+			 *
+			 * @param mesh   Where to store the output triangles
+			 * @param vert_ind   The mapping from vertices to
+			 *                   indices in the mesh.
+			 *
+			 * @return       Returns zero on success, non-zero
+			 *               on failure.
+			 */
+			int compute_mesh(mesh_io::mesh_t& mesh,
+				const std::map<node_corner::corner_t,
+						size_t>& vert_ind) const;
+
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
@@ -636,7 +691,21 @@ namespace region_mesher
 			 */
 			int writecsv(std::ostream& os, 
 					const vertmap_t& vm) const;
-	
+
+			/**
+			 * Writes the boundaries of this region out to
+			 * the specified Wavefront OBJ file stream.
+			 *
+			 * @param os   The output stream to write to
+			 * @param  vm   The vertex map to get the info
+			 *              about each vertex
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
+			 */
+			int writeobj_boundary(std::ostream& os,
+					const vertmap_t& vm) const;
+
 			/**
 			 * Writes the edges connected to each vertex
 			 * of this region to the specified Wavefront

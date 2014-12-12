@@ -143,7 +143,15 @@ class octnode_t
 		 * @return   Returns true iff the node was simplified
 		 */
 		bool simplify();
-	
+
+		/**
+		 * Retrieves the surface area of this node
+		 *
+		 * @return   Returns the surface area of this node's cube
+		 */
+		inline double surface_area() const
+		{ return 24*this->halfwidth*this->halfwidth; };
+
 		/*-----------------*/
 		/* recursive calls */
 		/*-----------------*/

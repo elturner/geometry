@@ -338,6 +338,21 @@ class octdata_t
 		 */
 		inline void set_fp_room(int r)
 		{ this->fp_room = r; };
+
+		/**
+		 * Artificially flips the probability value stored in
+		 * this data structure.
+		 *
+		 * This process is useful for artificially modifying
+		 * the values of the carved tree, for the purposes
+		 * of improving cohesion, etc.
+		 *
+		 * This call will change the probability value to
+		 * change the return value of is_interior().  It will
+		 * also change the uncertainty value to be at maximum,
+		 * since it is no longer observed data.
+		 */
+		void flip();
 };
 
 #endif

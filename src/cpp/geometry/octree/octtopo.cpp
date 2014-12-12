@@ -3,12 +3,14 @@
 #include "octnode.h"
 #include <util/error_codes.h>
 #include <util/progress_bar.h>
+#include <util/tictoc.h>
 #include <Eigen/Dense>
 #include <algorithm>
 #include <utility>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <map>
 #include <set>
 
@@ -186,6 +188,147 @@ bool octtopo_t::are_neighbors(octnode_t* a, octnode_t* b) const
 
 	/* no neighbors found */
 	return false;
+}
+			
+int octtopo_t::remove_outliers(double neigh_thresh)
+{
+	queue<map<octnode_t*, octneighbors_t>::iterator> 
+				in_to_check, out_to_check;
+	map<octnode_t*, octneighbors_t>::iterator it;
+	vector<octnode_t*> ns;
+	progress_bar_t progbar;
+	tictoc_t clk;
+	size_t num_seen, fi, ni, num_neighs;
+	double count, myarea, neigharea, conf_ratio;
+	bool current_in;
+
+	/* if a threshold is given outside the valid
+	 * range, then don't do anything. */
+	if(neigh_thresh <= 0.5 || neigh_thresh > 1.0)
+		return 0;
+
+	/* prepare processing */
+	tic(clk);
+	progbar.set_name("Removing outliers");
+	num_seen = 0;
+
+	/* iterate over all available nodes, add them to our queues */
+	for(it = this->neighs.begin(); it != this->neighs.end(); it++)
+	{
+		/* add to appropriate queue */
+		if(this->node_is_interior(it->first))
+			in_to_check.push(it);
+		else
+			out_to_check.push(it);
+	}
+
+	/* We want to check all the interior nodes first,
+	 * to see if they should be flipped to exterior nodes.
+	 *
+	 * After we've finished with the in->out flipping,
+	 * we want to check any existing exterior nodes that
+	 * should be flipped to be interior. */
+	while(!(in_to_check.empty() && out_to_check.empty()))
+	{
+		/* update progress bar */
+		progbar.update(num_seen, 
+			num_seen+in_to_check.size()+out_to_check.size());
+		
+		/* get next value */
+		if(in_to_check.empty())
+		{
+			/* get next currently exterior node */
+			it = out_to_check.front();
+			out_to_check.pop();
+			current_in = false;
+		}
+		else
+		{
+			/* get next currently interior node */
+			it = in_to_check.front();
+			in_to_check.pop();
+			current_in = true;
+		}
+		num_seen++;
+
+		/* make sure this value is legit */
+		if(it == this->neighs.end())
+		{
+			progbar.clear();
+			cerr << "[octtopo_t::remove_outliers]\tError! "
+			     << "encountered invalid iterator in queue."
+			     << endl;
+			return -1;
+		}
+
+		/* check if we've already flipped this node */
+		if(it->first->data == NULL)
+			continue;
+		if(this->node_is_interior(it->first) != current_in)
+			continue; /* already flipped */
+
+		/* get this node's total surface area */
+		myarea = it->first->surface_area();
+
+		/* get this node's neighbors */
+		ns.clear();
+		for(fi = 0; fi < NUM_FACES_PER_CUBE; fi++)
+			it->second.get(all_cube_faces[fi], ns);
+
+		/* iterate through the neighbors, looking for nodes
+		 * whose flags disagree with the current node's flag.
+		 *
+		 * If there are a sufficient number of disagreeing
+		 * neighbors, then this node is an outlier. */
+		num_neighs = ns.size();
+		count = 0;
+		for(ni = 0; ni < num_neighs; ni++)
+			if(this->node_is_interior(ns[ni]) != current_in)
+			{
+				/* this neighboring node disagrees
+				 * with the current node, so count
+				 * its shared area towards the total */
+				neigharea = min(ns[ni]->halfwidth,
+						it->first->halfwidth);
+				neigharea = 4*neigharea*neigharea;
+
+				/* we also want to include a ratio
+				 * of the confidence values of these
+				 * two nodes, since we want neighbors
+				 * that have a lower uncertainty
+				 * to have more of a vote. */
+				conf_ratio = 
+					it->first->data->get_uncertainty()
+					/ ns[ni]->data->get_uncertainty();
+
+				/* weight this neighbor's vote based
+				 * on the amount of shared surface area,
+				 * as well as the ratio of their
+				 * confidences. */
+				count += neigharea * conf_ratio;
+			}
+		count /= myarea; /* normalize by total surface area */
+
+		/* check count against threshold */
+		if(count < neigh_thresh)
+			continue; /* not an outlier */
+
+		/* This node is an outlier, so we want to flip it. */
+		it->first->data->flip();
+
+		/* We also want to then double-check all its 
+		 * neighbors that used to agree (and now disagree),
+		 * since they may be outliers, too. */
+		for(ni = 0; ni < num_neighs; ni++)
+			if(this->node_is_interior(ns[ni]) == current_in)
+				in_to_check.push(
+					this->neighs.find(ns[ni]));
+	}
+	
+	/* success */
+	progbar.clear();
+	toc(clk, "Removing outlier nodes");
+	return 0;
 }
 			
 bool octtopo_t::node_is_interior(octnode_t* node)

@@ -161,3 +161,20 @@ void octdata_t::add_sample(double prob, double surf, double corner,
 	this->corner_sum  += corner; /* add corner coefficient obs. */
 	this->planar_sum  += planar; /* add planarity observation */
 }
+		
+void octdata_t::flip()
+{
+	/* check what the current value is */
+	if(this->is_interior())
+	{
+		/* fix this data value to be exterior */
+		this->prob_sum = 0.0;
+		this->count = 1;
+	}
+	else
+	{
+		/* fix this data value to be interior */
+		this->prob_sum = 1.0;
+		this->count = 1;
+	}
+}
