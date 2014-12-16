@@ -292,12 +292,12 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		<< "    Ceiling,         !- Surface Type" << "\r\n"
 		<< "    Interior Ceiling,!- Construction Name" << "\r\n"
 		<< "    " << zonename << ", !- Zone Name" << "\r\n"
-		<< "    Surface,         !- Outside Boundary Condition"
+		<< "    Outdoors,         !- Outside Boundary Condition"
 			<< "\r\n"
 		<< "    , !- Outside Boundary Condition Object" << "\r\n"
 		<< "    NoSun,           !- Sun Exposure" << "\r\n"
 		<< "    NoWind,          !- Wind Exposure" << "\r\n"
-		<< "    ,             !- View Factor to Ground" << "\r\n"
+		<< "    -1,              !- View Factor to Ground" << "\r\n"
 		<< "    " << n << ",     !- Number of Vertices" << "\r\n";
 
 	/* define geometry of ceiling */
