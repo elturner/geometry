@@ -241,7 +241,7 @@ int cell_graph_t::simplify_straights(tri_rep_t& trirep)
 
 		/* verify that neighbors are also not boundary cells */
 		if(c1->is_room_boundary() || c2->is_room_boundary())
-			continue;
+			continue; /* doesn't actually matter */
 
 		/* get the edge neighbors' direction from current node */
 		n1.dir(c->pos, c1->pos);
