@@ -11,6 +11,7 @@
 #define SIMPLIFY_THRESHOLD_FLAG  "-s"
 #define EXPORT_2D_FLAG           "-2"
 #define CARVE_THROUGH_FLAG       "-c"
+#define SIMP_DOOR_FLAG           "-d"
 #define NUM_POSES_FLAG           "-n"
 
 int parseargs(int argc, char** argv, config_t& conf)
@@ -28,6 +29,7 @@ int parseargs(int argc, char** argv, config_t& conf)
 	conf.simplify_threshold = DEFAULT_SIMPLIFY_THRESHOLD;
 	conf.export_2d = false;
 	conf.carve_through = false;
+	conf.simpdoor = false;
 	conf.num_poses = -1;
 
 	/* iterate through arguments */
@@ -73,6 +75,10 @@ int parseargs(int argc, char** argv, config_t& conf)
 		else if(!strcmp(argv[i], CARVE_THROUGH_FLAG))
 		{
 			conf.carve_through = true;
+		}
+		else if(!strcmp(argv[i], SIMP_DOOR_FLAG))
+		{
+			conf.simpdoor = true;
 		}
 		else
 		{
@@ -208,6 +214,11 @@ void print_usage(char* prog_name)
 	printf("\t%s         If specified, will not use any occlusion-\n"
 	       "\t           checking when performing ray-tracing for\n"
 	       "\t           geometry creation.\n\n", CARVE_THROUGH_FLAG);
+	printf("\t%s         If specified, will simplify door geometry\n"
+	       "\t           as well as the rest of the walls.  By\n"
+	       "\t           default, door geometry is preserved and kept\n"
+	       "\t           unsimplified, but this flag will force\n"
+	       "\t           simplification of doors.\n\n", SIMP_DOOR_FLAG);
 	printf("\t%s <int>   If specified, then will only use the first\n"
 	       "\t           <int> poses specified. By default, all poses\n"
 	       "\t           are used.\n\n", NUM_POSES_FLAG);

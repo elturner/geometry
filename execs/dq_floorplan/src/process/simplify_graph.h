@@ -25,11 +25,15 @@
  * 	graph	-	The graph to simplify
  * 	trirep -	The tri rep to simplify
  * 	thresh	-	The threshold to use.
+ * 	simpdoor -	If true, will simplify geometry around
+ * 			doors, which are the borders between rooms.
+ * 			By default, set to false.
  *
  * return value:
  *
  * 	Returns zero on success, non-zero on failure.
  */
-int simplify_graph(cell_graph_t& graph, tri_rep_t& trirep, double thresh);
+int simplify_graph(cell_graph_t& graph, tri_rep_t& trirep, double thresh,
+					bool simpdoor);
 
 #endif

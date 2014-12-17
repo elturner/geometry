@@ -93,7 +93,8 @@ int main(int argc, char** argv)
 	}
 
 	/* simplify walls */
-	ret = simplify_graph(graph, trirep, conf.simplify_threshold);
+	ret = simplify_graph(graph, trirep, conf.simplify_threshold,
+					conf.simpdoor);
 	if(ret)
 	{
 		cerr << "Error: " << ret

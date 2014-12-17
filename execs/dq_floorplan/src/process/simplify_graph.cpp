@@ -5,7 +5,8 @@
 #include "../util/room_parameters.h"
 #include "../util/error_codes.h"
 
-int simplify_graph(cell_graph_t& graph, tri_rep_t& trirep, double thresh)
+int simplify_graph(cell_graph_t& graph, tri_rep_t& trirep, double thresh,
+				bool simpdoor)
 {
 	tictoc_t clk;
 	int ret;
@@ -16,12 +17,12 @@ int simplify_graph(cell_graph_t& graph, tri_rep_t& trirep, double thresh)
 
 	/* simplify graph using error quadrics */
 	tic(clk);
-	ret = graph.simplify(trirep, thresh);
+	ret = graph.simplify(trirep, thresh, simpdoor);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
 	/* straighten walls */
-	ret = graph.simplify_straights(trirep);
+	ret = graph.simplify_straights(trirep, simpdoor);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 

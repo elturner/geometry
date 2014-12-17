@@ -42,6 +42,11 @@ typedef struct config
 	 * or will fully carve through any existing cells (if true) */
 	bool carve_through;
 
+	/* determines if we should simplify door geometry.  Doors are
+	 * anywhere that is between two rooms.  By default, door
+	 * geometry is preserved, and not simplified. */
+	bool simpdoor;
+
 } config_t;
 
 /* parseargs:

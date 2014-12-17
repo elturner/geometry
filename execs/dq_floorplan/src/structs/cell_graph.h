@@ -111,12 +111,16 @@ class cell_graph_t
 	 * 			graph.  Will simplify this triangulation
 	 * 			in tandum with any simplifications on
 	 * 			the graph.
+	 * 	simpdoor -	If true, will attempt to simplify nodes
+	 * 			near to doors (borders between rooms) as
+	 * 			well as single-room vertices.  By default,
+	 * 			this is set to false.
 	 *
 	 * return value:
 	 *
 	 * 	Returns zero on success, non-zero on failure.
 	 */
-	int simplify_straights(tri_rep_t& trirep);
+	int simplify_straights(tri_rep_t& trirep, bool simpdoor=false);
 
 	/* simplify:
 	 *
@@ -131,12 +135,17 @@ class cell_graph_t
 	 *	trirep -	The spawning triangulation topology
 	 *	threshold -	The error threshold to use during
 	 *			simplification.
+	 *	simpdoor -	If true, will attempt to simplify
+	 *			vertices adjacent to doors (i.e. verts
+	 *			that touch multiple rooms).  By default,
+	 *			set to false.
 	 *
 	 * return value:
 	 *
 	 *	Returns zero on success, non-zero on failure.
 	 */
-	int simplify(tri_rep_t& trirep, double threshold);
+	int simplify(tri_rep_t& trirep, double threshold,
+					bool simpdoor=false);
 
 	/* remove_sharps:
 	 *

@@ -203,7 +203,7 @@ int cell_graph_t::populate(quadtree_t& tree)
 	return 0;
 }
 	
-int cell_graph_t::simplify_straights(tri_rep_t& trirep)
+int cell_graph_t::simplify_straights(tri_rep_t& trirep, bool simpdoor)
 {
 	queue<cell_t*> to_check;
 	set<cell_t>::iterator it;
@@ -240,8 +240,9 @@ int cell_graph_t::simplify_straights(tri_rep_t& trirep)
 		c2 = (cell_t*) (*(c->edges.rbegin()));
 
 		/* verify that neighbors are also not boundary cells */
-		if(c1->is_room_boundary() || c2->is_room_boundary())
-			continue; /* doesn't actually matter! */
+		if(!simpdoor && (c1->is_room_boundary() 
+					|| c2->is_room_boundary()))
+			continue;
 
 		/* get the edge neighbors' direction from current node */
 		n1.dir(c->pos, c1->pos);
@@ -292,7 +293,8 @@ int cell_graph_t::simplify_straights(tri_rep_t& trirep)
 	return 0;
 }
 	
-int cell_graph_t::simplify(tri_rep_t& trirep, double threshold)
+int cell_graph_t::simplify(tri_rep_t& trirep, double threshold,
+						bool simpdoor)
 {
 	set<cell_t*> removed_cells;
 	priority_queue<edge_error_t> pq;
@@ -354,7 +356,7 @@ int cell_graph_t::simplify(tri_rep_t& trirep, double threshold)
 
 		/* check if b is shared by multiple rooms, in which
 		 * case, we don't want to remove this edge. */
-		if(b->is_room_boundary())
+		if(b->is_room_boundary() && !simpdoor)
 			continue;
 
 		/* also check any neighbors of b.  If b is adjacent to
@@ -366,7 +368,7 @@ int cell_graph_t::simplify(tri_rep_t& trirep, double threshold)
 				skip_this_edge = true;
 				break;
 			}
-		if(skip_this_edge)
+		if(skip_this_edge && !simpdoor)
 			continue;
 	
 		/* attempt to simplify edge within the triangulation */
