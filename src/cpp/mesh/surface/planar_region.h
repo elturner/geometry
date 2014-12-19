@@ -21,6 +21,7 @@
 
 #include <mesh/surface/node_boundary.h>
 #include <geometry/shapes/plane.h>
+#include <geometry/octree/octtopo.h>
 #include <iostream>
 #include <set>
 #include <Eigen/Dense>
@@ -273,6 +274,18 @@ class planar_region_t
 		 * the interior of the environment.
 		 */
 		void orient_normal();
+
+		/**
+		 * Computes the dominant axis-aligned face to
+		 * represent this region.
+		 *
+		 * Returns the node face direction that best matches
+		 * the normal direction of this region.
+		 *
+		 * @return   Returns the node face best matching
+		 *           this region.
+		 */
+		octtopo::CUBE_FACE find_dominant_face() const;
 
 		/*-----------*/
 		/* debugging */

@@ -541,6 +541,9 @@ namespace region_mesher
 
 			/**
 			 * This represents all vertices on this region
+			 *
+			 * These are only the boundary vertices that
+			 * are shared with other regions.
 			 */
 			node_corner::cornerset_t vertices;
 

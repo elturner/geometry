@@ -215,6 +215,42 @@ void planar_region_t::orient_normal()
 		this->plane.normal *= -1;
 	}
 }
+		
+octtopo::CUBE_FACE planar_region_t::find_dominant_face() const
+{
+	size_t i;
+	bool ispos;
+
+	/* find the coordinate axis that has the greatest
+	 * magnitude of the projected normal vector of the
+	 * plane for this region */
+	this->get_plane().normal.cwiseAbs().maxCoeff(&i);
+	ispos = (this->get_plane().normal(i) >= 0); /* is positive? */
+
+	/* return the appropriate face */
+	switch(i)
+	{
+		case 0: /* the x-coordinate */
+			if(ispos)
+				return octtopo::FACE_XPLUS;
+			return octtopo::FACE_XMINUS;
+		
+		case 1: /* the y-coordinate */
+			if(ispos)
+				return octtopo::FACE_YPLUS;
+			return octtopo::FACE_YMINUS;
+		
+		case 2: /* the z-coordinate */
+			if(ispos)
+				return octtopo::FACE_ZPLUS;
+			return octtopo::FACE_ZMINUS;
+
+		default: /* unknown */
+			cerr << "[planar_region_t::find_dominant_face]\t"
+			     << "Invalid vector index: " << i << endl;
+			return octtopo::FACE_ZPLUS;
+	}
+}
 
 void planar_region_t::writeobj(ostream& os, bool project) const
 {

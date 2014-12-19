@@ -769,6 +769,10 @@ int region_info_t::compute_mesh(mesh_io::mesh_t& mesh,
 				const std::map<node_corner::corner_t,
 						size_t>& vert_ind) const
 {
+	/* check if this region is empty */
+	if(this->region_it->second.get_region().num_faces() == 0)
+		return 0; /* do nothing */
+
 	return -1; // TODO implement me
 }
 			

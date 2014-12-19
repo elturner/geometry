@@ -155,9 +155,7 @@ int tree_exporter::export_planar_mesh(const std::string& filename,
 	// TODO DEBUGGING-------------
 	ret = mesher.writeobj_boundary(cerr);
 	if(ret)
-	{
 		cout << "SOMETHING BAD HAPPENED: " << ret << endl;
-	}
 	ret = region_graph.writeobj(filename, false);
 	if(ret)
 		cout << "UNABLE TO EXPORT REGION GRAPH" << endl;
