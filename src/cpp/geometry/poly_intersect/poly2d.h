@@ -102,6 +102,38 @@ namespace poly2d
 	}
 
 	/**
+	 * Checks if two AABBs intersect each other
+	 *
+	 * Given the geometry of two axis-aligned bounding boxes,
+	 * will check for an intersection.  The order of the boxes to
+	 * this call does not matter.
+	 *
+	 * Intersections are computed excluding the edges of the boxes,
+	 * which requires strict inequalities.
+	 * 
+	 * @param ax    The {xmin, xmax} bounds of box 'a'
+	 * @param ay    The {ymin, ymax} bounds of box 'a'
+	 * @param bx    The {xmin, xmax} bounds of box 'b'
+	 * @param by    The {ymin, ymax} bounds of box 'b'
+	 *
+	 * @return      Returns true iff an intersection occurs
+	 */
+	inline bool aabb_in_aabb(double ax[2], double ay[2],
+				double bx[2], double by[2])
+	{
+		/* check if intersect occurs in x-direction */
+		if(ax[0] >= bx[1] || bx[0] >= ax[1])
+			return false; /* no overlap in x */
+
+		/* check if intersect occurs in y-direction */
+		if(ay[0] >= by[1] || by[0] >= ay[1])
+			return false; /* no overlap in y */
+	
+		/* an intersection must occur */
+		return true;
+	}
+
+	/**
 	 * Checks if two axis-aligned bounding boxes abut
 	 *
 	 * Checks if the two given aabb's abut (that is, they share an

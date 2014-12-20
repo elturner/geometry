@@ -165,9 +165,58 @@ class quadnode_t
 		 */
 		bool intersects(const linesegment_2d_t& line) const;
 
+		/**
+		 * Get the center position of the i'th child, if it
+		 * existed.
+		 *
+		 * Will return the center position of the i'th child.
+		 * This call does not depend on the existance of this
+		 * child.
+		 *
+		 * @param i  The index of the child to check
+		 *
+		 * @return   Returns center position for this child.
+		 */
+		Eigen::Vector2d child_center(size_t i) const;
+
 		/*-----------------*/
 		/* recursive calls */
 		/*-----------------*/
+
+		/**
+		 * Subdivides the tree so that nodes exist
+		 * in the given bounds.
+		 *
+		 * No data will be stored at these nodes, only the nodes
+		 * themselves will be created.
+		 *
+		 * Will ignore any part of the input domain that is
+		 * out of bounds of this node.
+		 *
+		 * @param xs    The {xmin, xmax} bounds of box
+		 * @param ys    The {ymin, ymax} bounds of box
+		 * @param input_hw   The resolution at which to 
+		 *                   stop subdividing
+		 */
+		void subdivide(double xs[2], double ys[2], double input_hw);
+
+		/**
+		 * Simplifies the tree structure.
+		 *
+		 * Will not simplify any nodes that contain data
+		 *
+		 * If a node has all children with all of the following
+		 * qualities:
+		 * 	- non-null
+		 * 	- leaf
+		 * 	- no data
+		 *
+		 * Then the children will be removed.  This process
+		 * is performed bottom-up recursively.
+		 *
+		 * @return    Returns true iff node has been simplified.
+		 */
+		bool simplify();
 
 		/**
 		 * Inserts a point into the subtree of this node

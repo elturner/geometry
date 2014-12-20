@@ -182,7 +182,15 @@ class quadtree_t
 		 * 		Returns NULL if p out of range of tree.
 		 */
 		quaddata_t* retrieve(const Eigen::Vector2d& p) const;
-	
+
+		/**
+		 * Returns a pointer to the root node of tree
+		 *
+		 * @return    Returns root of tree
+		 */
+		inline quadnode_t* get_root() const
+		{ return this->root; };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/

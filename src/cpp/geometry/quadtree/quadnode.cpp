@@ -1,6 +1,7 @@
 #include "quadnode.h"
 #include <geometry/quadtree/quaddata.h>
 #include <geometry/shapes/linesegment_2d.h>
+#include <geometry/poly_intersect/poly2d.h>
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
@@ -127,37 +128,7 @@ void quadnode_t::init_child(size_t i)
 
 	/* set default geometry for i'th child */
 	chw = this->halfwidth / 2; /* child is half the size of parent */
-	
-	/* set position based on child number */
-	switch(i)
-	{
-		case 0: /* upper right */
-			cc(0) = this->center(0) + chw;
-			cc(1) = this->center(1) + chw;
-			break;
-
-		case 1: /* upper left */
-			cc(0) = this->center(0) - chw;
-			cc(1) = this->center(1) + chw;
-			break;
-
-		case 2: /* lower left */
-			cc(0) = this->center(0) - chw;
-			cc(1) = this->center(1) - chw;
-			break;
-
-		case 3: /* lower right */
-			cc(0) = this->center(0) + chw;
-			cc(1) = this->center(1) - chw;
-			break;
-
-		default:
-			/* case can never happen */
-			cerr << "[quadnode::init_child]\tERROR: something"
-			     << " has gone terribly wrong... i = " << i 
-			     << endl;
-			return;
-	}
+	cc = this->child_center(i); /* center of i'th child */
 
 	/* create new node */
 	this->children[i] = new quadnode_t(cc, chw);
@@ -221,6 +192,122 @@ bool quadnode_t::intersects(const linesegment_2d_t& line) const
 
 	/* test intersections */
 	return line.intersects(pos, this->halfwidth);
+}
+		
+Eigen::Vector2d quadnode_t::child_center(size_t i) const
+{
+	Vector2d cc;
+	double chw;
+
+	/* child is half the size of parent */
+	chw = this->halfwidth / 2; 
+	
+	/* set position based on child number */
+	switch(i)
+	{
+		case 0: /* upper right */
+			cc(0) = this->center(0) + chw;
+			cc(1) = this->center(1) + chw;
+			break;
+
+		case 1: /* upper left */
+			cc(0) = this->center(0) - chw;
+			cc(1) = this->center(1) + chw;
+			break;
+
+		case 2: /* lower left */
+			cc(0) = this->center(0) - chw;
+			cc(1) = this->center(1) - chw;
+			break;
+
+		case 3: /* lower right */
+			cc(0) = this->center(0) + chw;
+			cc(1) = this->center(1) - chw;
+			break;
+
+		default:
+			/* case can never happen */
+			cerr << "[quadnode::child_center]\tERROR: something"
+			     << " has gone terribly wrong... i = " << i 
+			     << endl;
+			break;
+	}
+
+	/* return the computed position */
+	return cc;
+}
+		
+void quadnode_t::subdivide(double xs[2], double ys[2], double input_hw)
+{
+	double myx[2];
+	double myy[2];
+	Vector2d cc;
+	size_t i;
+	double chw;
+
+	/* check if we've reached the desired resolution */
+	if(this->halfwidth <= input_hw)
+		return; /* don't need to divide any further */
+
+	/* check if the input geometry intersects with where
+	 * each child node would exist */
+	chw = this->halfwidth / 2;
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
+	{
+		/* get hypothetical center of child, and use it to
+		 * compute the child's bounding box */
+		cc = this->child_center(i);
+		myx[0] = cc(0) - chw; /* min-x */
+		myx[1] = cc(0) + chw; /* max-x */
+		myy[0] = cc(1) - chw; /* min-y */
+		myy[1] = cc(1) + chw; /* max-y */
+
+		/* check for intersection */
+		if(!(poly2d::aabb_in_aabb(myx, myy, xs, ys)))
+			continue;
+
+		/* intersection occurs at this child, make
+		 * sure it exists */
+		this->init_child(i);
+
+		/* recurse to this child */
+		this->children[i]->subdivide(xs, ys, input_hw);
+	}
+}
+		
+bool quadnode_t::simplify()
+{
+	size_t i;
+	bool all_simple;
+
+	/* check for base case, which occurs if node is a leaf
+	 * with no data elements */
+	if(this->data == NULL && this->isleaf())
+		return true; /* already simplified */
+
+	/* check if all children are simplified */
+	all_simple = true;
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
+	{
+		if(this->children[i] == NULL)
+			all_simple = false;
+		else
+			all_simple &= this->children[i]->simplify();
+	}
+
+	/* check if we can simplify this node */
+	if(!all_simple)
+		return false; /* can't simplify */
+
+	/* delete all children */
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
+	{
+		delete this->children[i];
+		this->children[i] = NULL;
+	}
+
+	/* successfully simplified */
+	return true;
 }
 
 quaddata_t* quadnode_t::insert(const Vector2d& p, const Vector2d& n,
