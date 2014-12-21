@@ -3,6 +3,8 @@
 #include <xmlreader/xmlsettings.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octree.h>
+#include <geometry/quadtree/quadtree.h>
+#include <geometry/quadtree/quadnode.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/surface/node_corner_map.h>
@@ -201,6 +203,13 @@ int mesher_t::init(const octree_t& tree,
 					vins.first->second.add(vinfo);
 					continue;
 				}
+
+				/* in addition to the corner itself, we
+				 * also want to record the originating
+				 * face as a boundary face for this region.
+				 */
+				ins.first->second.boundary_faces.insert(
+								*fit);
 			}
 		}
 	}
@@ -232,18 +241,6 @@ int mesher_t::init(const octree_t& tree,
  		ret = this->compute_vertex_pos(vit);
 		if(ret)
 			return PROPEGATE_ERROR(-4, ret);
-	}
-
-	/* at this point, all the corners know which regions they
-	 * touch, and all the regions know which corners they touch,
-	 * but the regions do NOT yet know what the appropriate order
-	 * of their boundary vertices is yet. */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
-	{
-		/* analyze this region to find its boundary */
-		ret = pit->second.populate_boundaries(corner_map);
-		if(ret)
-			return PROPEGATE_ERROR(-5, ret);
 	}
 
 	/* success */
@@ -349,156 +346,8 @@ int mesher_t::compute_vertex_pos(vertmap_t::iterator vit)
 	return 0;
 }
 			
-int mesher_t::simplify()
-{
-	map<corner_t, size_t> simplify_counts;
-	map<corner_t, size_t>::iterator cit;
-	cornerset_t to_remove;
-	cornerset_t::iterator rit;
-	planemap_t::iterator pit;
-	vertmap_t::const_iterator vit, vit_prev, vit_next;
-	vector<corner_t>::iterator bit, bitalt;
-	Vector3d edge_prev, edge_next;
-	size_t bi, num_boundaries, vi, vi_prev, vi_next, num_verts;
-	double c_ang;
-
-	/* prep the map of simplification counts.  This map
-	 * stores how many regions vote to simplify each vertex.
-	 *
-	 * If all the regions that are connected to a vertex vote to
-	 * simplify it, then it will be simplified. */
-	for(vit=this->vertices.begin(); vit != this->vertices.end(); vit++)
-		simplify_counts.insert(
-			pair<corner_t, size_t>(vit->first, 0));
-
-	/* iterate over the regions */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
-	{
-		/* iterate over the boundaries of this region */
-		num_boundaries = pit->second.boundaries.size();
-		for(bi = 0; bi < num_boundaries; bi++)
-		{
-			/* check if boundary is big enough to be 
-			 * simplified.  Note that you need at least
-			 * three elements to make a non-trivial boundary */
-			num_verts = pit->second.boundaries[bi].size();
-			if(num_verts < 3)
-				continue;
-			
-			/* iterate over the vertices of this boundary */
-			for(vi = 0; vi < num_verts; vi++)
-			{
-				/* get the info for this vertex */
-				vit = this->vertices.find(
-					pit->second.boundaries[bi][vi]);
-				if(vit == this->vertices.end())
-					return -1; /* bad vertex */
-
-				/* for this vertex, we want to check
-				 * if it is shared by at most two
-				 * regions (including this one) */
-				if(vit->second.size() > 2)
-					continue; /* don't simplify 
-						   * corners */
-
-				/* now we must check this vertex's
-				 * position against its neighbors */
-
-				/* get neighbors */
-				vi_prev = (vi + num_verts - 1) % num_verts;
-				vi_next = (vi + 1)             % num_verts;
-
-				/* retrieve neighbor info */
-				vit_prev = this->vertices.find(
-						pit->second.boundaries[
-							bi][vi_prev]);
-				if(vit_prev == this->vertices.end())
-					return -2;
-				vit_next = this->vertices.find(
-						pit->second.boundaries[
-							bi][vi_next]);
-				if(vit_next == this->vertices.end())
-					return -3;
-
-				/* check how colinear these points are 
-				 * by computing the magnitude of the
-				 * cosine between their vectors */
-				edge_prev = 
-					(vit_prev->second.get_position() 
-					- vit->second.get_position());
-				edge_prev.normalize();
-				edge_next = 
-					(vit_next->second.get_position() 
-					- vit->second.get_position());
-				edge_next.normalize();
-				c_ang = abs(edge_prev.dot(edge_next)); 
-				
-				/* check this value against our threshold */
-				if(c_ang < this->max_colinearity)
-					continue; /* can't simplify */
-
-				/* this region votes to simplify this
-				 * vertex out of existence, so we update
-				 * the vote map */
-				simplify_counts[vit->first]++;
-			}
-		}
-	}
-
-	/* iterate over the map of simplification votes, and find
-	 * which vertices can be simplified */
-	for(cit = simplify_counts.begin(); 
-			cit != simplify_counts.end(); cit++)
-	{
-		/* get this vertex's info */
-		vit = this->vertices.find(cit->first);
-		if(vit == this->vertices.end())
-			return -4;
-
-		/* check if all regions that contain this vertex
-		 * voted to have it simplified */
-		if(vit->second.size() > cit->second)
-			continue; /* not enough votes */
-
-		/* this vertex has been voted off the island. */
-		to_remove.insert(cit->first);
-	}
-
-	/* iterate through the regions, removing these vertices */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
-	{
-		/* iterate over the boundaries of this region */
-		num_boundaries = pit->second.boundaries.size();
-		for(bi = 0; bi < num_boundaries; bi++)
-		{
-			/* iterate over the vertices of this boundary */
-			for(bit = pit->second.boundaries[bi].begin(); 
-				bit != pit->second.boundaries[bi].end(); ) 
-			{
-				/* check if this vertex should be removed */
-				if(to_remove.count(*bit) > 0)
-				{
-					/* remove the vertex from this
-					 * boundary */
-					bitalt = bit;
-					bit = pit->second.boundaries
-							[bi].erase(bitalt);
-				}
-				else
-					bit++;
-			}
-		}
-
-		/* remove the vertices from this region */
-		for(rit = to_remove.begin(); rit != to_remove.end(); rit++)
-			pit->second.vertices.erase(*rit);
-	}
-
-	/* success */
-	return 0;
-}
-			
-int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
+int mesher_t::compute_mesh(mesh_io::mesh_t& mesh,
+					const octree_t& tree) const
 {
 	planemap_t::const_iterator pit;
 	cornerset_t::const_iterator cit;
@@ -545,7 +394,8 @@ int mesher_t::compute_mesh(mesh_io::mesh_t& mesh) const
 	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
 	{
 		/* make triangles for this region */
-		ret = pit->second.compute_mesh(mesh, vert_inds);
+		ret = pit->second.compute_mesh_isostuff(mesh, 
+						vert_inds, tree);
 		if(ret)
 			return PROPEGATE_ERROR(-2, ret);
 	}
@@ -603,42 +453,6 @@ int mesher_t::writeobj_vertices(std::ostream& os) const
 	return 0;
 }
 			
-int mesher_t::writecsv(std::ostream& os) const
-{
-	planemap_t::const_iterator pit;
-	int ret;
-
-	/* iterate over the regions */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
-	{
-		/* export this region */
-		ret = pit->second.writecsv(os, this->vertices);
-		if(ret)
-			return PROPEGATE_ERROR(-1, ret);
-	}
-
-	/* success */
-	return 0;
-}
-			
-int mesher_t::writeobj_boundary(std::ostream& os) const
-{
-	planemap_t::const_iterator pit;
-	int ret;
-
-	/* iterate over the regions */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
-	{
-		/* export this region */
-		ret = pit->second.writeobj_boundary(os, this->vertices);
-		if(ret)
-			return PROPEGATE_ERROR(-1, ret);
-	}
-
-	/* success */
-	return 0;
-}
-			
 void mesher_t::writeobj_edges(std::ostream& os, const octree_t& tree,
 				const node_corner::corner_map_t& cm) const
 {
@@ -677,219 +491,62 @@ region_info_t::~region_info_t()
 void region_info_t::clear()
 {
 	this->vertices.clear();
-	this->boundaries.clear();
+	this->boundary_faces.clear();
 }
 			
-int region_info_t::populate_boundaries(
-				const node_corner::corner_map_t& cm)
-{
-	faceset_t common_faces, common_region_faces; 
-	pair<cornerset_t::const_iterator, 
-				cornerset_t::const_iterator> range;
-	pair<faceset_t::const_iterator, faceset_t::const_iterator>
-				my_faces, neigh_faces;
-	cornerset_t::const_iterator nit;
-	cornerset_t unused;
-	corner_t c;
-	size_t curr_ring;
-	bool foundnext;
-	
-	/* clear any existing boundary info */
-	this->boundaries.clear();
-	unused.insert(this->vertices.begin(), this->vertices.end());
-
-	/* as long as we have corners left unused, take
-	 * the next corner and start a new boundary ring */
-	while(!(unused.empty()))
-	{
-		/* start a new boundary ring */
-		curr_ring = this->boundaries.size();
-		this->boundaries.resize(curr_ring+1);
-
-		/* pick the next corner to start this ring */
-		c = *(unused.begin());
-		foundnext = true;
-		
-		/* iterate over the current ring as long as we can */
-		while(foundnext)
-		{
-			/* add this corner to the boundary */
-			this->boundaries[curr_ring].push_back(c);
-			unused.erase(c);
-		
-			/* get the neighbors of this corner */
-			range = cm.get_edges_for(c);
-			my_faces = cm.get_faces_for(c);
-
-			/* search for the next valid corner in set 
-			 * of neighbors */
-			foundnext = false;
-			for(nit = range.first; nit != range.second; nit++)
-			{
-				/* check if this neighbor corner is
-				 * one of our unused vertices */
-				if(unused.count(*nit) == 0)
-					continue; /* it's not */
-
-				/* check if this neighbor actually forms
-				 * a valid BOUNDARY edge for this region,
-				 * which requires these two corners to
-				 * only share one face in the region */
-				neigh_faces = cm.get_faces_for(*nit);
-				set_ops::intersect(common_faces,
-						my_faces.first,
-						my_faces.second,
-						neigh_faces.first,
-						neigh_faces.second);
-				set_ops::intersect(common_region_faces,
-					common_faces.begin(), 
-					common_faces.end(), 
-					this->region_it->
-						second.get_region().begin(),
-					this->region_it->
-						second.get_region().end());
-				if(common_region_faces.size() != 1)
-					continue; /* too many shared */
-
-				/* this neighbor is part of the region,
-				 * and not yet used, so we should continue
-				 * the boundary in this direction */
-				c = *nit;
-				foundnext = true;
-				break;
-			}
-		}
-	}
-	
-	/* success */
-	return 0;
-}
-			
-int region_info_t::compute_mesh(mesh_io::mesh_t& mesh,
+int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 				const std::map<node_corner::corner_t,
-						size_t>& vert_ind) const
+						size_t>& vert_ind,
+					const octree_t& tree) const
 {
+	std::map<node_corner::corner_t, size_t> local_vert_ind;
+	faceset_t::const_iterator fit;
+	Eigen::Matrix<double, 2, 3> M;
+	octtopo::CUBE_FACE f;
+	quadtree_t quadtree;
+	Vector2d center;
+	double radius, res, aligned_radius;
+
 	/* check if this region is empty */
 	if(this->region_it->second.get_region().num_faces() == 0)
 		return 0; /* do nothing */
 
+	/* get the properties of this region (size and orientation) */
+	f = this->region_it->second.get_region().find_dominant_face();
+	radius = this->region_it->second.get_region().find_inf_radius(tree);
+	region_info_t::mapping_matrix(f, M);
+
+	/* prepare to construct quadtree:
+	 *
+	 * get the radius as a power of two of the resolution 
+	 * map center to 2D coordinates */
+	res = tree.get_resolution();
+	aligned_radius = res;
+	while(aligned_radius < radius)
+		aligned_radius *= 2;
+	center = M * tree.get_root()->center;
+
+	/* we are going to use a quadtree to generate the mesh of this
+	 * region.  This is the same method used in Turner and Zakhor
+	 * at 3DV 2013. */
+	quadtree.set(res, center, aligned_radius);
+
+	/* iterate over the faces of this region */
+	for(fit = this->region_it->second.get_region().begin();
+			fit != this->region_it->second.get_region().end();
+				fit++)
+	{
+		/* check if this face is along the boundary of
+		 * the region. */
+		// TODO
+
+
+	}
+
+
+
+
 	return -1; // TODO implement me
-}
-			
-int region_info_t::writecsv(std::ostream& os, const vertmap_t& vm) const
-{
-	vertmap_t::const_iterator vit, vit_first;
-	size_t bi, vi, num_boundaries, num_verts;
-
-	/* iterate over the boundaries in this region */
-	num_boundaries = this->boundaries.size();
-	for(bi = 0; bi < num_boundaries; bi++)
-	{
-		/* iterate over the vertices in this boundary */
-		num_verts = this->boundaries[bi].size();
-		for(vi = 0; vi < num_verts; vi++)
-		{
-			/* get info for this vertex */
-			vit = vm.find(this->boundaries[bi][vi]);
-			if(vit == vm.end())
-				return -1;
-			if(vi == 0)
-				vit_first = vit;
-
-			/* add info to stream */
-			os << vit->second.get_position()(0) << ","
-			   << vit->second.get_position()(1) << ","
-			   << vit->second.get_position()(2) << ",";	
-		}
-
-		/* end the line by repeating first vertex */
-		if(num_verts > 0)
-			os << vit_first->second.get_position()(0) << ","
-			   << vit_first->second.get_position()(1) << ","
-			   << vit_first->second.get_position()(2);
-			
-		/* add newline between boundaries within a region */
-		os << endl;
-	}
-
-	/* success */
-	os << endl;
-	return 0;
-}
-			
-int region_info_t::writeobj_boundary(ostream& os, const vertmap_t& vm) const
-{
-	vertmap_t::const_iterator vit, vit_first;
-	size_t bi, vi, num_boundaries, num_verts;
-	color_t mycolor;
-
-	/* pick a random color for this region */
-	mycolor.set_random();
-
-	/* iterate over the boundaries in this region */
-	num_boundaries = this->boundaries.size();
-	for(bi = 0; bi < num_boundaries; bi++)
-	{
-		/* iterate over the vertices in this boundary */
-		num_verts = this->boundaries[bi].size();
-		if(num_verts <= 1)
-			continue;
-		for(vi = 0; vi < num_verts; vi++)
-		{
-			/* get info for this vertex */
-			vit = vm.find(this->boundaries[bi][vi]);
-			if(vit == vm.end())
-				return -1;
-			if(vi == 0)
-				vit_first = vit;
-
-			/* add info to stream */
-			os << "v "
-			   << vit->second.get_position()(0) << " "
-			   << vit->second.get_position()(1) << " "
-			   << vit->second.get_position()(2) << " "
-			   << mycolor.get_red_int()         << " "
-			   << mycolor.get_green_int()       << " "
-			   << mycolor.get_blue_int()        << endl;
-
-			/* write a point really close to this one */
-			os << "v "
-			   << (vit->second.get_position()(0)
-			   +((double)(rand()%2000-1000)/100000.0)) << " "
-			   << (vit->second.get_position()(1)
-			   +((double)(rand()%2000-1000)/100000.0)) << " "
-			   << (vit->second.get_position()(2)
-			   +((double)(rand()%2000-1000)/100000.0)) << " "
-			   << mycolor.get_red_int()         << " "
-			   << mycolor.get_green_int()       << " "
-			   << mycolor.get_blue_int()        << endl;
-		}
-
-		/* write triangles connecting the boundary vertices */
-		for(vi = 0; vi < num_verts-1; vi++)
-		{
-			os << "f " << ((int)(2*vi+0) - (int)(2*num_verts) )
-			   << " "  << ((int)(2*vi+1) - (int)(2*num_verts) )
-			   << " "  << ((int)(2*vi+2) - (int)(2*num_verts) )
-			   << endl
-			   << "f " << ((int)(2*vi+1) - (int)(2*num_verts) )
-			   << " "  << ((int)(2*vi+3) - (int)(2*num_verts) )
-			   << " "  << ((int)(2*vi+2) - (int)(2*num_verts) )
-			   << endl;
-		}
-		os << "f " << (-2) 
-		   << " "  << (-1)
-		   << " "  << (0 - (int)(2*num_verts) )
-		   << endl
-		   << "f " << (-1)
-		   << " "  << (1 - (int)(2*num_verts) )
-		   << " "  << (0 - (int)(2*num_verts) )
-		   << endl;
-	}
-
-	/* success */
-	os << endl;
-	return 0;
 }
 			
 void region_info_t::writeobj_edges(std::ostream& os, const octree_t& tree,
@@ -902,5 +559,37 @@ void region_info_t::writeobj_edges(std::ostream& os, const octree_t& tree,
 	{
 		/* write out corner edge info */
 		cm.writeobj_edges(os, tree, *cit);
+	}
+}
+
+void region_info_t::mapping_matrix(octtopo::CUBE_FACE f,
+				Matrix<double, 2, 3>& M)
+{
+	/* store the appropriate matrix */
+	switch(f)
+	{
+		case octtopo::FACE_ZPLUS:
+			M << 1,0,0,  0,1,0; /* x->x, y->y */
+			break;
+
+		case octtopo::FACE_ZMINUS:
+			M << 0,1,0,  1,0,0; /* x->y, y->x */
+			break;
+
+		case octtopo::FACE_YPLUS:
+			M << 0,0,1,  1,0,0; /* x->y, z->x */
+			break;
+		
+		case octtopo::FACE_YMINUS:
+			M << 1,0,0,  0,0,1; /* x->x, z->y */
+			break;
+
+		case octtopo::FACE_XPLUS:
+			M << 0,1,0,  0,0,1; /* y->x, z->y */
+			break;
+
+		case octtopo::FACE_XMINUS:
+			M << 0,0,1,  0,1,0; /* y->y, z->x */
+			break;
 	}
 }

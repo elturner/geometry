@@ -152,35 +152,18 @@ int tree_exporter::export_planar_mesh(const std::string& filename,
 		return PROPEGATE_ERROR(-8, ret);
 	toc(clk, "Meshing regions");
 	
-	// TODO DEBUGGING-------------
-	ret = mesher.writeobj_boundary(cerr);
-	if(ret)
-		cout << "SOMETHING BAD HAPPENED: " << ret << endl;
-	ret = region_graph.writeobj(filename, false);
-	if(ret)
-		cout << "UNABLE TO EXPORT REGION GRAPH" << endl;
-	return 0;
-	// TODO END DEBUGGING ------------------
-
-	/* simplify it */
-	tic(clk);
-	ret = mesher.simplify();
-	if(ret)
-		return PROPEGATE_ERROR(-9, ret);
-	toc(clk, "Simplifying regions");
-	
 	/* generate the topologically watertight mesh */
 	tic(clk);
-	ret = mesher.compute_mesh(mesh);
+	ret = mesher.compute_mesh(mesh, tree);
 	if(ret)
-		return PROPEGATE_ERROR(-10, ret);
+		return PROPEGATE_ERROR(-9, ret);
 	toc(clk, "Generating mesh");
 
 	/* export the mesh to disk */
 	tic(clk);
 	ret = mesh.write(filename);	
 	if(ret)
-		return PROPEGATE_ERROR(-11, ret);
+		return PROPEGATE_ERROR(-10, ret);
 	toc(clk, "Writing mesh");
 
 	/* success */

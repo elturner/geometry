@@ -250,24 +250,6 @@ namespace region_mesher
 			inline double get_min_singular_value() const
 			{ return this->min_singular_value; };
 
-			/*------------*/
-			/* processing */
-			/*------------*/
-
-			/**
-			 * Attempts to simplify the geometry for each region
-			 * by selectively removing unnecessary vertices.
-			 *
-			 * Only vertices that are shared by at most two
-			 * regions will be removed, and only if they are
-			 * along a straight line with their neighboring
-			 * vertices for all regions that share them.
-			 *
-			 * @return    Returns zero on success, non-zero on
-			 *            failure.
-			 */
-			int simplify();
-
 			/*-----*/
 			/* i/o */
 			/*-----*/
@@ -283,11 +265,13 @@ namespace region_mesher
 			 * mesh is clear before this call.
 			 *
 			 * @param mesh   The mesh to add to
+			 * @param tree   The originating tree for this model
 			 *
 			 * @return       Returns zero on success, 
 			 *               non-zero on failure.
 			 */
-			int compute_mesh(mesh_io::mesh_t& mesh) const;
+			int compute_mesh(mesh_io::mesh_t& mesh,
+					const octree_t& tree) const;
 	
 			/*-----------*/
 			/* debugging */
@@ -303,36 +287,6 @@ namespace region_mesher
 			 *             failure.
 			 */
 			int writeobj_vertices(std::ostream& os) const;
-
-			/**
-			 * Exports all regions to the specified CSV stream.
-			 *
-			 * Will export all regions to the given comma-
-			 * separated variables stream.  Each region
-			 * is represented by its vertices' arranged
-			 * in boundary rings.  Each ring is a line.
-			 *
-			 * @param os   The output stream
-			 *
-			 * @return     Returns zero on success, non-zero on
-			 *             failure.
-			 */
-			int writecsv(std::ostream& os) const;
-
-			/**
-			 * Exports all region boundary edges to
-			 * the specified Wavefront OBJ stream.
-			 *
-			 * These edges represent the output of the
-			 * processing by this structure, including
-			 * any simplification.
-			 *
-			 * @param os   The output stream
-			 *
-			 * @return    Returns zero on success, non-zero on
-			 *            failure.
-			 */
-			int writeobj_boundary(std::ostream& os) const;
 
 			/**
 			 * Exports all corner map edges connected to
@@ -548,15 +502,15 @@ namespace region_mesher
 			node_corner::cornerset_t vertices;
 
 			/**
-			 * This represents the ordered list of boundary
-			 * vertices for this region.  Each boundary is
-			 * oriented in counter-clockwise order (assuming
-			 * the normal of the region is pointing towards
-			 * you), and each disjoint boundary is represented
-			 * by its own separate list.
+			 * This set represents the subset of faces
+			 * in this region that contain at least one
+			 * boundary vertex.
+			 *
+			 * These are the border faces, and will be
+			 * meshed differently than the interior
+			 * of the region.
 			 */
-			std::vector<std::vector< node_corner::corner_t > >
-				boundaries;
+			faceset_t boundary_faces;
 
 			/**
 			 * The original information for this region,
@@ -624,28 +578,6 @@ namespace region_mesher
 			/*------------*/
 
 			/**
-			 * Will use the vertices to generate an ordered
-			 * boundary for this region.
-			 *
-			 * Given a populated set of vertices, will generate
-			 * the 'boundary' list.  This list represents a list
-			 * of rings, where each ring is a closed, disjoint
-			 * ordering of vertices.
-			 *
-			 * The elements in this->vertices will be unchanged
-			 * by this call, but the elements in 
-			 * this->boundaries will be repopulated.
-			 *
-			 * @param cm   The corner map to use to analyze
-			 *             the region's vertices
-			 *
-			 * @return     Returns zero on success, non-zero
-			 *             on failure.
-			 */
-			int populate_boundaries(
-				const node_corner::corner_map_t& cm);
-
-			/**
 			 * Will triangulate the topology of this region
 			 * and store the results in the provided mesh.
 			 *
@@ -655,59 +587,26 @@ namespace region_mesher
 			 * vertex indices, and store those triangles in
 			 * the given mesh structure.
 			 *
+			 * Will perform the region meshing based on the
+			 * isostuffing approach from Turner and Zakhor 2013,
+			 * 3DV.
+			 *
 			 * @param mesh   Where to store the output triangles
 			 * @param vert_ind   The mapping from vertices to
 			 *                   indices in the mesh.
+			 * @param tree   The originating tree for this model
 			 *
 			 * @return       Returns zero on success, non-zero
 			 *               on failure.
 			 */
-			int compute_mesh(mesh_io::mesh_t& mesh,
+			int compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 				const std::map<node_corner::corner_t,
-						size_t>& vert_ind) const;
+						size_t>& vert_ind,
+					const octree_t& tree) const;
 
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
-
-			/**
-			 * Exports this region information to a
-			 * Comma-Separated Variable file stream (csv)
-			 *
-			 * Will export the vertices of this region
-			 * to the specified csv stream, where each
-			 * bounary is represented by a line in the
-			 * stream.
-			 *
-			 * format:
-			 *
-			 * 	<x11>,<y11>,<z11>,...<x1n>,<y1n>,<z1n>
-			 * 	<x21>,<y21>,<z21>,...<x2n>,<y2n>,<z2n>
-			 * 	...
-			 *
-			 * @params os   The stream to export to
-			 * @param  vm   The vertex map to get the info
-			 *              about each vertex
-			 *
-			 * @return      Returns zero on success, non-zero on
-			 *              failure.
-			 */
-			int writecsv(std::ostream& os, 
-					const vertmap_t& vm) const;
-
-			/**
-			 * Writes the boundaries of this region out to
-			 * the specified Wavefront OBJ file stream.
-			 *
-			 * @param os   The output stream to write to
-			 * @param  vm   The vertex map to get the info
-			 *              about each vertex
-			 *
-			 * @return     Returns zero on success, non-zero
-			 *             on failure.
-			 */
-			int writeobj_boundary(std::ostream& os,
-					const vertmap_t& vm) const;
 
 			/**
 			 * Writes the edges connected to each vertex
@@ -721,6 +620,29 @@ namespace region_mesher
 			void writeobj_edges(std::ostream& os,
 				const octree_t& tree,
 				const node_corner::corner_map_t& cm) const;
+
+		/* helper functions */
+		private:
+
+			/**
+			 * Computes mapping matrix for given face direction
+			 *
+			 * Computes the matrix that maps from world
+			 * coordinates onto the surface coordinates
+			 * of a region that is represented by the
+			 * specified by the given dominant face.
+			 *
+			 * Example:
+			 *
+			 * if f = FACE_ZPLUS, then:
+			 *
+			 *	[x_r;y_r] = [1,0,0; 0,1,0] * [x_w;y_w;z_w]
+			 *
+			 * @param f   The face that specifies the mapping
+			 * @param M   Where to store the mapping matrix
+			 */
+			static void mapping_matrix(octtopo::CUBE_FACE f,
+					Eigen::Matrix<double, 2, 3>& M);
 	};
 }
 
