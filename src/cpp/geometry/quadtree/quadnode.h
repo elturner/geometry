@@ -219,6 +219,25 @@ class quadnode_t
 		bool simplify();
 
 		/**
+		 * Gets the neighboring nodes of this node that occur
+		 * under the specified parent node.
+		 *
+		 * For all nodes under the parent node given, will check
+		 * if they neighbor this node.  If so, they will be
+		 * added to the output container 'neighs'.
+		 *
+		 * @param neighs   Where to store neighboring nodes
+		 * @param parent   The parent node to recursively check
+		 *                 for neighbors.
+		 * @param err      The error parameter for testing abutting
+		 *                 sides.  This distance should be smaller
+		 *                 than any node feature.
+		 */
+		void get_neighbors_under(std::vector<quadnode_t*>& neighs,
+						quadnode_t* parent,
+						double err) const;
+
+		/**
 		 * Inserts a point into the subtree of this node
 		 *
 		 * Will insert the given point into this node

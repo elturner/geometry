@@ -26,6 +26,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io_obj.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io_ply.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadtree.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadnode.cpp \
+		$(SOURCEDIR)geometry/quadtree/quaddata.cpp \
 		$(SOURCEDIR)geometry/octree/octtopo.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
@@ -60,6 +63,9 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/octree/vox_writer.h \
 		$(SOURCEDIR)io/octree/sof_io.h \
 		$(SOURCEDIR)io/mesh/mesh_io.h \
+		$(SOURCEDIR)geometry/quadtree/quadtree.h \
+		$(SOURCEDIR)geometry/quadtree/quadnode.h \
+		$(SOURCEDIR)geometry/quadtree/quaddata.h \
 		$(SOURCEDIR)geometry/octree/octtopo.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \

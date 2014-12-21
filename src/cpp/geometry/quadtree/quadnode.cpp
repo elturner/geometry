@@ -309,6 +309,54 @@ bool quadnode_t::simplify()
 	/* successfully simplified */
 	return true;
 }
+		
+void quadnode_t::get_neighbors_under(std::vector<quadnode_t*>& neighs,
+						quadnode_t* parent,
+						double err) const
+{
+	double myx[2];
+	double myy[2];
+	double px[2];
+	double py[2];
+	size_t i;
+
+	/* check edge cases */
+	if(this == parent || parent == NULL)
+		return; /* don't do anything */
+
+	/* get bounding box for this node */
+	myx[0] = this->center(0) - this->halfwidth; /* min-x */
+	myx[1] = this->center(0) + this->halfwidth; /* max-x */
+	myy[0] = this->center(1) - this->halfwidth; /* min-y */
+	myy[1] = this->center(1) + this->halfwidth; /* max-y */
+	
+	/* get bounding box for parent */
+	px[0] = parent->center(0) - parent->halfwidth; /* min-x */
+	px[1] = parent->center(0) + parent->halfwidth; /* max-x */
+	py[0] = parent->center(1) - parent->halfwidth; /* min-y */
+	py[1] = parent->center(1) + parent->halfwidth; /* max-y */
+
+	/* check if parent is actually a leaf (this is the base case) */
+	if(parent->isleaf())
+	{
+		/* can only be a neighbor if the two nodes abut */
+		if(poly2d::aabb_pair_abut(myx, myy, px, py, err))
+			neighs.push_back(parent);
+		
+		/* we're done here */
+		return;
+	}
+
+	/* since 'parent' is not a leaf, we need to check for both
+	 * abutting or overlapping */
+	if(!(poly2d::aabb_in_aabb(myx, myy, px, py))
+		&& !(poly2d::aabb_pair_abut(myx, myy, px, py, err)) )
+		return; /* must be disjoint */
+
+	/* if got here, then recurse to parent's children */
+	for(i = 0; i < CHILDREN_PER_QUADNODE; i++)
+		this->get_neighbors_under(neighs, parent->children[i], err);
+}
 
 quaddata_t* quadnode_t::insert(const Vector2d& p, const Vector2d& n,
 				double w, int d)

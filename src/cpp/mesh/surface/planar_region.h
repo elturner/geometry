@@ -287,6 +287,19 @@ class planar_region_t
 		 */
 		octtopo::CUBE_FACE find_dominant_face() const;
 
+		/**
+		 * Computes the radius of this region in the L_inf
+		 * meaure space.
+		 *
+		 * The radius is measured from the center of the region,
+		 * as defined by the point of its plane geometry.
+		 *
+		 * @param tree   The originating tree for this model
+		 *
+		 * @return       Returns radius of region's shape in L_inf
+		 */
+		double find_inf_radius(const octree_t& tree) const;
+
 		/*-----------*/
 		/* debugging */
 		/*-----------*/

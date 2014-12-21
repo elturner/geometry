@@ -251,6 +251,38 @@ octtopo::CUBE_FACE planar_region_t::find_dominant_face() const
 			return octtopo::FACE_ZPLUS;
 	}
 }
+		
+double planar_region_t::find_inf_radius(const octree_t& tree) const
+{
+	faceset_t::const_iterator it;
+	Vector3d cpos;
+	node_corner::corner_t c;
+	size_t ci;
+	double r;
+
+	/* initialize radius to zero, and as we iterate through
+	 * faces, update to max-so-far */
+	const Vector3d& p = this->get_plane().point;
+	r = 0;
+
+	/* iterate over the faces of this region */
+	for(it = this->faces.begin(); it != this->faces.end(); it++)
+	{
+		/* iterate over the corners of this face */
+		for(ci = 0; ci < node_corner::NUM_CORNERS_PER_SQUARE; ci++)
+		{
+			/* get corner position */
+			c.set(tree, *it, ci);
+
+			/* test corner position against center of region */
+			c.get_position(tree, cpos);
+			r = max(r, (cpos - p).cwiseAbs().maxCoeff());
+		}
+	}
+
+	/* return the max displacement */
+	return r;
+}
 
 void planar_region_t::writeobj(ostream& os, bool project) const
 {
