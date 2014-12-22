@@ -254,6 +254,38 @@ quaddata_t* quadtree_t::retrieve(const Eigen::Vector2d& p) const
 		return NULL;
 	return node->data;
 }
+		
+void quadtree_t::subdivide(const Eigen::Vector2d& c, double hw)
+{
+	double xs[2];
+	double ys[2];
+
+	/* check if tree exists */
+	if(this->root == NULL)
+	{
+		/* initialize the tree based on this geometry */
+		this->set(2*hw, c, hw);
+		return;
+	}
+
+	/* generate the bounds for the input square */
+	xs[0] = c(0) - hw; /* min-x */
+	xs[1] = c(0) + hw; /* max-x */
+	ys[0] = c(1) - hw; /* min-y */
+	ys[1] = c(1) + hw; /* max-y */
+
+	/* subdivide the tree */
+	this->root->subdivide(xs, ys, hw);
+}
+		
+void quadtree_t::simplify()
+{
+	if(this->root == NULL)
+		return; /* do nothing */
+
+	/* simplify the tree structure recursively */
+	this->root->simplify();
+}
 	
 quaddata_t* quadtree_t::nearest_neighbor(const Eigen::Vector2d& p) const
 {

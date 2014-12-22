@@ -194,6 +194,38 @@ class quadtree_t
 		/*----------*/
 		/* geometry */
 		/*----------*/
+		
+		/**
+		 * Subdivides the tree so that nodes exist
+		 * in the given bounds.
+		 *
+		 * No data will be stored at these nodes, only the nodes
+		 * themselves will be created.
+		 *
+		 * Will ignore any part of the input domain that is
+		 * out of bounds of this node.
+		 *
+		 * @param c          The center position of square to add
+		 * @param hw         The resolution at which to 
+		 *                   stop subdividing
+		 */
+		void subdivide(const Eigen::Vector2d& c, double hw);
+
+		/**
+		 * Simplifies the tree structure.
+		 *
+		 * Will not simplify any nodes that contain data
+		 *
+		 * If a node has all children with all of the following
+		 * qualities:
+		 * 	- non-null
+		 * 	- leaf
+		 * 	- no data
+		 *
+		 * Then the children will be removed.  This process
+		 * is performed bottom-up recursively.
+		 */
+		void simplify();
 
 		/**
 		 * Retrieve nearest neighbor to given point
