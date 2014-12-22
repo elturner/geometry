@@ -101,6 +101,29 @@ class plane_t : public shape_t
 		void project_onto(Eigen::Vector3d& p) const;
 
 		/**
+		 * Given a point and a vector that define a line, determines
+		 * where that line intersects this plane.
+		 *
+		 * Computes the intersection point on the surface of this
+		 * plane of the argument line defined by the point and
+		 * tangent direction.
+		 *
+		 * If the line runs parallel to the plane, then false is
+		 * returned.
+		 *
+		 * x and p are allowed to be the same reference.
+		 *
+		 * @param x       Where to store the intersection point
+		 * @param p       A point on the line in question
+		 * @param tangent The tangent of the line to test
+		 *
+		 * @return        Returns true iff an intersection occurs
+		 */
+		bool get_intersection_of(Eigen::Vector3d& x,
+				const Eigen::Vector3d& p,
+				const Eigen::Vector3d& tangent) const;
+
+		/**
 		 * Performs PCA on the given points, and stores the best-fit
 		 * plane in this structure.
 		 *

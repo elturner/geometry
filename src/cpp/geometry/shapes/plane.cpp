@@ -4,6 +4,7 @@
 #include <util/error_codes.h>
 #include <iostream>
 #include <vector>
+#include <float.h>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <Eigen/Eigenvalues>
@@ -40,6 +41,25 @@ void plane_t::project_onto(Eigen::Vector3d& p) const
 
 	/* subtract the displacement using the plane normal */
 	p -= this->normal*dist;
+}
+		
+bool plane_t::get_intersection_of(Eigen::Vector3d& x,
+				const Eigen::Vector3d& p,
+				const Eigen::Vector3d& tangent) const
+{
+	double u, ndt;
+
+	/* check if normal and tangent are orthogonal */
+	ndt = this->normal.dot(tangent);
+	if(abs(ndt) < FLT_EPSILON)
+		return false;
+
+	/* get the coordinate along line of intersection */
+	u = this->normal.dot(this->point - p) / ndt;
+
+	/* get point in 3D space */
+	x = p + u*tangent; 
+	return true;
 }
 
 void plane_t::fit(const std::vector<Eigen::Vector3d,
