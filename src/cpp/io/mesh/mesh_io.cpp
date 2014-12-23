@@ -1,4 +1,5 @@
 #include "mesh_io.h"
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -399,6 +400,21 @@ polygon_t::polygon_t(size_t i, size_t j, size_t k)
 	this->vertices.push_back(i);
 	this->vertices.push_back(j);
 	this->vertices.push_back(k);
+}
+			
+bool polygon_t::is_degenerate() const
+{
+	/* make copy of vertices */
+	std::vector<size_t> copy;
+	copy.insert(copy.begin(),
+			this->vertices.begin(), this->vertices.end());
+
+	/* check if any duplicates */
+	std::vector<size_t>::iterator it = std::unique(copy.begin(),
+						copy.end());
+				
+	/* if duplicates, then degenerate */
+	return (it != copy.end());
 }
 			
 int polygon_t::serialize(std::ostream& os, FILE_FORMAT ff) const

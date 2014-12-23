@@ -625,6 +625,17 @@ namespace mesh_io
 					vs.begin(), vs.end());
 			};
 
+			/**
+			 * Checks if this polygon is degenerate
+			 *
+			 * A degenerate polygon is one that contains
+			 * multiple instances of a single vertex.
+			 *
+			 * @return   Returns true iff this poly 
+			 *           is degenerate
+			 */
+			bool is_degenerate() const;
+
 			/*-----*/
 			/* i/o */
 			/*-----*/
