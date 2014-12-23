@@ -71,11 +71,22 @@ class octsurf_run_settings_t
 		 * If present, will perform surface reconstruction
 		 * by using the planar meshing from region_mesher_t.
 		 *
-		 * By default, the dense meshing in face_mesher_t is
-		 * used, but this flag specifies to use planar meshing
-		 * instead.
+		 * By default, both the dense meshing and the planar
+		 * meshing are used together, but this flag specifies 
+		 * to use planar meshing alone instead.
 		 */
 		bool export_planar;
+
+		/**
+		 * If present, will perform surface reconstruction
+		 * by using the dense meshing from face_mesher_t
+		 * on the entire geomtery.
+		 *
+		 * By default, both the dense meshing and the planar
+		 * meshing are used together, but this flag specifies
+		 * to use dense meshing alone instead.
+		 */
+		bool export_dense;
 
 		/**
 		 * If exporting to OBJ, this option indicates whether

@@ -136,7 +136,7 @@ int region_isostuffer_t::populate(const octree_t& octree,
 	 * the appropriate faces of this region, we want to
 	 * simplify the quadtree geometry to ensure minimal
 	 * triangles are used to represent the planar region. */
-	this->quadtree.simplify();
+//TODO	this->quadtree.simplify();
 
 	/* the quadtree now represents the interior area
 	 * of the region */

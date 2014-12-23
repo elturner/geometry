@@ -104,12 +104,16 @@ int main(int argc, char** argv)
 				ret = tree_exporter::export_planar_mesh(
 						args.outfile, tree, scheme,
 						args.xml_settings);
+			else if(args.export_dense)
+				ret = tree_exporter::export_dense_mesh(
+						args.outfile, tree, scheme);
 			else if(args.export_node_faces)
 				ret = tree_exporter::export_node_faces(
 					args.outfile, tree, scheme);
 			else
-				ret = tree_exporter::export_dense_mesh(
-						args.outfile, tree, scheme);
+				ret = tree_exporter::export_all(
+						args.outfile, tree,
+						args.xml_settings);
 			if(ret)
 			{
 				cerr << "[main]\tError " << ret << ": "
@@ -123,6 +127,9 @@ int main(int argc, char** argv)
 				ret = tree_exporter::export_planar_mesh(
 						args.outfile, tree, scheme,
 						args.xml_settings);
+			else if(args.export_dense)
+				ret = tree_exporter::export_dense_mesh(
+						args.outfile, tree, scheme);
 			else if(args.export_node_faces)
 				ret = tree_exporter::export_node_faces(
 					args.outfile, tree, scheme);
@@ -137,8 +144,9 @@ int main(int argc, char** argv)
 				ret = tree_exporter::export_corners_to_obj(
 						args.outfile, tree);
 			else
-				ret = tree_exporter::export_dense_mesh(
-						args.outfile, tree, scheme);
+				ret = tree_exporter::export_all(
+						args.outfile, tree,
+						args.xml_settings);
 			if(ret)
 			{
 				cerr << "[main]\tError " << ret << ": "

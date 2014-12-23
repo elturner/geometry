@@ -22,6 +22,25 @@
 namespace tree_exporter
 {
 	/**
+	 * Exports the full geometry
+	 *
+	 * The geometry representing OBJECTS will be modeled using
+	 * dense meshing.  The geometry representing ROOMS will be
+	 * modeled using the planar meshing.
+	 *
+	 * All geometry will be exported to the same output mesh,
+	 * which is any format that is handled by mesh_io::mesh_t.
+	 *
+	 * @param filename   The path to the output file to write
+	 * @param tree       The tree to export
+	 * @param xml_settings  The input settings file to import
+	 *
+	 * @return           Returns zero on success, non-zero on failure.
+	 */
+	int export_all(const std::string& filename, const octree_t& tree,
+                              const std::string& xml_settings);
+
+	/**
 	 * Exports a dense mesh of the octree to the specified file
 	 *
 	 * Will export the interior/exterior boundary described in the
@@ -53,6 +72,7 @@ namespace tree_exporter
 	 * @param tree       The tree to export
 	 * @param scheme      Specifies whether to export the whole scene,
 	 *                    just the objects, or just the rooms
+	 * @param xml_settings The settings file to import
 	 *
 	 * @return           Returns zero on success, non-zero on failure.
 	 */

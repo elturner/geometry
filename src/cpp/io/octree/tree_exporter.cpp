@@ -41,6 +41,109 @@ using namespace Eigen;
 /* function implementations */
 /*--------------------------*/
 	
+int tree_exporter::export_all(const std::string& filename, 
+				const octree_t& tree,
+				const std::string& xml_settings)
+{
+	octtopo::octtopo_t top;
+	node_boundary_t object_boundary;
+	node_boundary_t room_boundary;
+	node_corner::corner_map_t corner_map;
+	planar_region_graph_t region_graph;
+	face_mesher_t face_mesher;
+	region_mesher::mesher_t region_mesher;
+	mesh_io::mesh_t mesh;
+	tictoc_t clk;
+	int ret;
+
+	/* read in settings information */
+	tic(clk);
+	ret = region_mesher.import(xml_settings);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+	toc(clk, "Importing xml file");
+	
+	/* initialize the octree topology */
+	tic(clk);
+	ret = top.init(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
+	toc(clk, "Initializing topology");
+
+	/* extract the object boundary nodes */
+	ret = object_boundary.populate(top, node_boundary_t::SEG_OBJECTS);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
+
+	/* generate dense mesh from this geometry */
+	tic(clk);
+	ret = face_mesher.add(tree, object_boundary);
+	if(ret)
+		return PROPEGATE_ERROR(-4, ret);
+	toc(clk, "Generating dense mesh");
+
+	/* remove outliers from topology */
+	ret = top.remove_outliers(region_mesher.get_node_outlierthresh());
+	if(ret)
+		return PROPEGATE_ERROR(-5, ret);
+
+	/* extract the boundary nodes using the generated topology */
+	ret = room_boundary.populate(top, node_boundary_t::SEG_ROOM);
+	if(ret)
+		return PROPEGATE_ERROR(-6, ret);
+
+	/* extract the corners of the model from this boundary */
+	tic(clk);
+	corner_map.add(tree, room_boundary);
+	ret = corner_map.populate_edges(tree);
+	if(ret)
+		return PROPEGATE_ERROR(-7, ret);
+	toc(clk, "Computing corners");
+
+	/* form planar regions from these boundary faces */
+	tic(clk);
+	region_graph.init(region_mesher.get_coalesce_planethresh(),
+			region_mesher.get_coalesce_distthresh(), 
+			region_mesher.get_use_isosurface_pos(), 
+			planar_region_graph_t::COALESCE_WITH_L2_NORM); 
+	ret = region_graph.populate(room_boundary);
+	if(ret)
+		return PROPEGATE_ERROR(-8, ret);
+	toc(clk, "Forming regions");
+
+	/* coalesce regions */
+	tic(clk);
+	ret = region_graph.coalesce_regions();
+	if(ret)
+		return PROPEGATE_ERROR(-9, ret);
+	toc(clk, "Coalescing regions");
+
+	/* mesh the region graph */
+	tic(clk);
+	ret = region_mesher.init(tree, region_graph, corner_map);
+	if(ret)
+		return PROPEGATE_ERROR(-10, ret);
+	toc(clk, "Meshing regions");
+	
+	/* generate the topologically watertight mesh */
+	tic(clk);
+	ret = region_mesher.compute_mesh(mesh, tree);
+	if(ret)
+		return PROPEGATE_ERROR(-11, ret);
+	mesh.add(face_mesher.get_mesh());
+	toc(clk, "Generating planar mesh");
+
+	/* export the mesh to disk */
+	tic(clk);
+	ret = mesh.write(filename);	
+	if(ret)
+		return PROPEGATE_ERROR(-12, ret);
+	toc(clk, "Writing full mesh");
+
+	/* success */
+	return 0;
+}
+
 int tree_exporter::export_dense_mesh(const std::string& filename,
                                      const octree_t& tree,
                                      node_boundary_t::SEG_SCHEME scheme)

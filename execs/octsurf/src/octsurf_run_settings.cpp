@@ -29,6 +29,7 @@ using namespace std;
 #define OUTPUT_FLAG       "-o" /* where to store the output file */
 #define EXPORT_LEAFS_FLAG "-l" /* export leafs to OBJ */
 #define EXPORT_PLANAR_FLAG "--planar" /* use planar region meshing */
+#define EXPORT_DENSE_FLAG  "--dense" /* use dense meshing alone */
 #define EXPORT_FACES_FLAG "--node_faces" /* export node faces to OBJ */
 #define EXPORT_OBJECTS_FLAG "--objects"  /* export objects only */
 #define EXPORT_ROOM_FLAG    "--room"     /* export rooms only */
@@ -79,8 +80,14 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	args.add(EXPORT_PLANAR_FLAG, "If present, this flag indicates that "
 			"the region meshing approach should be used.  By "
 			"default, the dense meshing (a variant of dual "
-			"contouring) is used, but with this flag a planar "
-			"meshing approach is used.", true, 0);
+			"contouring) is used together with this method, "
+			"but with this flag the planar meshing approach "
+			"is used alone.", true, 0);
+	args.add(EXPORT_DENSE_FLAG, "If present, this flag indicates that "
+			"the dense meshing approach should be used.  By "
+			"default, both the dense meshing and the planar "
+			"meshing are used together, but with this flag, "
+			"only the planar meshing is used.", true, 0);
 	args.add(EXPORT_LEAFS_FLAG, "If present, this flag indicates that "
 			"all leaf centers of the octree should be exported "
 			"to the specified OBJ file.  This flag will be "
@@ -138,6 +145,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	this->output_format 
 		= octsurf_run_settings_t::get_format(this->outfile);
 	this->export_planar     = args.tag_seen(EXPORT_PLANAR_FLAG);
+	this->export_dense      = args.tag_seen(EXPORT_DENSE_FLAG);
 	this->export_obj_leafs  = args.tag_seen(EXPORT_LEAFS_FLAG);
 	this->export_node_faces = args.tag_seen(EXPORT_FACES_FLAG);
 	this->export_objects    = args.tag_seen(EXPORT_OBJECTS_FLAG);
