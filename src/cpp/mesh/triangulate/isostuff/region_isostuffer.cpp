@@ -3,6 +3,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octtopo.h>
 #include <geometry/quadtree/quadtree.h>
+#include <mesh/surface/region_mesher.h>
 #include <mesh/surface/planar_region.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/node_corner.h>
@@ -45,22 +46,23 @@ void region_isostuffer_t::clear()
 }
 		
 int region_isostuffer_t::populate(const octree_t& octree, 
-				const planar_region_t& region,
+				const region_mesher::region_info_t& reginfo,
 				const map<corner_t, size_t>& vert3d_ind)
 {
 	map<corner_t, size_t>::const_iterator vit;
+	cornerset_t::const_iterator cit;
 	faceset_t::const_iterator fit;
 	octtopo::CUBE_FACE f, opp_f;
 	Vector3d p3d;
 	Vector2d center, p2d;
-	corner_t corner2, corner3;
+	corner_t corner2;
 	double radius, res, hw;
-	size_t ci;
 
 	/* clear any existing info */
 	this->clear();
 
 	/* get the properties of this region (size and orientation) */
+	const planar_region_t& region = reginfo.get_region();
 	f = region.find_dominant_face();
 	opp_f = octtopo::get_opposing_face(f);
 	this->mapping_matrix(f);
@@ -79,35 +81,35 @@ int region_isostuffer_t::populate(const octree_t& octree,
 	 * at 3DV 2013. */
 	this->quadtree.set(res, center, radius);
 
+	/* iterate over the boundary vertices of this region */
+	for(cit = reginfo.begin(); cit != reginfo.end(); cit++)
+	{
+		/* this corner should be a boundary vertex */
+		vit = vert3d_ind.find(*cit);
+		if(vit == vert3d_ind.end())
+		{
+			/* this map should have all vertices defined,
+			 * something went wrong here */
+			return -1;
+		}
+
+		/* get the position of this corner in 3D space */
+		cit->get_position(octree, p3d);
+
+		/* compute projected position onto 2D space */
+		p2d = this->M * p3d;
+
+		/* get corner discretization in 2D */
+		corner2.set(center, res, p2d); 
+
+		/* store in local map */
+		this->vert2d_ind.insert(pair<corner_t, size_t>(
+					corner2, vit->second));	
+	}
+
 	/* iterate over the faces of this region */
 	for(fit = region.begin(); fit != region.end(); fit++)
 	{
-		/* We want to check if each of these corners already
-		 * has a pre-defined vertex. */
-		for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
-		{
-			/* get this corner structure */
-			corner3.set(octree, *fit, ci); 
-
-			/* check if vertex for it already defined */
-			vit = vert3d_ind.find(corner3);
-			if(vit == vert3d_ind.end())
-				continue;
-
-			/* get the position of this corner in 3D space */
-			corner3.get_position(octree, p3d);
-
-			/* compute projected position onto 2D space */
-			p2d = this->M * p3d;
-
-			/* get corner discretization in 2D */
-			corner2.set(center, res, p2d); 
-
-			/* store in local map */
-			this->vert2d_ind.insert(pair<corner_t, size_t>(
-					corner2, vit->second));	
-		}
-
 		/* check if it is oriented correctly */
 		if(fit->direction != f && fit->direction != opp_f)
 			continue; /* ignore non-dominant faces */
@@ -182,7 +184,6 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 				vert.x = pts3d(0);
 				vert.y = pts3d(1);
 				vert.z = pts3d(2);
-				vert.red = 0; // TODO
 				v_inds[i] = mesh.num_verts();
 				mesh.add(vert);
 

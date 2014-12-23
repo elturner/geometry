@@ -124,14 +124,9 @@ int mesher_t::init(const octree_t& tree,
 {
 	pair<planemap_t::iterator, bool> ins; /* access this->regions */
 	planemap_t::iterator pit; /* access this->regions */
-	regionmap_t::const_iterator rit, sit; /* access region_graph */
-	pair<vertmap_t::iterator, bool> vins; /* access this->vertices */
+	regionmap_t::const_iterator rit; /* access region_graph */
 	vertmap_t::iterator vit; /* access this->vertices */
-	faceset_t::const_iterator fit, nit;
-	pair<faceset_t::const_iterator, faceset_t::const_iterator> faces;
-	corner_t c;
-	vertex_info_t vinfo;
-	size_t ci;
+	faceset_t::const_iterator fit;
 	int ret;
 
 	/* clear any existing data */
@@ -151,59 +146,10 @@ int mesher_t::init(const octree_t& tree,
 		for(fit = rit->second.get_region().begin();
 			fit != rit->second.get_region().end(); fit++)
 		{
-			/* for each face, iterate through corners */
-			for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
-			{
-				/* get the value of this corner */
-				c.set(tree, *fit, ci);
-
-				/* prepare info for this corner */
-				vinfo.clear();
-				c.get_position(tree, vinfo.position);
-
-				/* get the faces that touch this
-				 * corner */
-				faces = corner_map.get_faces_for(c);
-		
-				/* check which regions each of these
-				 * faces are in */
-				for(nit = faces.first; nit != faces.second;
-						nit++)
-				{
-					/* get the info for this face */
-					sit=region_graph.lookup_face(*nit);
-					if(sit == region_graph.end())
-						return -2;
-
-					/* record this region as
-					 * intersecting this corner */
-					vinfo.add(sit->first);
-				}
-
-				/* check if we care about this corner
-				 * (we only care if it touches multiple
-				 * regions) */
-				if(vinfo.size() < 2)
-					continue; /* don't care */
-				
-				/* if there are multiple regions touching
-				 * this corner, then we should record it
-				 *
-				 * if we have already seen this corner,
-				 * then don't bother continuing. */
-				vins = this->vertices.insert(
-						pair<corner_t,
-						vertex_info_t>(c,vinfo));
-				if(!(vins.second))
-				{
-					/* this corner already exists
-					 * in our map, just add region
-					 * set and don't bother with 
-					 * the rest */
-					vins.first->second.add(vinfo);
-					continue;
-				}
-			}
+			ret = this->add_face(*fit, tree, region_graph,
+						corner_map);
+			if(ret)
+				return PROPEGATE_ERROR(-2, ret);
 		}
 	}
 
@@ -234,6 +180,134 @@ int mesher_t::init(const octree_t& tree,
  		ret = this->compute_vertex_pos(vit);
 		if(ret)
 			return PROPEGATE_ERROR(-4, ret);
+	}
+
+	/* success */
+	return 0;
+}
+			
+int mesher_t::add_face(const node_face_t& f, const octree_t& tree,
+				const planar_region_graph_t& region_graph,
+				const corner_map_t& corner_map)
+{
+	pair<faceset_t::const_iterator, faceset_t::const_iterator> faces;
+	regionmap_t::const_iterator sit; /* access region_graph */
+	pair<vertmap_t::iterator, bool> vins[NUM_CORNERS_PER_SQUARE]; 
+					/* access this->vertices */
+	bool corner_added[NUM_CORNERS_PER_SQUARE];
+	faceset_t::const_iterator nit; /* access corner's neighbor faces */
+	corner_t c, c_next; /* corners of f */
+	vertex_info_t vinfo;
+	size_t ci, ci_next;
+	double res;
+
+	/* for each face, iterate through corners */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* get the value of this corner */
+		c.set(tree, f, ci);
+
+		/* prepare info for this corner */
+		vinfo.clear();
+		c.get_position(tree, vinfo.position);
+
+		/* get the faces that touch this corner */
+		faces = corner_map.get_faces_for(c);
+		
+		/* check which regions each of these faces are in */
+		for(nit = faces.first; nit != faces.second; nit++)
+		{
+			/* get the info for this face */
+			sit=region_graph.lookup_face(*nit);
+			if(sit == region_graph.end())
+				return -1;
+
+			/* record this region as intersecting this corner */
+			vinfo.add(sit->first);
+		}
+
+		/* check if we care about this corner
+		 * (we only care if it touches multiple regions) */
+		if(vinfo.size() < 2)
+		{
+			corner_added[ci] = false;
+			continue; /* don't care */
+		}
+		corner_added[ci] = true;
+				
+		/* if there are multiple regions touching
+		 * this corner, then we should record it
+		 *
+		 * if we have already seen this corner,
+		 * then don't bother continuing. */
+		vins[ci] = this->vertices.insert(pair<corner_t,
+					vertex_info_t>(c,vinfo));
+		if(!(vins[ci].second))
+		{
+			/* this corner already exists
+			 * in our map, just add region
+			 * set and don't bother with 
+			 * the rest */
+			vins[ci].first->second.add(vinfo);
+			continue;
+		}
+	}
+
+	/* now check between adjacent corners that were added
+	 * as boundary vertices.  If two corners share multiple
+	 * common regions, AND the face is larger than the min
+	 * resolution of the tree, then there should be other
+	 * corners between the ones we just added.
+	 *
+	 * If those corners do not exist in the corner map, the
+	 * we want to create them for this data structure. */
+	res = tree.get_resolution();
+	if(2*f.get_halfwidth() <= res)
+		return 0; /* no space for extra verts to exist */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* get index of next corner */
+		ci_next = (ci + 1) % NUM_CORNERS_PER_SQUARE;
+
+		/* check if both this and the next corner were
+		 * added as boundary vertices */
+		if(!corner_added[ci] || !corner_added[ci_next])
+			continue; /* ignore this pair */
+
+		/* these two corners are both boundary vertices.  Before
+		 * continuing, we want to make sure that they share
+		 * multiple regions in common. */
+		set_ops::intersect(vinfo.regions, 
+				vins[ci].first->second.begin(),
+				vins[ci].first->second.end(),
+				vins[ci_next].first->second.begin(),
+				vins[ci_next].first->second.end() );
+		if(vinfo.size() < 2)
+			continue; /* don't bother with this */
+
+		/* iterate from this corner to the next, checking
+		 * that all boundary vertices in between are properly
+		 * defined. */
+		c      = vins[ci].first->first;
+		c_next = vins[ci_next].first->first;
+		c.increment_towards(c_next); /* only look exclusive */
+		for( ; c != c_next; c.increment_towards(c_next))
+		{
+			/* check if a boundary vertex exists at c's
+			 * location already */
+			faces = corner_map.get_faces_for(c);
+			if(faces.first != faces.second)
+			{
+				/* a corner is already defined here */
+				continue;
+			}
+
+			/* no corner is defined here, so we want to
+			 * add it to our boundary vertex list */
+			c.get_position(tree, vinfo.position);
+			this->vertices.insert(pair<corner_t,
+					vertex_info_t>(c,vinfo));
+		}
 	}
 
 	/* success */
@@ -350,36 +424,23 @@ int mesher_t::compute_mesh(mesh_io::mesh_t& mesh,
 	mesh_io::vertex_t v;
 	int ret;
 
-	/* iterate over the regions.  We want to find the
-	 * vertices that are going to be exported with them. */
-	for(pit = this->regions.begin(); pit != this->regions.end(); pit++)
+	/* iterate over the vertices in this mesher.  We want to add them
+	 * to the output mesh */
+	for(vit = this->vertices.begin(); vit != this->vertices.end();vit++)
 	{
-		/* iterate over the vertices of this region */
-		for(cit = pit->second.vertices.begin(); 
-				cit != pit->second.vertices.end(); cit++)
-		{
-			/* attempt to add this vertex to our map */
-			ins = vert_inds.insert(pair<corner_t, size_t>(
-						*cit, vert_inds.size()));
-			if(!(ins.second))
-				continue; /* already in map */
+		/* attempt to add this vertex to our map */
+		ins = vert_inds.insert(pair<corner_t, size_t>(
+					vit->first, vert_inds.size()));
+		if(!(ins.second))
+			return -1; /* already in map? */
 
-			/* this is a new vertex, so go ahead and
-			 * add it to our mesh.
-			 *
-			 * First, we need to get its position */
-			vit = this->vertices.find(*cit);
-			if(vit == this->vertices.end())
-				return -1;
+		/* copy the position to the vertex structure */
+		v.x = vit->second.position(0);
+		v.y = vit->second.position(1);
+		v.z = vit->second.position(2);
 
-			/* copy the position to the vertex structure */
-			v.x = vit->second.position(0);
-			v.y = vit->second.position(1);
-			v.z = vit->second.position(2);
-
-			/* insert into mesh */
-			mesh.add(v);
-		}
+		/* insert into mesh */
+		mesh.add(v);
 	}
 
 	/* now that we've inserted all the vertices, we can go
@@ -500,8 +561,7 @@ int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 
 	/* represent the geometry of this region by forming a quadtree
 	 * representation of the interior area of the planar region */
-	ret = isostuff.populate(tree, this->region_it->second.get_region(),
-				vert_ind);
+	ret = isostuff.populate(tree, *this, vert_ind);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
@@ -512,7 +572,6 @@ int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 		return PROPEGATE_ERROR(-2, ret);
 
 	/* success */
-	mesh.set_color(true); // TODO
 	return 0;
 }
 			

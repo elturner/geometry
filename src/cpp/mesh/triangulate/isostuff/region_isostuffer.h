@@ -21,7 +21,7 @@
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octtopo.h>
 #include <geometry/quadtree/quadtree.h>
-#include <mesh/surface/planar_region.h>
+#include <mesh/surface/region_mesher.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/node_corner.h>
 #include <io/mesh/mesh_io.h>
@@ -129,14 +129,14 @@ class region_isostuffer_t
 		 * efficiently.
 		 *
 		 * @param octree      The originating octree for this model
-		 * @param region      The region to analyze
+		 * @param reginfo     The region info to analyze
 		 * @param vert3d_ind  Mapping between existing vertices 
 		 *                    (in 3D) to vertex indices.
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int populate(const octree_t& octree, 
-				const planar_region_t& region,
+				const region_mesher::region_info_t& reginfo,
 				const std::map<node_corner::corner_t, 
 						size_t>& vert3d_ind);
 

@@ -305,6 +305,32 @@ namespace region_mesher
 		private:
 
 			/**
+			 * Adds face structure to this mesher
+			 *
+			 * Given a face from the generated model,
+			 * will add all relevant corners to the regions
+			 * stored in this mesher.
+			 *
+			 * Will search the face for corners that touch
+			 * multiple regions in the model.  Will also
+			 * create any such corners that are not
+			 * represented in the model due to over-spacing.
+			 *
+			 * @param f              The face to add
+			 * @param tree           The original tree of model
+			 * @param region_graph   The region graph of model
+			 * @param corner_map     The corner map of model
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
+			 */
+			int add_face(const node_face_t& f,
+				const octree_t& tree,
+				const planar_region_graph_t& region_graph,
+				const node_corner::corner_map_t& 
+						corner_map);
+
+			/**
 			 * Computes the ideal position of the given vertex
 			 * based on the set of regions that intersect it.
 			 *
@@ -553,14 +579,34 @@ namespace region_mesher
 			{ this->vertices.insert(v); };
 
 			/**
+			 * Retrieves beginning iterator to vertex set
+			 *
+			 * @return   Returns beginning of vertex corner list
+			 */
+			inline node_corner::cornerset_t::const_iterator
+					begin() const
+			{ return this->vertices.begin(); };
+
+			/**
+			 * Retrieves ending iterator to vertex set
+			 *
+			 * @return   Returns ending of vertex corner list
+			 */
+			inline node_corner::cornerset_t::const_iterator
+					end() const
+			{ return this->vertices.end(); };
+
+			/**
 			 * Retrieve the plane of this region
 			 */
 			inline const plane_t& get_plane() const
-			{ 
-				return this->region_it->
-						second.get_region()
-							.get_plane();
-			};
+			{ return this->get_region().get_plane(); };
+
+			/**
+			 * Retrieve the originating region
+			 */
+			inline const planar_region_t& get_region() const
+			{ return this->region_it->second.get_region(); };
 
 			/*------------*/
 			/* processing */
