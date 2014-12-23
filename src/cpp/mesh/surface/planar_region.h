@@ -291,8 +291,9 @@ class planar_region_t
 		 * Computes the radius of this region in the L_inf
 		 * meaure space.
 		 *
-		 * The radius is measured from the center of the region,
-		 * as defined by the point of its plane geometry.
+		 * The radius is measured from the center of the octree.
+		 * which will make this value larger than half the 
+		 * end-to-end distance of the region itself.
 		 *
 		 * @param tree   The originating tree for this model
 		 *

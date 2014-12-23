@@ -275,7 +275,7 @@ void quadtree_t::subdivide(const Eigen::Vector2d& c, double hw)
 	ys[1] = c(1) + hw; /* max-y */
 
 	/* subdivide the tree */
-	this->root->subdivide(xs, ys, hw);
+	this->root->subdivide(xs, ys, this->max_depth);
 }
 		
 void quadtree_t::simplify()

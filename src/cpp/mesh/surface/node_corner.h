@@ -271,19 +271,13 @@ namespace node_corner
 			inline void set(const octree_t& tree,
 					octnode_t* n, size_t ind)
 			{
-				double res;
-
 				/* get corner position in world coords */
 				Eigen::Vector3d p = get_corner_pos(n, ind);
 
-				/* get tree properties */
-				p -= tree.get_root()->center;
-				res = tree.get_resolution() * 0.5;
-
-				/* get discretized coordinates */
-				this->x_ind = (int) floor(p(0) / res);
-				this->y_ind = (int) floor(p(1) / res);
-				this->z_ind = (int) floor(p(2) / res);
+				/* set the discrete values based on this
+				 * continuous position */
+				this->set(tree.get_root()->center,
+					tree.get_resolution(), p);
 			};
 
 			/**
@@ -326,6 +320,63 @@ namespace node_corner
 				this->set(tree, node, node_corner_ind);
 			};
 
+			/**
+			 * Sets the value of this node corner based
+			 * on the given continuous position, resolution,
+			 * and coordinate system center.
+			 *
+			 * Will find the discretized coordinates for
+			 * this corner by centering the coordinate system
+			 * at 'center', discretizing the position by 'res',
+			 * and storing the values in this structure.
+			 *
+			 * @param center   The center of coordinate system
+			 * @param res      The discretization resolution
+			 * @param pos      The continuous position to
+			 *                 discretize.
+			 */
+			inline void set(const Eigen::Vector3d& center,
+					double res,
+					const Eigen::Vector3d& pos)
+			{
+				Eigen::Vector3d p;
+
+				/* point in relative coordinate system */
+				p = (pos - center) / (0.5 * res);
+
+				/* get discretized coordinates */
+				this->x_ind = (int) floor(p(0));
+				this->y_ind = (int) floor(p(1));
+				this->z_ind = (int) floor(p(2));
+			};
+
+			/**
+			 * Sets the value of this node corner based
+			 * on the given continuous 2D position, resolution,
+			 * and 2D coordinate system center.
+			 *
+			 * @param center   The center of coordinate system
+			 * @param res      The discretization resolution
+			 * @param pos      The continuous position to
+			 *                 discretize.
+			 */
+			inline void set(const Eigen::Vector2d& center,
+					double res,
+					const Eigen::Vector2d& pos)
+			{
+				Eigen::Vector3d p;
+
+				/* point in relative coordinate system */
+				p(0) = (pos(0) - center(0)) / (0.5 * res);
+				p(1) = (pos(1) - center(1)) / (0.5 * res);
+				p(2) = 0.0;
+
+				/* get discretized coordinates */
+				this->x_ind = (int) floor(p(0));
+				this->y_ind = (int) floor(p(1));
+				this->z_ind = (int) floor(p(2));
+			};
+
 			/*----------*/
 			/* geometry */
 			/*----------*/
@@ -339,14 +390,27 @@ namespace node_corner
 			 */
 			inline void get_position(const octree_t& tree,
 						Eigen::Vector3d& pos) const
-			{ 
-				double res;
+			{
+				/* get position */
+				this->get_position(tree.get_root()->center,
+						tree.get_resolution(),
+						pos);
+			};
 
-				/* get the tree resolution */
-				res = tree.get_resolution() * 0.5;
-
-				/* set corner position based on tree */
-				pos = tree.get_root()->center;
+			/**
+			 * Gets the global position of this corner
+			 *
+			 * @param center   The coordinate system center
+			 * @param res      The resolution of discretization
+			 * @param pos      Where to store the position
+			 */
+			inline void get_position(
+					const Eigen::Vector3d& center,
+					double res,
+					Eigen::Vector3d& pos) const
+			{
+				res *= 0.5;
+				pos = center;
 				pos(0) += this->x_ind * res;
 				pos(1) += this->y_ind * res;
 				pos(2) += this->z_ind * res;

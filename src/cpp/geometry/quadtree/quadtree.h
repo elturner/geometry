@@ -197,7 +197,7 @@ class quadtree_t
 		
 		/**
 		 * Subdivides the tree so that nodes exist
-		 * in the given bounds.
+		 * in the given bounds at the max depth.
 		 *
 		 * No data will be stored at these nodes, only the nodes
 		 * themselves will be created.
@@ -206,8 +206,7 @@ class quadtree_t
 		 * out of bounds of this node.
 		 *
 		 * @param c          The center position of square to add
-		 * @param hw         The resolution at which to 
-		 *                   stop subdividing
+		 * @param hw         The area which to subdivide 
 		 */
 		void subdivide(const Eigen::Vector2d& c, double hw);
 

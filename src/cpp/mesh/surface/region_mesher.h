@@ -502,17 +502,6 @@ namespace region_mesher
 			node_corner::cornerset_t vertices;
 
 			/**
-			 * This set represents the subset of faces
-			 * in this region that contain at least one
-			 * boundary vertex.
-			 *
-			 * These are the border faces, and will be
-			 * meshed differently than the interior
-			 * of the region.
-			 */
-			faceset_t boundary_faces;
-
-			/**
 			 * The original information for this region,
 			 * such as plane geometry, originating faces, etc.
 			 */
@@ -593,7 +582,9 @@ namespace region_mesher
 			 *
 			 * @param mesh   Where to store the output triangles
 			 * @param vert_ind   The mapping from vertices to
-			 *                   indices in the mesh.
+			 *                   indices in the mesh.  New
+			 *                   vertices added by this
+			 *                   region will be inserted here.
 			 * @param tree   The originating tree for this model
 			 *
 			 * @return       Returns zero on success, non-zero
@@ -620,29 +611,6 @@ namespace region_mesher
 			void writeobj_edges(std::ostream& os,
 				const octree_t& tree,
 				const node_corner::corner_map_t& cm) const;
-
-		/* helper functions */
-		private:
-
-			/**
-			 * Computes mapping matrix for given face direction
-			 *
-			 * Computes the matrix that maps from world
-			 * coordinates onto the surface coordinates
-			 * of a region that is represented by the
-			 * specified by the given dominant face.
-			 *
-			 * Example:
-			 *
-			 * if f = FACE_ZPLUS, then:
-			 *
-			 *	[x_r;y_r] = [1,0,0; 0,1,0] * [x_w;y_w;z_w]
-			 *
-			 * @param f   The face that specifies the mapping
-			 * @param M   Where to store the mapping matrix
-			 */
-			static void mapping_matrix(octtopo::CUBE_FACE f,
-					Eigen::Matrix<double, 2, 3>& M);
 	};
 }
 

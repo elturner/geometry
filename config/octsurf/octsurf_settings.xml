@@ -82,7 +82,7 @@
 	     planes will be processed as if they were one plane.
 
 	     range:  [0,1] (please keep it small) -->
-	<octsurf_min_singular_value>0.1</octsurf_min_singular_value>
+	<octsurf_min_singular_value>0.2</octsurf_min_singular_value>
 
 	<!-- The maximum allowed dot-product magnitude of adjacent
 	     edges during the region boundary simplification process.

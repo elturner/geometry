@@ -37,6 +37,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \
+		$(SOURCEDIR)mesh/triangulate/isostuff/region_isostuffer.cpp\
 		$(SOURCEDIR)mesh/surface/node_boundary.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.cpp \
@@ -76,6 +77,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \
 		$(SOURCEDIR)mesh/partition/node_set.h \
+		$(SOURCEDIR)mesh/triangulate/isostuff/region_isostuffer.h \
 		$(SOURCEDIR)mesh/surface/node_boundary.h \
 		$(SOURCEDIR)mesh/surface/planar_region.h \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.h \

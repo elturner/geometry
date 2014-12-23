@@ -3,8 +3,7 @@
 #include <xmlreader/xmlsettings.h>
 #include <geometry/shapes/plane.h>
 #include <geometry/octree/octree.h>
-#include <geometry/quadtree/quadtree.h>
-#include <geometry/quadtree/quadnode.h>
+#include <mesh/triangulate/isostuff/region_isostuffer.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
 #include <mesh/surface/node_corner_map.h>
@@ -14,6 +13,7 @@
 #include <util/set_ops.h>
 #include <Eigen/Dense>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <set>
@@ -164,7 +164,7 @@ int mesher_t::init(const octree_t& tree,
 				/* get the faces that touch this
 				 * corner */
 				faces = corner_map.get_faces_for(c);
-
+		
 				/* check which regions each of these
 				 * faces are in */
 				for(nit = faces.first; nit != faces.second;
@@ -203,13 +203,6 @@ int mesher_t::init(const octree_t& tree,
 					vins.first->second.add(vinfo);
 					continue;
 				}
-
-				/* in addition to the corner itself, we
-				 * also want to record the originating
-				 * face as a boundary face for this region.
-				 */
-				ins.first->second.boundary_faces.insert(
-								*fit);
 			}
 		}
 	}
@@ -491,62 +484,36 @@ region_info_t::~region_info_t()
 void region_info_t::clear()
 {
 	this->vertices.clear();
-	this->boundary_faces.clear();
 }
-			
+
 int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 				const std::map<node_corner::corner_t,
 						size_t>& vert_ind,
 					const octree_t& tree) const
 {
-	std::map<node_corner::corner_t, size_t> local_vert_ind;
-	faceset_t::const_iterator fit;
-	Eigen::Matrix<double, 2, 3> M;
-	octtopo::CUBE_FACE f;
-	quadtree_t quadtree;
-	Vector2d center;
-	double radius, res, aligned_radius;
+	region_isostuffer_t isostuff;
+	int ret;
 
 	/* check if this region is empty */
 	if(this->region_it->second.get_region().num_faces() == 0)
 		return 0; /* do nothing */
 
-	/* get the properties of this region (size and orientation) */
-	f = this->region_it->second.get_region().find_dominant_face();
-	radius = this->region_it->second.get_region().find_inf_radius(tree);
-	region_info_t::mapping_matrix(f, M);
+	/* represent the geometry of this region by forming a quadtree
+	 * representation of the interior area of the planar region */
+	ret = isostuff.populate(tree, this->region_it->second.get_region(),
+				vert_ind);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
 
-	/* prepare to construct quadtree:
-	 *
-	 * get the radius as a power of two of the resolution 
-	 * map center to 2D coordinates */
-	res = tree.get_resolution();
-	aligned_radius = res;
-	while(aligned_radius < radius)
-		aligned_radius *= 2;
-	center = M * tree.get_root()->center;
+	/* we now want to generate a triangulation of the region
+	 * based on the geometry represented by the quadtree. */
+	ret = isostuff.triangulate(mesh, vert_ind);
+	if(ret)
+		return PROPEGATE_ERROR(-2, ret);
 
-	/* we are going to use a quadtree to generate the mesh of this
-	 * region.  This is the same method used in Turner and Zakhor
-	 * at 3DV 2013. */
-	quadtree.set(res, center, aligned_radius);
-
-	/* iterate over the faces of this region */
-	for(fit = this->region_it->second.get_region().begin();
-			fit != this->region_it->second.get_region().end();
-				fit++)
-	{
-		/* check if this face is along the boundary of
-		 * the region. */
-		// TODO
-
-
-	}
-
-
-
-
-	return -1; // TODO implement me
+	/* success */
+	mesh.set_color(true); // TODO
+	return 0;
 }
 			
 void region_info_t::writeobj_edges(std::ostream& os, const octree_t& tree,
@@ -559,37 +526,5 @@ void region_info_t::writeobj_edges(std::ostream& os, const octree_t& tree,
 	{
 		/* write out corner edge info */
 		cm.writeobj_edges(os, tree, *cit);
-	}
-}
-
-void region_info_t::mapping_matrix(octtopo::CUBE_FACE f,
-				Matrix<double, 2, 3>& M)
-{
-	/* store the appropriate matrix */
-	switch(f)
-	{
-		case octtopo::FACE_ZPLUS:
-			M << 1,0,0,  0,1,0; /* x->x, y->y */
-			break;
-
-		case octtopo::FACE_ZMINUS:
-			M << 0,1,0,  1,0,0; /* x->y, y->x */
-			break;
-
-		case octtopo::FACE_YPLUS:
-			M << 0,0,1,  1,0,0; /* x->y, z->x */
-			break;
-		
-		case octtopo::FACE_YMINUS:
-			M << 1,0,0,  0,0,1; /* x->x, z->y */
-			break;
-
-		case octtopo::FACE_XPLUS:
-			M << 0,1,0,  0,0,1; /* y->x, z->y */
-			break;
-
-		case octtopo::FACE_XMINUS:
-			M << 0,0,1,  0,1,0; /* y->y, z->x */
-			break;
 	}
 }

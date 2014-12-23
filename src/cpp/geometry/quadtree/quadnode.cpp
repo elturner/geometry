@@ -237,7 +237,23 @@ Eigen::Vector2d quadnode_t::child_center(size_t i) const
 	return cc;
 }
 		
-void quadnode_t::subdivide(double xs[2], double ys[2], double input_hw)
+Eigen::Vector2d quadnode_t::corner_position(size_t i) const
+{
+	Vector2d p;
+
+	/* the i'th child center is halfwidth/2 away, while
+	 * the corner position is in the same direction, just
+	 * twice as far away. */
+	p = this->child_center(i);
+
+	/* get the corner position from the child position */
+	p = 2*(p - this->center) + this->center;
+	
+	/* return the corner position */
+	return p;
+}
+		
+void quadnode_t::subdivide(double xs[2], double ys[2], int d)
 {
 	double myx[2];
 	double myy[2];
@@ -246,7 +262,7 @@ void quadnode_t::subdivide(double xs[2], double ys[2], double input_hw)
 	double chw;
 
 	/* check if we've reached the desired resolution */
-	if(this->halfwidth <= input_hw)
+	if(d <= 0)
 		return; /* don't need to divide any further */
 
 	/* check if the input geometry intersects with where
@@ -271,7 +287,7 @@ void quadnode_t::subdivide(double xs[2], double ys[2], double input_hw)
 		this->init_child(i);
 
 		/* recurse to this child */
-		this->children[i]->subdivide(xs, ys, input_hw);
+		this->children[i]->subdivide(xs, ys, d-1);
 	}
 }
 		

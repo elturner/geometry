@@ -262,7 +262,7 @@ double planar_region_t::find_inf_radius(const octree_t& tree) const
 
 	/* initialize radius to zero, and as we iterate through
 	 * faces, update to max-so-far */
-	const Vector3d& p = this->get_plane().point;
+	const Vector3d& p = tree.get_root()->center;
 	r = 0;
 
 	/* iterate over the faces of this region */

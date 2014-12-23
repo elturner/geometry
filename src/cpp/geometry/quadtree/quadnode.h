@@ -179,6 +179,19 @@ class quadnode_t
 		 */
 		Eigen::Vector2d child_center(size_t i) const;
 
+		/**
+		 * Gets the i'th corner position
+		 *
+		 * Corners are index in the same ordering as the node
+		 * children.  The input value must be in range
+		 * [0, CHILDREN_PER_QUADNODE).
+		 *
+		 * @param i   The index of the corner to check
+		 *
+		 * @return    Returns the corner position
+		 */
+		Eigen::Vector2d corner_position(size_t i) const;
+
 		/*-----------------*/
 		/* recursive calls */
 		/*-----------------*/
@@ -195,10 +208,9 @@ class quadnode_t
 		 *
 		 * @param xs    The {xmin, xmax} bounds of box
 		 * @param ys    The {ymin, ymax} bounds of box
-		 * @param input_hw   The resolution at which to 
-		 *                   stop subdividing
+		 * @param d     The depth at which to stop subdividing
 		 */
-		void subdivide(double xs[2], double ys[2], double input_hw);
+		void subdivide(double xs[2], double ys[2], int d);
 
 		/**
 		 * Simplifies the tree structure.
