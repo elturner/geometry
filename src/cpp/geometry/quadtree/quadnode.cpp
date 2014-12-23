@@ -253,6 +253,64 @@ Eigen::Vector2d quadnode_t::corner_position(size_t i) const
 	return p;
 }
 		
+int quadnode_t::edge_in_common(Eigen::Vector2d& a, Eigen::Vector2d& b,
+					quadnode_t* other,
+					double res) const
+{
+	double mx[2]; /* min/max bounds for this node in x */
+	double my[2]; /* min/max bounds for this node in y */
+	double ox[2]; /* min/max bounds for other node in x */
+	double oy[2]; /* min/max bounds for other node in y */
+
+	/* compute bounds on nodes */
+	mx[0] = this->center(0)  - this->halfwidth;
+	mx[1] = this->center(0)  + this->halfwidth;
+	my[0] = this->center(1)  - this->halfwidth;
+	my[1] = this->center(1)  + this->halfwidth;
+	ox[0] = other->center(0) - other->halfwidth;
+	ox[1] = other->center(0) + other->halfwidth;
+	oy[0] = other->center(1) - other->halfwidth;
+	oy[1] = other->center(1) + other->halfwidth;
+
+	/* check four possible sides for neighbor */
+	if(abs(mx[1] - ox[0]) < res)
+	{
+		/* vertical edge going up */
+		a(0) = b(0) = mx[1];
+		a(1) = max(my[0], oy[0]);
+		b(1) = min(my[1], oy[1]);
+	}
+	else if(abs(mx[0] - ox[1]) < res)
+	{
+		/* vertical edge going down */
+		a(0) = b(0) = mx[0];
+		a(1) = min(my[1], oy[1]);
+		b(1) = max(my[0], oy[0]);
+	}
+	else if(abs(my[1] - oy[0]) < res)
+	{
+		/* horizontal edge, going left */
+		a(1) = b(1) = my[1];
+		a(0) = min(mx[1], ox[1]);
+		b(0) = max(mx[0], ox[0]);
+	}
+	else if(abs(my[0] - oy[1]) < res)
+	{
+		/* horizontal edge, going right */
+		a(1) = b(1) = my[0];
+		a(0) = max(mx[0], ox[0]);
+		b(0) = min(mx[1], ox[1]);
+	}
+	else
+	{
+		/* not neighbors! */
+		return -1;
+	}
+
+	/* success */
+	return 0;
+}
+		
 void quadnode_t::subdivide(double xs[2], double ys[2], int d)
 {
 	double myx[2];
@@ -300,6 +358,10 @@ bool quadnode_t::simplify()
 	 * with no data elements */
 	if(this->data == NULL && this->isleaf())
 		return true; /* already simplified */
+
+	/* check if this node has data.  We cannot simplify data nodes */
+	if(this->data != NULL)
+		return false; /* can't simplify */
 
 	/* check if all children are simplified */
 	all_simple = true;
@@ -412,6 +474,19 @@ quaddata_t* quadnode_t::insert(const Vector2d& p, const Vector2d& n,
 }
 	
 const quadnode_t* quadnode_t::retrieve(const Vector2d& p) const
+{
+	int i;
+
+	/* get appropriate child */
+	i = this->contains(p);
+
+	/* check if child exists */
+	if(this->children[i] == NULL)
+		return this; /* no child, return current node */
+	return this->children[i]->retrieve(p); /* recurse through child */
+}
+
+quadnode_t* quadnode_t::retrieve(const Vector2d& p)
 {
 	int i;
 

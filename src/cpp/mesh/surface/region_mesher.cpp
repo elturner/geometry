@@ -553,6 +553,7 @@ int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 					const octree_t& tree) const
 {
 	region_isostuffer_t isostuff;
+	color_t color;
 	int ret;
 
 	/* check if this region is empty */
@@ -565,11 +566,19 @@ int region_info_t::compute_mesh_isostuff(mesh_io::mesh_t& mesh,
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
-	/* we now want to generate a triangulation of the region
-	 * based on the geometry represented by the quadtree. */
-	ret = isostuff.triangulate(mesh, vert_ind);
+	/* we want the output geometry to be topologically watertight,
+	 * so we want neighboring nodes to share vertices. */
+	mesh.set_color(true);
+	color.set_random();
+	ret = isostuff.compute_verts(mesh, color);
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
+
+	/* we now want to generate a triangulation of the region
+	 * based on the geometry represented by the quadtree. */
+	ret = isostuff.triangulate(mesh, color);
+	if(ret)
+		return PROPEGATE_ERROR(-3, ret);
 
 	/* success */
 	return 0;

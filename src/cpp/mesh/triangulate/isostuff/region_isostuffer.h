@@ -24,6 +24,7 @@
 #include <mesh/surface/region_mesher.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/node_corner.h>
+#include <image/color.h>
 #include <io/mesh/mesh_io.h>
 #include <Eigen/Dense>
 #include <iostream>
@@ -141,15 +142,38 @@ class region_isostuffer_t
 						size_t>& vert3d_ind);
 
 		/**
+		 * Computes the vertices of this quadtree, stores in mesh
+		 *
+		 * Assuming that the populate() function has already been
+		 * called, will generate a set of vertices that represent
+		 * the corners of the nodes in the representing quadtree
+		 * of this region, and store the 3D positions of those
+		 * vertices into the given mesh.
+		 *
+		 * This does NOT produce any triangles.  In order to
+		 * do that, triagulate() must be called after this function.
+		 *
+		 * @param mesh    The mesh to add elements to
+		 * @param color   The color to assign each vertex
+		 * @param q       The root of the tree to write.  If null,
+		 *                will use the root of the quadtree of this
+		 *                object.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int compute_verts(mesh_io::mesh_t& mesh,
+				const color_t& color,
+				quadnode_t* q=NULL);
+
+		/**
 		 * Generates a triangulation of the generated quadtree
 		 *
 		 * Assuming that the populate() function has already been
 		 * called, will generate a triangulation of the quadtree
 		 * that will be stored in the given mesh.
 		 *
-		 * @param mesh        The mesh to add elements to
-		 * @param vert3d_ind  Mapping between existing vertices 
-		 *                    (in 3D) to vertex indices.
+		 * @param mesh The mesh to add elements to
+		 * @param color   The color to assign each vertex
 		 * @param q    The root of the tree to write.  If null,
 		 *             will use the root of the quadtree of this
 		 *             object.
@@ -157,9 +181,9 @@ class region_isostuffer_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int triangulate(mesh_io::mesh_t& mesh,
-				const std::map<node_corner::corner_t, 
-						size_t>& vert3d_ind,
-					quadnode_t* q = NULL);
+				const color_t& color,
+				quadnode_t* q=NULL);
+
 		/*-----------*/
 		/* debugging */
 		/*-----------*/
@@ -195,6 +219,26 @@ class region_isostuffer_t
 		 * @param f   The face that specifies the mapping
 		 */
 		void mapping_matrix(octtopo::CUBE_FACE f);
+
+		/**
+		 * Checks if the given face is a boundary face of the region
+		 *
+		 * Given a node_face_t and the mapping of which corners
+		 * are boundaries, this function will check if the given
+		 * face contains any boundary corners.
+		 *
+		 * If so, then it will be considered a boundary face.
+		 *
+		 * @param f            The face to check
+		 * @param tree         The originating tree of this model
+		 * @param vert3d_ind   The map of existing boundary corners
+		 *
+		 * @return   Returns true iff f is a bounary face.
+		 */
+		bool is_boundary_face(const node_face_t& f,
+				const octree_t& tree,
+				const std::map<node_corner::corner_t,
+						size_t>& vert3d_ind) const;
 };
 
 #endif

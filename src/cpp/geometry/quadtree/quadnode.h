@@ -192,6 +192,32 @@ class quadnode_t
 		 */
 		Eigen::Vector2d corner_position(size_t i) const;
 
+		/**
+		 * Computes position of edge shared with other node
+		 *
+		 * Given a neighboring node of this node, will compute
+		 * the edge in common between the two nodes.
+		 *
+		 * The positions of the corners will be stored, not
+		 * any topology information.
+		 *
+		 * The corners generated will be oriented in 
+		 * counter-clockwise order relative to this node,
+		 * which is clockwise relative to the other node.
+		 *
+		 * @param a       Where to store first corner of edge
+		 * @param b       Where to store second corner of edge
+		 * @param other   The other node to check
+		 * @param res     Floating point error bounds
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 *            (If the other node is not a neighbor, this
+		 *             counts as failure.)
+		 */
+		int edge_in_common(Eigen::Vector2d& a, Eigen::Vector2d& b,
+					quadnode_t* other, 
+					double res=0.0) const;
+
 		/*-----------------*/
 		/* recursive calls */
 		/*-----------------*/
@@ -283,6 +309,22 @@ class quadnode_t
 		 *             Returns NULL on error.
 		 */
 		const quadnode_t* retrieve(const Eigen::Vector2d& p) const;
+
+		/**
+		 * Retrieves the data at the given point
+		 *
+		 * Will return the leaf node that contains the
+		 * given point.
+		 *
+		 * This function is just like retrieve(), but it returns
+		 * a pointer that is non-const.
+		 *
+		 * @param p    The query point.
+		 *
+		 * @return     Returns node that is a leaf and contains p.
+		 *             Returns NULL on error.
+		 */
+		quadnode_t* retrieve(const Eigen::Vector2d& p);
 
 		/**
 		 * Gets the nearest neighbor for the given point

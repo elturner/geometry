@@ -10,6 +10,7 @@
 #include <io/mesh/mesh_io.h>
 #include <image/color.h>
 #include <util/error_codes.h>
+#include <Eigen/StdVector>
 #include <Eigen/Dense>
 #include <iostream>
 #include <map>
@@ -123,31 +124,34 @@ int region_isostuffer_t::populate(const octree_t& octree,
 		
 		/* add this area to the quadtree */
 		this->quadtree.subdivide(p2d, hw);
+
+		/* Check if this face is on the boundary.  If so,
+		 * then we want to make sure it doesn't get simplified
+		 * later, so we should put some data here. */
+		if(this->is_boundary_face(*fit, octree, vert3d_ind))
+			this->quadtree.insert(p2d, p2d);
 	}
 
 	/* now that we've populated the quadtree with all
 	 * the appropriate faces of this region, we want to
 	 * simplify the quadtree geometry to ensure minimal
 	 * triangles are used to represent the planar region. */
-	quadtree.simplify();
+	this->quadtree.simplify();
 
 	/* the quadtree now represents the interior area
 	 * of the region */
 	return 0;
 }
 		
-int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
-				const map<corner_t, size_t>& vert3d_ind,
-				quadnode_t* q)
+int region_isostuffer_t::compute_verts(mesh_io::mesh_t& mesh,
+				const color_t& color, quadnode_t* q)
 {
-	size_t v_inds[quadnode_t::CHILDREN_PER_QUADNODE];
 	map<corner_t, size_t>::const_iterator vit;
 	Vector2d pts2d;
 	Vector3d pts3d;
 	corner_t corner;
 	mesh_io::vertex_t vert;
-	mesh_io::polygon_t poly;
-	size_t i;
+	size_t i, v_ind;
 	int ret;
 
 	/* check arguments */
@@ -155,71 +159,261 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 		q = this->quadtree.get_root();
 
 	/* only triangulate leaf nodes */
-	if(q->isleaf())
+	if(!(q->isleaf()))
 	{
-		/* iterate over each corner */
+		/* not a leaf node, so recurse through its children
+		 * until we find leaf nodes. */
 		for(i = 0; i < quadnode_t::CHILDREN_PER_QUADNODE; i++)
-		{
-			/* get position of corners of node */
-			pts2d = q->corner_position(i);
-			corner.set(this->quadtree.get_root()->center,
-				this->quadtree.get_resolution(),
-				pts2d);
-
-			/* get info about this corner */
-			vit = this->vert2d_ind.find(corner);
-			if(vit == this->vert2d_ind.end())
+			if(q->children[i] != NULL)
 			{
-				/* This is a new vertex, internal only
-				 * to this region.  Figure
-				 * out its geometry:
-				 *
-				 * Its 3D position is found
-				 * by projecting onto the plane */
-				pts3d = M.transpose() * pts2d;
-				this->plane.get_intersection_of(pts3d, 
-						pts3d, this->nullspace);
-				
-				/* add it to the mesh */
-				vert.x = pts3d(0);
-				vert.y = pts3d(1);
-				vert.z = pts3d(2);
-				v_inds[i] = mesh.num_verts();
-				mesh.add(vert);
-
-				/* add it to the vert map */
-				this->vert2d_ind.insert(
-					pair<corner_t, size_t>(
-						corner, v_inds[i]));
+				ret = this->compute_verts(mesh, color, 
+						q->children[i]);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
 			}
-			else
-			{
-				/* Since the vertex already exists,
-				 * its index is taken
-				 * from the map */
-				v_inds[i] = vit->second;
-			}
-		}
-
-		/* triangulate this leaf based on its neighbors */
-		// TODO
 		
-		// TODO temporary meshing
-		poly.clear();
-		for(i = 0; i < quadnode_t::CHILDREN_PER_QUADNODE; i++)
-			poly.vertices.push_back(v_inds[i]);
-		mesh.add(poly);
+		/* success */
+		return 0;
 	}
 
-	/* recurse */
+	/* if got here, then we're a leaf */
+
+	/* iterate over each corner */
 	for(i = 0; i < quadnode_t::CHILDREN_PER_QUADNODE; i++)
-		if(q->children[i] != NULL)
+	{
+		/* get position of corners of node */
+		pts2d = q->corner_position(i);
+		corner.set(this->quadtree.get_root()->center,
+			this->quadtree.get_resolution(),
+			pts2d);
+
+		/* get info about this corner */
+		vit = this->vert2d_ind.find(corner);
+		if(vit != this->vert2d_ind.end())
+			continue; /* already exists */
+
+		/* This is a new vertex, internal only
+		 * to this region.  Figure
+		 * out its geometry:
+		 *
+		 * Its 3D position is found
+		 * by projecting onto the plane */
+		pts3d = M.transpose() * pts2d;
+		this->plane.get_intersection_of(pts3d, 
+				pts3d, this->nullspace);
+			
+		/* add it to the mesh */
+		vert.x     = pts3d(0);
+		vert.y     = pts3d(1);
+		vert.z     = pts3d(2);
+		vert.red   = color.get_red_int();
+		vert.green = color.get_green_int();
+		vert.blue  = color.get_blue_int();
+		v_ind      = mesh.num_verts();
+		mesh.add(vert);
+
+		/* add it to the vert map */
+		this->vert2d_ind.insert(
+			pair<corner_t, size_t>(
+				corner, v_ind));
+	}
+
+	/* success */
+	return 0;
+}
+		
+int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh, 
+				const color_t& color, quadnode_t* q)
+{
+	vector<quadnode_t*> neighs;
+	size_t v_inds[quadnode_t::CHILDREN_PER_QUADNODE];
+	map<corner_t, size_t>::const_iterator vit, edge_a_vit, edge_b_vit;
+	Vector2d pts2d, edge_a, edge_b;
+	Vector3d pts3d;
+	corner_t corner, edge_a_corner, edge_b_corner;
+	mesh_io::vertex_t vert;
+	mesh_io::polygon_t poly;
+	size_t i, num_neighs, center_ind, edge_a_ind, edge_b_ind;
+	bool min_feature;
+	double res, err;
+	int ret;
+
+	/* check arguments */
+	if(q == NULL)
+		q = this->quadtree.get_root();
+
+	/* only triangulate leaf nodes */
+	if(!(q->isleaf()))
+	{
+		/* not a leaf node, so recurse through its children
+		 * until we find leaf nodes. */
+		for(i = 0; i < quadnode_t::CHILDREN_PER_QUADNODE; i++)
+			if(q->children[i] != NULL)
+			{
+				ret = this->triangulate(mesh, color, 
+						q->children[i]);
+				if(ret)
+					return PROPEGATE_ERROR(-1, ret);
+			}
+		
+		/* success */
+		return 0;
+	}
+
+	/* if got here, then we're a leaf */
+
+	/* iterate over each corner */
+	for(i = 0; i < quadnode_t::CHILDREN_PER_QUADNODE; i++)
+	{
+		/* get position of corners of node */
+		pts2d = q->corner_position(i);
+		corner.set(this->quadtree.get_root()->center,
+			this->quadtree.get_resolution(),
+			pts2d);
+
+		/* get info about this corner */
+		vit = this->vert2d_ind.find(corner);
+		if(vit == this->vert2d_ind.end())
 		{
-			ret = this->triangulate(mesh, 
-					vert3d_ind, q->children[i]);
-			if(ret)
-				return PROPEGATE_ERROR(-1, ret);
+			/* can't find node */
+			cerr << "[region_isostuffer_t::triangulate]\t"
+			     << "Error!  Can't find vertex index for "
+			     << "corner:\t";
+			corner.writecsv(cerr);
+			cerr << endl << endl;
+			return -1;
 		}
+			
+		/* Since the vertex already exists,
+		 * its index is taken
+		 * from the map */
+		v_inds[i] = vit->second;
+	}
+
+	/* get the neighboring nodes to this leaf */
+	res = this->quadtree.get_resolution();
+	err = res/4; /* no feature in tree should be this small */
+	q->get_neighbors_under(neighs, 
+			this->quadtree.get_root(), err);
+
+	/* triangulate this leaf based on its neighbors.
+	 *
+	 * There are two ways to triangulate a node.  If the
+	 * node is smaller than all of its neighbors, we can
+	 * just put a square there (only two triangles). */
+	num_neighs = neighs.size();
+	min_feature = true;
+	for(i = 0; i < num_neighs; i++)
+		if(neighs[i]->halfwidth < q->halfwidth)
+		{
+			/* found a neighboring node smaller than q,
+			 * so we cannot triangulate q with the
+			 * simple method...bummer. */
+			min_feature = false;
+			break;
+		}		
+
+	/* check if we can use simple triangulation */
+	if(min_feature)
+	{
+		/* just put a square (via two triangles) */
+		poly.set(v_inds[0], v_inds[1], v_inds[2]);
+		if(!(poly.is_degenerate()))
+			mesh.add(poly);
+		poly.set(v_inds[0], v_inds[2], v_inds[3]);
+		if(!(poly.is_degenerate()))
+			mesh.add(poly);
+
+		/* success */
+		return 0;
+	}
+
+	/* If got here, then we need to use more complicated mesh
+	 * for this node.
+	 *
+	 * Since node is square, we can put a vertex at its center,
+	 * and add edges to all neighboring sides, ensuring watertightness.
+	 */
+
+	/* put a vertex at the center */
+	pts3d = M.transpose() * (q->center);
+	this->plane.get_intersection_of(pts3d, pts3d, this->nullspace);
+	vert.x     = pts3d(0);
+	vert.y     = pts3d(1);
+	vert.z     = pts3d(2);
+	vert.red   = color.get_red_int();
+	vert.green = color.get_green_int();
+	vert.blue  = color.get_blue_int();
+	center_ind = mesh.num_verts();
+	mesh.add(vert);
+
+	/* add triangles from center to all neighboring nodes */
+	for(i = 0; i < num_neighs; i++)
+	{
+		/* get corners of neighbor that touch this node */
+
+		/* get position of corners */
+		ret = q->edge_in_common(edge_a, edge_b, neighs[i], err);
+		if(ret)
+		{
+			cerr << endl
+			     << "[region_isostuffer_t::triangulate]\t"
+			     << "Error " << ret << ": Unable to find "
+			     << "edge in common between nodes:" << endl
+			     << "\t\tq->center: " << q->center.transpose()
+			     << endl
+			     << "\t\tq->halfwidth: " << q->halfwidth
+			     << endl
+			     << "\t\tneigh[" << i << "]->center: " 
+			     << neighs[i]->center.transpose() << endl
+			     << "\t\tneigh[" << i << "]->halfwidth: "
+			     << neighs[i]->halfwidth << endl << endl;
+			return PROPEGATE_ERROR(-2, ret);
+		}
+
+		/* convert to corner objects */
+		edge_a_corner.set(this->quadtree.get_root()->center,
+			res, edge_a);
+		edge_b_corner.set(this->quadtree.get_root()->center,
+			res, edge_b);
+
+		/* look up vertices of these corners */
+		edge_a_vit = this->vert2d_ind.find(edge_a_corner);
+		edge_b_vit = this->vert2d_ind.find(edge_b_corner);
+		if(edge_a_vit == this->vert2d_ind.end()
+				|| edge_b_vit == this->vert2d_ind.end())
+		{
+			cerr << endl
+			     << "[region_isostuffer_t::triangulate]\t"
+			     << "Error occurred when triangulating node:\n"
+			     << "\t\tmy center: " << q->center.transpose()
+			     << endl
+			     << "\t\tmy halfwidth: " << q->halfwidth
+			     << endl
+			     << "\t\tneigh center: " 
+			     << neighs[i]->center.transpose() << endl
+			     << "\t\tneigh halfwidth: " 
+			     << neighs[i]->halfwidth << endl
+			     << "\t\tedge_a: " << edge_a.transpose()
+			     << endl
+			     << "\t\t\tfound: " 
+			     << (edge_a_vit != this->vert2d_ind.end())
+			     << endl
+			     << "\t\tedge_b: " << edge_b.transpose()
+			     << endl
+			     << "\t\t\tfound: " 
+			     << (edge_a_vit != this->vert2d_ind.end())
+			     << endl << endl;
+			return -3; /* couldn't find them! */
+		}
+		edge_a_ind = edge_a_vit->second;
+		edge_b_ind = edge_b_vit->second;
+
+		/* create triangle between center and this neighbor */
+		poly.set(center_ind,edge_a_ind,edge_b_ind);
+		if(!(poly.is_degenerate()))
+			mesh.add(poly);
+	}
 
 	/* success */
 	return 0;
@@ -340,4 +534,27 @@ void region_isostuffer_t::mapping_matrix(octtopo::CUBE_FACE f)
 
 	/* record the normal of this face */
 	octtopo::cube_face_normals(f, this->nullspace);
+}
+		
+bool region_isostuffer_t::is_boundary_face(const node_face_t& f,
+				const octree_t& tree,
+				const std::map<node_corner::corner_t,
+						size_t>& vert3d_ind) const
+{
+	corner_t c;
+	size_t ci;
+
+	/* iterate over the corners of this face */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* get the current corner info */
+		c.set(tree, f, ci);
+
+		/* check if this corner is a boundary */
+		if(vert3d_ind.count(c) > 0)
+			return true; /* boundary found */
+	}
+
+	/* no corners are boundaries, so this face isn't a boundary */
+	return false;
 }
