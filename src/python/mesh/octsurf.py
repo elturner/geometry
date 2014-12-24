@@ -33,8 +33,8 @@ OCTSURF_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 # the following indicates the expected location of the settings xml
 # file used for the octsurf program
 SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
-        '..', '..', '..', 'config', 'procarve', \
-        'procarve_settings.xml'))
+        '..', '..', '..', 'config', 'octsurf', \
+        'octsurf_settings.xml'))
 
 ##
 # The main function of this script, which is used to run octsurf
