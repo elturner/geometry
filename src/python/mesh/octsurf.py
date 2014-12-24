@@ -57,9 +57,10 @@ def run(dataset_dir):
     octree     = dataset_filepaths.get_refined_octree(dataset_dir)
     objectmesh = dataset_filepaths.get_object_mesh_file(dataset_dir)
     roommesh   = dataset_filepaths.get_room_mesh_file(dataset_dir)
+    fullmesh   = dataset_filepaths.get_full_mesh_file(dataset_dir)
 
     # run octsurf code to generate mesh of objects
-    args = [OCTSURF_EXE, '-o', objectmesh, '--objects', \
+    args = [OCTSURF_EXE, '-o', objectmesh, '--objects', '--dense', \
             '-s', SETTINGS_XML, octree]
     ret = callproc(OCTSURF_EXE, args, dataset_dir, False)
     if ret != 0:
@@ -67,12 +68,19 @@ def run(dataset_dir):
         return -1
     
     # run octsurf code to generate mesh of room
-    args = [OCTSURF_EXE, '-o', roommesh, '--room', \
+    args = [OCTSURF_EXE, '-o', roommesh, '--room', '--planar', \
             '-s', SETTINGS_XML, octree]
     ret = callproc(OCTSURF_EXE, args, dataset_dir, False)
     if ret != 0:
         print "octsurf program returned error %d on room meshing" % ret
         return -2 
+
+    # generate full mesh
+    args = [OCTSURF_EXE, '-o', fullmesh, '-s', SETTINGS_XML, octree]
+    ret = callproc(OCTSURF_EXE, args, dataset_dir, False)
+    if ret != 0:
+        print "octsurf program returned error %d on full meshing" % ret
+        return -3
 
     # success
     return 0
