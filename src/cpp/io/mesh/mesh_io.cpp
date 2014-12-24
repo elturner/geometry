@@ -303,7 +303,7 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 				return this->format;
 
 			/* check if colored of another format */
-			if(FORMAT_OBJ_COLOR)
+			case FORMAT_OBJ_COLOR:
 				return FORMAT_PLY_LE_COLOR;
 
 			/* return uncolored ply */
@@ -322,6 +322,9 @@ FILE_FORMAT mesh_t::get_format(const string& filename) const
 			
 int vertex_t::serialize(ostream& os, FILE_FORMAT ff) const
 {
+	float f;
+	unsigned char uc;
+
 	/* how we serialize depends on the file format */
 	switch(ff)
 	{
@@ -369,19 +372,38 @@ int vertex_t::serialize(ostream& os, FILE_FORMAT ff) const
 			     << "is not yet supported for serialization: "
 			     << ff << endl;
 			return -2;
+
+		/* binary ply files write vertices at floats
+		 * and colors as unsigned chars */
 		case FORMAT_PLY_LE:
-			os.write((char*) &(this->x), sizeof(this->x));
-			os.write((char*) &(this->y), sizeof(this->y));
-			os.write((char*) &(this->z), sizeof(this->z));
+			
+			/* write vertex as floats */
+			f = (float) this->x;
+			os.write((char*) &f, sizeof(f));
+			f = (float) this->y;
+			os.write((char*) &f, sizeof(f));
+			f = (float) this->z;
+			os.write((char*) &f, sizeof(f));
+
 			break;
 		case FORMAT_PLY_LE_COLOR:
-			os.write((char*) &(this->x), sizeof(this->x));
-			os.write((char*) &(this->y), sizeof(this->y));
-			os.write((char*) &(this->z), sizeof(this->z));
-			os.write((char*) &(this->red), sizeof(this->red));
-			os.write((char*) &(this->green),
-						sizeof(this->green));
-			os.write((char*) &(this->blue), sizeof(this->blue));
+			
+			/* write vertex as floats */
+			f = (float) this->x;
+			os.write((char*) &f, sizeof(f));
+			f = (float) this->y;
+			os.write((char*) &f, sizeof(f));
+			f = (float) this->z;
+			os.write((char*) &f, sizeof(f));
+			
+			/* write colors as unsigned chars */
+			uc = (unsigned char) this->red;
+			os.write((char*) &uc, sizeof(uc));
+			uc = (unsigned char) this->green;
+			os.write((char*) &uc, sizeof(uc));
+			uc = (unsigned char) this->blue;
+			os.write((char*) &uc, sizeof(uc));
+			
 			break;
 	}
 

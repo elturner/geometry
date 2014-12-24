@@ -336,13 +336,13 @@ int mesh_t::write_ply(const std::string& filename, FILE_FORMAT ff) const
 	outfile << ELEMENT_FLAG    << " "
 		<< vertex_names[0] << " " << this->vertices.size() << endl
 	        << PROPERTY_FLAG   << " "
-		<< DOUBLE_TYPE     << " "
+		<< FLOAT_TYPE     << " "
 		<< x_names[0]      << endl
 	        << PROPERTY_FLAG   << " "
-		<< DOUBLE_TYPE     << " "
+		<< FLOAT_TYPE     << " "
 		<< y_names[0]      << endl
 	        << PROPERTY_FLAG   << " "
-		<< DOUBLE_TYPE     << " " 
+		<< FLOAT_TYPE     << " " 
 		<< z_names[0]      << endl;
 
 	/* add color info if desired */
@@ -352,13 +352,13 @@ int mesh_t::write_ply(const std::string& filename, FILE_FORMAT ff) const
 		case FORMAT_PLY_BE_COLOR:
 		case FORMAT_PLY_LE_COLOR:
 			outfile << PROPERTY_FLAG   << " "
-				<< INT_TYPE        << " " 
+				<< UCHAR_TYPE        << " " 
 				<< red_names[0]    << endl
 			        << PROPERTY_FLAG   << " "
-				<< INT_TYPE        << " " 
+				<< UCHAR_TYPE        << " " 
 				<< green_names[0]  << endl
 			        << PROPERTY_FLAG   << " "
-				<< INT_TYPE        << " " 
+				<< UCHAR_TYPE        << " " 
 				<< blue_names[0]   << endl;
 			break;
 		default:
