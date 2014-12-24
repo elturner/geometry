@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -std=c++0x
-LFLAGS = -lm -lCGAL
+LFLAGS = -lm
 PFLAGS = #-pg -fprofile-arcs
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
