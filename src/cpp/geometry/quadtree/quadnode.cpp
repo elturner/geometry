@@ -479,6 +479,8 @@ const quadnode_t* quadnode_t::retrieve(const Vector2d& p) const
 
 	/* get appropriate child */
 	i = this->contains(p);
+	if(i < 0)
+		return NULL;
 
 	/* check if child exists */
 	if(this->children[i] == NULL)
@@ -492,6 +494,8 @@ quadnode_t* quadnode_t::retrieve(const Vector2d& p)
 
 	/* get appropriate child */
 	i = this->contains(p);
+	if(i < 0)
+		return NULL;
 
 	/* check if child exists */
 	if(this->children[i] == NULL)

@@ -227,18 +227,25 @@ class region_isostuffer_t
 		 * are boundaries, this function will check if the given
 		 * face contains any boundary corners.
 		 *
-		 * If so, then it will be considered a boundary face.
+		 * If so, then it will be considered a boundary face. This
+		 * function will insert fake data into the boundary node,
+		 * in order to prevent it from being simplified.
 		 *
 		 * @param f            The face to check
+		 * @param domdir       True iff f aligned with dom direction
 		 * @param tree         The originating tree of this model
 		 * @param vert3d_ind   The map of existing boundary corners
-		 *
-		 * @return   Returns true iff f is a bounary face.
+		 * @param err          Epsilon distance for this model.
+		 *                     This value should be smaller than
+		 *                     the feature length of any part of
+		 *                     the model.
 		 */
-		bool is_boundary_face(const node_face_t& f,
+		void lock_if_boundary_face(const node_face_t& f,
+				bool domdir,
 				const octree_t& tree,
 				const std::map<node_corner::corner_t,
-						size_t>& vert3d_ind) const;
+						size_t>& vert3d_ind,
+				double err);
 };
 
 #endif

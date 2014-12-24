@@ -57,7 +57,8 @@ int region_isostuffer_t::populate(const octree_t& octree,
 	Vector3d p3d;
 	Vector2d center, p2d;
 	corner_t corner2;
-	double radius, res, hw;
+	double radius, res, hw, err;
+	bool domdir;
 
 	/* clear any existing info */
 	this->clear();
@@ -76,6 +77,7 @@ int region_isostuffer_t::populate(const octree_t& octree,
 	res = octree.get_resolution();
 	radius = octree.get_root()->halfwidth;
 	center = this->M * octree.get_root()->center;
+	err = res / 4; /* everything is larger than this length */
 
 	/* we are going to use a quadtree to generate the mesh of this
 	 * region.  This is the same method used in Turner and Zakhor
@@ -112,31 +114,38 @@ int region_isostuffer_t::populate(const octree_t& octree,
 	for(fit = region.begin(); fit != region.end(); fit++)
 	{
 		/* check if it is oriented correctly */
-		if(fit->direction != f && fit->direction != opp_f)
-			continue; /* ignore non-dominant faces */
-
-		/* we want to add the geometry of this face
-		 * to the geometry of the quadtree. First, we
-		 * need to get its projected position and size */
-		fit->get_center(p3d);
-		hw = fit->get_halfwidth();
-		p2d = this->M * p3d;
+		if(fit->direction == f || fit->direction == opp_f)
+		{
+			/* we want to add the geometry of this face
+			 * to the geometry of the quadtree. First, we
+			 * need to get its projected position and size */
+			fit->get_center(p3d);
+			hw = fit->get_halfwidth();
+			p2d = this->M * p3d;
 		
-		/* add this area to the quadtree */
-		this->quadtree.subdivide(p2d, hw);
+			/* add this area to the quadtree */
+			this->quadtree.subdivide(p2d, hw);
+		}
+	}
 
+	/* iterate again, locking any boundary faces */
+	for(fit = region.begin(); fit != region.end(); fit++)
+	{
+		/* check if it is oriented correctly */
+		domdir = (fit->direction == f || fit->direction == opp_f);
+		
 		/* Check if this face is on the boundary.  If so,
 		 * then we want to make sure it doesn't get simplified
 		 * later, so we should put some data here. */
-		if(this->is_boundary_face(*fit, octree, vert3d_ind))
-			this->quadtree.insert(p2d, p2d);
+		this->lock_if_boundary_face(*fit, domdir, 
+				octree, vert3d_ind, err);
 	}
 
 	/* now that we've populated the quadtree with all
 	 * the appropriate faces of this region, we want to
 	 * simplify the quadtree geometry to ensure minimal
 	 * triangles are used to represent the planar region. */
-//TODO	this->quadtree.simplify();
+	this->quadtree.simplify();
 
 	/* the quadtree now represents the interior area
 	 * of the region */
@@ -536,25 +545,147 @@ void region_isostuffer_t::mapping_matrix(octtopo::CUBE_FACE f)
 	octtopo::cube_face_normals(f, this->nullspace);
 }
 		
-bool region_isostuffer_t::is_boundary_face(const node_face_t& f,
+void region_isostuffer_t::lock_if_boundary_face(const node_face_t& f,
+				bool domdir,
 				const octree_t& tree,
 				const std::map<node_corner::corner_t,
-						size_t>& vert3d_ind) const
+						size_t>& vert3d_ind,
+				double err)
 {
+	bool is_boundary[NUM_CORNERS_PER_SQUARE];
+	Vector2d p2d[NUM_CORNERS_PER_SQUARE];
 	corner_t c;
-	size_t ci;
+	Vector3d p3d;
+	Vector2d center, p, dp, norm;
+	size_t ci, ci_next, si, num_samples;
+	bool any_boundary;
+	quadnode_t* q;
 
 	/* iterate over the corners of this face */
+	any_boundary = false;
 	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
 	{
 		/* get the current corner info */
 		c.set(tree, f, ci);
 
 		/* check if this corner is a boundary */
-		if(vert3d_ind.count(c) > 0)
-			return true; /* boundary found */
+		if(vert3d_ind.count(c) == 0)
+		{
+			is_boundary[ci] = false;
+			continue; /* not a boundary */
+		}
+	
+		/* since this is a boundary corner, save its
+		 * 2d position on the quadtree */
+		c.get_position(tree, p3d);
+		p2d[ci] = this->M * p3d;
+		is_boundary[ci] = true;
+		any_boundary = true;
 	}
 
-	/* no corners are boundaries, so this face isn't a boundary */
-	return false;
+	/* short-circuit if no boundaries */
+	if(!any_boundary)
+		return;
+
+	/* get the 2D position of the center of this face */
+	f.get_center(p3d);
+	center = this->M * p3d;
+	if(!domdir)
+	{
+		/* this face is not aligned to the dominant
+		 * direction of the region, which means that
+		 * all the points we process here will be right
+		 * on the boundary of the region.  We want to
+		 * push this geometry into the interior.
+		 *
+		 * In other to do that, we need to test which
+		 * direction is best. */
+		
+		/* get the normal direction of face */
+		f.get_normal(p3d);
+		dp = this->M * p3d;
+		dp *= err;
+
+		/* try positive normal */
+		p = center + dp;
+		q = this->quadtree.get_root()->retrieve(p);
+		if(q != NULL && q->isleaf())
+		{
+			/* this is a good direction */
+			center = p;
+		}
+		else
+		{
+			/* try negative normal */
+			p = center - dp;
+			q = this->quadtree.get_root()->retrieve(p);
+			if(q != NULL && q->isleaf())
+			{
+				/* this is a good direction */
+				center = p;
+			}
+			else
+			{
+				/* neither direction is good, it's
+				 * a lost cause */
+				return;
+			}
+		}
+	}
+
+	/* determine how many samples to put on each boundary edge.
+	 *
+	 * Each sample is spaced 'err' apart, and there's a spacing
+	 * of 'err' on each side. */
+	num_samples = ceil( (2.0*f.get_halfwidth()/err) - 1);
+
+	/* check which edges are boundary edges (i.e. both
+	 * corners of the edge are boundary corners) */
+	for(ci = 0; ci < NUM_CORNERS_PER_SQUARE; ci++)
+	{
+		/* check if this corner is a boundary */
+		if(!is_boundary[ci])
+			continue;
+
+		/* get the starting corner a little inset into the face */
+		norm = center - p2d[ci];
+		norm.normalize();
+		norm *= sqrt(2) * err; /* amount to move starting point */
+
+		/* put starting point towards the center a bit */
+		p = p2d[ci] + norm;
+		this->quadtree.insert(p, p);
+		
+		/* now we want to do this same operation for the
+		 * whole edge, assuming that the next corner is
+		 * also on the boundary.
+		 *
+		 * get the next corner of this edge */
+		ci_next = (ci+1) % NUM_CORNERS_PER_SQUARE;
+
+		/* check if both corners are boundary */
+		if(!is_boundary[ci_next])
+			continue; /* not boundary edge */
+
+		/* get direction of edge */
+		dp = p2d[ci_next] - p2d[ci];
+		dp.normalize();
+		dp *= err;
+		p += dp;
+
+		/* since this is a boundary edge, insert
+		 * a bunch of points along it to make sure
+		 * that it won't get simplified later 
+		 *
+		 * Note the loop starts at 1 because we've
+		 * already placed the first point above. */
+		for(si = 1; si < num_samples; si++)
+		{
+			/* insert the locking point */
+			this->quadtree.insert(p, p);
+
+			/* update point */
+			p += dp;
+		}
+	}
 }
