@@ -95,6 +95,14 @@ class quadtree_t
 		double get_resolution() const;
 
 		/**
+		 * Returns the max depth of the tree
+		 *
+		 * @return   Returns the max depth
+		 */
+		inline int get_max_depth() const
+		{ return max_depth; };
+
+		/**
 		 * Clears all information from tree.  
 		 *
 		 * set_resolution() must be called before adding more data.

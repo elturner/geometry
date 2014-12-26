@@ -246,6 +246,26 @@ class region_isostuffer_t
 				const std::map<node_corner::corner_t,
 						size_t>& vert3d_ind,
 				double err);
+
+		/**
+		 * Adds a vertex to the given mesh
+		 *
+		 * Will add the specified 2D quadtree-point to
+		 * the global mesh by first converting it to 3D
+		 * coordinates, then projecting it onto
+		 * the plane geometry, then adding it as a vertex.
+		 *
+		 * The index of the newly created point is returned.
+		 *
+		 * @param p2d   The 2D point to add as a vertex
+		 * @param color The color of this point
+		 * @param mesh  The mesh to add it to
+		 *
+		 * @return      Returns the index of the new point in mesh
+		 */
+		size_t add_vertex(const Eigen::Vector2d& p2d,
+				const color_t& color,
+				mesh_io::mesh_t& mesh) const;
 };
 
 #endif

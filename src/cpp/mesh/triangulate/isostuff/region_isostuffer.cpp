@@ -202,24 +202,8 @@ int region_isostuffer_t::compute_verts(mesh_io::mesh_t& mesh,
 			continue; /* already exists */
 
 		/* This is a new vertex, internal only
-		 * to this region.  Figure
-		 * out its geometry:
-		 *
-		 * Its 3D position is found
-		 * by projecting onto the plane */
-		pts3d = M.transpose() * pts2d;
-		this->plane.get_intersection_of(pts3d, 
-				pts3d, this->nullspace);
-			
-		/* add it to the mesh */
-		vert.x     = pts3d(0);
-		vert.y     = pts3d(1);
-		vert.z     = pts3d(2);
-		vert.red   = color.get_red_int();
-		vert.green = color.get_green_int();
-		vert.blue  = color.get_blue_int();
-		v_ind      = mesh.num_verts();
-		mesh.add(vert);
+		 * to this region. */
+		v_ind = this->add_vertex(pts2d, color, mesh);
 
 		/* add it to the vert map */
 		this->vert2d_ind.insert(
@@ -345,16 +329,7 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 	 */
 
 	/* put a vertex at the center */
-	pts3d = M.transpose() * (q->center);
-	this->plane.get_intersection_of(pts3d, pts3d, this->nullspace);
-	vert.x     = pts3d(0);
-	vert.y     = pts3d(1);
-	vert.z     = pts3d(2);
-	vert.red   = color.get_red_int();
-	vert.green = color.get_green_int();
-	vert.blue  = color.get_blue_int();
-	center_ind = mesh.num_verts();
-	mesh.add(vert);
+	center_ind = this->add_vertex(q->center, color, mesh);
 
 	/* add triangles from center to all neighboring nodes */
 	for(i = 0; i < num_neighs; i++)
@@ -377,7 +352,7 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 			     << neighs[i]->center.transpose() << endl
 			     << "\t\tneigh[" << i << "]->halfwidth: "
 			     << neighs[i]->halfwidth << endl << endl;
-			return PROPEGATE_ERROR(-2, ret);
+			continue;
 		}
 
 		/* convert to corner objects */
@@ -392,6 +367,7 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 		if(edge_a_vit == this->vert2d_ind.end()
 				|| edge_b_vit == this->vert2d_ind.end())
 		{
+			/* report the error */
 			cerr << endl
 			     << "[region_isostuffer_t::triangulate]\t"
 			     << "Error occurred when triangulating node:\n"
@@ -413,7 +389,7 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 			     << "\t\t\tfound: " 
 			     << (edge_b_vit != this->vert2d_ind.end())
 			     << endl << endl;
-			return -3; /* couldn't find them! */
+			continue; /* couldn't find them! */
 		}
 		edge_a_ind = edge_a_vit->second;
 		edge_b_ind = edge_b_vit->second;
@@ -671,7 +647,6 @@ void region_isostuffer_t::lock_if_boundary_face(const node_face_t& f,
 		dp = p2d[ci_next] - p2d[ci];
 		dp.normalize();
 		dp *= err;
-		p += dp;
 
 		/* since this is a boundary edge, insert
 		 * a bunch of points along it to make sure
@@ -679,13 +654,43 @@ void region_isostuffer_t::lock_if_boundary_face(const node_face_t& f,
 		 *
 		 * Note the loop starts at 1 because we've
 		 * already placed the first point above. */
+		p += dp;
 		for(si = 1; si < num_samples; si++)
 		{
 			/* insert the locking point */
-			this->quadtree.insert(p, p);
+			this->quadtree.get_root()->insert(p, p, 1, 
+					this->quadtree.get_max_depth());
 
 			/* update point */
 			p += dp;
 		}
 	}
+}
+		
+size_t region_isostuffer_t::add_vertex(const Eigen::Vector2d& p2d,
+				const color_t& color,
+				mesh_io::mesh_t& mesh) const
+{
+	mesh_io::vertex_t vert;
+	Vector3d p3d;
+	size_t v_ind;
+
+	/* get the 3d coordinates of point */
+	p3d = this->M.transpose() * p2d;
+	this->plane.get_intersection_of(p3d, p3d, this->nullspace);
+	
+	/* populate vertex */
+	vert.x     = p3d(0);
+	vert.y     = p3d(1);
+	vert.z     = p3d(2);
+	vert.red   = color.get_red_int();
+	vert.green = color.get_green_int();
+	vert.blue  = color.get_blue_int();
+
+	/* add to mesh */
+	v_ind      = mesh.num_verts();
+	mesh.add(vert);
+
+	/* return its index */
+	return v_ind;
 }
