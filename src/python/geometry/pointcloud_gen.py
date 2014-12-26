@@ -36,7 +36,8 @@ if sys.platform == 'win32' :
 
 # the following dictionary contains the white-list of all laser sensors
 # to use for pointcloud generation
-laser_whitelist = ['H1214157', 'H1311822', 'H1004314', 'H1004315']
+laser_whitelist = ['H1214157', 'H1311822', 'H1004314', 'H1004315',
+	'H1316223', 'H1316225']
 camera_whitelist = ['left_camera', 'right_camera', 'back_camera']
 
 #----------------------------------------------------
