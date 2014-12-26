@@ -2,7 +2,7 @@ function [] = render_line_pdf(scan)
 	% render_line_pdf(scan)
 	%
 	%	Renders the pdf of the line segment representing
-	%	a laser scan, given the distributions of the saensor and
+	%	a laser scan, given the distributions of the sensor and
 	%	scan point positions.
 	%
 	% arguments:
@@ -26,6 +26,7 @@ function [] = render_line_pdf(scan)
 
 	% plot it
 	surf(X,Y,Z);
+	axis equal;
 
 	% check normalization
 	x = unique(X);

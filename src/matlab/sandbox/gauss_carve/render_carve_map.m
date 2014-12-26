@@ -32,5 +32,6 @@ function [] = render_carve_map(scan)
 	end
 
 	% plot it
-	surf(X,Y,Z);
+	surf(X,Y,Z, 'EdgeAlpha', 0);
+	axis equal;
 end
