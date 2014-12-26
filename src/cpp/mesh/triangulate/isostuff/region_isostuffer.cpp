@@ -411,7 +411,7 @@ int region_isostuffer_t::triangulate(mesh_io::mesh_t& mesh,
 			     << "\t\tedge_b: " << edge_b.transpose()
 			     << endl
 			     << "\t\t\tfound: " 
-			     << (edge_a_vit != this->vert2d_ind.end())
+			     << (edge_b_vit != this->vert2d_ind.end())
 			     << endl << endl;
 			return -3; /* couldn't find them! */
 		}
