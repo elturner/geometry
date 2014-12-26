@@ -16,11 +16,12 @@ function [] = render_point_pdfs(scan)
 
 	% sample the sensor distribution and plot
 	[X,Y,Z] = bivar_gauss(scan.Es,scan.Cs);
-	surf(X,Y,Z);
+	contour3(X,Y,Z);
 
 	% sample and plot the point distribution
 	[X,Y,Z] = bivar_gauss(scan.Ep,scan.Cp);
-	surf(X,Y,Z);
+	contour3(X,Y,Z);
+	axis equal;
 end
 
 function [X,Y,Z] = bivar_gauss(E,C)
