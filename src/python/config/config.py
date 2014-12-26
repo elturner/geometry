@@ -80,6 +80,11 @@ def parse_backpack_xml(filename):
 
 		# parse the file
 		for group in sensors: # iterate over sensor type groups
+
+			# Skip the hardware block
+			if group.tag == 'hardware' :
+				continue
+
 			for sensor in group: # iterate over sensors
 				
 				# check if this sensor is enabled
