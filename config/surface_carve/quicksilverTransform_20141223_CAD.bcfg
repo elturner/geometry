@@ -1,0 +1,72 @@
+%
+%	Backpack Config File - quicksilverTransform_20141223_CAD.bcfg
+%
+%	Holds the transform numbers, serial numbers, and other meta 
+%	information about the CAD measurements of the magneto gen-3
+%	backpack.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	SCANNER CONFIGS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% This is the HUL Scanner Properties
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = hul
+	&type = UTM30
+	&serialNum = H1316222
+	
+	% Transformation Parameters
+	&rToCommon = [0 90 0]                % This is in degrees
+	&tToCommon = [210.17 -0.32 -2.78]     % This is in millimeters
+	
+#endsensor
+
+% This is the geometry (up) scanner
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = geom_up
+	&type = UTM30
+	&serialNum = H1316223
+	
+	% Transformation Parameters
+	&rToCommon = [180 0 0]                % This is in degrees
+	&tToCommon = [166.82 -0.32 -113.78]    % This is in millimeters
+	
+#endsensor
+
+% This is the geometry (down) scanner
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = geom_down
+	&type = UTM30
+	&serialNum = H1311822
+	
+	% Transformation Parameters
+	&rToCommon = [180 15 180]                % This is in degrees
+	&tToCommon = [-16.53 -0.32 -106.83]    % This is in millimeters
+	
+#endsensor
+
+% This is the localization scanner (vertical)
+#startsensor
+	
+	% Meta Information
+	#laser
+	&name = loc_vert
+	&type = UTM30
+	&serialNum = H1316224
+	
+	% Transformation Parameters
+	&rToCommon = [90 90 0]                  % This is in degrees
+	&tToCommon = [24.47 -153.22 -79.18]     % This is in millimeters
+	
+#endsensor
+
