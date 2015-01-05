@@ -12,18 +12,19 @@
  * the bounding box grows as more elements are added.
  */
 
-#include <Eigen/Dense>
-#include <string>
 #include "octnode.h"
 #include "shape.h"
 #include "octdata.h"
+#include <Eigen/Dense>
+#include <string>
+#include <set>
 
 /**
  * defines the octree class
  */
 class octree_t
 {
-	/*** parameters ***/
+	/* parameters */
 	private:
 
 		/* root of the tree and its relative position */
@@ -36,10 +37,12 @@ class octree_t
 		 * levels. */
 		int max_depth;
 
-	/*** function ***/
+	/* function */
 	public:
 
+		/*--------------*/
 		/* constructors */
+		/*--------------*/
 
 		/**
 		 * Constructs empty tree with default resolution.
@@ -76,7 +79,9 @@ class octree_t
 		 */
 		~octree_t();
 
+		/*-----------*/
 		/* accessors */
+		/*-----------*/
 
 		/**
 		 * Sets the size of this tree.
@@ -270,6 +275,18 @@ class octree_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int subdivide(const shape_t& s);
+
+		/**
+		 * Will remove any data elements that are not in the
+		 * set provided.
+		 *
+		 * Given a set of data objects that constitute a whitelist,
+		 * will delete any data elements from this tree that
+		 * are not in the list.
+		 *
+		 * @param whitelist  How to filter the tree
+		 */
+		void filter(const std::set<octdata_t*>& whitelist);
 
 		/*-----*/
 		/* i/o */

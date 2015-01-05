@@ -3,9 +3,13 @@
 #include <io/octree/vox_writer.h>
 #include <io/octree/sof_io.h>
 #include <geometry/octree/octree.h>
+#include <geometry/shapes/bloated_fp.h>
 #include <mesh/refine/octree_padder.h>
 #include <mesh/surface/node_boundary.h>
+#include <mesh/floorplan/floorplan.h>
+#include <util/error_codes.h>
 #include <iostream>
+#include <set>
 
 /**
  * @file   main.cpp
@@ -21,7 +25,31 @@
 
 using namespace std;
 
+/*------------------*/
+/* function headers */
+/*------------------*/
+
+/**
+ * This helper function is used to remove parts of the octree
+ * that are considered 'explosions'.
+ *
+ * Explosions are areas that occur far away from any floorplan generation
+ * of the environment, and are considered outside of the scan area.  These
+ * parts are removed from the octree in order to simplify the geometry.
+ *
+ * Note that if no floorplans are provided, or an invalid buffer is given,
+ * then no trimming will be performed.
+ *
+ * @param tree   The tree to modify
+ * @param args   The settings to use
+ * 
+ * @return   Returns zero on success, non-zero on failure.
+ */
+int trim_explosions(octree_t& tree, octsurf_run_settings_t args);
+
+/*--------------------------*/
 /* function implementations */
+/*--------------------------*/
 
 /**
  * The main function for this program
@@ -50,14 +78,23 @@ int main(int argc, char** argv)
 		     << "Unable to read octfile." << endl;
 		return 2;
 	}
-	octree_padder::pad(tree);
 				
-	/* determine which scheme to use */
+	/* determine which scheme to use, to see if we need to trim */
 	scheme = node_boundary_t::SEG_ALL;
 	if(args.export_objects)
 		scheme = node_boundary_t::SEG_OBJECTS;
 	else if(args.export_room)
 		scheme = node_boundary_t::SEG_ROOM;
+
+	/* check for further trimming from input floorplans */
+	ret = trim_explosions(tree, args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to trim explosions." << endl;
+		return 3;
+	}
+	octree_padder::pad(tree);
 
 	/* export */
 	switch(args.output_format)
@@ -75,7 +112,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to vox" << endl;
-				return 3;
+				return 4;
 			}
 			break;
 		case FORMAT_SOF:
@@ -85,7 +122,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to sof" << endl;
-				return 4;
+				return 5;
 			}
 			break;
 		case FORMAT_SOG:
@@ -95,7 +132,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to sog" << endl;
-				return 5;
+				return 6;
 			}
 			break;
 		case FORMAT_PLY:
@@ -118,7 +155,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to ply" << endl;
-				return 6;
+				return 7;
 			}
 			break;
 		case FORMAT_OBJ:
@@ -151,7 +188,7 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to obj" << endl;
-				return 7;
+				return 8;
 			}
 			break;
 		case FORMAT_TXT:
@@ -162,10 +199,60 @@ int main(int argc, char** argv)
 			{
 				cerr << "[main]\tError " << ret << ": "
 				     << "Unable to export to txt" << endl;
-				return 8;
+				return 9;
 			}
 			break;
 	}
+
+	/* success */
+	return 0;
+}
+
+int trim_explosions(octree_t& tree, octsurf_run_settings_t args)
+{
+	set<octdata_t*> whitelist;
+	fp::floorplan_t floorplan;
+	bloated_fp_t shape;
+	size_t fi, num_fps;
+	int ret;
+
+	/* check if any floorplans are defined.  If not,
+	 * then no filtering will occur */
+	if(args.floorplans.empty())
+		return 0;
+
+	/* check if the explosion buffer is valid.  If not,
+	 * then no filtering will occurr */
+	if(args.explosion_buffer < 0.0)
+		return 0;
+	
+	/* iterate over the floorplans given */
+	num_fps = args.floorplans.size();
+	for(fi = 0; fi < num_fps; fi++)
+	{
+		/* read in this floorplan */
+		ret = floorplan.import_from_fp(args.floorplans[fi]);
+		if(ret)
+		{
+			cerr << "[trim_explosions]\tError " << ret << ": "
+			     << "Unable to read floorplan file #" 
+			     << (fi+1) << ": "
+			     << args.floorplans[fi] << endl << endl;
+			return PROPEGATE_ERROR(-1, ret);
+		}
+
+		/* populate the 'bloated' floorplan */
+		shape.init(floorplan, args.explosion_buffer);
+
+		/* get the whitelist from the bloated floorplan */
+		tree.find(shape);
+
+		/* add to total whitelist */
+		whitelist.insert(shape.begin(), shape.end());
+	}
+
+	/* trim the octree based on the compiled whitelist */
+	tree.filter(whitelist);
 
 	/* success */
 	return 0;

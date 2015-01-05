@@ -9,6 +9,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <cmath>
+#include <set>
 #include <float.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -322,6 +323,13 @@ int octree_t::subdivide(const shape_t& s)
 
 	/* success */
 	return 0;
+}
+		
+void octree_t::filter(const std::set<octdata_t*>& whitelist)
+{
+	/* recursively filter the contents of the tree */
+	if(this->root != NULL)
+		this->root->filter(whitelist);
 }
 
 /* The following defines are used for reading and writing files */

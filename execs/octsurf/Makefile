@@ -34,6 +34,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/shapes/plane.cpp \
+		$(SOURCEDIR)geometry/shapes/bloated_fp.cpp \
 		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \
@@ -45,6 +46,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/surface/node_corner_map.cpp \
 		$(SOURCEDIR)mesh/surface/face_mesher.cpp \
 		$(SOURCEDIR)mesh/surface/region_mesher.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan_input.cpp \
+		$(SOURCEDIR)mesh/floorplan/floorplan_output.cpp \
 		src/octsurf_run_settings.cpp \
 		src/main.cpp
 
@@ -74,6 +78,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)geometry/shapes/plane.h \
+		$(SOURCEDIR)geometry/shapes/bloated_fp.h \
 		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \
 		$(SOURCEDIR)mesh/partition/node_set.h \
@@ -85,6 +90,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/surface/node_corner_map.h \
 		$(SOURCEDIR)mesh/surface/face_mesher.h \
 		$(SOURCEDIR)mesh/surface/region_mesher.h \
+		$(SOURCEDIR)mesh/floorplan/floorplan.h \
 		$(SOURCEDIR)image/color.h \
 		src/octsurf_run_settings.h
 

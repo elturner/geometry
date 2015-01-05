@@ -45,6 +45,11 @@ using namespace std;
 #define TXT_FILE_EXT   "txt"
 #define SOF_FILE_EXT   "sof"
 #define SOG_FILE_EXT   "sog"
+#define  FP_FILE_EXT   "fp"
+
+/* settings file parameters */
+
+#define XML_TAG_EXPLOSION_BUFFER "octsurf_explosion_buffer"
 
 /* function implementations */
 		
@@ -52,6 +57,8 @@ octsurf_run_settings_t::octsurf_run_settings_t()
 {
 	/* set default values for this program's files */
 	this->octfiles.clear();
+	this->floorplans.clear();
+	this->explosion_buffer = -1;
 	this->outfile = "";
 	this->output_format = FORMAT_UNKNOWN;
 }
@@ -125,6 +132,13 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 			"The input octree files.  These represent the "
 			"volume information of the scanned environment, and"
 			" are processed at a given resolution.");
+	args.add_required_file_type(FP_FILE_EXT, 0,
+			"If provided, these floorplan files will be used "
+			"to filter the octree, in order to prevent "
+			"'explosions' in the output mesh.  Explosions are "
+			"parts of the volume that are significantly far "
+			"away from the floorplan, and are considered to "
+			"be outside the scanned environment.");
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -153,6 +167,7 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 	this->export_regions    = args.tag_seen(EXPORT_REGIONS_FLAG);
 	this->export_corners    = args.tag_seen(EXPORT_CORNERS);
 	args.files_of_type(OCT_FILE_EXT, this->octfiles);
+	args.files_of_type(FP_FILE_EXT,  this->floorplans);
 
 	/* check if a settings xml file was specified */
 	if(args.tag_seen(SETTINGS_FLAG))
@@ -177,7 +192,11 @@ int octsurf_run_settings_t::parse(int argc, char** argv)
 		 * file, then the default settings that were set in this
 		 * object's constructor will be used. */
 
-		// No settings needed here
+		/* check if an explosion buffer is specified */
+		if(settings.is_prop(XML_TAG_EXPLOSION_BUFFER))
+			this->explosion_buffer
+				= settings.getAsDouble(
+						XML_TAG_EXPLOSION_BUFFER);
 	}
 	else
 		this->xml_settings = "";

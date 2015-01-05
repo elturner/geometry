@@ -420,7 +420,7 @@ int tree_exporter::export_regions(const std::string& filename,
 
 	/* export regions to file */
 	tic(clk);
-	ret = region_graph.writeobj(filename, true);
+	ret = region_graph.writeobj(filename, false);
 	if(ret)
 		return PROPEGATE_ERROR(-7, ret);
 	toc(clk, "Writing OBJ");

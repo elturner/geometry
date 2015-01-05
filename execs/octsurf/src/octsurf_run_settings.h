@@ -68,6 +68,33 @@ class octsurf_run_settings_t
 		std::string xml_settings;
 
 		/**
+		 * The location of the (optional) .fp files
+		 * 
+		 * These files are used to remove 'explosions' from
+		 * the output models.  'Explosions' are any geometry
+		 * significantly outside of the floorplan.
+		 */
+		std::vector<std::string> floorplans;
+
+		/**
+		 * Explosion buffer size.
+		 *
+		 * This parameter only matters if one or more floorplan
+		 * files are specified.  If present, it represents how
+		 * much 'bloat' to add to each floorplan.  Adding a buffer
+		 * ensures that geometry just outside the domain of the
+		 * floorplan is still properly modeled.
+		 *
+		 * Any geometry that is past this buffer away from all
+		 * the floorplans will not be modeled in the final mesh.
+		 *
+		 * If set to a negative value, no trimming will occur.
+		 *
+		 * units:  meters
+		 */
+		double explosion_buffer;
+
+		/**
 		 * If present, will perform surface reconstruction
 		 * by using the planar meshing from region_mesher_t.
 		 *

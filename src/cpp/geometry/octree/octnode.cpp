@@ -3,6 +3,7 @@
 #include "octdata.h"
 #include <Eigen/Dense>
 #include <iostream>
+#include <set>
 
 /**
  * @file octnode.cpp
@@ -442,6 +443,28 @@ void octnode_t::subdivide(const shape_t& s, int d)
 		/* recurse */
 		this->children[i]->subdivide(s, d-1);
 	}
+}
+		
+void octnode_t::filter(const std::set<octdata_t*>& whitelist)
+{
+	size_t i;
+
+	/* check if this node has any data */
+	if(this->data != NULL)
+	{
+		/* if the data element is not in the whitelist, then
+		 * delete it */
+		if(whitelist.count(this->data) == 0)
+		{
+			delete (this->data);
+			this->data = NULL;
+		}
+	}
+
+	/* recurse to children */
+	for(i = 0; i < CHILDREN_PER_NODE; i++)
+		if(this->children[i] != NULL)
+			this->children[i]->filter(whitelist);
 }
 		
 unsigned int octnode_t::get_num_nodes() const

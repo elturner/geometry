@@ -161,6 +161,18 @@ class bloated_fp_t : public shape_t
 		 */
 		Eigen::Vector3d get_vertex(unsigned int i) const;
 
+		/**
+		 * Retrieves the beginning iterator for the whitelist
+		 */
+		inline std::set<octdata_t*>::const_iterator begin() const
+		{ return this->whitelist.begin(); };
+
+		/**
+		 * Retrieves the ending iterator for the whitelist
+		 */
+		inline std::set<octdata_t*>::const_iterator end() const
+		{ return this->whitelist.end(); };
+
 		/*----------*/
 		/* geometry */
 		/*----------*/

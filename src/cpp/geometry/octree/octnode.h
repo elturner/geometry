@@ -12,10 +12,11 @@
  * through octrees.
  */
 
-#include <Eigen/Dense>
-#include <iostream>
 #include "shape.h"
 #include "octdata.h"
+#include <Eigen/Dense>
+#include <iostream>
+#include <set>
 
 /* number of children each node in the octree has */
 #define CHILDREN_PER_NODE 8
@@ -252,6 +253,20 @@ class octnode_t
 		 * @param d     The depth to subdivide to
 		 */
 		void subdivide(const shape_t& s, int d);
+
+		/**
+		 * Will filter the contents of the subtree under this
+		 * node by the given whitelist.
+		 *
+		 * Given a set of data objects as a whitelist, will
+		 * remove any data element that is not in the list.
+		 *
+		 * This operation is applied recursively to this node
+		 * and all nodes under it.
+		 *
+		 * @param whitelist   The whitelist to use
+		 */
+		void filter(const std::set<octdata_t*>& whitelist);
 
 		/**
 		 * Returns the count of this node and all its subnodes

@@ -1,7 +1,26 @@
 <settings>
 <!-- This file contains run settings for the octsurf program -->
 
+	<!-- ********************************************* -->
 	<!-- PARAMETERS FOR NODE OUTLIER REMOVAL/SMOOTHING -->
+	<!-- ********************************************* -->
+
+	<!-- The buffer size to use to expand floorplans when removing
+	     'explosions' from output models.
+
+	     This parameter only matters if one or more floorplan
+	     files are specified.  If present, it represents how
+	     much 'bloat' to add to each floorplan.  Adding a 
+	     buffer ensures that geometry just outside the domain
+	     of the floorplan is still properly modeled.
+
+	     Any geometry that is past this buffer away from all
+	     the floorplans will not be modeled in the final mesh.
+
+	     If set to a negative value, no trimming will occur.
+
+	     units: meters   -->
+	<octsurf_explosion_buffer>1.0</octsurf_explosion_buffer>
 
 	<!-- This value indicates the percentage of an octnode's
 	     surface area that has to be touching neighboring nodes
@@ -24,7 +43,9 @@
 	     range: (0.5,1] -->
 	<octsurf_node_outlierthresh>0.66</octsurf_node_outlierthresh>
 
+	<!-- ******************************* -->
 	<!-- PARAMETERS FOR REGION FORMATION -->
+	<!-- ******************************* -->
 
 	<!-- This value indicates how aggressive planar region
 	     coalescing will be with respect to distance-from-plane.
