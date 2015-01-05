@@ -118,8 +118,8 @@ namespace poly2d
 	 *
 	 * @return      Returns true iff an intersection occurs
 	 */
-	inline bool aabb_in_aabb(double ax[2], double ay[2],
-				double bx[2], double by[2])
+	inline bool aabb_in_aabb(const double ax[2], const double ay[2],
+				const double bx[2], const double by[2])
 	{
 		/* check if intersect occurs in x-direction */
 		if(ax[0] >= bx[1] || bx[0] >= ax[1])
