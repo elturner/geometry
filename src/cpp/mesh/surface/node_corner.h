@@ -345,9 +345,9 @@ namespace node_corner
 				p = (pos - center) / (0.5 * res);
 
 				/* get discretized coordinates */
-				this->x_ind = (int) floor(p(0));
-				this->y_ind = (int) floor(p(1));
-				this->z_ind = (int) floor(p(2));
+				this->x_ind = (int) round(p(0));
+				this->y_ind = (int) round(p(1));
+				this->z_ind = (int) round(p(2));
 			};
 
 			/**
@@ -372,9 +372,9 @@ namespace node_corner
 				p(2) = 0.0;
 
 				/* get discretized coordinates */
-				this->x_ind = (int) floor(p(0));
-				this->y_ind = (int) floor(p(1));
-				this->z_ind = (int) floor(p(2));
+				this->x_ind = (int) round(p(0));
+				this->y_ind = (int) round(p(1));
+				this->z_ind = (int) round(p(2));
 			};
 
 			/*----------*/
