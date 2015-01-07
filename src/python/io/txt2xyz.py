@@ -31,7 +31,7 @@ def main() :
 
     # init values
     header_lines = args.header_lines
-    units = args.units_scale
+    units = args.units_scale[0]
     num_points = 0
     num_ignored = 0
     vals_per_line = -1
