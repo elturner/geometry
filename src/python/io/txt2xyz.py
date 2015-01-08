@@ -31,7 +31,7 @@ def main() :
 
     # init values
     header_lines = args.header_lines
-    units = args.units_scale[0]
+    units = args.units_scale
     num_points = 0
     num_ignored = 0
     vals_per_line = -1
@@ -70,7 +70,7 @@ def main() :
         if len(invals) == 4 :
             # assume <x> <y> <z> <timestamp>
             timestamp = float(invals[3])
-            index = timestamp
+            index = int(timestamp)
 
             # check if this is the first line of this type
             if vals_per_line < 0:
@@ -94,7 +94,7 @@ def main() :
             g = int(invals[4])
             b = int(invals[5])
             timestamp = float(invals[6])
-            index = timestamp
+            index = int(timestamp)
 
             # check if this is the first line of this type
             if vals_per_line < 0:
