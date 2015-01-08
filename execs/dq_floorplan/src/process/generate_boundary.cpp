@@ -235,7 +235,7 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 		{
 			/* skip this pose, and don't carve the
 			 * pose-to-pose line segments */
-			continue;
+//TODO			continue;
 		}
 		
 		/* get pose information */
@@ -347,8 +347,8 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 		 * step for the end of the path */
 		if(i+1 >= n)
 			continue;
-		if(pose_map[i+1].empty())
-			continue;
+//		if(pose_map[i+1].empty())
+//TODO			continue;
 		pose = path.get_pose(i+1);
 
 		/* ray-trace path from i to i+1 */
