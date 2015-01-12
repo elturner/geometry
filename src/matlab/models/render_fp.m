@@ -8,7 +8,9 @@ function [] = render_fp(floorplan, color_by_room, c, labels)
 	%	floorplan -	The struct to render
 	%
 	%	color_by_room -	OPTIONAL. If true, will color each room
-	%			separately. Default is false.
+	%			separately. Default is false.  If this
+	%			is an array of size NUM_ROOMS, then will
+	%			use these colors for each room.
 	%
 	%	c -		OPTIONAL. Default color to use. Can specify
 	%			[r g b] where each component is in [0,1],
@@ -24,24 +26,33 @@ function [] = render_fp(floorplan, color_by_room, c, labels)
 	axis off;
 
 	% check arguments
-	if(~exist('color_by_room', 'var'))
+	if(~exist('color_by_room', 'var') || isempty(color_by_room))
 		color_by_room = false;
 	end
-	if(~exist('c', 'var'))
+	if(~exist('c', 'var') || isempty(c))
 		c = [0.8 0.8 1 1];
 	end
 	if(length(c) < 4)
 		c = [c, ones(1,4-length(c))];
 	end
-	if(~exist('labels', 'var'))
+	if(~exist('labels', 'var') || isempty(labels))
 		labels = false;
 	end
 
 	% make a color for each room
-	if(color_by_room)
-		colors = 0.25 + 0.5*rand(floorplan.num_rooms, 3);
+	if(numel(color_by_room) == 1)
+		% treat color_by_room as a boolean, make up random colors
+		if(color_by_room)
+			colors = 0.25 + 0.5*rand(floorplan.num_rooms, 3);
+		else
+			colors = ones(floorplan.num_rooms, 1) * c(1:3);
+		end
+	elseif(numel(color_by_room) == floorplan.num_rooms)
+		% treat color_by_room as a set of color values
+		colors = colorme(color_by_room);
 	else
-		colors = ones(floorplan.num_rooms, 1) * c(1:3);
+		% unknown input
+		error('unable to parse input value of color_by_room');
 	end
 
 	% plot triangles
@@ -73,4 +84,42 @@ function [] = render_fp(floorplan, color_by_room, c, labels)
 		[floorplan.verts(floorplan.edges(:,1),2)' ; ...
 		floorplan.verts(floorplan.edges(:,2),2)'], ...
 		'LineWidth', 2, 'color', 'black');
+end
+
+function colors = colorme(array)
+	% colors = colorme(array)
+	%
+	%	Given a set of N values as an array of scalars, 
+	%	this function will return a Nx3 matrix representing
+	%	a color for each given value.
+	%
+	% arguments:
+	%
+	%	array -		Either a row or column vector of scalars
+	%
+	% output:
+	%
+	%	colors -	The colors corresponding with each input
+	%			value
+	%
+	% author:
+	%
+	%	Eric Turner <elturner@eecs.berkeley.edu>
+	%	Written January 12, 2015
+	%
+
+	% get bounds
+	N = numel(array);
+	minval = min(array);
+	maxval = max(array);
+	res = 256;
+
+	% make a JETMAP array
+	J = jet(res);
+
+	% get indices for each input value
+	I = 1 + round( (res-1) .* (array - minval) ./ (maxval - minval) );
+
+	% create colors
+	colors = J(I,:);
 end
