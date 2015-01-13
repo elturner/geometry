@@ -39,7 +39,7 @@ Where:
 value              type                 description
 -------------------------------------------------------------------
 vert_1             Integer              Index of first vertex of edge
-vert_2             Integer              Inded of second vertex of edge
+vert_2             Integer              Index of second vertex of edge
 min_horizontal     double               Value [0,1] norm pos along edge
 min_vertical       double               Value [0,1] norm pos along edge
 max_horizontal     double               Value [0,1] norm pos along edge
