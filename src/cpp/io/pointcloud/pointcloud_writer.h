@@ -15,6 +15,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <fstream>
 #include <Eigen/Dense>
 #include <io/data/urg/urg_data_reader.h>
@@ -24,6 +25,7 @@
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
 #include <image/fisheye/fisheye_camera.h>
+#include <image/rectilinear/rectilinear_camera.h>
 
 /* the pointcloud writer class */
 class pointcloud_writer_t
@@ -36,10 +38,10 @@ class pointcloud_writer_t
 		 */
 		enum FILE_TYPE
 		{
-			XYZ_FILE,   /* ascii-formatted xyz file */
-			OBJ_FILE,   /* wavefront OBJ file */
-			PTS_FILE,   /* ascii-formatted pts file */
-			UNKNOWN_FILE /* unknown filetype */
+			XYZ_FILE,   				  /* ascii-formatted xyz file */
+			OBJ_FILE,   				  /* wavefront OBJ file */
+			PTS_FILE,   				  /* ascii-formatted pts file */
+			UNKNOWN_FILE 				  /* unknown filetype */
 		};
 
 		/**
@@ -47,14 +49,22 @@ class pointcloud_writer_t
 		 */
 		enum COLOR_METHOD
 		{
-			NO_COLOR, /* add no color information to output */
-			COLOR_BY_HEIGHT, /* color output by height */
-			COLOR_BY_NOISE, /* color output by noise level */
-			COLOR_BY_TIME, /* color output by timestamp */
-			NEAREST_IMAGE, /* color points based on imagery */
-			NEAREST_IMAGE_DROP_UNCOLORED /* don't export 
-			                              * uncolored points */
+			NO_COLOR, 					  /* add no color information */
+			COLOR_BY_HEIGHT, 			  /* color output by height */
+			COLOR_BY_NOISE, 			  /* color output by noise level */
+			COLOR_BY_TIME, 				  /* color output by timestamp */
+			NEAREST_IMAGE, 				  /* color points based on imagery */
+			NEAREST_IMAGE_DROP_UNCOLORED  /* don't export * uncolored points */
 		};
+
+		/**
+ 		 * valid camera options
+ 		 */
+ 		enum CAMERA_TYPES
+ 		{
+ 			CAMERA_TYPE_FISHEYE,		  /* fisheye camers */
+ 			CAMERA_TYPE_RECTILINEAR  	  /* rectilienar cameras */
+ 		};
 
 	/* parameters */
 	private:
@@ -132,7 +142,7 @@ class pointcloud_writer_t
 		/**
 		 * Specifies the fisheye cameras to use for coloring, if any
 		 */
-		std::vector<fisheye_camera_t> fisheye_cameras;
+		std::vector<std::shared_ptr<camera_t> > cameras;
 
 		/**
 		 * Specifies the units to use in output file.
@@ -209,7 +219,8 @@ class pointcloud_writer_t
 		 */
 		int add_camera(const std::string& metafile,
 		               const std::string& calibfile,
-		               const std::string& imgdir);
+		               const std::string& imgdir,
+		               CAMERA_TYPES cameraType);
 
 		/**
 		 * Exports all points from this laser scanner to file

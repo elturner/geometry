@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <memory>
 #include <vector>
 #include <math.h>
 #include <float.h>
@@ -162,13 +163,30 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		
 int pointcloud_writer_t::add_camera(const std::string& metafile,
                                     const std::string& calibfile,
-                                    const std::string& imgdir)
+                                    const std::string& imgdir,
+                                    CAMERA_TYPES cameraType)
 {
-	fisheye_camera_t cam;
 	int ret;
 
+	/* pushback a new camera onto the list */
+	if(cameraType == pointcloud_writer_t::CAMERA_TYPE_FISHEYE)
+	{
+		this->cameras.push_back(
+			make_shared<fisheye_camera_t>());
+	}
+	else if(cameraType == pointcloud_writer_t::CAMERA_TYPE_RECTILINEAR)
+	{
+		this->cameras.push_back(
+			make_shared<rectilinear_camera_t>());
+	}
+	else
+	{
+		return PROPEGATE_ERROR(-2, 1);	
+	}
+
 	/* initialize the new camera */
-	ret = cam.init(calibfile, metafile, imgdir, this->path);
+	ret = this->cameras.back()->init(
+		calibfile, metafile, imgdir, this->path);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
@@ -176,10 +194,9 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 	 * with how many images will be searched for each point.  This
 	 * cache is set to be twice the number of images searched for
 	 * each point. */
-	cam.set_cache_size(ceil(1
+	this->cameras.back()->set_cache_size(ceil(1
 		+ (4*this->camera_time_buffer_range 
 			/ this->camera_time_buffer_dt)));
-	this->fisheye_cameras.push_back(cam);
 
 	/* success */
 	return 0;
@@ -523,10 +540,10 @@ void pointcloud_writer_t::close()
 	this->path.clear();
 
 	/* clear camera info */
-	n = this->fisheye_cameras.size();
+	n = this->cameras.size();
 	for(i = 0; i < n; i++)
-		this->fisheye_cameras[i].clear();
-	this->fisheye_cameras.clear();
+		this->cameras[i]->clear();
+	this->cameras.clear();
 }
 		
 int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
@@ -788,7 +805,7 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	}
 
 	/* iterate over cameras */
-	n = this->fisheye_cameras.size();
+	n = this->cameras.size();
 	m = times_to_search.size();
 	for(i = 0; i < n; i++)
 	{
@@ -799,7 +816,7 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 			tau = times_to_search[j];
 
 			/* get coloring from this camera */
-			ret = this->fisheye_cameras[i].color_point(
+			ret = this->cameras[i]->color_point(
 						x,y,z,tau,r,g,b,q);
 			if(ret)
 			{

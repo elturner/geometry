@@ -28,6 +28,7 @@ using namespace std;
 #define D_IMAGER_FILE_FLAG        "-d"
 #define FSS_FILE_FLAG             "--fss"
 #define FISHEYE_CAMERA_FLAG       "-f"
+#define RECTILINEAR_CAMERA_FLAG	  "-q"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define RANGE_LIMIT_FLAG          "-r"
@@ -124,6 +125,14 @@ void init_args(cmd_args_t& args)
 	               " representing the ocam calib results.  The image "
 	               "directory should be the same one that is referenced"
 	               " by the metadata file.", true, 3);
+	args.add(RECTILINEAR_CAMERA_FLAG, /* params for rectilinear camera */
+				   "Specifies three arguments: <color metadata file> "
+				   "<rectilinear calib file> <image folder>.  The metadata "
+				   "file should be the output file after normalization. "
+				   "The calibration should be a binary .dat file representing "
+				   "the rectilinear calibration results.  The image "
+				   "directory should be the same one that is referenced "
+				   "by the metadata file.", true, 3);
 	args.add(UNITS_FLAG, /* specifies units to use in output file */
 	               "Given floating-point value specifies the units to "
                        "use in the output file.  A value of 1.0 indicates "
@@ -189,7 +198,7 @@ void init_args(cmd_args_t& args)
 int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 {
 	string pathfile, conffile, timefile, outfile;
-	vector<string> fisheye_tags;
+	vector<string> fisheye_tags, rectilinear_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
 	double units, maxrange, timebuf_range, timebuf_dt;
 	int ret, i, n;
@@ -232,6 +241,12 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 		timebuf_dt = 1;
 	}
 
+	/* check if cameras were given and save the tags if so */
+	bool usingFisheyeCameras
+		= args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags);
+	bool usingRectilinearCameras
+		= args.tag_seen(RECTILINEAR_CAMERA_FLAG, rectilinear_tags);
+
 	/* get coloring method */
 	if(args.tag_seen(COLOR_BY_HEIGHT_FLAG))
 		/* use height of points to color */
@@ -244,7 +259,7 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 	{
 		c = pointcloud_writer_t::COLOR_BY_TIME;
 	}
-	else if(args.tag_seen(FISHEYE_CAMERA_FLAG, fisheye_tags))
+	else if(usingFisheyeCameras || usingRectilinearCameras)
 	{
 		/* use camera images to color */
 		if(args.tag_seen(REMOVE_NONCOLORED_POINTS))
@@ -279,7 +294,24 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 			ret = writer.add_camera(
 				fisheye_tags[3*i], /* metadata file */
 				fisheye_tags[3*i + 1], /* calib file */
-				fisheye_tags[3*i + 2]); /* img dir */
+				fisheye_tags[3*i + 2], /* img dir */
+				pointcloud_writer_t::CAMERA_TYPE_FISHEYE);
+			if(ret)
+			{
+				cerr << "Error " << ret << ": Unable to "
+				     << "initialize camera #" << i << endl;
+				return PROPEGATE_ERROR(-2, ret);
+			}
+		}
+		n = rectilinear_tags.size() / 3;
+		for(i = 0; i < n; i++)
+		{
+			/* add this camera */
+			ret = writer.add_camera(
+				rectilinear_tags[3*i], /* metadata file */
+				rectilinear_tags[3*i + 1], /* calib file */
+				rectilinear_tags[3*i + 2], /* img dir */
+				pointcloud_writer_t::CAMERA_TYPE_RECTILINEAR);
 			if(ret)
 			{
 				cerr << "Error " << ret << ": Unable to "
