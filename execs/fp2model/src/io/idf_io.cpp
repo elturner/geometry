@@ -269,7 +269,7 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		<< "    , !- Outside Boundary Condition Object" << "\r\n"
 		<< "    NoSun,         !- Sun Exposure" << "\r\n"
 		<< "    NoWind,        !- Wind Exposure" << "\r\n"
-		<< "    1.0,           !- View Factor to Ground" << "\r\n"
+		<< "    Autocalculate, !- View Factor to Ground" << "\r\n"
 		<< "    " << n << ",   !- Number of Vertices" << "\r\n";
 
 	/* define geometry of floor */
@@ -297,7 +297,7 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 		<< "    , !- Outside Boundary Condition Object" << "\r\n"
 		<< "    NoSun,           !- Sun Exposure" << "\r\n"
 		<< "    NoWind,          !- Wind Exposure" << "\r\n"
-		<< "    -1,              !- View Factor to Ground" << "\r\n"
+		<< "    Autocalculate,   !- View Factor to Ground" << "\r\n"
 		<< "    " << n << ",     !- Number of Vertices" << "\r\n";
 
 	/* define geometry of ceiling */
@@ -385,7 +385,7 @@ void writesubwall(ofstream& outfile, double x1, double y1,
 		<< "    , !- Outside Boundary Condition Object" << "\r\n" 
 		<< "    NoSun,         !- Sun Exposure" << "\r\n"
 		<< "    NoWind,        !- Wind Exposure" << "\r\n"
-		<< "    ,              !- View Factor to Ground" << "\r\n"
+		<< "    Autocalculate, !- View Factor to Ground" << "\r\n"
 		<< "    4,             !- Number of Vertices" << "\r\n"	
 		<< "    " << x1 << "," << y1 << "," << min_z
 			<< ", !- Vertex 1, lower right {m}" << "\r\n"
@@ -410,7 +410,7 @@ void writewindow(ofstream& outfile, double x1, double y1,
 		<< "    Exterior Window, !- Construction Name" << "\r\n"
 		<< "    " << wallname << ", !- Building Surface Name"<< "\r\n"
 		<< "    , !- Outside Boundary Condition Object" << "\r\n" 
-		<< "    , !- View Factor to Ground" << "\r\n"
+		<< "    Autocalculate, !- View Factor to Ground" << "\r\n"
 		<< "    , !- Shading Control Name" << "\r\n"
 		<< "    , !- Frame and Divider Name" << "\r\n"
 		<< "    , !- Multiplier" << "\r\n"
