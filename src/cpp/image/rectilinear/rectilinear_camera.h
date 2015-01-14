@@ -1,20 +1,20 @@
-#ifndef FISHEYE_CAMERA_H
-#define FISHEYE_CAMERA_H
+#ifndef RECTILINEAR_CAMERA_H
+#define RECTILINEAR_CAMERA_H
 
 /**
- * @file fisheye_camera.h
- * @author Eric Turner <elturner@eecs.berkeley.edu>
+ * @file rectilinear_camera.h
+ * @author Nicholas Corso <ncorso@eecs.berkeley.edu>
  *
  * @section DESCRIPTION
  *
- * This file defines the fisheye_camera_t class, which is used
+ * This file defines the rectilinear_camera_t class, which is used
  * to represent the intrinsic and extrinsic calibration, and the
- * poses, for camera imagery with a fisheye lens.
+ * poses, for camera imagery with a rectilinear lens.
  */
 #include <image/camera.h>
 #include <io/data/color_image/color_image_metadata_reader.h>
 #include <image/image_cache.h>
-#include <image/fisheye/ocam_functions.h>
+#include <image/rectilinear/rectilinear_functions.h>
 #include <geometry/transform.h>
 #include <geometry/system_path.h>
 #include <vector>
@@ -22,21 +22,21 @@
 #include <Eigen/StdVector>
 
 /**
- * The fisheye_camera_t class is used to represent camera output
+ * The rectilinear_camera_t class is used to represent camera output
  *
  * This class represents the pose of the sensor at each timestamp,
  * the calibration for the camera, and provides useful functions for
  * using these values.
  */
-class fisheye_camera_t : public camera_t
+class rectilinear_camera_t : public camera_t
 {
 	/* parameters */
 	private:
 
 		/**
-		 * Provides the fisheye calibration parameters
+		 * Provides the rectilinear calibration parameters
 		 */
-		struct ocam_model calibration;
+		rcam_model calibration;
 
 
 	/* functions */
@@ -45,12 +45,12 @@ class fisheye_camera_t : public camera_t
 		/**
 		 * Creates empty structure
 		 */
-		fisheye_camera_t();
+		rectilinear_camera_t();
 
 		/**
 		 * Frees all memory and resources
 		 */
-		~fisheye_camera_t();
+		~rectilinear_camera_t();
 
 		/**
 		 * Initializes this structure based on input files
