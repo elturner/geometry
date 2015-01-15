@@ -44,6 +44,7 @@ URG_DAT_XPATH = 'configFile/urg_datafile'
 DALSA_CALIB_XPATH = 'configFile/dalsa_fisheye_calibration_file'
 DALSA_METADATA_XPATH = 'configFile/dalsa_metadata_outfile'
 DALSA_OUTPUTDIR_XPATH = 'configFile/dalsa_output_directory'
+DALSA_MASKFILE_XPATH = 'configFile/dalsa_fisheye_mask_file'
 FLIR_CALIB_XPATH = 'configFile/flir_rectilinear_calibration_file'
 FLIR_METADATA_XPATH = 'configFile/flir_metadata_outfile'
 FLIR_OUTPUTDIR_XPATH = 'configFile/flir_output_directory'
@@ -125,6 +126,8 @@ def main() :
 		# Handle tacking on the colorization flag
 		if args.color_by == 'cameras' :
 			for camera in args.camera_list :
+
+				# Give the information for the camera
 				cmetadata = conf.find_sensor_prop(camera, \
 					DALSA_METADATA_XPATH, \
 					CAMERA_TYPE)
@@ -146,8 +149,22 @@ def main() :
 				cargs.append(cmetadata)
 				cargs.append(calibFile)
 				cargs.append(imgDir)
+
+				#Check if a mask exists and if so register it for the camera
+				maskFile = conf.find_sensor_prop(camera, \
+					DALSA_MASKFILE_XPATH, \
+					CAMERA_TYPE)
+				if maskFile != None :
+					maskFile = os.path.join(args.dataset_directory[0], \
+						maskFile)
+					cargs.append('-m')
+					cargs.append(camera)
+					cargs.append(maskFile)
+
 		elif args.color_by == 'ir_cameras' :
 			for camera in args.camera_list :
+
+				# Give the information for the camera
 				cmetadata = conf.find_sensor_prop(camera, \
 					FLIR_METADATA_XPATH, \
 					FLIR_TYPE)
@@ -169,6 +186,7 @@ def main() :
 				cargs.append(cmetadata)
 				cargs.append(calibFile)
 				cargs.append(imgDir)
+				
 		elif args.color_by == 'time' :
 			cargs.append('--color_by_time')
 		elif args.color_by == 'height' :

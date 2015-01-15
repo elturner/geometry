@@ -230,6 +230,19 @@ class pointcloud_writer_t
 		               CAMERA_TYPES cameraType);
 
 		/**
+		 * Registers a camera mask for an already added camera.
+		 *
+		 * This function loads a 8bit mask for the imagery loaded 
+		 * from the camera specified by cameraName. This name must
+		 * match the one found in an already added camera's metadata
+		 * file.
+		 *
+		 * Returns 0 on success and non-zero on failure
+		 */
+		int register_camera_mask(const std::string& cameraName,
+			const std::string& maskFileName);
+
+		/**
 		 * Exports all points from this laser scanner to file
 		 *
 		 * Will export all points recorded in the specified

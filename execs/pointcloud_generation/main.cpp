@@ -29,6 +29,7 @@ using namespace std;
 #define FSS_FILE_FLAG             "--fss"
 #define FISHEYE_CAMERA_FLAG       "-f"
 #define RECTILINEAR_CAMERA_FLAG	  "-q"
+#define CAMERA_MASK_FLAG		  "-m"
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define RANGE_LIMIT_FLAG          "-r"
@@ -134,6 +135,16 @@ void init_args(cmd_args_t& args)
 				   "the rectilinear calibration results.  The image "
 				   "directory should be the same one that is referenced "
 				   "by the metadata file.", true, 3);
+	args.add(CAMERA_MASK_FLAG,
+				   "Specifies a binary mask image for a camera.  This file "
+				   "should contain an 8bit grayscale binary image where a "
+				   "pixel is non-zero to indicate that it exists in a valid "
+				   "portion of the image.  This flag expects two inputs: "
+				   "<camera name> <camera mask path>.  The camera name "
+				   "must match exactly that given in the camera's metadata "
+				   "file.",
+				   true,
+				   2);
 	args.add(UNITS_FLAG, /* specifies units to use in output file */
 	               "Given floating-point value specifies the units to "
                        "use in the output file.  A value of 1.0 indicates "
@@ -206,7 +217,7 @@ void init_args(cmd_args_t& args)
 int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 {
 	string pathfile, conffile, timefile, outfile;
-	vector<string> fisheye_tags, rectilinear_tags;
+	vector<string> fisheye_tags, rectilinear_tags, mask_tags;
 	pointcloud_writer_t::COLOR_METHOD c;
 	double units, maxrange, timebuf_range, timebuf_dt;
 	int ret, i, n;
@@ -324,7 +335,7 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 			{
 				cerr << "Error " << ret << ": Unable to "
 				     << "initialize camera #" << i << endl;
-				return PROPEGATE_ERROR(-2, ret);
+				return PROPEGATE_ERROR(-3, ret);
 			}
 		}
 	}
@@ -336,6 +347,23 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 0),
 			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 1),
 			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 2));
+	}
+
+	/* check if there are any mask files to register against */
+	if(args.tag_seen(CAMERA_MASK_FLAG, mask_tags))
+	{
+		n = mask_tags.size() / 2;
+		for(i = 0; i < n; i++)
+		{
+			ret = writer.register_camera_mask(mask_tags[2*i],
+				mask_tags[2*i+1]);
+			if(ret)
+			{
+				cerr << "Error " << ret << ": Unable to register "
+				     << "mask file #" << i << endl;
+				return PROPEGATE_ERROR(-4, ret);
+			}
+		}
 	}
 
 	/* success */

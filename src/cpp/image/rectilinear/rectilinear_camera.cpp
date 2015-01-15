@@ -79,6 +79,9 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 	this->timestamps.resize(infile.get_num_images());
 	this->poses.resize(infile.get_num_images());
 
+	/* log the camera name */
+	this->cameraName = infile.get_camera_name();
+
 	/* iterate over image frames, storing metadata */
 	for(i = 0; i < infile.get_num_images(); i++)
 	{
@@ -184,6 +187,17 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	if(point2D[0] >= 0 && point2D[0] < img.size().height
 		&& point2D[1] >= 0 && point2D[1] < img.size().width)
 	{
+		
+		/* Check if there is a mask */
+		if(!this->mask.empty())
+		{
+			/* check if this point is masked out */
+			if(!this->mask.at<unsigned char>((int)point2D[0], (int)point2D[1]))
+			{
+				q = -DBL_MAX;
+				return 0;
+			}
+		}
 
 		/* get color from these coordinates */
 		b = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[0];

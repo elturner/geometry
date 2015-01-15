@@ -12,6 +12,7 @@
 #include <geometry/system_path.h>
 #include <vector>
 #include <string>
+#include <opencv/cv.h>
 #include <Eigen/StdVector>
 
 /* class */
@@ -31,6 +32,11 @@ protected:
 	std::vector<double> timestamps;
 
 	/**
+	 * The name of the camera
+	 */
+	std::string cameraName;
+
+	/**
 	 * This cache provides efficient storage of images
 	 */
 	image_cache_t images;
@@ -44,6 +50,13 @@ protected:
 	 */
 	std::vector<transform_t,
 	            Eigen::aligned_allocator<transform_t> > poses;
+
+	/**
+	 *	This stores the optional image mask.  If this exists
+	 *	then it will force the images to be the same size as
+	 *	the mask or an error will occur
+	 */
+	cv::Mat mask;
 
 public:
 
@@ -93,6 +106,18 @@ public:
 	 */
 	inline void set_cache_size(size_t n)
 		{ this->images.set_capacity(n); };
+
+	/**
+	 * Gets the name of the camera
+	 */
+	inline const std::string& name() const 
+		{return cameraName; };
+
+	/**
+	 * Function that attempts to load the image mask.  This function
+	 * will return non-zero if the mask is unloadable.
+	 */
+	int load_mask(const std::string& maskFileName);
 
 	/**
 	 * Gets the point color and camera-relative properties

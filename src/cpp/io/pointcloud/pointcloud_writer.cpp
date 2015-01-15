@@ -181,14 +181,14 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 	}
 	else
 	{
-		return PROPEGATE_ERROR(-2, 1);	
+		return -1;	
 	}
 
 	/* initialize the new camera */
 	ret = this->cameras.back()->init(
 		calibfile, metafile, imgdir, this->path);
 	if(ret)
-		return PROPEGATE_ERROR(-1, ret);
+		return PROPEGATE_ERROR(-2, ret);
 
 	/* add to this structure.  Set the image caching to correspond
 	 * with how many images will be searched for each point.  This
@@ -200,6 +200,42 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 
 	/* success */
 	return 0;
+}
+
+int pointcloud_writer_t::register_camera_mask(
+	const std::string& cameraName,
+	const std::string& maskFileName)
+{
+	int ret;
+
+	/* check if any cameras are registered */
+	if(this->cameras.size() == 0)
+	{
+		cerr << "Error! No cameras added yet!" << endl;
+		return -1;
+	}
+
+	/* loop through the existing cameras looking for 
+	 * a camera that matches the given camera name 
+	 */
+	for(size_t i = 0; i < this->cameras.size(); i++)
+	{
+		if(this->cameras[i]->name().compare(cameraName) == 0)
+		{
+			/* load the camera mask for this camera */
+			ret = this->cameras[i]->load_mask(maskFileName);
+			if(ret)
+				PROPEGATE_ERROR(-1,ret);
+
+			return 0;
+		}
+	}
+
+	/* if we got to here then we were unable to find the camera
+	 * so we return error */
+	cerr << "Error! Camera \"" << cameraName << "\" has not been "
+		 << "added." << endl;
+	return -3;
 }
 		
 int pointcloud_writer_t::export_urg(const string& name,

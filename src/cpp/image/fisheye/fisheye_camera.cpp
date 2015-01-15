@@ -80,6 +80,9 @@ int fisheye_camera_t::init(const std::string& calibfile,
 	if(name.compare(infile.get_camera_name()) != 0)
 		return PROPEGATE_ERROR(-3, ret); /* different names */
 
+	/* save the camera name */
+	this->cameraName = infile.get_camera_name();
+
 	/* initialize lists for metadata and transforms */
 	this->metadata.resize(infile.get_num_images());
 	this->timestamps.resize(infile.get_num_images());
@@ -185,6 +188,18 @@ int fisheye_camera_t::color_point(double px, double py, double pz, double t,
 	if(point2D[0] >= 0 && point2D[0] < this->calibration.height
 		&& point2D[1] >= 0 && point2D[1] < this->calibration.width)
 	{
+
+		/* Check if there is a mask */
+		if(!this->mask.empty())
+		{
+			/* check if this point is masked out */
+			if(!this->mask.at<unsigned char>((int)point2D[0], (int)point2D[1]))
+			{
+				q = -DBL_MAX;
+				return 0;
+			}
+		}
+
 		/* get color from these coordinates */
 		b = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[0];
 		g = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[1];
