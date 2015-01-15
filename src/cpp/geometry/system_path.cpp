@@ -11,6 +11,7 @@
 #include <io/carve/noisypath_io.h>
 #include <config/backpackConfig.h>
 #include <config/sensorProp.h>
+#include <config/flirProp.h>
 #include <config/imuProp.h>
 #include <config/laserProp.h>
 #include <config/cameraProp.h>
@@ -329,6 +330,7 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 	vector<laserProp> lasers;
 	vector<cameraProp> cameras;
 	vector<tofProp> tofs;
+	vector<flirProp> flirs;
 	backpackConfig conf;
 	transform_t* t;
 	size_t i, n;
@@ -416,6 +418,26 @@ int system_path_t::parse_hardware_config(const std::string& xml)
 
 		/* add this transform to our map */
 		this->transform_map.insert(make_pair(tofs[i].name, t));
+	}
+
+	/* store the flir transforms */
+	conf.get_props(flirs, true);
+	n = flirs.size();
+	for(i = 0; i < n; i++)
+	{
+		/* generate transform for each sensor */
+		flirs[i].toRadianMeters();
+		t = new transform_t();
+		ret = t->set(flirs[i].tToCommon, flirs[i].rToCommon);
+		if(ret)
+		{
+			/* clean up and return error */
+			delete t;
+			return PROPEGATE_ERROR(-6, ret);
+		}
+
+		/* add this transform to our map */
+		this->transform_map.insert(make_pair(flirs[i].name, t));
 	}
 
 	/* success */
@@ -556,7 +578,7 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 	it = this->transform_map.find(s);
 	if(it == this->transform_map.end())
 		return -1; /* not a valid sensor name */
-
+	
 	/* save the sensor's transform */
 	p = *(it->second); /* sensor -> system */
 

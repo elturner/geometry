@@ -74,10 +74,6 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
-	/* check that files match */
-	if(name.compare(infile.get_camera_name()) != 0)
-		return PROPEGATE_ERROR(-3, ret); /* different names */
-
 	/* initialize lists for metadata and transforms */
 	this->metadata.resize(infile.get_num_images());
 	this->timestamps.resize(infile.get_num_images());
@@ -90,7 +86,7 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 		ret = infile.next(this->metadata[i]);
 		if(ret)
 		{
-			cerr << "[fisheye_camera_t::init]\tUnable to parse"
+			cerr << "[rectilinear_camera_t::init]\tUnable to parse"
 			     << " metadata #" << i << "/"
 			     << infile.get_num_images() << " from "
 			     << metafile << endl;
@@ -159,10 +155,18 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	}
 
 	/* get camera u/v coordinates of this point */
-	calibration.project_into_image(point3D, point2D);
+	calibration.project_into_image(point3D, point2D);	
 	
-	/* the code below expects the U and V coordinates to be flipped because */
-	/* potato, thats why */
+	/* the code below expects the U and V coordinates to be flipped because 
+	* potato, thats why *
+	*
+	* The rectilinear calibration expects  --> point2D[0]
+	*									  |
+	*									  |
+	*									  \/ point2D[1]
+	*
+	* However the opencv defines it the other way, so we flip 
+	*/
 	swap(point2D[0], point2D[1]);
 
 	/* get the image matrix */
@@ -170,7 +174,7 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	ret = this->images.get(path, img);
 	if(ret)
 	{
-		cerr << "[fisheye_camera_t::color_point]\tCould not get"
+		cerr << "[rectilinear_camera_t::color_point]\tCould not get"
 		     << " image: \"" << this->metadata[i].image_file 
 		     << "\" with full path \"" << path << "\"" << endl;
 		return PROPEGATE_ERROR(-2, ret);
@@ -180,6 +184,7 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	if(point2D[0] >= 0 && point2D[0] < img.size().height
 		&& point2D[1] >= 0 && point2D[1] < img.size().width)
 	{
+
 		/* get color from these coordinates */
 		b = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[0];
 		g = img.at<Vec3b>((int)point2D[0], (int)point2D[1])[1];
@@ -187,7 +192,7 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	
 		/* record normalized z-component as the quality 
 		 * of this coloring */
-		q = -point3D[2] / sqrt( (point3D[0]*point3D[0])
+		q = point3D[2] / sqrt( (point3D[0]*point3D[0])
 			+(point3D[1]*point3D[1])+(point3D[2]*point3D[2]) );
 	}
 	else
