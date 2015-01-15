@@ -192,6 +192,11 @@ def main() :
 		# if we are removing uncolored points tack them on
 		if not args.keep_noncolored_points :
 			cargs.append('--remove_noncolored_points')
+		else :
+			cargs.append('--default_color')
+			cargs.append(str(args.default_color[0]))
+			cargs.append(str(args.default_color[1]))
+			cargs.append(str(args.default_color[2]))
 
 		# Make the output file
 		outFileName = os.path.join(args.output_directory,
@@ -345,6 +350,15 @@ def handle_args() :
 			"points."),
 		action="store_true",
 		default=False)
+	parser.add_argument("--default_color",
+		required=False,
+		help=("Sets the default color for uncolorizable points. This should "
+			"given as 3 integers between the range of [0 255] representing "
+			"the default <red> <green> <blue> components. If not given this "
+			"will default to black."),
+		nargs=3,
+		type=int,
+		default=[0, 0, 0])
 	parser.add_argument("--color_by",
 		required=False,
 		help=("Flags how the point cloud code should be colorized. The "

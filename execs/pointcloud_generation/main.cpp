@@ -32,6 +32,7 @@ using namespace std;
 #define UNITS_FLAG                "-u"
 #define OUTPUT_FILE_FLAG          "-o"
 #define RANGE_LIMIT_FLAG          "-r"
+#define DEFAULT_COLOR_FLAG		  "--default_color"
 #define TIME_BUFFER_FLAG          "--time_buffer"
 #define COLOR_BY_HEIGHT_FLAG      "--color_by_height"
 #define COLOR_BY_NOISE_FLAG       "--color_by_noise"
@@ -163,6 +164,13 @@ void init_args(cmd_args_t& args)
 	               ".fss files.  This flag will override "
 	               "coloring from images, even if cameras are provided."
 	               );
+	args.add(DEFAULT_COLOR_FLAG,
+				   "If seen, this will set the default color for uncolorable "
+				   "points. This flag expects 3 values to be given <red> "
+				   "<green> <blue>. These values should be integers in the "
+				   "range [0 255].",
+				   true,
+				   3);
 	args.add(COLOR_BY_TIME_FLAG, /* colors pointcloud by time */
 	               "If seen, will explicitly color the output points "
 	               "based on their timestamp values. This flag will "
@@ -319,6 +327,15 @@ int init_writer(pointcloud_writer_t& writer, cmd_args_t& args)
 				return PROPEGATE_ERROR(-2, ret);
 			}
 		}
+	}
+
+	/* check if we need to reset the default color of points */
+	if(args.tag_seen(DEFAULT_COLOR_FLAG))
+	{
+		writer.set_default_color( 
+			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 0),
+			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 1),
+			(unsigned char)args.get_val_as<int>(DEFAULT_COLOR_FLAG, 2));
 	}
 
 	/* success */

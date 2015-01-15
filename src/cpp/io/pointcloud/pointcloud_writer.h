@@ -140,7 +140,7 @@ class pointcloud_writer_t
 		COLOR_METHOD coloring;
 
 		/**
-		 * Specifies the fisheye cameras to use for coloring, if any
+		 * Specifies the cameras to use for coloring, if any
 		 */
 		std::vector<std::shared_ptr<camera_t> > cameras;
 
@@ -152,6 +152,13 @@ class pointcloud_writer_t
 		 * 3.28084 specifies feet.  Defaults to meters (1)
 		 */
 		double units;
+
+		/**
+		 * Specifies the defualt color used
+		 */
+		unsigned char default_red;
+		unsigned char default_green;
+		unsigned char default_blue;
 
 	/* functions */
 	public:
@@ -271,6 +278,15 @@ class pointcloud_writer_t
 		 * by this structure.
 		 */
 		void close();
+
+		/**
+		 *	Sets the default color of points when no available color
+		 *	can be found or no cameras or colorization modes are given
+		 */
+		inline void set_default_color(unsigned char red,
+			unsigned char green,
+			unsigned char blue)
+			{ default_red = red; default_blue = blue; default_green = green; };
 
 	/* helper functions */
 	private:

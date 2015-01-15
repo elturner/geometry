@@ -38,9 +38,6 @@ using namespace Eigen;
 #define HEIGHT_COLORING_PERIOD 2.0  /* period of height coloring, meters */
 #define MIN_URG_RANGE_VALUE    0.5  /* units: meters */
 
-/* the following defines the default grayscale color of points */
-#define DEFAULT_POINT_COLOR 0
-
 /* specifies image cache size */
 #define IMAGE_CACHE_SIZE 10 
 
@@ -49,7 +46,10 @@ using namespace Eigen;
 
 /* function implementations */
 
-pointcloud_writer_t::pointcloud_writer_t()
+pointcloud_writer_t::pointcloud_writer_t() :
+	default_red(0),
+	default_green(0),
+	default_blue(0)
 {
 	/* set default values */
 	this->units = 1;
@@ -556,7 +556,9 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 
 	/* iterate over points */
 	n = pts.cols();
-	red = green = blue = DEFAULT_POINT_COLOR;
+	red = this->default_red;
+	green = this->default_green; 
+	blue = this->default_blue;
 	for(i = 0; i < n; i++)
 	{
 		/* get geometry */
@@ -590,7 +592,9 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 			case NO_COLOR:
 			default:
 				/* make all points default color */
-				red = green = blue = DEFAULT_POINT_COLOR;
+				red = this->default_red;
+				green = this->default_green; 
+				blue = this->default_blue;
 				break;
 			case COLOR_BY_HEIGHT:
 				/* color points by height pattern */
@@ -790,7 +794,9 @@ int pointcloud_writer_t::color_from_cameras(int& red,int& green,int& blue,
 	q_best = 0;
 
 	/* start with default color */
-	red = green = blue = r = g = b = DEFAULT_POINT_COLOR;
+	red = r = this->default_red;
+	green = g = this->default_green;
+	blue = b = this->default_blue;
 
 	/* determine the list of timestamps to search for each camera */
 	times_to_search.push_back(t);
