@@ -353,7 +353,7 @@ def handle_args() :
 	parser.add_argument("-x", "--output_filetype",
 		required=False,
 		help=("The desired output file type. The default is \"xyz\"."),
-		choices=['txt','pts','xyz','obj'],
+		choices=['txt','pts','xyz','obj','las','laz'],
 		default='xyz')
 	#parser.add_argument("--single_output_file",
 	#	required=False,

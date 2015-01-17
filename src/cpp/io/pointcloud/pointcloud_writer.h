@@ -21,6 +21,7 @@
 #include <io/data/urg/urg_data_reader.h>
 #include <io/data/d_imager/d_imager_data_reader.h>
 #include <io/data/fss/fss_io.h>
+#include <io/pointcloud/writer/PointCloudWriter.h>
 #include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <geometry/transform.h>
@@ -32,17 +33,6 @@ class pointcloud_writer_t
 {
 	/* states */
 	public:
-
-		/**
-		 * valid filetypes for export
-		 */
-		enum FILE_TYPE
-		{
-			XYZ_FILE,   				  /* ascii-formatted xyz file */
-			OBJ_FILE,   				  /* wavefront OBJ file */
-			PTS_FILE,   				  /* ascii-formatted pts file */
-			UNKNOWN_FILE 				  /* unknown filetype */
-		};
 
 		/**
 		 * valid coloring options
@@ -125,14 +115,10 @@ class pointcloud_writer_t
 		/*------------------------*/
 	
 		/**
-		 * The output file stream.
+		 * This specifies the pointcloud writer object that handles the
+		 * actual file serialization
 		 */
-		std::ofstream outfile;
-
-		/**
-		 * The format of the output file
-		 */
-		FILE_TYPE outfile_format;
+		PointCloudWriter writerObj;
 
 		/**
 		 * Specifies what coloring technique is used.
@@ -169,11 +155,6 @@ class pointcloud_writer_t
 		 * Default constructor initializes empty object.
 		 */
 		pointcloud_writer_t();
-
-		/**
-		 * Frees all memory and resources.
-		 */
-		~pointcloud_writer_t();
 
 		/* i/o */
 
@@ -323,69 +304,6 @@ class pointcloud_writer_t
 		                  std::vector<double>& noise);
 		
 		/**
-		 * Writes a point to an *.xyz formatted outfile
-		 *
-		 * Given a point and its info, will write to the output
-		 * file in the format of an *.xyz file.
-		 *
-		 * @param x     The x-coordinate of point to write
-		 * @param y     The y-coordinate of point to write
-		 * @param z     The z-coordinate of point to write
-		 * @param r     The red component of color to write
-		 * @param g     The green component of color to write
-		 * @param b     The blue component of color to write
-		 * @param ind   The index of this scan
-		 * @param ts    The timestamp for these points
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int write_to_xyz_file(double x, double y, double z,
-		                      int r, int g, int b,
-		                      int ind, double ts);
-			
-		/**
-		 * Writes a point to an *.obj formatted outfile
-		 *
-		 * Given a point and its info, will write to the output
-		 * file in the format of an *.obj file.
-		 *
-		 * @param x     The x-coordinate of point to write
-		 * @param y     The y-coordinate of point to write
-		 * @param z     The z-coordinate of point to write
-		 * @param r     The red component of color to write
-		 * @param g     The green component of color to write
-		 * @param b     The blue component of color to write
-		 * @param ind   The index of this scan
-		 * @param ts    The timestamp for these points
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int write_to_obj_file(double x, double y, double z,
-		                      int r, int g, int b,
-		                      int ind, double ts);
-		
-		/**
-		 * Writes a point to an *.pts formatted outfile
-		 *
-		 * Given a point and its info, will write to the output
-		 * file in the format of an *.pts file.
-		 *
-		 * @param x     The x-coordinate of point to write
-		 * @param y     The y-coordinate of point to write
-		 * @param z     The z-coordinate of point to write
-		 * @param r     The red component of color to write
-		 * @param g     The green component of color to write
-		 * @param b     The blue component of color to write
-		 * @param ind   The index of this scan
-		 * @param ts    The timestamp for these points
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int write_to_pts_file(double x, double y, double z,
-		                      int r, int g, int b,
-		                      int ind, double ts);
-
-		/**
 		 * Generates a color based on the given height
 		 *
 		 * Will generated a color as an (r,g,b) triplet
@@ -513,16 +431,6 @@ class pointcloud_writer_t
 		 */
 		static int convert_fss_scan(Eigen::MatrixXd& mat,
 		                            const fss::frame_t& frame);
-
-		/**
-		 * Determine file type given file path
-		 *
-		 * Will parse the given file path to determine what
-		 * type of file is referenced.
-		 *
-		 * @param file   The file path to parse
-		 */
-		static FILE_TYPE get_file_type(const std::string& file);
 };
 
 #endif

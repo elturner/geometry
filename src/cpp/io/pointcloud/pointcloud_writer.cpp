@@ -53,14 +53,7 @@ pointcloud_writer_t::pointcloud_writer_t() :
 {
 	/* set default values */
 	this->units = 1;
-	this->outfile_format = XYZ_FILE;
 	this->coloring = NO_COLOR;
-}
-
-pointcloud_writer_t::~pointcloud_writer_t()
-{
-	/* free all resoureces */
-	this->close();
 }
 
 int pointcloud_writer_t::open(const  string& pcfile,
@@ -131,15 +124,6 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		return PROPEGATE_ERROR(-5, ret);
 	}
 
-	/* attempt to open output file for writing */
-	this->outfile.open(pcfile.c_str());
-	if(!(this->outfile.is_open()))
-	{
-		cerr << "Error!  Unable to open output file: "
-		     << pcfile << endl;
-		return -6;
-	}
-
 	/* record additional parameters */
 	this->units = u; /* record desired units */
 	this->coloring = c; /* coloring method to use */
@@ -147,13 +131,43 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	this->camera_time_buffer_range = timebuf_range; /* units: seconds */
 	this->camera_time_buffer_dt = timebuf_dt; /* units: seconds */
 
-	/* get output file type */
-	this->outfile_format = pointcloud_writer_t::get_file_type(pcfile);
-	if(this->outfile_format == UNKNOWN_FILE)
+	/* create the point cloud file writer */
+	p = pcfile.find_last_of('.');
+	if(p == string::npos)
+		file_ext = "";
+	else
+		file_ext = pcfile.substr(p+1);
+
+	/* create the correct version */
+	if(file_ext.compare("xyz") == 0)
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::XYZ);
+	else if(file_ext.compare("pts") == 0)
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::PTS);
+	else if(file_ext.compare("txt") == 0)
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::XYZ);
+	else if(file_ext.compare("obj") == 0)
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::OBJ);
+	else if(file_ext.compare("las") == 0)
 	{
-		cerr << "Error!  Unknown output file format specified: "
-		     << pcfile << endl;
-		this->outfile.close();
+		cerr << "Error! LAS not implemented yet" << endl;
+		return -8;
+	}
+	else if(file_ext.compare("laz") == 0)
+	{
+		cerr << "Error! LAZ not implemented yet" << endl;
+		return -9;
+	}
+	else
+	{
+		cerr << "Error! Unknown output file extension : " << file_ext << endl;
+		return -6;
+	}
+
+	/* Open the file */
+	if(!this->writerObj.open(pcfile))
+	{
+		cerr << "Error! Unable to open output point cloud file for writing!" 
+			 << endl;
 		return -7;
 	}
 
@@ -569,8 +583,8 @@ void pointcloud_writer_t::close()
 	unsigned int i, n;
 
 	/* check if output stream is open */
-	if(this->outfile.is_open())
-		this->outfile.close();
+	if(this->writerObj.is_open())
+		this->writerObj.close();
 	
 	/* clear input values */
 	this->path.clear();
@@ -589,6 +603,7 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 	double x, y, z, q;
 	int red, green, blue;
 	int ret;
+	bool writeSuccessful;
 
 	/* iterate over points */
 	n = pts.cols();
@@ -649,99 +664,17 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 		}
 		
 		/* write points to output file */
-		if(this->outfile_format == OBJ_FILE)
-			ret = this->write_to_obj_file(x, y, z,
-			                              red, green, blue,
-			                              ind, ts);
-		else if(this->outfile_format == PTS_FILE)
-			ret = this->write_to_pts_file(x, y, z,
-			                              red, green, blue,
-			                              ind, ts);
-		else /* write to xyz file by default */
-			ret = this->write_to_xyz_file(x, y, z,
-			                              red, green, blue,
-			                              ind, ts);
+		writeSuccessful = this->writerObj.write_point(
+			this->units*x, this->units*y, this->units*z, 
+			(unsigned char)red, (unsigned char)green, (unsigned char)blue,
+			ind, ts);
+
+		if(!writeSuccessful)
+			return -2;
+
 	}
 
-	/* check for failure */
-	if(this->outfile.fail() || this->outfile.bad())
-		return -2;
-	return 0;
-}
-
-int pointcloud_writer_t::write_to_xyz_file(double x, double y, double z,
-                                           int r, int g, int b,
-                                           int ind, double ts)
-{
-	/* write geometry in desired units */
-	this->outfile << (x * this->units) << " " 
-	              << (y * this->units) << " " 
-	              << (z * this->units) 
-	              << " " << ((unsigned int) r)
-	              << " " << ((unsigned int) g)
-	              << " " << ((unsigned int) b)
-	              << " " << ind /* index of scan */
-	              << " " << ts /* timestamp of scan */
-	              << " 0"; /* serial number of scanner */
-	
-	/* new line at end of point information */
-	this->outfile << endl;
-
-	/* check for failure */
-	if(this->outfile.fail() || this->outfile.bad())
-		return -1;
-	return 0;
-}
-
-int pointcloud_writer_t::write_to_obj_file(double x, double y, double z,
-                                           int r, int g, int b,
-                                           int ind, double ts)
-{
-	/* the following values are not used */
-	ind = ind;
-	ts = ts;
-
-	/* write geometry in desired units */
-	this->outfile << "v " << (x * this->units) << " " 
-	              << (y * this->units) << " " 
-	              << (z * this->units) 
-	              << " " << ((unsigned int) r)
-	              << " " << ((unsigned int) g)
-	              << " " << ((unsigned int) b);
-	
-	/* new line at end of point information */
-	this->outfile << endl;
-
-	/* check for failure */
-	if(this->outfile.fail() || this->outfile.bad())
-		return -1;
-	return 0;
-}
-
-int pointcloud_writer_t::write_to_pts_file(double x, double y, double z,
-                                           int r, int g, int b,
-                                           int ind, double ts)
-{
-	/* each line represents a point, formatted as:
-	 *
-	 *  x y z ts ind r g b
-	 */
-
-	/* write geometry in desired units */
-	this->outfile << "v " << (x * this->units) << " " 
-	              << (y * this->units) << " " 
-	              << (z * this->units)
-		      << ts << " " << ind
-	              << " " << ((unsigned int) r)
-	              << " " << ((unsigned int) g)
-	              << " " << ((unsigned int) b);
-	
-	/* new line at end of point information */
-	this->outfile << endl;
-
-	/* check for failure */
-	if(this->outfile.fail() || this->outfile.bad())
-		return -1;
+	/* return success */
 	return 0;
 }
 
@@ -993,26 +926,4 @@ int pointcloud_writer_t::convert_fss_scan(Eigen::MatrixXd& mat,
 
 	/* success */
 	return 0;
-}
-		
-pointcloud_writer_t::FILE_TYPE pointcloud_writer_t::get_file_type(
-                                                 const std::string& file)
-{
-	string ext3;
-
-	/* check argument */
-	if(file.size() < 3)
-		return UNKNOWN_FILE; /* not long enough to have extension */
-	ext3 = file.substr(file.size() - 3);
-
-	/* iterate over possible types */
-	if(ext3.compare("xyz") == 0 || ext3.compare("txt") == 0)
-		return XYZ_FILE;
-	if(ext3.compare("obj") == 0)
-		return OBJ_FILE;
-	if(ext3.compare("pts") == 0)
-		return PTS_FILE;
-
-	/* no known file type fits */
-	return UNKNOWN_FILE;
 }
