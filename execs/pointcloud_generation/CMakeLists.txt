@@ -41,13 +41,14 @@ include_directories(${OpenCV_LIBS})
 # Find liblas
 #
 # This is used for supporting outputing to .las formats
-find_package(LibLAS)
-IF(LIBLAS_FOUND)
-	MESSAGE(STATUS "Compiling with .las file support.")
-	add_definitions(-DLIBLAS_SUPPORTED)
-ELSE(LIBLAS_FOUND)
-	MESSAGE(STATUS "Compiling without .las file support.")
-ENDIF(LIBLAS_FOUND)
+find_package(LibLAS REQUIRED)
+#IF(LIBLAS_FOUND)
+#	MESSAGE(STATUS "Compiling with .las file support.")
+#	add_definitions(-DLIBLAS_SUPPORTED)
+#	include_directories(${LIBLAS_INCLUDE_DIR})
+#ELSE(LIBLAS_FOUND)
+#	MESSAGE(STATUS "Compiling without .las file support.")
+#ENDIF(LIBLAS_FOUND)
 
 # Make the test sandbox executable
 MESSAGE(STATUS "Including binary \"pointcloud_gen\"")
@@ -71,3 +72,6 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/transform.cpp)
 add_executable(pointcloud_gen ${SANDBOX_SRC})
 target_link_libraries(pointcloud_gen ${OpenCV_LIBS})
+IF(LIBLAS_FOUND)
+	target_link_libraries(pointcloud_gen ${LIBLAS_LIBRARY})
+ENDIF(LIBLAS_FOUND)

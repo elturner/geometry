@@ -91,6 +91,8 @@ public:
 		XYZ,
 		PTS,
 		OBJ,
+		LAS,
+		LAZ
 	};
 
 private:

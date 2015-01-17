@@ -70,6 +70,9 @@ def main() :
 	# Parse the args from the command line
 	args = handle_args()
 
+	# Ensure that the given input files actually exist
+	check_files_exist(args)
+
 	# Read in the hardware config file so that we have access to the list of 
 	# active sensors that were used in this dataset
 	conf = backpackconfig.Configuration( \
@@ -320,6 +323,29 @@ def collect_scanners(scanner_list, conf) :
 	
 	# Return the list of scanners
 	return lasers_to_use
+
+#
+#	Function that checks if the input arguments exist. 
+#
+def check_files_exist(args) :
+
+	# Check that the dataset directory actually exists
+	if not os.path.exists(args.dataset_directory[0]) :
+		raise Exception("Dataset directory does not exist on filesystem!")
+
+	# Check that the given path file exists
+	if not os.path.exists(args.path_file[0]) :
+		raise Exception("Path file does not exist on filesystem!")
+
+	# Check that the configuration file exists
+	if not os.path.exists(os.path.join( \
+			args.dataset_directory[0], CONFIGFILE_PATH)) :
+		raise Exception("Configuration xml does not exist on filesystem!")
+
+	# Check if the time sync file exists 
+	if not os.path.exists(os.path.join( \
+			args.dataset_directory[0], TIMEFILE_PATH)) :
+		raise Exception("Time sync xml does not exist on filesystem!")
 
 
 #

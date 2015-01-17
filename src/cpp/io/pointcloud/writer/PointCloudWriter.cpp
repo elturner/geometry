@@ -12,6 +12,7 @@
 #include "XYZWriter.h"
 #include "OBJWriter.h"
 #include "PTSWriter.h"
+#include "LASWriter.h"
 
 /* includes */
 #include <memory>
@@ -37,6 +38,16 @@ PointCloudWriter PointCloudWriter::create(POINTCLOUD_FILE_TYPE file_type)
 			break;
 		case PTS :
 			writer._impl = make_shared<PTSWriter>();
+			break;
+		case LAS :
+			writer._impl = make_shared<LASWriter>();
+			std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
+				= false;
+			break;
+		case LAZ :
+			writer._impl = make_shared<LASWriter>();
+			std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
+				= true;
 			break;
 	}
 

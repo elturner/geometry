@@ -148,15 +148,9 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	else if(file_ext.compare("obj") == 0)
 		this->writerObj = PointCloudWriter::create(PointCloudWriter::OBJ);
 	else if(file_ext.compare("las") == 0)
-	{
-		cerr << "Error! LAS not implemented yet" << endl;
-		return -8;
-	}
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAS);
 	else if(file_ext.compare("laz") == 0)
-	{
-		cerr << "Error! LAZ not implemented yet" << endl;
-		return -9;
-	}
+		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAZ);
 	else
 	{
 		cerr << "Error! Unknown output file extension : " << file_ext << endl;

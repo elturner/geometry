@@ -1,0 +1,115 @@
+#ifndef H_LASWRITER_H
+#define H_LASWRITER_H
+
+/*
+	LASWriter.h
+
+	This class serves as an implementation of the PointCloudWriterImpl for
+	writing LAS/LAZ pointcloud files.
+
+	The binary LAS/LAZ point cloud files are documented via on the website
+		http://www.liblas.org/
+*/
+
+/* includes */
+#include <string>
+#include <fstream>
+#include <memory>
+#include <liblas/liblas.hpp>
+#include "PointCloudWriter.h"
+
+/* the actual class */
+class LASWriter : public PointCloudWriterImpl
+{
+
+private:
+
+	/* Flags if the file should use compression or not */
+	bool _compressed;
+
+	/* The filestream that is being written to */
+	std::ofstream _outStream;
+
+	/* 	
+	*	This holds the liblas header that is used to configure the output 
+	*	file stream and what the file contains
+	*/
+	liblas::Header _header;
+
+	/*
+	*	This holds the actual writer object for the liblas library.
+	*/
+	std::shared_ptr<liblas::Writer> _writer;
+
+	/*
+	*	Holds a copy of the point type that will be passed to the writer
+	*	object when serialization occurs.
+	*/
+	liblas::Point _point;
+
+public:
+
+	/*
+	*	Constructor
+	*
+	*	Constructs the LAS file writer using either no-compression (LAS) or
+	*	compression (LAZ)
+	*/
+	LASWriter(bool compressed = false);
+
+	/*
+	*	Gets/Sets the compression status flag
+	*/
+	inline bool& compressed()
+		{return _compressed;};
+
+	/*
+	*	The open function.
+	*
+	*	This function performs all needed tasks to get the output file ready
+	*	for writing.  
+	*
+	*	Returns true on success and false on error.
+	*
+	*	After this function is called, the output file should begin to accept
+	*	calls to the write_point funciton.
+	*/
+	bool open(const std::string& output_file_name);
+
+	/*
+	*	The close function.
+	*
+	*	This function performs all the needed tasks for closing out the output
+	*	stream.  
+	*
+	*	After this function is called the class should not accept any more 
+	*	requests to write points	
+	*/
+	void close();
+
+	/*
+	*	Checks if the output file is open and ready to recieve points 
+	*
+	*	Returns true if the output file can recieve points for writing and
+	*	false if it can not.
+	*/
+	bool is_open() const;
+
+	/*
+	*	The write point function.  
+	*
+	*	This is the main workhorse of the class. This point should serialize
+	*	the point data into the output file.
+	*
+	*	Which values actually make it into the file is determined by the 
+	*	actual file type.
+	*/
+	bool write_point(double x, double y, double z,
+		unsigned char r, unsigned char g, unsigned char b,
+		int index, double timestamp);
+
+};
+
+
+
+#endif
