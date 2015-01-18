@@ -283,7 +283,6 @@ def handle_units(units):
 	unitStr = unitStr.split(" ")[0]
 
 	# Return the result
-	print unitStr
 	return unitStr
 
 #
