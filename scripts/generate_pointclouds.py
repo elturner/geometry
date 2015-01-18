@@ -13,6 +13,8 @@
 # system imports
 import sys
 import os
+import re
+import string
 import argparse
 import subprocess
 
@@ -24,6 +26,7 @@ PYTHON_CONFIG_DIR   = os.path.join(PYTHON_SRC_DIR, 'config')
 sys.path.append(PYTHON_SRC_DIR)
 sys.path.append(PYTHON_CONFIG_DIR)
 import backpackconfig
+from pint import UnitRegistry
 
 
 #
@@ -92,6 +95,9 @@ def main() :
 	timeFile = os.path.join(args.dataset_directory[0], TIMEFILE_PATH)
 	configFile = os.path.join(args.dataset_directory[0], CONFIGFILE_PATH)
 	pathFileBase = os.path.splitext(os.path.basename(args.path_file[0]))[0]
+
+	# Handle the units
+	args.units = handle_units(args.units[0])
 
 	# Lastly run the executable for each scanner
 	for scanner in args.scanner_list :
@@ -231,6 +237,54 @@ def main() :
 			exit(1)
 
 
+#
+#	Function to handle the units string
+#
+def handle_units(units):
+
+	# Check if all numeric. If it is numeric then we just pass it back
+	# because we are already done
+	try :
+		float(units)
+		return units
+	except:
+		pass
+
+	# Check to see if it only contains a-z
+	units = units.lower()
+	isAlpha = True
+	for c in units :
+		if c not in string.lowercase:
+			isAlpha = False
+	if not isAlpha :
+		raise Exception("units string must be either convertable to float " + \
+			"or purely alphabetic.")
+
+	# Strip an s on the end
+	if units[-1] == 's' :
+		units = units[0:-1]
+
+	# Get the units registry
+	ureg = UnitRegistry(os.path.join(PYTHON_SRC_DIR, 'pint', \
+		'default_en.txt'), True)
+
+	# Check if this unit exists
+	if units not in ureg._units :
+		raise Exception("Units: " + units + " not a known unit of measure.")
+
+	# Create a quantity from it
+	Q_ = ureg.Quantity
+	try :
+		unitStr = str(Q_(units).to('meter'))
+	except :
+		raise Exception(units + " has no converstion to meters.")
+
+	# Get the actual conversion in string form
+	unitStr = unitStr.split(" ")[0]
+
+	# Return the result
+	print unitStr
+	return unitStr
 
 #
 #	Function to create the output folder
@@ -450,13 +504,14 @@ def handle_args() :
 		default=[2.0,0.5])
 	parser.add_argument("-u", "--units",
 		required=False,
-		help=("Floating point number that specifies the units of the output " 
-			"point cloud. A value of 1.0 indicates meteres, 1000.0 indicates "
-			"millimeters, 3.28084 indicates feet, etc. The default is 1.0 "
-			"(meters)."),
+		help=("Specifies the units in which the output point cloud will saved."
+			"This can either be a number or the such as \"1.0\" or \"3.2\", "
+			"which signifies or the converstion from meters to the desired "
+			"units or the name of the desired units, such as \"meters\" or "
+			"\"feet\". The defualt value is \"meters\"."),
 		nargs=1,
-		type=float,
-		default=1.0)
+		type=str,
+		default=['1.0'])
 
 	# Parse and return
 	args = parser.parse_args()
