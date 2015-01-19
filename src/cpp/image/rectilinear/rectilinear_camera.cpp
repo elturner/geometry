@@ -132,7 +132,6 @@ int rectilinear_camera_t::color_point(double px, double py, double pz, double t,
 	Mat img;
 	double point3D[3];
 	double point2D[2];
-	double tmp;
 	int i, ret;
 
 	/* find the closest camera, with respect to time */
