@@ -12,7 +12,7 @@
 	files with easy extensibility for adding new output types
 */
 
-/* forward decleration of the classes */
+/* forward deceleration of the classes */
 class PointCloudWriterImpl;
 class PointCloudWriter;
 
@@ -40,7 +40,7 @@ public:
 	*	Returns true on success and false on error.
 	*
 	*	After this function is called, the output file should begin to accept
-	*	calls to the write_point funciton.
+	*	calls to the write_point function.
 	*/
 	virtual bool open(const std::string& output_file_name) =0;
 
@@ -56,9 +56,9 @@ public:
 	virtual void close() =0;
 
 	/*
-	*	Checks if the output file is open and ready to recieve points 
+	*	Checks if the output file is open and ready to receive points 
 	*
-	*	Returns true if the output file can recieve points for writing and
+	*	Returns true if the output file can receive points for writing and
 	*	false if it can not.
 	*/
 	virtual bool is_open() const =0;
@@ -66,7 +66,7 @@ public:
 	/*
 	*	The write point function.  
 	*
-	*	This is the main workhorse of the class. This point should serialize
+	*	This is the main workhorse of the class. This function should serialize
 	*	the point data into the output file.
 	*
 	*	Which values actually make it into the file is determined by the 
@@ -114,10 +114,10 @@ public:
 	PointCloudWriter() {};
 
 	/* 
-	*	Checks if the class has a valid iplementation
+	*	Checks if the class has a valid implementation
 	*/
 	inline bool is_valid() const
-		{return _impl;};
+		{return (bool)_impl;};
 
 	/*
 	*	Creation function that generates a new PointCloudWriter object 
@@ -138,7 +138,7 @@ public:
 	*	Returns true on success and false on error.
 	*
 	*	After this function is called, the output file should begin to accept
-	*	calls to the write_point funciton.
+	*	calls to the write_point function.
 	*/
 	inline bool open(const std::string& output_file_name)
 		{return _impl->open(output_file_name); };
@@ -156,9 +156,9 @@ public:
 		{ _impl->close(); };
 
 	/*
-	*	Checks if the output file is open and ready to recieve points 
+	*	Checks if the output file is open and ready to receive points 
 	*
-	*	Returns true if the output file can recieve points for writing and
+	*	Returns true if the output file can receive points for writing and
 	*	false if it can not.
 	*/
 	inline bool is_open() const
@@ -177,10 +177,6 @@ public:
 			unsigned char r, unsigned char g, unsigned char b,
 			int index, double timestamp)
 		{ return _impl->write_point(x,y,z,r,g,b,index,timestamp);};
-
-
-
-
 
 };
 

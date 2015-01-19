@@ -434,12 +434,6 @@ def handle_args() :
 		help=("The desired output file type. The default is \"xyz\"."),
 		choices=['txt','pts','xyz','obj','las','laz'],
 		default='xyz')
-	#parser.add_argument("--single_output_file",
-	#	required=False,
-	#	help=("Specifies that all scanners should be merged into a single "
-	#		"output file instead of a single file per scanner."),
-	#	action="store_true",
-	#	default=False)
 	parser.add_argument("--keep_noncolored_points",
 		required=False,
 		help=("Flags the point cloud generation code to not export points "
