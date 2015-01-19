@@ -1,0 +1,26 @@
+
+---------------------
+Third-Party Libraries
+---------------------
+
+ Written by Eric Turner <elturner@eecs.berkeley.edu>
+ Created January 19, 2015
+
+--------------------------------------------------------
+The following libraries are used in one or more programs 
+in the geometry repo:
+--------------------------------------------------------
+
+Eigen        --  Used everywhere
+
+Boost        --  Used for procarve code for multi-threading
+
+OpenCV       --  Used for pointcloud code (required for fisheye images)
+
+LibLas (version 2 or later)
+	liblas-dev   --  Used for pointcloud code (to export .las files)
+	liblas-c-dev --    "
+
+GDAL (version 1.8 or later):
+	libgdal1-dev --    "
+	gdal-bin     --    "
