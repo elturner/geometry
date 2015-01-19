@@ -1,5 +1,5 @@
-function area = compute_area(fp)
-	% area = compute_area(fp)
+function [area,room_areas] = compute_area(fp)
+	% [area,room_areas] = compute_area(fp)
 	%
 	%	Given a floorplan structure as generated from read_fp.m,
 	%	will find the area covered by the interior space defined
@@ -12,10 +12,13 @@ function area = compute_area(fp)
 	% output:
 	%
 	%	area -	The area of the floorplan (units: meters^2)
+	%	room_areas -	A NUM_ROOMS length array, indicating
+	%			area on a per-room basis.
 	%
 
 	% initialize sum
 	area = 0;
+	room_areas = zeros(fp.num_rooms,1);
 
 	% iterate over triangles
 	for i = 1:fp.num_tris
@@ -26,6 +29,9 @@ function area = compute_area(fp)
 		% get area of this triangle
 		a = tri_area(P(1,:), P(2,:), P(3,:));
 		area = area + a;
+
+		% add to room area
+		room_areas(fp.room_inds(i)) = room_areas(fp.room_inds(i))+a;
 	end
 end
 
