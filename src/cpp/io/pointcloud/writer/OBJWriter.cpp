@@ -80,6 +80,9 @@ bool OBJWriter::write_point(double x, double y, double z,
 	int index, double timestamp)
 {
 
+	/* silence compiler warnings */
+	(void)index; (void)timestamp;
+
 	/* Write the data to file */
 	_outStream << "v " 
 			   << x << " "
