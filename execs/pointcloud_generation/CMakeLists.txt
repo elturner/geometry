@@ -44,7 +44,7 @@ include_directories(${OpenCV_LIBS})
 # Find liblas
 #
 # This is used for supporting outputing to .las formats
-find_package(gdal REQUIRED )
+find_package(GDAL REQUIRED)
 find_package(LibLAS REQUIRED)
 IF(NOT LIBLAS_FOUND)
 	message( FATAL_ERROR "Unable to find LibLAS library" )
