@@ -17,8 +17,9 @@
 #include "XYZReader.h"
 #include "PTSReader.h"
 #include "OBJReader.h"
-#ifdef WITH_LAS_SUPPORT
 
+#ifdef WITH_LAS_SUPPORT
+	#include "LASReader.h"
 #endif
 
 /* namespaces */
@@ -43,8 +44,8 @@ PointCloudReader PointCloudReader::create(POINTCLOUD_FILE_TYPE file_type)
 			break;
 #ifdef WITH_LAS_SUPPORT
 		case LAS:
-			break;
 		case LAZ:
+			reader._impl = make_shared<LASReader>();
 			break;
 #endif
 	}
