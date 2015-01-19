@@ -44,6 +44,7 @@ include_directories(${OpenCV_LIBS})
 # Find liblas
 #
 # This is used for supporting outputing to .las formats
+find_package(gdal REQUIRED )
 find_package(LibLAS REQUIRED)
 IF(NOT LIBLAS_FOUND)
 	message( FATAL_ERROR "Unable to find LibLAS library" )
@@ -71,6 +72,5 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/transform.cpp)
 add_executable(pointcloud_gen ${SANDBOX_SRC})
 target_link_libraries(pointcloud_gen ${OpenCV_LIBS})
-IF(LIBLAS_FOUND)
-	target_link_libraries(pointcloud_gen ${LIBLAS_LIBRARY})
-ENDIF(LIBLAS_FOUND)
+target_link_libraries(pointcloud_gen ${LIBLAS_LIBRARY})
+target_link_libraries(pointcloud_gen ${GDAL_LIBRARY})
