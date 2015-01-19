@@ -18,6 +18,7 @@ SOURCES =	$(SOURCEDIR)util/range_list.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
 		$(SOURCEDIR)config/laserProp.cpp \
 		$(SOURCEDIR)config/tofProp.cpp \
+		$(SOURCEDIR)config/flirProp.cpp \
 		$(SOURCEDIR)xmlreader/tinystr.cpp \
 		$(SOURCEDIR)xmlreader/tinyxml.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
@@ -63,6 +64,7 @@ HEADERS =	$(SOURCEDIR)util/range_list.h \
 		$(SOURCEDIR)config/laserProp.h \
 		$(SOURCEDIR)config/sensorProp.h \
 		$(SOURCEDIR)config/tofProp.h \
+		$(SOURCEDIR)config/flirProp.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
