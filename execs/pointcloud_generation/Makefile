@@ -20,6 +20,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
 		$(SOURCEDIR)config/laserProp.cpp \
 		$(SOURCEDIR)config/tofProp.cpp \
+		$(SOURCEDIR)config/flirProp.cpp \
 		$(SOURCEDIR)xmlreader/tinystr.cpp \
 		$(SOURCEDIR)xmlreader/tinyxml.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
@@ -32,8 +33,15 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)image/image_cache.cpp \
+		$(SOURCEDIR)image/camera.cpp \
+		$(SOURCEDIR)image/rectilinear/rectilinear_functions.cpp \
+		$(SOURCEDIR)image/rectilinear/rectilinear_camera.cpp \
 		$(SOURCEDIR)image/fisheye/ocam_functions.cpp \
 		$(SOURCEDIR)image/fisheye/fisheye_camera.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
@@ -54,6 +62,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)config/laserProp.h \
 		$(SOURCEDIR)config/sensorProp.h \
 		$(SOURCEDIR)config/tofProp.h \
+		$(SOURCEDIR)config/flirProp.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
@@ -64,8 +73,16 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
+		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.h \
+		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.h \
+		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.h \
+		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)image/image_cache.h \
+		$(SOURCEDIR)image/image_cache.h \
+		$(SOURCEIDR)image/camera.h \
+		$(SOURCEDIR)image/rectilinear/rectilinear_functions.h \
+		$(SOURCEDIR)image/rectilinear/rectilinear_camera.h \
 		$(SOURCEDIR)image/fisheye/ocam_functions.h \
 		$(SOURCEDIR)image/fisheye/fisheye_camera.h \
 		$(SOURCEDIR)geometry/system_path.h \
