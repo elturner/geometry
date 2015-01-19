@@ -11,16 +11,25 @@ The following libraries are used in one or more programs
 in the geometry repo:
 --------------------------------------------------------
 
-Eigen        --  Used everywhere
+Eigen (version 3 or later) 
+	--  Used everywhere
 
-Boost        --  Used for procarve code for multi-threading
+Boost        
+	--  Used for procarve, scan_chunker code
+	--  multi-threading and filesystem support
 
-OpenCV       --  Used for pointcloud code (required for fisheye images)
+OpenCV
+	--  Used for pointcloud code (required for fisheye images)
 
-LibLas (version 2 or later)
+LibLAS (version 2 or later)
 	liblas-dev   --  Used for pointcloud code (to export .las files)
 	liblas-c-dev --    "
+	liblas-bin   --    "
 
 GDAL (version 1.8 or later):
 	libgdal1-dev --    "
 	gdal-bin     --    "
+
+Lib TIFF (version 4 or later):
+	libgeotiff-dev
+	libtiff4-dev
