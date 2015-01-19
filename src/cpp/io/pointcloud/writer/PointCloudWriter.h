@@ -91,11 +91,11 @@ public:
 		XYZ,
 		PTS,
 		OBJ
-		#ifdef WITH_LAS_SUPPORT
+#ifdef WITH_LAS_SUPPORT
 		,
 		LAS,
 		LAZ
-		#endif
+#endif
 	};
 
 private:
