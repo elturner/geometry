@@ -20,6 +20,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
 		$(SOURCEDIR)config/laserProp.cpp \
 		$(SOURCEDIR)config/tofProp.cpp \
+		$(SOURCEDIR)config/flirProp.cpp \
 		$(SOURCEDIR)xmlreader/tinystr.cpp \
 		$(SOURCEDIR)xmlreader/tinyxml.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlerror.cpp \
@@ -46,6 +47,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)config/imuProp.h \
 		$(SOURCEDIR)config/laserProp.h \
 		$(SOURCEDIR)config/tofProp.h \
+		$(SOURCEDIR)config/flirProp.h \
 		$(SOURCEDIR)config/sensorProp.h \
 		$(SOURCEDIR)xmlreader/tinystr.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
