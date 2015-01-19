@@ -30,7 +30,7 @@ private:
 	liblas::ReaderFactory _readerCreationFactory;
 
 	/* this holds the actual las reader object */
-	liblas::Reader _reader;
+	std::shared_ptr<liblas::Reader> _reader;
 
 public:
 

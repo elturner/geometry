@@ -43,7 +43,8 @@ bool LASReader::open(const std::string& input_file_name)
 		return false;
 
 	/* then we create the las reader from the factory */
-	_reader = _readerCreationFactory.CreateWithStream(_inStream);
+	_reader = make_shared<liblas::Reader>(
+		_readerCreationFactory.CreateWithStream(_inStream));
 
 	/* return true because we were successful */
 	return true;
@@ -114,15 +115,15 @@ bool LASReader::read_point(double& x, double& y, double& z,
 		return false;
 
 	/* Check if we can read a point */
-	if(!_reader.ReadNextPoint())
+	if(!_reader->ReadNextPoint())
 	{
-		x = _reader.GetPoint().GetX();
-		y = _reader.GetPoint().GetX();
-		z = _reader.GetPoint().GetX();
-		r = (unsigned char)_reader.GetPoint().GetColor().GetRed();
-		g = (unsigned char)_reader.GetPoint().GetColor().GetGreen();
-		b = (unsigned char)_reader.GetPoint().GetColor().GetBlue();
-		timestamp = _reader.GetPoint().GetTime();
+		x = _reader->GetPoint().GetX();
+		y = _reader->GetPoint().GetX();
+		z = _reader->GetPoint().GetX();
+		r = (unsigned char)_reader->GetPoint().GetColor().GetRed();
+		g = (unsigned char)_reader->GetPoint().GetColor().GetGreen();
+		b = (unsigned char)_reader->GetPoint().GetColor().GetBlue();
+		timestamp = _reader->GetPoint().GetTime();
 		index = 0;
 		return true;
 	}
