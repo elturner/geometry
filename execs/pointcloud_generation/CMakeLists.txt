@@ -41,15 +41,6 @@ include_directories(/usr/include/eigen3/)
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_LIBS})
 
-# Find liblas
-#
-# This is used for supporting outputing to .las formats
-find_package(GDAL REQUIRED)
-find_package(LibLAS REQUIRED)
-IF(NOT LIBLAS_FOUND)
-	message( FATAL_ERROR "Unable to find LibLAS library" )
-ENDIF(NOT LIBLAS_FOUND)
-
 # Make the test sandbox executable
 MESSAGE(STATUS "Including binary \"pointcloud_gen\"")
 file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud_generation/main.cpp
@@ -64,13 +55,29 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/d_imager/d_imager_data_reader.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/fss/fss_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/color_image/color_image_metadata_reader.cpp
-							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/pointcloud_writer.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/OBJ*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/XYZ*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PTS*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/PointCloudWriter.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/carve/noisypath_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/timestamp/*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/system_path.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/transform.cpp)
+
+# Find liblas
+#
+# This is used for supporting outputing to .las formats
+IF(LAS_SUPPORT)
+	find_package(LibLAS REQUIRED)
+	IF(NOT LIBLAS_FOUND)
+		message( FATAL_ERROR "Unable to find LibLAS library" )
+		add_definitions( -DWITH_LAS_SUPPORT )
+	ENDIF(NOT LIBLAS_FOUND)
+	LIST(APPEND SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/LASWriter.cpp)
+ENDIF(LAS_SUPPORT)
+
 add_executable(pointcloud_gen ${SANDBOX_SRC})
 target_link_libraries(pointcloud_gen ${OpenCV_LIBS})
 target_link_libraries(pointcloud_gen ${LIBLAS_LIBRARY})
-target_link_libraries(pointcloud_gen ${GDAL_LIBRARY})

@@ -12,7 +12,11 @@
 #include "XYZWriter.h"
 #include "OBJWriter.h"
 #include "PTSWriter.h"
-#include "LASWriter.h"
+
+/* use if command line says to build with las */
+#ifdef WITH_LAS_SUPPORT
+	#include "LASWriter.h"
+#endif
 
 /* includes */
 #include <memory>
@@ -39,6 +43,7 @@ PointCloudWriter PointCloudWriter::create(POINTCLOUD_FILE_TYPE file_type)
 		case PTS :
 			writer._impl = make_shared<PTSWriter>();
 			break;
+#ifdef WITH_LAS_SUPPORT
 		case LAS :
 			writer._impl = make_shared<LASWriter>();
 			std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
@@ -49,6 +54,7 @@ PointCloudWriter PointCloudWriter::create(POINTCLOUD_FILE_TYPE file_type)
 			std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
 				= true;
 			break;
+#endif
 	}
 
 	/* return the writer object */

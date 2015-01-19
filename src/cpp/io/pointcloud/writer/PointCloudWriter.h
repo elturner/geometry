@@ -90,9 +90,12 @@ public:
 	{
 		XYZ,
 		PTS,
-		OBJ,
+		OBJ
+		#ifdef WITH_LAS_SUPPORT
+		,
 		LAS,
 		LAZ
+		#endif
 	};
 
 private:

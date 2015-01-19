@@ -147,10 +147,14 @@ int pointcloud_writer_t::open(const  string& pcfile,
 		this->writerObj = PointCloudWriter::create(PointCloudWriter::XYZ);
 	else if(file_ext.compare("obj") == 0)
 		this->writerObj = PointCloudWriter::create(PointCloudWriter::OBJ);
+
+#ifdef WITH_LAS_SUPPORT
 	else if(file_ext.compare("las") == 0)
 		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAS);
 	else if(file_ext.compare("laz") == 0)
 		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAZ);
+#endif
+	
 	else
 	{
 		cerr << "Error! Unknown output file extension : " << file_ext << endl;
