@@ -13,6 +13,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <liblas/liblas.hpp>
 #include "PointCloudReader.h"
 
@@ -115,11 +116,11 @@ bool LASReader::read_point(double& x, double& y, double& z,
 		return false;
 
 	/* Check if we can read a point */
-	if(!_reader->ReadNextPoint())
+	if(_reader->ReadNextPoint())
 	{
 		x = _reader->GetPoint().GetX();
-		y = _reader->GetPoint().GetX();
-		z = _reader->GetPoint().GetX();
+		y = _reader->GetPoint().GetY();
+		z = _reader->GetPoint().GetZ();
 		r = (unsigned char)_reader->GetPoint().GetColor().GetRed();
 		g = (unsigned char)_reader->GetPoint().GetColor().GetGreen();
 		b = (unsigned char)_reader->GetPoint().GetColor().GetBlue();

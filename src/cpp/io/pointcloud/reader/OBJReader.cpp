@@ -17,6 +17,7 @@
 /* includes */
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <fstream>
 #include "PointCloudReader.h"
 
@@ -132,28 +133,35 @@ bool OBJReader::read_point(double& x, double& y, double& z,
 			continue;
 		}
 	}
-	
+
 	/* we hit the end of the file without getting any lines to read */
 	if(line.empty())
 		return false;
 
 	/* strip out the part of the line we care about */
-	line = line.substr(pos, string::npos);
+	line = line.substr(pos+1, string::npos);
 	
 	/* extract the data from the string */
 	stringstream ss(line);
+	unsigned int color;
 	if(!(ss >> x))
 		return false;
 	if(!(ss >> y))
 		return false;
 	if(!(ss >> z))
 		return false;
-	if(!(ss >> r))
+	if(!(ss >> color))
 		return false;
-	if(!(ss >> g))
+	else
+		r = (unsigned char)color;
+	if(!(ss >> color))
 		return false;
-	if(!(ss >> b))
+	else
+		g = (unsigned char)color;
+	if(!(ss >> color))
 		return false;
+	else
+		b = (unsigned char)color;
 
 	/* set unread data to 0 */
 	index = 0;

@@ -13,6 +13,7 @@
 
 /* includes */
 #include <string>
+#include <iostream>
 #include <sstream>
 #include <fstream>
 #include <vector>
@@ -149,20 +150,27 @@ bool PTSReader::read_point(double& x, double& y, double& z,
 		return false;
 
 	/* check if color was given and if so we should copy it out */
-	if(tokens.size() < 6)
+	if(tokens.size() >= 6)
 	{
+		unsigned int color;
 		ss.str(tokens[tokens.size()-3]);
 		ss.clear();
-		if(!(ss >> r))
+		if(!(ss >> color))
 			return false;
+		else
+			r = (unsigned char)color;
 		ss.str(tokens[tokens.size()-2]);
 		ss.clear();
-		if(!(ss >> g))
+		if(!(ss >> color))
 			return false;
+		else
+			g = (unsigned char)color;
 		ss.str(tokens[tokens.size()-1]);
 		ss.clear();
-		if(!(ss >> b))
+		if(!(ss >> color))
 			return false;
+		else
+			b = (unsigned char)color;
 	}
 	else
 	{

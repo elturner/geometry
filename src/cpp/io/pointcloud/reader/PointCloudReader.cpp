@@ -13,6 +13,7 @@
 /* includes */
 #include <string>
 #include <memory>
+#include <iostream>
 
 #include "XYZReader.h"
 #include "PTSReader.h"
@@ -51,6 +52,39 @@ PointCloudReader PointCloudReader::create(POINTCLOUD_FILE_TYPE file_type)
 	}
 
 	/* return the reader */
+	return move(reader);
+}
+
+PointCloudReader PointCloudReader::create(const std::string& file_name)
+{
+	PointCloudReader reader;
+
+	/* strip off the file extension */
+	string ext;
+	size_t pos = file_name.find_last_of(".");
+	if(pos == string::npos)
+		ext = "";
+	else
+		ext = file_name.substr(pos+1, string::npos);
+
+	/* create the file reader based on known extensions */
+	if(ext.compare("xyz") == 0)
+		reader._impl = make_shared<XYZReader>();
+	else if(ext.compare("pts") == 0)
+		reader._impl = make_shared<PTSReader>();
+	else if(ext.compare("obj") == 0)
+		reader._impl = make_shared<OBJReader>();
+
+#ifdef WITH_LAS_SUPPORT
+	else if(ext.compare("las") == 0 || ext.compare("laz") == 0)
+		reader._impl = make_shared<LASReader>();
+#endif
+
+	/* unknown file extension */
+	else
+		throw std::runtime_error("Unknown file extenstion \"" + ext + 
+			"\" thrown from PointCloudReader::create");
+
 	return move(reader);
 }
 

@@ -22,18 +22,22 @@ using namespace std;
 
 /* the following make formatting assumptions */
 #define STANDARD_PAGE_WIDTH 79 /* assume 80 character wide pages */
+#define DEFAULT_TAB_SIZE 4
 #define WHITESPACE " \t\r\n" /* whitespace characters */
 
 /* cmd_args_t function defintions */
 
-cmd_args_t::cmd_args_t()
+cmd_args_t::cmd_args_t(bool printInOrder)
 {
 	/* empty structures for now */
 	this->program_description = "";
+	this->tab_width = DEFAULT_TAB_SIZE;
 	this->tags.clear();
 	this->files.clear();
 	this->required_file_types.clear();
 	this->filetype_purposes.clear();
+	this->arg_order.clear();
+	this->print_in_order = printInOrder;
 }
 
 cmd_args_t::~cmd_args_t()
@@ -43,6 +47,7 @@ cmd_args_t::~cmd_args_t()
 	this->files.clear();
 	this->required_file_types.clear();
 	this->filetype_purposes.clear();
+	this->arg_order.clear();
 }
 
 void cmd_args_t::add(const string& t, const string& d, bool o, int n)
@@ -51,6 +56,7 @@ void cmd_args_t::add(const string& t, const string& d, bool o, int n)
 
 	/* create a new tag structure
 	 * and add it to the map */
+	arg_order.push_back(t);
 	tag.init(t, d, o, n);
 	this->tags.insert(make_pair(t, tag));
 }
@@ -110,12 +116,18 @@ int cmd_args_t::parse(int argc, char** argv)
 			it->second.found = true;
 
 			/* check for its values */
-			for(j = 0; j < it->second.num_vals; j++)
+			for(j = 0; 
+				j < it->second.num_vals || it->second.num_vals == FLEX_ARGS; 
+				j++)
 			{
 				/* verify we don't go out of bounds */
 				i++;
 				if(i >= argc)
 				{
+					// In flex args mode this is okay
+					if(it->second.num_vals == FLEX_ARGS)
+						return 0;
+
 					/* insufficient number of values
 					 * for this tag! */
 					cerr << "The " << tag << " tag"
@@ -129,6 +141,13 @@ int cmd_args_t::parse(int argc, char** argv)
 					     << endl;
 					this->print_usage(argv[0]);
 					return -3;
+				}
+
+				/* check if the next item is a valid tab */
+				if(this->tags.count(argv[i]))
+				{
+					i--;
+					break;
 				}
 
 				/* save this value */
@@ -198,7 +217,7 @@ void cmd_args_t::print_usage(char* prog_name) const
 	int i, indent;
 
 	/* set reasonable tab width */
-	tab = "        "; /* tab width: 8 */
+	tab = this->generate_tab(); /* tab width generated from defined settings */
 	
 	/* print program description if available */
 	if(!(this->program_description.empty()))
@@ -225,19 +244,42 @@ void cmd_args_t::print_usage(char* prog_name) const
 		indent = tab.size();
 
 	/* print all possible tags */
-	for(it = this->tags.begin(); it != this->tags.end(); it++)
+	if(!this->print_in_order)
 	{
-		/* print tag name */
-		line << (it->second.optional ? "[ " : "")
-		     << it->second.tag << " ";
-		
-		/* print arguments for this tag */
-		for(i = 0; i < it->second.num_vals; i++)
-			line << "<arg_" << (i+1) << "> ";
+		for(it = this->tags.begin(); it != this->tags.end(); it++)
+		{
+			/* print tag name */
+			line << (it->second.optional ? "[ " : "")
+			     << it->second.tag << " ";
+			
+			/* print arguments for this tag */
+			for(i = 0; i < it->second.num_vals; i++)
+				line << "<arg_" << (i+1) << "> ";
 
-		/* end optional bracket */
-		if(it->second.optional)
-			line << "] ";
+			/* end optional bracket */
+			if(it->second.optional)
+				line << "] ";
+		}
+	}
+	else
+	{
+		for(size_t j = 0; j < arg_order.size(); j++)
+		{
+			/* find the correct tag */
+			it = tags.find(arg_order[j]);
+
+			/* print tag name */
+			line << (it->second.optional ? "[ " : "")
+			     << it->second.tag << " ";
+			
+			/* print arguments for this tag */
+			for(i = 0; i < it->second.num_vals; i++)
+				line << "<arg_" << (i+1) << "> ";
+
+			/* end optional bracket */
+			if(it->second.optional)
+				line << "] ";
+		}
 	}
 
 	/* print files if necessary */
@@ -252,23 +294,69 @@ void cmd_args_t::print_usage(char* prog_name) const
 		cerr << " Where:" << endl
 		     << endl;
 
-		/* iterate over each tag */
-		for(it = this->tags.begin(); it != this->tags.end(); it++)
+		if(!this->print_in_order)
+			/* iterate over each tag */
+			for(it = this->tags.begin(); it != this->tags.end(); it++)
+			{
+				/* prepare tag string */
+				line.str("");
+				line << tab << it->second.tag; 
+				if(it->second.tag.size() < tab.size())
+					line << tab.substr(it->second.tag.size());
+				else
+					line << tab;
+				indent = line.str().size();
+		
+				/* print description with indents */
+				stringstream ss;
+				if(it->second.num_vals == FLEX_ARGS)
+					ss << "*";
+				else
+					ss << it->second.num_vals;
+				line 
+					 << ((it->second.num_vals > 0 || 
+					 	it->second.num_vals == FLEX_ARGS) ? 
+					 	"Nargs : " + ss.str() : "") << tab
+					 << (it->second.optional ? "Optional." : "")
+					 << endl << endl
+				     << it->second.description << endl << endl; 
+				cmd_args_t::write_line_with_indent(line.str(),
+				                                   2*tab.size());
+			}
+		else
 		{
-			/* prepare tag string */
-			line.str("");
-			line << tab << it->second.tag; 
-			if(it->second.tag.size() < tab.size())
-				line << tab.substr(it->second.tag.size());
-			else
-				line << tab;
-			indent = line.str().size();
-	
-			/* print description with indents */
-			line << (it->second.optional ? "Optional.  " : "")
-			     << it->second.description << endl << endl; 
-			cmd_args_t::write_line_with_indent(line.str(),
-			                                   indent);
+			for(size_t j = 0; j < arg_order.size(); j++)
+			{
+				/* find the correct tag */
+				it = tags.find(arg_order[j]);
+
+				/* prepare tag string */
+				line.str("");
+				line << tab << it->second.tag; 
+				if(it->second.tag.size() < tab.size())
+					line << tab.substr(it->second.tag.size());
+				else
+					line << tab;
+				indent = line.str().size();
+		
+				/* print description with indents */
+				stringstream ss;
+				if(it->second.num_vals == FLEX_ARGS)
+				{
+					ss << "*";
+				}
+				else
+					ss << it->second.num_vals;
+				line 
+					 << ((it->second.num_vals > 0 || 
+					 	it->second.num_vals == FLEX_ARGS) ? 
+					 	"Nargs : " + ss.str() : "") << tab
+					 << (it->second.optional ? "Optional." : "")
+					 << endl << endl
+				     << it->second.description << endl << endl; 
+				cmd_args_t::write_line_with_indent(line.str(),
+				                                   2*tab.size());
+			}
 		}
 	}
 
@@ -446,6 +534,14 @@ void cmd_args_t::write_line_with_indent(const std::string& line,
 		ss << " ";
 	ss << line.substr(p+1);
 	cmd_args_t::write_line_with_indent(ss.str(), indent);
+}
+
+std::string cmd_args_t::generate_tab() const
+{
+	string tab;
+	for(size_t i = 0; i < tab_width; i++)
+		tab += " ";
+	return tab;
 }
 
 /* cmd_tag_t function implementations */

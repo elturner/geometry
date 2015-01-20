@@ -121,6 +121,7 @@ bool XYZReader::read_point(double& x, double& y, double& z,
 
 	
 	/* extract the data from the string */
+	unsigned int color;
 	stringstream ss(line);
 	if(!(ss >> x))
 		return false;
@@ -128,12 +129,18 @@ bool XYZReader::read_point(double& x, double& y, double& z,
 		return false;
 	if(!(ss >> z))
 		return false;
-	if(!(ss >> r))
+	if(!(ss >> color))
 		return false;
-	if(!(ss >> g))
+	else
+		r = (unsigned char)color;
+	if(!(ss >> color))
 		return false;
-	if(!(ss >> b))
+	else
+		g = (unsigned char)color;
+	if(!(ss >> color))
 		return false;
+	else
+		b = (unsigned char)color;
 	if(!(ss >> index))
 		return false;
 	if(!(ss >> timestamp))

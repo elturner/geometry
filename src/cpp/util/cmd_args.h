@@ -35,6 +35,14 @@ class cmd_args_t
 	/* parameters */
 	private:
 
+		/* boolean flag that specifies if the arguments should
+		 * be printed in the order they are recieved */
+		bool print_in_order;
+
+		/* this vector contains the order in which the arguments
+		 * were recieved.  This is used for printing in order */
+		std::vector<std::string> arg_order;
+
 		/* overall description of program.  Is printed
 		 * first if the usage information is displayed. */
 		std::string program_description;
@@ -59,13 +67,26 @@ class cmd_args_t
 		 * extension, if provided */
 		std::map<std::string, std::string> filetype_purposes;
 
+		/* this holds the tab width.  This is 8 by default */
+		size_t tab_width;
+
+
+	/* enum */
+	public:
+
+		/* enumeration for flex arguments mode */
+		enum FLEX_ARGS_ENUM
+		{
+			FLEX_ARGS = -1
+		};
+
 	/* functions */
 	public:
 
 		/**
 		 * Initializes empty structure 
 		 */
-		cmd_args_t();
+		cmd_args_t(bool printInOrder = true);
 
 		/**
 		 * Frees all memory and resources
@@ -84,6 +105,14 @@ class cmd_args_t
 		 */
 		inline void set_program_description(const std::string& s)
 		{ this->program_description = s; };
+
+		/**
+		 *	Sets the tab size used for printings
+		 *
+		 *	@param s  The number of white space characters in the tab
+		 */
+		inline void set_tab_width(size_t s) 
+			{ this->tab_width = s; };
 
 		/**
 		 * Adds tag information to this structure
@@ -247,6 +276,11 @@ class cmd_args_t
 		 */
 		static void write_line_with_indent(const std::string& line,
 		                                   int indent);
+
+		/**
+		 * Generates the tab string using the current tab width
+		 */
+		 std::string generate_tab() const;
 };
 
 /**

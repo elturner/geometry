@@ -162,6 +162,7 @@ public:
 	*	with the correct file type.
 	*/
 	static PointCloudReader create(POINTCLOUD_FILE_TYPE file_type);
+	static PointCloudReader create(const std::string& file_name);
 
 	/*
 	*	Wrapper around implementation functions
