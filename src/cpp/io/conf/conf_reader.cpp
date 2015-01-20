@@ -76,6 +76,7 @@ void reader_t::reset()
 	/* set helptext options */
 	this->tab_width = 3;
 	this->line_width = 70;
+	this->general_description = "";
 }
 			
 void reader_t::set_linebreak(char b)
@@ -421,6 +422,10 @@ void reader_t::helptext(std::ostream& os) const
 	stringstream line;
 	string tab;
 	size_t indent;
+
+	/* write general description */
+	this->write_line_with_indent(os, this->general_description, 
+			this->tab_width);
 
 	/* write header */
 	os << "---------------" << endl
