@@ -133,17 +133,21 @@ void reader_t::add_delimiter(char d)
 	this->delimiters.insert(d);
 }
 			
-void reader_t::add_keyword(const std::string& k, int num_args)
+void reader_t::add_keyword(const std::string& k, 
+			const std::string& helptext, int num_args)
 {
-	pair<map<string, int>::iterator, bool> ins;
+	pair<map<string, keyword_t>::iterator, bool> ins;
+
+	/* make structure */
+	keyword_t keyword(k, helptext, num_args);
 
 	/* add keyword */
-	ins = this->keywords.insert(pair<string,int>(k,num_args));
+	ins = this->keywords.insert(pair<string,keyword_t>(k,keyword));
 	if( !(ins.second) )
 	{
 		/* if got here, means keyword was already
-		 * defined.  Just update its num args */
-		ins.first->second = num_args;
+		 * defined.  Just update its attributes */
+		ins.first->second = keyword;
 	}
 }
 			
@@ -187,7 +191,7 @@ int reader_t::parse(const std::string& filename)
 			
 int reader_t::parse(std::istream& is)
 {
-	map<string,int>::iterator it;
+	map<string,keyword_t>::iterator it;
 	vector<string> lines;
 	vector<string> tokens;
 	command_t cmd;
@@ -326,7 +330,8 @@ int reader_t::parse(std::istream& is)
 		}
 
 		/* check if it has the correct number of arguments */
-		if(it->second >= 0 && it->second != cmd.args.size())
+		if(it->second.num_args >= 0 
+				&& it->second.num_args != cmd.args.size())
 		{
 			/* incorrect number of arguments */
 			if(this->verbose)
@@ -334,8 +339,8 @@ int reader_t::parse(std::istream& is)
 				cerr << "[conf::reader_t::parse]\t"
 				     << "Syntax error!  \""
 				     << cmd.keyword << "\" expects "
-				     << it->second << " argument"
-				     << (it->second == 1 ? "" : "s")
+				     << it->second.num_args << " argument"
+				     << (it->second.num_args == 1 ? "":"s")
 				     << ", but was given "
 				     << cmd.args.size() << endl;
 			}
@@ -399,6 +404,32 @@ void reader_t::serialize(std::ostream& os) const
 
 		/* print a newline */
 		os << *(this->linebreaks.begin());
+	}
+}
+			
+void reader_t::helptext(std::ostream& os) const
+{
+	map<string,keyword_t>::const_iterator it;
+
+	os << "---------------" << endl
+	   << "Valid Commands:" << endl
+	   << "---------------" << endl
+	   << endl;
+
+	/* iterate over keywords */
+	for(it = this->keywords.begin(); it != this->keywords.end(); it++)
+	{
+		/* print out this keyword */
+		os << "   " << it->first << " : ";
+		if(it->second.num_args < 0)
+			os << "*";
+		else if(it->second.num_args == 1)
+			os << "1 argument";
+		else
+			os << it->second.num_args << " arguments";
+		os << endl
+		   << "        " << it->second.helptext << endl
+		   << endl;
 	}
 }
 

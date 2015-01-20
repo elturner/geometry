@@ -28,7 +28,12 @@ namespace conf
 {
 	/* the following classes are defined in this namespace */
 	class reader_t;
+	class keyword_t;
 	class command_t;
+
+	/* this value represents a variable number of arguments for
+	 * a keyword */
+	static const int VARARGS = -1;
 
 	/**
 	 * The conf::reader_t class is used to parse .conf files
@@ -50,7 +55,7 @@ namespace conf
 			 * of arguments, then a variable number of
 			 * arguments can be given.
 			 */
-			std::map<std::string, int> keywords;
+			std::map<std::string, keyword_t> keywords;
 
 			/**
 			 * The line-break characters
@@ -254,11 +259,13 @@ namespace conf
 			 * arguments is allowed for this keyword.
 			 *
 			 * @param k         The new keyword
+			 * @param helptext  Any helptext for this keyword
 			 * @param num_args  The number of arguments
 			 *                  to parse for this keyword
 			 */
 			void add_keyword(const std::string& k, 
-						int num_args=0);
+					const std::string& helptext="",
+					int num_args = VARARGS);
 
 			/**
 			 * Sets the verbose flag
@@ -344,6 +351,18 @@ namespace conf
 			 */
 			void serialize(std::ostream& os) const;
 
+			/**
+			 * Prints help text about allowed keywords 
+			 * and current settings.
+			 *
+			 * Given an output stream, will write ascii
+			 * help text about how to format input to
+			 * this reader.
+			 *
+			 * @param os  The output stream to write to
+			 */
+			void helptext(std::ostream& os) const;
+
 			/*-----------*/
 			/* accessors */
 			/*-----------*/
@@ -373,6 +392,78 @@ namespace conf
 			 */
 			inline const command_t& get(size_t i) const
 			{ return this->commands[i]; };
+	};
+
+	/**
+	 * The conf::keyword_t class is used to define valid input
+	 * commands and their expected attributes.
+	 */
+	class keyword_t
+	{
+		/* security */
+		friend class reader_t;
+
+		/* parameters */
+		private:
+
+			/**
+			 * The keyword string that indicates this call
+			 */
+			std::string name;
+
+			/**
+			 * How many arguments to expect for a call to
+			 * this command keyword.
+			 *
+			 * If a negative value is supplied, then
+			 * a variable number of arguments can be
+			 * taken.
+			 */
+			int num_args;
+
+			/**
+			 * Help text describing the purpose of the
+			 * command this keyword represents.
+			 */
+			std::string helptext;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Makes empty keyword
+			 */
+			keyword_t() : name(""), num_args(-1), helptext("")
+			{};
+
+			/**
+			 * Makes keyword from given arguments
+			 *
+			 * @param n   The name of this keyword
+			 * @param na  Number of arguments
+			 * @param h   Help text
+			 */
+			keyword_t(const std::string& n,
+				const std::string& h, int na)
+				: name(n), helptext(h), num_args(na)
+			{};
+
+			/*-----------*/
+			/* operators */
+			/*-----------*/
+
+			inline keyword_t& operator= (const keyword_t& other)
+			{
+				/* copy and return */
+				this->name = other.name;
+				this->helptext = other.helptext;
+				this->num_args = other.num_args;
+				return *(this);
+			};
 	};
 
 	/**
