@@ -113,6 +113,13 @@ namespace conf
 			 */
 			size_t line_width;
 
+			/**
+			 * Provides a general description
+			 * of the files to be parsed by
+			 * this reader.
+			 */
+			std::string general_description;
+
 			/*----------*/
 			/* contents */
 			/*----------*/
@@ -305,6 +312,14 @@ namespace conf
 			 */
 			inline void set_line_width(size_t w)
 			{ this->line_width = w; };
+
+			/**
+			 * Sets the general description to be
+			 * printed above the help text.
+			 */
+			inline void set_general_description(
+					const std::string& d)
+			{ this->general_description = d; };
 
 			/*-----*/
 			/* i/o */

@@ -76,6 +76,7 @@ void reader_t::reset()
 	/* set helptext options */
 	this->tab_width = 3;
 	this->line_width = 70;
+	this->general_description = "";
 }
 			
 void reader_t::set_linebreak(char b)
@@ -421,6 +422,20 @@ void reader_t::helptext(std::ostream& os) const
 	stringstream line;
 	string tab;
 	size_t indent;
+	
+	/* init */
+	tab = this->generate_tab();
+
+	/* write general description */
+	os << "--------------------" << endl
+	   << "General Description:" << endl
+	   << "--------------------" << endl
+	   << endl;
+
+	os << tab;
+	this->write_line_with_indent(os, this->general_description, 
+			this->tab_width);
+	os << endl << endl;
 
 	/* write header */
 	os << "---------------" << endl
@@ -428,9 +443,6 @@ void reader_t::helptext(std::ostream& os) const
 	   << "---------------" << endl
 	   << endl;
 	
-	/* init */
-	tab = this->generate_tab();
-
 	/* iterate over keywords */
 	for(it = this->keywords.begin(); it != this->keywords.end(); it++)
 	{
