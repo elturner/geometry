@@ -437,6 +437,10 @@ void reader_t::helptext(std::ostream& os) const
 			this->tab_width);
 	os << endl << endl;
 
+	/* write general description */
+	this->write_line_with_indent(os, this->general_description, 
+			this->tab_width);
+
 	/* write header */
 	os << "---------------" << endl
 	   << "Valid Commands:" << endl
