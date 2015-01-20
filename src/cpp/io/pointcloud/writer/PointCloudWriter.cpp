@@ -61,3 +61,45 @@ PointCloudWriter PointCloudWriter::create(POINTCLOUD_FILE_TYPE file_type)
 	return std::move(writer);
 }
 
+PointCloudWriter PointCloudWriter::create(const std::string& file_name)
+{
+	PointCloudWriter writer;
+
+	/* strip off the file extension */
+	string ext;
+	size_t pos = file_name.find_last_of(".");
+	if(pos == string::npos)
+		ext = "";
+	else
+		ext = file_name.substr(pos+1, string::npos);
+
+	/* create the file writer based on known extensions */
+	if(ext.compare("xyz") == 0)
+		writer._impl = make_shared<XYZWriter>();
+	else if(ext.compare("pts") == 0)
+		writer._impl = make_shared<PTSWriter>();
+	else if(ext.compare("obj") == 0)
+		writer._impl = make_shared<OBJWriter>();
+
+#ifdef WITH_LAS_SUPPORT
+	else if(ext.compare("las") == 0)
+	{
+		writer._impl = make_shared<LASWriter>();
+		std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
+				= false;
+	}
+	else if(ext.compare("laz") == 0)
+	{
+		writer._impl = make_shared<LASWriter>();
+		std::dynamic_pointer_cast<LASWriter>(writer._impl)->compressed() 
+				= true;
+	}
+#endif
+
+	/* unknown file extension */
+	else
+		throw std::runtime_error("Unknown file extenstion \"" + ext + 
+			"\" thrown from PointCloudWriter::create");
+
+	return move(writer);
+}

@@ -127,6 +127,7 @@ public:
 	*	with the correct file type.
 	*/
 	static PointCloudWriter create(POINTCLOUD_FILE_TYPE file_type);
+	static PointCloudWriter create(const std::string& file_name);
 
 	/*
 	*	Wrapper around implementation functions
