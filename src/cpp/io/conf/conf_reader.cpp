@@ -215,6 +215,8 @@ int reader_t::parse(std::istream& is)
 	{
 		/* get the next character from the stream */
 		is.get(c);
+		if(!(is.good()))
+			break;
 
 		/* check for a line separator, which
 		 * denotes the end of current line. */
