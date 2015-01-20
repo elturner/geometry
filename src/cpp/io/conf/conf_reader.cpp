@@ -1,6 +1,7 @@
 #include "conf_reader.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <set>
@@ -20,6 +21,9 @@
 
 using namespace std;
 using namespace conf;
+
+/* the following are defined for this class */
+#define WHITESPACE " \r\t\n" /* whitespace characters */
 
 /*-----------------------------------*/
 /* reader_t function implementations */
@@ -68,6 +72,10 @@ void reader_t::reset()
 	this->delimiters.insert(' ');
 	this->delimiters.insert('\t');
 	this->delimiters.insert('\r');
+
+	/* set helptext options */
+	this->tab_width = 3;
+	this->line_width = 70;
 }
 			
 void reader_t::set_linebreak(char b)
@@ -406,31 +414,112 @@ void reader_t::serialize(std::ostream& os) const
 		os << *(this->linebreaks.begin());
 	}
 }
-			
+
 void reader_t::helptext(std::ostream& os) const
 {
 	map<string,keyword_t>::const_iterator it;
+	stringstream line;
+	string tab;
+	size_t indent;
 
+	/* write header */
 	os << "---------------" << endl
 	   << "Valid Commands:" << endl
 	   << "---------------" << endl
 	   << endl;
+	
+	/* init */
+	tab = this->generate_tab();
 
 	/* iterate over keywords */
 	for(it = this->keywords.begin(); it != this->keywords.end(); it++)
 	{
 		/* print out this keyword */
-		os << "   " << it->first << " : ";
+		indent = this->tab_width;
+		line.str("");
+		line << tab << it->first << " : ";
 		if(it->second.num_args < 0)
-			os << "*";
+			line << "*";
 		else if(it->second.num_args == 1)
-			os << "1 argument";
+			line << "1 argument";
 		else
-			os << it->second.num_args << " arguments";
-		os << endl
-		   << "        " << it->second.helptext << endl
-		   << endl;
+			line << it->second.num_args << " arguments";
+		line << endl;
+		this->write_line_with_indent(os, line.str(), indent);
+
+		/* print helptext about keyword */
+		indent += this->tab_width;
+		line.str("");
+		line << tab << tab << it->second.helptext << endl;
+		this->write_line_with_indent(os, line.str(), indent);
+		os << endl;
 	}
+}
+
+string reader_t::generate_tab() const
+{
+	string tab;
+	size_t i;
+
+	/* make the tab string */
+	for(i = 0; i < this->tab_width; i++)
+		tab += " ";
+	return tab;
+}
+			
+void reader_t::write_line_with_indent(std::ostream& os, 
+					const std::string& line,
+					size_t indent) const
+{
+	stringstream ss;
+	string to_print;
+	size_t i, p, newline;
+
+	/* first check for newline in this input */
+	newline = line.find_first_of('\n');
+	if(newline != string::npos && newline < line.size()-1)
+	{
+		/* there exists a newline in the middle, so we
+		 * write it as multiple lines */
+		to_print = line.substr(0, newline+1);
+		this->write_line_with_indent(os, to_print, indent);
+
+		/* write remainder */
+		for(i = 0; i < indent; i++)
+			ss << " ";
+		ss << line.substr(newline+1);
+		this->write_line_with_indent(os, ss.str(), indent);
+
+		/* we're done */
+		return;
+	}
+
+	/* check base case */
+	if(line.size() <= this->line_width)
+	{
+		/* just print it */
+		os << line;
+		return;
+	}
+
+	/* parse current line */
+	to_print = line.substr(0, this->line_width);
+
+	/* try to split the line at whitespace */
+	p = to_print.find_last_of(WHITESPACE);
+	if(p > indent)
+		to_print = line.substr(0, p+1);
+	else
+		p = this->line_width;
+
+	/* print the resulting first line */
+	os << to_print << endl;
+
+	/* indent the remainder */
+	for(i = 0; i < indent; i++)
+		ss << " ";
+	ss << line.substr(p+1);
+	this->write_line_with_indent(os, ss.str(), indent);
 }
 
 /*------------------------------------*/

@@ -117,8 +117,9 @@ int cmd_args_t::parse(int argc, char** argv)
 
 			/* check for its values */
 			for(j = 0; 
-				j < it->second.num_vals || it->second.num_vals == FLEX_ARGS; 
-				j++)
+				j < it->second.num_vals 
+				|| it->second.num_vals == FLEX_ARGS; 
+					j++)
 			{
 				/* verify we don't go out of bounds */
 				i++;
@@ -216,8 +217,8 @@ void cmd_args_t::print_usage(char* prog_name) const
 	stringstream line;
 	int i, indent;
 
-	/* set reasonable tab width */
-	tab = this->generate_tab(); /* tab width generated from defined settings */
+	/* tab width generated from defined settings */
+	tab = this->generate_tab(); 
 	
 	/* print program description if available */
 	if(!(this->program_description.empty()))

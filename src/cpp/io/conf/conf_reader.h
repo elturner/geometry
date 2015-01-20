@@ -101,6 +101,18 @@ namespace conf
 			 */
 			bool verbose;
 
+			/**
+			 * The tab width for the auto-generated
+			 * help text.
+			 */
+			size_t tab_width;
+
+			/**
+			 * The max characters-per-line for
+			 * the auto-generated help text.
+			 */
+			size_t line_width;
+
 			/*----------*/
 			/* contents */
 			/*----------*/
@@ -282,6 +294,18 @@ namespace conf
 			inline void set_verbose(bool v)
 			{ this->verbose = v; };
 
+			/**
+			 * Sets the tab width in the help text
+			 */
+			inline void set_tab_width(size_t t)
+			{ this->tab_width = t; };
+
+			/**
+			 * Sets the line width in the help text
+			 */
+			inline void set_line_width(size_t w)
+			{ this->line_width = w; };
+
 			/*-----*/
 			/* i/o */
 			/*-----*/
@@ -392,6 +416,23 @@ namespace conf
 			 */
 			inline const command_t& get(size_t i) const
 			{ return this->commands[i]; };
+
+		/* helper functions */
+		private:
+
+			/**
+			 * Generates the tab string using current tab width
+			 */
+			std::string generate_tab() const;
+
+			/**
+			 * Writes a specified line to the given output
+			 * stream with appropriate indenting, based
+			 * on the current settings of line_width
+			 */
+			void write_line_with_indent(std::ostream& os,
+					const std::string& line,
+					size_t indent) const;
 	};
 
 	/**
