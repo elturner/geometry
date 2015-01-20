@@ -589,6 +589,12 @@ namespace conf
 				return a;
 			};
 
+			/**
+			 *	Get a reference to the args as a vector 
+			 */
+			inline const std::vector<std::string>& get_args() const
+				{return this->args;};
+
 			/*-----------*/
 			/* debugging */
 			/*-----------*/
