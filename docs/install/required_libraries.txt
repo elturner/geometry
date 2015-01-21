@@ -31,5 +31,9 @@ GDAL (version 1.8 or later):
 	gdal-bin     --    "
 
 Lib TIFF (version 4 or later):
-	libgeotiff-dev
-	libtiff4-dev
+	libgeotiff-dev --  "
+	libtiff4-dev   --  "
+
+TeX Portable Graphic Format
+	-- Used by generate_tex program
+	-- sudo apt-get install pgf
