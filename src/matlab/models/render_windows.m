@@ -33,7 +33,7 @@ function [] = render_windows(windows)
 			% draw this window
 			plot(windows(wi).verts2d(i,[1 3]), ...
 				windows(wi).verts2d(i,[2 4]), ...
-				'c-', 'LineWidth', 3);
+				'r-', 'LineWidth', 3);
 		end
 	end
 end
