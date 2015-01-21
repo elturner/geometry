@@ -463,11 +463,6 @@ namespace conf
 		private:
 
 			/**
-			 * The keyword string that indicates this call
-			 */
-			std::string name;
-
-			/**
 			 * How many arguments to expect for a call to
 			 * this command keyword.
 			 *
@@ -476,6 +471,11 @@ namespace conf
 			 * taken.
 			 */
 			int num_args;
+
+			/**
+			 * The keyword string that indicates this call
+			 */
+			std::string name;
 
 			/**
 			 * Help text describing the purpose of the
@@ -493,7 +493,8 @@ namespace conf
 			/**
 			 * Makes empty keyword
 			 */
-			keyword_t() : name(""), num_args(-1), helptext("")
+			keyword_t() : num_args(VARARGS), 
+					name(""), helptext("")
 			{};
 
 			/**
@@ -505,7 +506,7 @@ namespace conf
 			 */
 			keyword_t(const std::string& n,
 				const std::string& h, int na)
-				: name(n), helptext(h), num_args(na)
+				: num_args(na), name(n), helptext(h)
 			{};
 
 			/*-----------*/

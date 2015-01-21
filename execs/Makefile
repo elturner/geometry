@@ -50,4 +50,5 @@ util_progs:
 	$(MAKE) -w -C wedge2xyz
 	$(MAKE) -w -C generate_msd
 	$(MAKE) -w -C transform_model
+	$(MAKE) -w -C filter_pointcloud
 	$(MAKE) -w -C surface_carve

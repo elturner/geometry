@@ -342,7 +342,8 @@ int reader_t::parse(std::istream& is)
 
 		/* check if it has the correct number of arguments */
 		if(it->second.num_args >= 0 
-				&& it->second.num_args != cmd.args.size())
+				&& it->second.num_args 
+					!= (int) cmd.args.size())
 		{
 			/* incorrect number of arguments */
 			if(this->verbose)

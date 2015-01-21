@@ -113,7 +113,7 @@ bool OBJReader::read_point(double& x, double& y, double& z,
 
 	/* attempt to read a line */
 	string line;
-	size_t pos;
+	size_t pos = 0;
 	while(_inStream.good() && line.empty())
 	{
 		getline(_inStream, line);
