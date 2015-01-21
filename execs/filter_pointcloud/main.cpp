@@ -192,7 +192,9 @@ void build_conf_reader(conf::reader_t& conf_reader)
 		"\t" CMD_FILTERALL ", " CMD_FILTERVALID ", or " CMD_FILTERINVALID "\n"
 		"\n"
 		"Points are flagged as invalid if they have been effected by a "
-		"partitioning operation.");
+		"partitioning or decimation operation.  They are not actually "
+		"removed from the filtering pipeline until a " CMD_KILL " command "
+		"is issued.");
 	conf_reader.add_keyword(CMD_FLIPVALID,
 		"Usage: " CMD_FLIPVALID " [<OPERATE_ON>]\n"
 		"\n"
@@ -208,7 +210,12 @@ void build_conf_reader(conf::reader_t& conf_reader)
 		"The rotation can be specified as either:\n" 
 		"\t3 element Euler angle set in degrees : roll pitch yaw\n" 
 		"\t4 element quaternion in order : w x y z\n"
-		"\t9 element rotation matrix in row major order",
+		"\t9 element rotation matrix in row major order\n"
+		"\n"
+		"The Euler angles are specified in 3-2-1 axis ordering. This means "
+		"that a rotation matrix is specified as R = Rz*Ry*Rx where Rx is a "
+		"rotation about the x axis, Ry is a rotation about the y axis, and "
+		"Rz is a rotation about the z axis.",
 		conf::VARARGS);
 	conf_reader.add_keyword(CMD_SCALE,
 		"Usage: " CMD_SCALE " [<OPERATE_ON>] <SCALE>\n"
@@ -362,7 +369,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			if(vals.size() == 3)
@@ -405,7 +418,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -438,7 +457,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -472,7 +497,14 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			{
 				unsigned int v;
 				stringstream ss(args[j]);
-				ss >> v; vals[j] = v;
+				if(!(ss >> v))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				} 
+				vals[j] = v;
 			}
 
 			/* create the correct filter */
@@ -505,7 +537,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -544,7 +582,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -579,7 +623,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -605,7 +655,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
@@ -632,7 +688,13 @@ int convert_to_filters(conf::reader_t& conf_reader,
 			for(size_t j = 0; j < args.size(); j++)
 			{
 				stringstream ss(args[j]);
-				ss >> vals[j];
+				if(!(ss >> vals[j]))
+				{
+					cerr << "Error at Command #" << i << " : Parameter #"
+						 << j << " : Can not convert " << args[j] << " to "
+						 << "numeric." << endl;
+					return -3;
+				}
 			}
 
 			/* create the correct filter */
