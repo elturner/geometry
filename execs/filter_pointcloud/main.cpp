@@ -69,7 +69,12 @@ int main(int argc, char * argv[])
 		"a full list of commands.");
 	parser.add(FLAG_INPUT,
 		"The list of input files that will be operated on. This can any number "
-		"of files.",
+		"of files. The current version of the code supports:\n"
+		"\t"
+		#ifdef WITH_LAS_SUPPORT
+		".las, .laz, "
+		#endif
+		".xyz, .obj, and .pts",
 		true,
 		cmd_args_t::FLEX_ARGS);
 	parser.add(FLAG_SCRIPT,
