@@ -54,7 +54,10 @@ int align_path_run_settings_t::parse(int argc, char** argv)
 
 	/* populate args with what we expect on the command-line */
 	tic(clk);
-	args.set_program_description("This program reads in a 3D path "
+	args.set_program_description("NOTE: THIS PROGRAM IS DEPRECATED\n"
+			"\tPlease use align_path found in the localization "
+			"repo\n\n"
+			"This program reads in a 3D path "
 			"file that can be aligned to any arbitrary "
 			"coordinate system (z+ is assumed to be up).  The "
 			"program will determine the direction of north, "
