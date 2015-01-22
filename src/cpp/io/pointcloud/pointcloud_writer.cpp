@@ -131,35 +131,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	this->camera_time_buffer_range = timebuf_range; /* units: seconds */
 	this->camera_time_buffer_dt = timebuf_dt; /* units: seconds */
 
-	/* create the point cloud file writer */
-	p = pcfile.find_last_of('.');
-	if(p == string::npos)
-		file_ext = "";
-	else
-		file_ext = pcfile.substr(p+1);
-
 	/* create the correct version */
-	if(file_ext.compare("xyz") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::XYZ);
-	else if(file_ext.compare("pts") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::PTS);
-	else if(file_ext.compare("txt") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::XYZ);
-	else if(file_ext.compare("obj") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::OBJ);
-
-#ifdef WITH_LAS_SUPPORT
-	else if(file_ext.compare("las") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAS);
-	else if(file_ext.compare("laz") == 0)
-		this->writerObj = PointCloudWriter::create(PointCloudWriter::LAZ);
-#endif
-	
-	else
-	{
-		cerr << "Error! Unknown output file extension : " << file_ext << endl;
-		return -6;
-	}
+	this->writerObj = PointCloudWriter::create(pcfile);
 
 	/* Open the file */
 	if(!this->writerObj.open(pcfile))
