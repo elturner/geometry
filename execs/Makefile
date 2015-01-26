@@ -29,6 +29,7 @@ procarve_progs:
 	@echo ""
 	@echo "Compiling procarve programs..."
 	@echo ""
+	$(MAKE) -w -C filter_urg_scans
 	$(MAKE) -w -C generate_noisypath
 	$(MAKE) -w -C wedge_generator
 	$(MAKE) -w -C scan_chunker
@@ -44,7 +45,7 @@ util_progs:
 	@echo ""
 	@echo "Compiling utility programs..."
 	@echo ""
-	$(MAKE) -w -C align_path
+	#$(MAKE) -w -C align_path  # deprecated, use localization repo
 	$(MAKE) -w -C generate_tex
 	#$(MAKE) -w -C simplify_fp
 	$(MAKE) -w -C wedge2xyz

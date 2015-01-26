@@ -1,0 +1,110 @@
+-------------------------------------------------------
+File format for Filtered Synchronized Scan (.fss) files
+-------------------------------------------------------
+
+Written by Eric Turner <elturner@eecs.berkeley.edu>
+on January 28, 2014
+
+------
+About:
+------
+
+This format specifies the scan data from laser, time-of-flight, or depth sensors after it has been time synchronized and statistically analyzed.
+
+All values in this file are in SENSOR COORDINATES, and are independent of any localization or extrinsic calibration values.
+
+This file format can be in binary or ascii, but it is recommendend to use binary for precision and space-efficiency reasons.  The header of the file is always in ascii.
+
+--------------
+Header Format:
+--------------
+
+The header block of the file is denoted in ASCII.  The first line is always a magic number string of 'fss' so that the file format is easily recognized.  The last line of the header is always 'end_header'.  All lines in between are formatted as space-separated strings formatted as:
+
+	<tag> <value1> <value2> ...
+
+The tag-lines in the header can appear in any order, but some tags are required for a valid .fss file.  The body of the file begins immediately after the new-line character at the end of 'end_header'.
+
+These are the required header tags:
+
+	version <float>		:	File format version number
+
+	format <string>		:	File body format.  Allowable
+					values are "ascii", "little_endian",
+					or "big_endian"
+
+	scanner_name <string>	:	Name of the scanner that produced
+					this data. This name should match
+					what is used in the configuration
+					files produced by each dataset.
+
+	num_scans <uint>	:	Number of scan frames contained
+					in this file.  Each scan frame
+					contains the same number of points
+					and a timestamp in the system-synced
+					clock.
+
+	num_points_per_scan <uint>
+				:	Number of points per scan frame.
+					Each point contains the geometric
+					information, color information, and
+					statistical metadata.
+
+	units <string>		:	The units used to represent the
+					points.  Valid options are:
+					"millimeters", "centimeters",
+					"meters", "kilometers", "inches",
+					"feet", "yards", "furlongs", "miles"
+
+and the following optional tags:
+
+	scanner_type <string>	:	The type of sensor used (e.g.
+					"tof_camera" or "urg")
+
+---------------
+Example Header:
+---------------
+
+fss
+version 1.0
+format ascii
+scanner_name D-Imager
+scanner_type tof_camera
+units meters
+num_scans 1000
+num_points_per_scan 14200
+end_header
+
+-----------------
+File Body Format:
+-----------------
+
+The body of this file is presented as a list of scan blocks.  Each block represents one scan frame.  A block consists of the following items:
+
+	timestamp	(quantity: 1)
+	list of points	(quantity: num_points_per_scan)
+
+Each point in the list has the following fields:
+
+	x (x-coordinate of point position) 
+	y (y-coordinate of point position)
+	z (z-coordinate of point position)
+	intensity (greyscale intensity value)
+	bias (bias of range measurement in direction of scan)
+	stddev (std. dev. of range measurement in direction of scan)
+	width (lateral uncertainty in units of length)
+
+If the format is ascii, then all values are seperated by whitespace (either spaces or new-lines).
+
+If the format is in binary, then the values take up the following sizes:
+
+Value			Format			Size
+-----			----			----
+timestamp		double			8 bytes
+x			double			8 bytes
+y			double			8 bytes
+z			double			8 bytes
+intensity		int			4 bytes
+bias			double			8 bytes
+stddev			double			8 bytes
+width			double			8 bytes

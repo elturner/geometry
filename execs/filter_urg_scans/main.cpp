@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
 	/* give a basic description of this code */
 	args.set_program_description("This program will convert raw "
-		" URG scan files (.dat) into the filtered file format "
+		"URG scan files (.dat) into the filtered file format "
 		"(.fss) for use in statistical processing.");
 
 	/* as input, we require a .dat file (urg scans), and a

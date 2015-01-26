@@ -50,6 +50,15 @@ def get_timesync_xml(dataset_dir):
 #--------------- Sensor-specific files ------------------------
 
 ##
+# Returns the location of the .fss file generated from the given
+# range sensor .dat file
+#
+def get_fss_file(dat_file):
+	name, ext = os.path.splitext(dat_file)
+	fss_file = name + ".fss"
+	return fss_file
+
+##
 # Returns the expected location of the .fss files in this dataset as a list
 #
 # Note:  this does not include d-imager-generated fss files, but only those
