@@ -49,13 +49,33 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
+	/* sort the planar regions into representative floors, walls, 
+	 * and ceilings */
+	ret = process.identify_surfaces(args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to identify floors, walls, and ceilings" 
+		     << endl;
+		return 3;
+	}
+
+	/* estimate how many levels were scanned, and where to split them */
+	ret = process.compute_level_splits(args);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to compute level splits" << endl;
+		return 4;
+	}
+
 	/* compute the wall samples from the discovered planar regions */
 	ret = process.compute_wall_samples(args);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to compute wall samples" << endl;
-		return 3;
+		return 5;
 	}
 
 	/* add pose information to the wall samples */
@@ -64,7 +84,7 @@ int main(int argc, char** argv)
 	{
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to compute pose indices" << endl;
-		return 4;
+		return 6;
 	}
 
 	/* export the samples */
@@ -73,7 +93,7 @@ int main(int argc, char** argv)
 	{
 		cerr << "[main]\tError " << ret << ": "
 		     << "Unable to export data." << endl;
-		return 5;
+		return 7;
 	}
 
 	/* success */

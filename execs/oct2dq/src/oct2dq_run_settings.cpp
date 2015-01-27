@@ -37,15 +37,16 @@ using namespace std;
 
 /* the xml parameters to look for */
 
-#define XML_COALESCE_DISTTHRESH  "oct2dq_coalesce_distthresh"
-#define XML_COALESCE_PLANETHRESH "oct2dq_coalesce_planethresh"
-#define XML_USE_ISOSURFACE_POS   "oct2dq_use_isosurface_pos"
-#define XML_VERTICALITYTHRESH    "oct2dq_verticalitythresh"
-#define XML_SURFACEAREATHRESH    "oct2dq_surfaceareathresh"
-#define XML_WALLHEIGHTTHRESH     "oct2dq_wallheightthresh"
-#define XML_MINROOMSIZE          "oct2dq_minroomsize"
-#define XML_CHOICERATIOTHRESH    "oct2dq_choiceratiothresh"
-#define XML_DQ_RESOLUTION        "oct2dq_dq_resolution"
+#define XML_COALESCE_DISTTHRESH      "oct2dq_coalesce_distthresh"
+#define XML_COALESCE_PLANETHRESH     "oct2dq_coalesce_planethresh"
+#define XML_USE_ISOSURFACE_POS       "oct2dq_use_isosurface_pos"
+#define XML_VERTICALITYTHRESH        "oct2dq_verticalitythresh"
+#define XML_SURFACEAREATHRESH        "oct2dq_surfaceareathresh"
+#define XML_FLOORCEILSURFAREATHRESH  "oct2dq_floorceilsurfareathresh"
+#define XML_WALLHEIGHTTHRESH         "oct2dq_wallheightthresh"
+#define XML_MINROOMSIZE              "oct2dq_minroomsize"
+#define XML_CHOICERATIOTHRESH        "oct2dq_choiceratiothresh"
+#define XML_DQ_RESOLUTION            "oct2dq_dq_resolution"
 
 /* function implementations */
 		
@@ -58,15 +59,16 @@ oct2dq_run_settings_t::oct2dq_run_settings_t()
 	this->fssfiles.clear(); /* input scan files */
 
 	/* set default parameter values */
-	this->coalesce_distthresh  = 2.0;
-	this->coalesce_planethresh = 0.5;
-	this->use_isosurface_pos   = false;
-	this->verticalitythresh    = 0.08;
-	this->surfaceareathresh    = 1.0;
-	this->wallheightthresh     = 2.5;
-	this->minroomsize          = 1.5;
-	this->choiceratiothresh    = 0.1;
-	this->dq_resolution        = -1.0;
+	this->coalesce_distthresh     = 2.0;
+	this->coalesce_planethresh    = 0.5;
+	this->use_isosurface_pos      = false;
+	this->verticalitythresh       = 0.08;
+	this->surfaceareathresh       = 1.0;
+	this->wallheightthresh        = 2.5;
+	this->floorceilsurfareathresh = 2.0;
+	this->minroomsize             = 1.5;
+	this->choiceratiothresh       = 0.1;
+	this->dq_resolution           = -1.0;
 }
 
 int oct2dq_run_settings_t::parse(int argc, char** argv)
@@ -196,6 +198,9 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_WALLHEIGHTTHRESH))
 		this->wallheightthresh
 			= settings.getAsDouble(XML_WALLHEIGHTTHRESH);
+	if(settings.is_prop(XML_FLOORCEILSURFAREATHRESH))
+		this->floorceilsurfareathresh
+			= settings.getAsDouble(XML_FLOORCEILSURFAREATHRESH);
 	if(settings.is_prop(XML_MINROOMSIZE))
 		this->minroomsize
 			= settings.getAsDouble(XML_MINROOMSIZE);

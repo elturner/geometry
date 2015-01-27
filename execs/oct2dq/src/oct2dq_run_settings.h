@@ -92,7 +92,8 @@ class oct2dq_run_settings_t
 		 *
 		 * abs(surface_normal.dot(<0,0,1>)) < verticalitythresh
 		 *
-		 * Just for reference, here's a few examples:
+		 * NOTE:  this same threshold is used for determining
+		 * if planar regions are horizontal, as well.
 		 */
 		double verticalitythresh;
 
@@ -102,6 +103,10 @@ class oct2dq_run_settings_t
 		 *
 		 * Only regions that have at least this much surface
 		 * area are considered to donate wall samples.
+		 *
+		 * NOTE:  This threshold is only used for vertical
+		 * surfaces.  A separate threshold is used for
+		 * horizontal surfaces.
 		 *
 		 * units: meters squared
 		 */
@@ -118,6 +123,21 @@ class oct2dq_run_settings_t
 		 * units: meters
 		 */
 		double wallheightthresh;
+
+		/**
+		 * Specifies the surface area threshold to use
+		 * to filter regions for candidacy as floors or ceilings.
+		 *
+		 * Only regions that have this much surface area are
+		 * considered to be possible floor or ceiling areas.
+		 *
+		 * NOTE:  this threshold is only used for horizontal
+		 * surfaces.  A separate threshold is used for vertical
+		 * surfaces.
+		 *
+		 * units:  meters squared
+		 */
+		double floorceilsurfareathresh;
 
 		/**
 		 * Minimum room feature length

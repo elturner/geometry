@@ -15,6 +15,7 @@
 
 #include "oct2dq_run_settings.h"
 #include "wall_region_info.h"
+#include "horizontal_region_info.h"
 #include <geometry/octree/octree.h>
 #include <geometry/quadtree/quadtree.h>
 #include <geometry/quadtree/quaddata.h>
@@ -47,6 +48,18 @@ class process_t
 		 * that were selected to be representative of walls.
 		 */
 		std::vector<wall_region_info_t> walls;
+
+		/**
+		 * The following list represents the details on regions
+		 * that were selected to be representative of floors.
+		 */
+		std::vector<horizontal_region_info_t> floors;
+
+		/**
+		 * The following list represents the details on regions
+		 * that were selected to be representative of ceilings.
+		 */
+		std::vector<horizontal_region_info_t> ceilings;
 
 		/**
 		 * This represents the generated wall samples
@@ -82,6 +95,37 @@ class process_t
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int init(oct2dq_run_settings_t& args);
+
+		/**
+		 * Analyzes the planar regions to find representative
+		 * floors, walls, and ceilings.
+		 *
+		 * This step takes the planar regions formed by calling
+		 * init(), and identifies floors, walls, and ceilings.
+		 * This step is necessary before calling
+		 * compute_wall_samples(), which uses the found surfaces
+		 * to form 2D wall sampling.
+		 *
+		 * @param args   The parsed program arguments
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int identify_surfaces(const oct2dq_run_settings_t& args);
+
+		/**
+		 * Uses the identified surfaces computed in 
+		 * identify_surfaces() to estimate the bounds on
+		 * each level scanned.
+		 *
+		 * This computation will estimate how many levels of a 
+		 * building were scanned, and produce a partitioning
+		 * of these levels.
+		 *
+		 * @param args    The parsed program arguments
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int compute_level_splits(const oct2dq_run_settings_t& args);
 
 		/**
 		 * Computes the locations and strengths of wall samples

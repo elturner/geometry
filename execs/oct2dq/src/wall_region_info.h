@@ -59,6 +59,10 @@ class wall_region_info_t
 	/* functions */
 	public:
 
+		/*----------------*/
+		/* initialization */
+		/*----------------*/
+
 		/**
 		 * Populates the information in this info struct
 		 *
@@ -66,6 +70,15 @@ class wall_region_info_t
 		 * @param reg   The region to analyze
 		 */
 		void init(double s, const planar_region_t& reg);
+
+		/*--------*/
+		/* update */
+		/*--------*/
+
+		/**
+		 * Updates the bounding box information of this
+		 * wall by TODO LEFT OFF HERE
+		 */
 };
 
 #endif

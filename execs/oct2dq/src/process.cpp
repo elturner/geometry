@@ -1,6 +1,7 @@
 #include "process.h"
 #include "oct2dq_run_settings.h"
 #include "wall_region_info.h"
+#include "horizontal_region_info.h"
 #include <io/data/fss/fss_io.h>
 #include <geometry/shapes/shape_wrapper.h>
 #include <geometry/shapes/linesegment.h>
@@ -121,31 +122,24 @@ int process_t::init(oct2dq_run_settings_t& args)
 	return 0;
 }
 		
-int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
+int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 {
 	map<node_face_t, size_t> wall_regions;
+	map<node_face_t, size_t> floor_regions;
+	map<node_face_t, size_t> ceiling_regions;
 	map<node_face_t, size_t>::iterator wit, w1it, w2it;
+	horizontal_region_info_t hori_info;
 	wall_region_info_t wall_info;
 	regionmap_t::const_iterator it;
 	faceset_t::const_iterator fit, n1it, n2it;
-	octnode_t* leaf;
-	quaddata_t* data;
-	pair<nodefacemap_t::const_iterator, 
-			nodefacemap_t::const_iterator> range;
-	Vector3d p;
-	Vector2d p2d, n2d;
-	double coord_a, coord_b, height;
 	progress_bar_t progbar;
 	tictoc_t clk;
-	size_t i, wall_index;
+	double height;
+	size_t i;
 
 	/* initialize */
 	tic(clk);
-	p2d << this->tree.get_root()->center(0),
-	       this->tree.get_root()->center(1);
-	this->sampling.set(args.dq_resolution, p2d,
-			this->tree.get_root()->halfwidth);
-	progbar.set_name("Wall Sampling");
+	progbar.set_name("Finding walls");
 	i = 0;
 
 	/* iterate over regions, computing strength for wall samples */
@@ -185,9 +179,14 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 	 * 	- are both wall regions
 	 * 	- AND are facing opposing directions
 	 */
+	progbar.set_name("Finding small walls");
+	i = 0;
 	for(it = this->region_graph.begin();
 			it != this->region_graph.end(); it++)
 	{
+		/* update the progress bar */
+		progbar.update(i++, this->region_graph.size());
+
 		/* check if this is already a wall region */
 		if(wall_regions.count(it->first) > 0)
 			continue; /* don't need to do anything */
@@ -251,12 +250,100 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 		}
 	}
 
+	/* now that we have the set of regions that are estimated to
+	 * be walls, we want to get better estimates for their vertical
+	 * extent.
+	 *
+	 * To do this, we look for nearly-horizontal neighboring regions
+	 * to each wall, and choose the largest ones as the neighboring
+	 * floor and ceiling, which define the min and max elevation of
+	 * the wall.
+	 *
+	 * We also want to keep track of these horizontal regions for
+	 * the purposes of determine multi-level splits
+	 */
+	progbar.set_name("Finding floors/ceilings");
+	i = 0;
+	for(it = this->region_graph.begin();
+			it != this->region_graph.end(); it++)
+	{
+		/* update progress bar */
+		progbar.update(i++, this->region_graph.size());
+
+		/* check if this is already a wall region */
+		if(wall_regions.count(it->first) > 0)
+			continue; /* don't need to do anything */
+
+		/* get info about this region, to see
+		 * if it would be a good fit for horizontal
+		 * regions. */
+		if(!(hori_info.init(it->second.get_region(), args)))
+			continue; /* not a good fit */
+
+		/* insert this info into appropriate structures,
+		 * based on whether it is a floor or ceiling. */
+		if(hori_info.upnormal)
+		{
+			/* floor */
+			this->floors.push_back(hori_info);
+			floor_regions.insert(pair<node_face_t, size_t>
+				(it->first, this->floors.size()-1));
+		}
+		else
+		{
+			/* ceiling */
+			this->ceilings.push_back(hori_info);
+			ceiling_regions.insert(pair<node_face_t, size_t>
+				(it->first, this->ceilings.size()-1));
+		}
+	}
+
+	/* use the floor and ceiling positions to adjust the neighboring
+	 * wall heights */
+	// TODO
+
+	/* success */
+	progbar.clear();
+	toc(clk, "Finding surfaces");
+	return 0;
+}
+		
+int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
+{
+	// TODO implement me
+	return 0;
+}
+
+int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
+{
+	pair<nodefacemap_t::const_iterator, 
+			nodefacemap_t::const_iterator> range;
+	Vector2d p2d, n2d;
+	octnode_t* leaf;
+	quaddata_t* data;
+	Vector3d p;
+	progress_bar_t progbar;
+	tictoc_t clk;
+	double coord_a, coord_b;
+	size_t wall_index, num_walls;
+
+	/* init */
+	tic(clk);
+	progbar.set_name("Wall sampling");
+
+	/* initialize the quadtree wall sampling */
+	p2d << this->tree.get_root()->center(0),
+	       this->tree.get_root()->center(1);
+	this->sampling.set(args.dq_resolution, p2d,
+			this->tree.get_root()->halfwidth);
+	
 	/* iterate over all the regions we determined to be walls,
 	 * and actually compute the wall samples to export */
-	for(wit = wall_regions.begin(); wit != wall_regions.end(); wit++)
+	num_walls = this->walls.size();
+	for(wall_index = 0; wall_index < num_walls; wall_index++)
 	{
-		/* get the wall to insert */
-		wall_index = wit->second;
+		/* update the progress bar */
+		progbar.update(wall_index, num_walls);
 
 		/* iterate over the plane of the region, adding
 		 * samples taken uniformly.
@@ -353,7 +440,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 	
 	/* success */
 	progbar.clear();
-	toc(clk, "Computing wall samples");
+	toc(clk, "Wall sampling");
 	return 0;
 }
 		
