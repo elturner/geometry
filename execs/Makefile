@@ -53,3 +53,7 @@ util_progs:
 	$(MAKE) -w -C transform_model
 	$(MAKE) -w -C filter_pointcloud
 	$(MAKE) -w -C surface_carve
+
+# todo searcher
+todo:
+	@grep -n --color=auto -R --exclude=Makefile --exclude-dir=boost --exclude-dir=pint "TODO" ../src/ .
