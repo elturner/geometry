@@ -375,9 +375,6 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 				}
 			}
 		}
-		
-		// TODO DEBUG print new walls
-		this->walls[wit->second].writeobj(cerr, 0, 0, 255);
 	}
 
 	/* success */
