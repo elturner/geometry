@@ -121,7 +121,7 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	/* import covariance information about the 6-dof pose,
 	 * and store in both the input covariance matrices */
 	input_sensor_cov = sensor_cov_t::Zero();
-	// TODO import pose uncertainties
+	// LEFT UNDONE import pose uncertainties
 	input_sensor_cov(6,6) = this->ts_std * this->ts_std; /* variance */
 	
 	/* compute the roll, pitch, and yaw for this pose */
@@ -209,8 +209,8 @@ int scan_model_t::set_frame(double time, const system_path_t& path)
 	 * the timestamp error and the output of the sensor position's
 	 * distribution */
 	this->input_scanpoint_cov.block(3,3,3,3) = this->output_sensor_cov;
-	// TODO how does r,p,y correlate with sensor position */
-	// TODO how does timestamp correlate with sensor position */
+	// LEFT UNDONE how does r,p,y correlate with sensor position */
+	// LEFT UNDONE does timestamp correlate with sensor position */
 
 	/* update the input covariance matrix for the scan point
 	 * with the uncertainty with respect to the timestamp.

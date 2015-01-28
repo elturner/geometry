@@ -102,7 +102,7 @@ int random_carver_t::carve(const string& fssfile)
 	/* iterate through scans, incorporating them into the octree */
 	tic(clk);
 	progbar.set_name(infile.scanner_name());
-	n = 10; // TODO infile.num_frames();
+	n = 10; // LEFT UNDONE infile.num_frames();
 	for(i = 0; i < n; i++)
 	{
 		/* parse the current frame and update user on progress */
@@ -130,7 +130,7 @@ int random_carver_t::carve(const string& fssfile)
 			/* get statistics of j'th point */
 			model.set_scan(frame.points[j]);
 
-			// TODO planarity/edge info about scan?
+			// LEFT UNDONE planarity/edge info about scan?
 
 			/* generate samples for this scan point */
 			ret = this->carve_current_point();

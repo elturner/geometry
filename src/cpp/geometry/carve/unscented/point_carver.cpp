@@ -88,7 +88,7 @@ int point_carver_t::update_tree() const
 		 * which is the ratio of samples that intersected it
 		 * to the total number of samples */
 		prob = ((double) it->second) / this->num_samples;
-		// TODO planarity and corner coefficient estimates
+		// LEFT UNDONE planarity and corner coefficient estimates
 
 		/* check if this node already has data */
 		if(it->first->data != NULL)
@@ -104,7 +104,7 @@ int point_carver_t::update_tree() const
 		}
 	}
 
-	// TODO tree simplification?
+	// LEFT UNDONE tree simplification?
 	
 	/* success */
 	return 0;
