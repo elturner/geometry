@@ -15,6 +15,7 @@
 
 #include <geometry/shapes/plane.h>
 #include <mesh/surface/planar_region.h>
+#include <iostream>
 #include <Eigen/Dense>
 
 /**
@@ -77,8 +78,47 @@ class wall_region_info_t
 
 		/**
 		 * Updates the bounding box information of this
-		 * wall by TODO LEFT OFF HERE
+		 * wall by specifying a new maximum z-elevation.
+		 *
+		 * Given the new value of the ceiling height
+		 * associated with this wall, will adjust the
+		 * stored bounding box to this new height.
+		 *
+		 * @param zmax
 		 */
+		void update_zmax(double zmax);
+
+		/**
+		 * Updates the bounding box information of this
+		 * wall by specifying a new minimum z-elevation.
+		 *
+		 * Given a new value of the floor height associated
+		 * with this wall, will adjust the stored
+		 * bounding box to this new height.
+		 *
+		 * @param zmin
+		 */
+		void update_zmin(double zmin);
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Writes the bounding box of this region
+		 * to the specified Wavefront OBJ output stream
+		 *
+		 * Given the output stream for a .obj file, will
+		 * write the geometry of this region's aligned
+		 * bounding box.
+		 *
+		 * @param os  The output stream to write to
+		 * @param r   The red color to use
+		 * @param g   The green color to use
+		 * @param b   The blue color to use
+		 */
+		void writeobj(std::ostream& os, 
+				int r=255, int g=255, int b=255) const;
 };
 
 #endif

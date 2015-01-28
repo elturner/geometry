@@ -29,7 +29,6 @@ bool horizontal_region_info_t::init(const planar_region_t& reg,
 	/* get the normal vector's components */
 	nx      = reg.get_plane().normal(0);
 	ny      = reg.get_plane().normal(1);
-	this->z = reg.get_plane().normal(2);
 
 	/* get the magnitude of the projection of the
 	 * normal onto the xy-plane */
@@ -56,7 +55,10 @@ bool horizontal_region_info_t::init(const planar_region_t& reg,
 	 * region.  Now we check whether the normal
 	 * is facing up or down, which helps us determine
 	 * if this region is a floor or a ceiling. */
-	this->upnormal = (this->z > 0);
+	this->upnormal = (reg.get_plane().normal(2) > 0);
+	
+	/* record the elevation of this region */
+	this->z = reg.get_plane().point(2);
 
 	/* we have successfully found a large horizontal region */
 	return true;

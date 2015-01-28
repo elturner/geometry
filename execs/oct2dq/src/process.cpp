@@ -128,6 +128,7 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 	map<node_face_t, size_t> floor_regions;
 	map<node_face_t, size_t> ceiling_regions;
 	map<node_face_t, size_t>::iterator wit, w1it, w2it;
+	map<node_face_t, size_t>::iterator floor_it, ceil_it;
 	horizontal_region_info_t hori_info;
 	wall_region_info_t wall_info;
 	regionmap_t::const_iterator it;
@@ -136,6 +137,7 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 	tictoc_t clk;
 	double height;
 	size_t i;
+	int best_floor_ind, best_ceil_ind;
 
 	/* initialize */
 	tic(clk);
@@ -262,7 +264,7 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 	 * We also want to keep track of these horizontal regions for
 	 * the purposes of determine multi-level splits
 	 */
-	progbar.set_name("Finding floors/ceilings");
+	progbar.set_name("Finding floors/ceils");
 	i = 0;
 	for(it = this->region_graph.begin();
 			it != this->region_graph.end(); it++)
@@ -300,7 +302,83 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 
 	/* use the floor and ceiling positions to adjust the neighboring
 	 * wall heights */
-	// TODO
+	progbar.set_name("Refining wall heights");
+	i = 0;
+	for(wit = wall_regions.begin(); wit != wall_regions.end(); wit++)
+	{
+		/* update progress bar */
+		progbar.update(i++, wall_regions.size());
+	
+		/* get the original planar regions for each wall */
+		it = this->region_graph.lookup_face(wit->first);
+		if(it == this->region_graph.end())
+		{
+			progbar.clear();
+			cerr << "[identify_surfaces]\tError! Inconsistent "
+			     << "wall region iterators (this means the "
+			     << "code is probably broken)" << endl;
+			return -1;
+		}
+
+		/* Go through the neighboring regions of this planar 
+		 * region, and check if any of the neighbors are floors
+		 * or ceilings.  If so, then update the heights of the
+		 * wall based on the largest neighboring floor and ceiling.
+		 */
+		best_floor_ind = best_ceil_ind = -1;
+		for(n1it = it->second.begin_neighs();
+				n1it != it->second.end_neighs(); n1it++)
+		{
+			/* is this neighboring region (represented by
+			 * the seed face) a floor? */
+			floor_it = floor_regions.find(*n1it);
+			if(floor_it != floor_regions.end())
+			{
+				/* update the floor height of this wall */
+				if(best_floor_ind < 0 
+					|| this->floors[
+					best_floor_ind].surface_area
+					< this->floors[
+					floor_it->second].surface_area)
+				{
+					/* n1it points to a better, larger
+					 * floor for this wall, update the
+					 * bounds */
+					best_floor_ind = floor_it->second;
+					this->walls[wit->second
+						].update_zmin(
+						this->floors[
+						best_floor_ind].z);
+				}
+			}
+
+			/* is this neighboring region (represented by
+			 * the seed face) a ceiling? */
+			ceil_it = ceiling_regions.find(*n1it);
+			if(ceil_it != ceiling_regions.end())
+			{
+				/* update the ceiling height of this wall */
+				if(best_ceil_ind < 0
+					|| this->ceilings[
+					best_ceil_ind].surface_area
+					< this->ceilings[
+					ceil_it->second].surface_area)
+				{
+					/* nit points to a better, larger 
+					 * ceiling for this wall, update 
+					 * the bounds */
+					best_ceil_ind = ceil_it->second;
+					this->walls[wit->second
+						].update_zmax(
+						this->ceilings[
+						best_ceil_ind].z);
+				}
+			}
+		}
+		
+		// TODO DEBUG print new walls
+		this->walls[wit->second].writeobj(cerr, 0, 0, 255);
+	}
 
 	/* success */
 	progbar.clear();

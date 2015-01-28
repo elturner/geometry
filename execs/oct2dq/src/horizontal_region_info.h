@@ -88,7 +88,6 @@ class horizontal_region_info_t
 		 */
 		bool init(const planar_region_t& reg,
 			const oct2dq_run_settings_t& args);
-
 };
 
 #endif
