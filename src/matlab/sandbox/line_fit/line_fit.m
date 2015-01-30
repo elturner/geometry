@@ -62,6 +62,4 @@ function [line_models, P_line, P_corner] = line_fit(scan)
 		% update the list of free points
 		is_free(il) = false;
 	end
-
-	% TODO
 end

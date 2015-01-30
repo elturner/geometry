@@ -59,8 +59,7 @@ function ang = compute_compass_north(madfile, ic4file, timefile)
 	T_north = T_north / length(ic4_poses);
 	ang = atan2(T_north(2), T_north(1));
 
-
-	% TODO plot value
+	% plot value
 	render_path(poses);
 	plot([0 cos(ang)], [0 sin(ang)], 'r-');
 	plot(0,0,'bo');
