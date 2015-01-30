@@ -17,11 +17,11 @@ floorplan_progs:
 	@echo ""
 	@echo "Compiling floorplan programs..."
 	@echo ""
-	$(MAKE) -w -C pointcloud_generation
-	$(MAKE) -w -C partition_pointcloud_levels
-	$(MAKE) -w -C xyz2dq
-	$(MAKE) -w -C dq_floorplan
-	$(MAKE) -w -C fp2model
+	$(MAKE) -w -C pointcloud_generation $(CMD)
+	$(MAKE) -w -C partition_pointcloud_levels $(CMD)
+	$(MAKE) -w -C xyz2dq $(CMD)
+	$(MAKE) -w -C dq_floorplan $(CMD)
+	$(MAKE) -w -C fp2model $(CMD)
 
 # programs needed to generate carvings
 procarve_progs:
@@ -29,15 +29,15 @@ procarve_progs:
 	@echo ""
 	@echo "Compiling procarve programs..."
 	@echo ""
-	$(MAKE) -w -C filter_urg_scans
-	$(MAKE) -w -C generate_noisypath
-	$(MAKE) -w -C wedge_generator
-	$(MAKE) -w -C scan_chunker
-	$(MAKE) -w -C procarve
-	$(MAKE) -w -C oct2dq
-	$(MAKE) -w -C fp_optimizer
-	$(MAKE) -w -C merge_fp_oct
-	$(MAKE) -w -C octsurf
+	$(MAKE) -w -C filter_urg_scans $(CMD)
+	$(MAKE) -w -C generate_noisypath $(CMD)
+	$(MAKE) -w -C wedge_generator $(CMD)
+	$(MAKE) -w -C scan_chunker $(CMD)
+	$(MAKE) -w -C procarve $(CMD)
+	$(MAKE) -w -C oct2dq $(CMD)
+	$(MAKE) -w -C fp_optimizer $(CMD)
+	$(MAKE) -w -C merge_fp_oct $(CMD)
+	$(MAKE) -w -C octsurf $(CMD)
 
 # utility programs
 util_progs:
@@ -46,13 +46,13 @@ util_progs:
 	@echo "Compiling utility programs..."
 	@echo ""
 	#$(MAKE) -w -C align_path  # deprecated, use localization repo
-	$(MAKE) -w -C generate_tex
+	$(MAKE) -w -C generate_tex $(CMD)
 	#$(MAKE) -w -C simplify_fp
-	$(MAKE) -w -C wedge2xyz
-	$(MAKE) -w -C generate_msd
-	$(MAKE) -w -C transform_model
-	$(MAKE) -w -C filter_pointcloud
-	$(MAKE) -w -C surface_carve
+	$(MAKE) -w -C wedge2xyz $(CMD)
+	$(MAKE) -w -C generate_msd $(CMD)
+	$(MAKE) -w -C transform_model $(CMD)
+	$(MAKE) -w -C filter_pointcloud $(CMD)
+	$(MAKE) -w -C surface_carve $(CMD)
 
 # todo searcher
 todo:
