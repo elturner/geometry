@@ -70,7 +70,7 @@ class histogram_t
 		 *
 		 * @param r   The bin size of this histogram
 		 */
-		histogram_t() : hist(), res(r)
+		histogram_t(double r) : hist(), res(r)
 		{};
 
 		/**
@@ -139,7 +139,7 @@ class histogram_t
 		 */
 		inline double count(double v) const
 		{
-			std::map<int, double>::iterator it;
+			std::map<int, double>::const_iterator it;
 		
 			/* find value in histogram */
 			it = this->hist.find(this->get_index(v));
@@ -204,10 +204,8 @@ class histogram_t
 		 *                    vertically, false will plot the 
 		 *                    histogram horizontally. Default 
 		 *                    is false.
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int export_to_matlab(std::ostream& outfile, 
+		void export_to_matlab(std::ostream& outfile, 
 				bool vertical=false) const;
 
 	/* helper functions */

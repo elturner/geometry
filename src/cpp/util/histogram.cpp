@@ -85,7 +85,7 @@ double histogram_t::max() const
 {
 	map<int, double>::const_iterator it;
 	int max_i;
-	double max_c
+	double max_c;
 
 	/* iterate through elements */
 	max_c = 0;
@@ -105,7 +105,7 @@ double histogram_t::max() const
 void histogram_t::find_peaks(vector<double>& peaks, vector<double>& counts,
 						double min_buffer) const
 {
-	map<int, double>::const_iterator it;
+	map<int, double>::const_iterator it, nit;
 	vector<pair<int, double> > local_max;
 	bool is_local_max;
 	int i, bi, n;
@@ -144,8 +144,13 @@ void histogram_t::find_peaks(vector<double>& peaks, vector<double>& counts,
 			if(i == 0)
 				continue; 
 
+			/* get neighbor info */
+			nit = this->hist.find(it->first + i);
+			if(nit == this->hist.end())
+				continue; /* neighbor doesn't exist */
+
 			/* compare neighbor to current bin */
-			if(this->hist[it->first + i] > it->second)
+			if(nit->second > it->second)
 			{
 				is_local_max = false;
 				break;
@@ -168,13 +173,9 @@ void histogram_t::find_peaks(vector<double>& peaks, vector<double>& counts,
 	}
 }
 
-int histogram_t::export_to_matlab(ostream& outfile, bool vertical) const
+void histogram_t::export_to_matlab(ostream& outfile, bool vertical) const
 {
-	map<int, int>::iterator it;
-
-	/* check file for writing */
-	if(!(outfile.is_open()))
-		return -1;
+	map<int, double>::const_iterator it;
 
 	/* put comment at top of script */
 	outfile << ((char) 0x25) << " "
@@ -186,7 +187,7 @@ int histogram_t::export_to_matlab(ostream& outfile, bool vertical) const
 		<< "r represents the resolution of the bins" << endl
 		<< "r = " << this->res << ";" << endl << endl
 	        << ((char) 0x25) << " "
-		<< "N represents bin counts" << endl
+		<< "N represents bin counts/weights" << endl
 		<< "N = [";
 
 	/* write out bin counts */
@@ -241,7 +242,4 @@ int histogram_t::export_to_matlab(ostream& outfile, bool vertical) const
 	/* finish plotting */
 	outfile << "');" << endl
 		<< endl;
-
-	/* clean up */
-	return 0;
 }

@@ -16,6 +16,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/union_find.cpp \
 		$(SOURCEDIR)util/range_list.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
+		$(SOURCEDIR)util/histogram.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
@@ -61,6 +62,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/union_find.h \
 		$(SOURCEDIR)util/range_list.h \
 		$(SOURCEDIR)util/rotLib.h \
+		$(SOURCEDIR)util/histogram.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \
 		$(SOURCEDIR)config/imuProp.h \
