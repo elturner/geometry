@@ -1,0 +1,80 @@
+******************************************
+* Format Specification for .levels Files *
+******************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+February 2, 2015
+
+***********
+* Purpose *
+***********
+
+These files define the horizontal partitioning of a building environment
+into levels, or stories, based on floor and ceiling heights for each level.
+
+It is assume that each level of the building can be expressed as a range of
+elevations.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+All values are zero-indexed
+All values are stored in ASCII, whitespace delimited.
+Comments can be added with the "#" character
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of levels.
+
+The header contains the following:
+
+-------------------------------------------------------------------
+key          arguments            description
+-------------------------------------------------------------------
+levels       None.                A magic number.  
+                                  Must be at top of file
+
+version      Two unsigned ints    Major/minor format version
+
+num_levels   Unsigned int         Number of levels in file. Must be
+                                  strictly postiive.
+-------------------------------------------------------------------
+
+After the header is a list of levels and their attributes.  Each
+level consists of a single space-separated line in the file, 
+organized as follows: 
+
+-------------------------------------------------------------------
+value                arguments                   description
+-------------------------------------------------------------------
+level                <int> <double> <double>     A level: its index,
+                                                 its floor height, and
+						 its ceiling height.
+-------------------------------------------------------------------
+
+Levels are split at the halfway point between the lower level's ceiling
+and the upper level's floor
+
+************
+* Examples *
+************
+
+An example file:
+
+	# the header
+	levels
+	version 1 0
+	num_levels 3
+
+	# the list of levels
+	level 0 -3.1 -0.4
+	level 1 0.9 4.0
+	level 2 5.3 8.5
+
+This file contains three levels.
+
