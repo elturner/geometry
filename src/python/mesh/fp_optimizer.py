@@ -52,8 +52,7 @@ def run(dataset_dir):
 	# determine the expected location of necessary files from
 	# within the dataset
 	octfile = dataset_filepaths.get_octree(dataset_dir)
-#TODO	in_fpfiles = dataset_filepaths.get_all_floorplan_files(dataset_dir)
-        in_fpfiles = [dataset_filepaths.get_carving_fp_file(dataset_dir)]
+        in_fpfiles = dataset_filepaths.get_carving_fp_files(dataset_dir)
 	if in_fpfiles is None or len(in_fpfiles) == 0:
 		print "Error! Could not find any floorplan files to use!"
 		return -1
