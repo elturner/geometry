@@ -50,9 +50,22 @@ class oct2dq_run_settings_t
 		std::vector<std::string> fssfiles;
 
 		/**
-		 * Location of the output .dq file
+		 * Location of the output .dq files
+		 *
+		 * Note that this should be only a prefix for the files,
+		 * since multiple files may be written.
+		 *
+		 * So, for example, if the prefix given is:
+		 *
+		 * 	../foo/bar/dqfile_
+		 *
+		 * and the code writes three files, they will be:
+		 *
+		 * 	../foo/bar/dqfile_0.dq
+		 * 	../foo/bar/dqfile_1.dq
+		 * 	../foo/bar/dqfile_2.dq
 		 */
-		std::string dqfile;
+		std::string dqfile_prefix;
 
 		/**
 		 * Location of the (optional) output .levels file

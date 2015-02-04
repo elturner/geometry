@@ -64,8 +64,7 @@ def run(dataset_dir, madfile, debug=False):
     pathfile   = dataset_filepaths.get_noisypath_file(dataset_dir)
     octfile    = dataset_filepaths.get_octree(dataset_dir)
     levelsfile = dataset_filepaths.get_carving_levels_file(dataset_dir)
-    dqfile     = dataset_filepaths.get_carving_dq_file(dataset_dir)
-    fpfile     = dataset_filepaths.get_carving_fp_file(dataset_dir)
+    dqprefix   = dataset_filepaths.get_carving_dq_prefix(dataset_dir)
 
     # verify input is good
     if fssfiles is None:
@@ -74,19 +73,29 @@ def run(dataset_dir, madfile, debug=False):
 
     # prepare the command-line arguments for the oct2dq code and run it
     args = [OCT2DQ_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
-        pathfile, octfile, levelsfile, dqfile] + fssfiles
+        pathfile, octfile, levelsfile, '-o', dqprefix] + fssfiles
     ret = callproc(OCT2DQ_EXE, args, dataset_dir, debug)
     if ret != 0:
         print "oct2dq program returned error",ret
         return -2
+
+    # get the list of generated wall sampling (.dq) files
+    dqfiles = dataset_filepaths.get_carving_dq_files(dataset_dir)
     
-    # run the floorplan generation code
-    args = [FLOORPLAN_EXE, dqfile, os.path.abspath(madfile), config_xml, \
-            fpfile, '-s', '-1']
-    ret = callproc(FLOORPLAN_EXE, args, dataset_dir, debug)
-    if ret != 0:
-        print "floorplan_gen program returned error",ret
-	return -3
+    # run the floorplan generation code on each dq file
+    for dq in dqfiles:
+
+        # get path to corresponding output fp file
+        fpfile = dataset_filepaths.get_fp_file(dq)
+
+        # run the code
+        args = [FLOORPLAN_EXE, dq, os.path.abspath(madfile), \
+                config_xml, fpfile, '-s', '-1']
+        ret = callproc(FLOORPLAN_EXE, args, dataset_dir, debug)
+        if ret != 0:
+            print "floorplan_gen program returned error",ret
+            print "\tInput: %s" % dq
+	    return -3
 
     # success
     return 0

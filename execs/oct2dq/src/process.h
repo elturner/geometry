@@ -62,13 +62,34 @@ class process_t
 		std::vector<horizontal_region_info_t> ceilings;
 
 		/**
-		 * This represents the generated wall samples
+		 * The following list of z-elevations represents
+		 * the partitions between levels of the building.
 		 *
-		 * This structure contains the wall samples generated
+		 * There are ( 1 + level_splits.size() ) levels 
+		 * of the building, split by horizontal planes at the 
+		 * elevations listed here.
+		 *
+		 * So, if a z-value is between ls[0] and ls[1], then
+		 * it is in the 2nd level.  If its height is less than
+		 * ls[0], then it is in the first (lowest) level.
+		 *
+		 * units:  meters
+		 */
+		std::vector<double> level_splits;
+
+		/**
+		 * This represents the generated wall samples for each level
+		 *
+		 * This list contains the wall sampling generated for each
+		 * level of the scanned environment.  The list is length N,
+		 * where N is the number of levels discovered in the
+		 * environment.
+		 *
+		 * Each structure contains the wall samples generated
 		 * from the planar regions.  Points along each face
 		 * are added to the structure with varying weight.
 		 */
-		quadtree_t sampling;
+		std::vector<quadtree_t> sampling;
 
 		/**
 		 * The mapping between the generated wall samples
@@ -78,6 +99,9 @@ class process_t
 		 *
 		 * Each quaddata maps to the list of walls that
 		 * contributed to that data sample.
+		 *
+		 * This map contains samples across all levels in
+		 * the environment.
 		 */
 		std::map<quaddata_t*, std::set<size_t> > ws_to_walls;
 
@@ -218,6 +242,22 @@ class process_t
 		 * @return    Returns true iff the wall samples share a wall
 		 */
 		bool shares_a_wall(quaddata_t* a, quaddata_t* b) const;
+
+		/**
+		 * Returns the level index of the building level
+		 * that contains the specified elevation.
+		 *
+		 * Will search through the building level splits to
+		 * find the level index corresponding to the specified
+		 * z-value.
+		 *
+		 * z is assumed to be in units of meters.
+		 *
+		 * @param z   The elevation to check
+		 *
+		 * @return    The level index of the specified elevation.
+		 */
+		size_t level_of_elevation(double z) const;
 };
 
 #endif

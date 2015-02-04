@@ -3,6 +3,7 @@
 #include "wall_region_info.h"
 #include "horizontal_region_info.h"
 #include <io/data/fss/fss_io.h>
+#include <io/levels/building_levels_io.h>
 #include <geometry/shapes/shape_wrapper.h>
 #include <geometry/shapes/linesegment.h>
 #include <geometry/shapes/linesegment_2d.h>
@@ -17,6 +18,7 @@
 #include <mesh/surface/planar_region_graph.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
+#include <util/histogram.h>
 #include <util/tictoc.h>
 #include <algorithm>
 #include <vector>
@@ -57,7 +59,8 @@ int process_t::init(oct2dq_run_settings_t& args)
 	if(ret)
 	{
 		/* report error */
-		cerr << "[process_t::init]\tUnable to read in octree file: "
+		cerr << "[process_t::init]\t"
+		     << "Unable to read in octree file: "
 		     << args.octfile << endl;
 		return PROPEGATE_ERROR(-3, ret);
 	}
@@ -153,14 +156,16 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 
 		/* get strength for this region.  stronger means more
 		 * wall-like */
-		wall_info.strength = this->compute_region_strength(it,args);
+		wall_info.strength 
+			= this->compute_region_strength(it, args);
 	
 		/* only proceed if strength is good enough */
 		if(wall_info.strength <= 0)
 			continue;
 
 		/* initialize stored values in wall_info struct */
-		wall_info.init(wall_info.strength, it->second.get_region());
+		wall_info.init(wall_info.strength, 
+				it->second.get_region());
 
 		/* compare bounding box to wall height threshold,
 		 * just to make sure we want to use this region */
@@ -357,7 +362,8 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 			ceil_it = ceiling_regions.find(*n1it);
 			if(ceil_it != ceiling_regions.end())
 			{
-				/* update the ceiling height of this wall */
+				/* update the ceiling height of 
+				 * this wall */
 				if(best_ceil_ind < 0
 					|| this->ceilings[
 					best_ceil_ind].surface_area
@@ -385,7 +391,146 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 		
 int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 {
-	// TODO implement me
+	histogram_t floor_hist, ceil_hist;
+	vector<double> floor_peaks, ceil_peaks;
+	vector<double> floor_counts, ceil_counts;
+	vector<double> floor_heights, ceil_heights;
+	building_levels::file_t levelsfile;
+	size_t i, fi, fi_next, ci, ci_next, fn, cn;
+	tictoc_t clk;
+	int ret;
+
+	/* start timer */
+	tic(clk);
+
+	/* prepare histograms for analysis */
+	floor_hist.set_resolution(this->tree.get_resolution());
+	ceil_hist.set_resolution(this->tree.get_resolution());
+
+	/* iterate over the floor regions that have been discovered,
+	 * and record their elevation + surface area */
+	fn = this->floors.size();
+	for(fi = 0; fi < fn; fi++)
+		floor_hist.insert(this->floors[fi].z, 
+				this->floors[fi].surface_area);
+
+	/* do the same thing for the ceiling regions */
+	cn = this->ceilings.size();
+	for(ci = 0; ci < cn; ci++)
+		ceil_hist.insert(this->ceilings[ci].z, 
+				this->ceilings[ci].surface_area);
+
+	/* find locations peaks in the histograms */
+	floor_hist.find_peaks(floor_peaks, floor_counts, 
+				args.minlevelheight); 
+	ceil_hist.find_peaks(ceil_peaks, ceil_counts, 
+				args.minlevelheight); 
+
+	/* clear output */
+	floor_heights.clear();
+	ceil_heights.clear();
+	this->level_splits.clear();
+
+	/* find matching floor/ceiling pairs */
+	fn = floor_peaks.size();
+	cn = ceil_peaks.size();
+	fi = fi_next = ci = ci_next = 0;
+	while(fi < fn && ci < cn)
+	{
+		/* find the floor with the highest count that is
+		 * still below the current ceiling */
+		for(i = fi+1; i<fn && floor_peaks[i] < ceil_peaks[ci]; i++)
+			if(floor_counts[i] > floor_counts[fi])
+				fi = i;
+
+		/* figure out what the next floor above the current ceiling
+		 * is */
+		fi_next = fi;
+		while(fi_next < fn 
+				&& floor_peaks[fi_next] < ceil_peaks[ci])
+			fi_next++;
+
+		/* find the ceiling with the highest count that is below
+		 * the next floor position */
+		for(i = ci+1; i<cn && (fi_next >= fn 
+				|| ceil_peaks[i] < floor_peaks[fi_next]); 
+				i++)
+			if(ceil_counts[i] > ceil_counts[ci])
+				ci = i;
+	
+		/* we know have the optimum floor and ceiling positions
+		 * for this level, so export those to the output */
+		floor_heights.push_back(floor_peaks[fi]);
+		ceil_heights.push_back(ceil_peaks[ci]);
+
+		/* find the next ceiling */
+		ci_next = ci;
+		while(ci_next < cn && ceil_peaks[ci_next] 
+					< floor_peaks[fi_next])
+			ci_next++;
+
+		/* move to next floor */
+		fi = fi_next;
+		ci = ci_next;
+	}
+	
+	/* verify that each level has a floor and a ceiling */
+	fn = floor_heights.size();
+	cn = ceil_heights.size();
+	if(fn != cn)
+	{
+		cerr << "[process_t::compute_level_splits]\tError! "
+		     << "Computed " << fn << " floor heights and "
+		     << cn << " ceiling heights." << endl;
+		return -1;
+	}
+
+	/* populate the level partition heights, which are the
+	 * elevations where one level is partitioned from its
+	 * neighboring levels 
+	 *
+	 * The length of this list is (N-1), where N is the number
+	 * of discovered levels */
+	level_splits.resize(fn-1);
+	for(i = 1; i < fn; i++)
+	{
+		/* split halfway between the lower ceiling and the
+		 * upper floor */
+		this->level_splits[i-1] = 0.5 * (ceil_heights[i-1] 
+				+ floor_heights[i]);
+	}
+
+	/* optionally export level partitioning to disk */
+	if(!(args.levelsfile.empty()))
+	{
+		/* populate levels file */
+		for(i = 0; i < fn; i++)
+		{
+			/* add current level */
+			ret = levelsfile.insert(building_levels::level_t(
+				i, floor_heights[i], ceil_heights[i]));
+			if(ret)
+			{
+				cerr << "[process_t::compute_level_splits]"
+				     << "\tError!  Unable to export level"
+				     << " #" << i << endl;
+				return PROPEGATE_ERROR(-2, ret);
+			}
+		}
+
+		/* export .levels to disk */
+		ret = levelsfile.write(args.levelsfile);
+		if(ret)
+		{
+			cerr << "[process_t::compute_level_splits]\t"
+			     << "ERROR! Unable to export .levels file "
+			     << "to: " << args.levelsfile << endl;
+			return PROPEGATE_ERROR(-3, ret);
+		}
+	}
+
+	/* success */
+	toc(clk, "Computing level ranges");
 	return 0;
 }
 
@@ -400,18 +545,24 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 	progress_bar_t progbar;
 	tictoc_t clk;
 	double coord_a, coord_b;
-	size_t wall_index, num_walls;
+	size_t level_index, wall_index, num_walls, num_levels;
 
 	/* init */
 	tic(clk);
 	progbar.set_name("Wall sampling");
 
-	/* initialize the quadtree wall sampling */
+	/* initialize the quadtree wall sampling for each level */
 	p2d << this->tree.get_root()->center(0),
 	       this->tree.get_root()->center(1);
-	this->sampling.set(args.dq_resolution, p2d,
+	num_levels = this->level_splits.size() + 1;
+	this->sampling.resize(num_levels);
+	for(level_index = 0; level_index < num_levels; level_index++)
+	{
+		/* initialize this level */
+		this->sampling[level_index].set(args.dq_resolution, p2d,
 			this->tree.get_root()->halfwidth);
-	
+	}
+
 	/* iterate over all the regions we determined to be walls,
 	 * and actually compute the wall samples to export */
 	num_walls = this->walls.size();
@@ -479,7 +630,12 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				 * wall. */
 				this->walls[wall_index]
 					.vertical.project_onto(p);
-			
+		
+				/* get the appropraite level index for
+				 * this point */
+				level_index 
+					= this->level_of_elevation(p(2));
+
 				/* get the 2D projection of this value,
 				 * so we are able to insert it into the
 				 * 2D structure of the wall samples */
@@ -491,8 +647,8 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 
 				/* we can now use this point to
 				 * contribute to wall samples */
-				data = this->sampling.insert(p2d, n2d,
-					p(2), p(2), 
+				data = this->sampling[level_index]
+					.insert(p2d, n2d, p(2), p(2), 
 					this->walls[wall_index].strength);
 				if(data == NULL)
 				{
@@ -621,7 +777,7 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 				/* report error */
 				progbar.clear();
 				cerr << "[process_t::compute_pose_inds]\t"
-				     << "Error!  Can't compute fss pose at "
+				     << "Error! Can't compute fss pose at "
 				     << "time " << frame.timestamp
 				     << " for " << infile.scanner_name()
 				     << endl;
@@ -653,7 +809,8 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 					/* report error */
 					progbar.clear();
 					cerr << "[process_t::compute_pose"
-					     << "_inds]\tUnable to process "
+					     << "_inds]\t"
+					     << "Unable to process "
 					     << "scan." << endl;
 					return PROPEGATE_ERROR(-6, ret);
 				}
@@ -670,7 +827,8 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 	for(pccit = pose_choice_counts.begin(); 
 			pccit != pose_choice_counts.end(); pccit++)
 	{
-		/* get the ratio for the pose counts for this wall sample */
+		/* get the ratio for the pose counts for 
+		 * this wall sample */
 		score = ((double) pccit->second.first) 
 			/ ((double) pccit->second.second);
 
@@ -689,26 +847,41 @@ int process_t::compute_pose_inds(const oct2dq_run_settings_t& args)
 		
 int process_t::export_data(const oct2dq_run_settings_t& args) const
 {
+	stringstream filename;
 	ofstream outfile;
 	tictoc_t clk;
+	size_t i, n;
 
-	/* prepare dq file to write to */
-	outfile.open(args.dqfile.c_str());
-	if(!(outfile.is_open()))
+	/* export each level */
+	tic(clk);
+	n = this->sampling.size();
+	for(i = 0; i < n; i++)
 	{
-		/* unable to write to disk */
-		cerr << "[process_t::export_data]\tUnable to open file "
-		     << "for writing: " << args.dqfile << endl;
-		return -1;
+		/* determine name of output file */
+		filename.clear();
+		filename.str("");
+		filename << args.dqfile_prefix << i << ".dq";
+
+		/* prepare dq file to write to */
+		outfile.open(filename.str().c_str());
+		if(!(outfile.is_open()))
+		{
+			/* unable to write to disk */
+			cerr << "[process_t::export_data]\t"
+			     << "Unable to open file "
+			     << "for writing: " << filename.str() << endl;
+			return -1;
+		}
+
+		/* write the wall samples to the specified dq file */
+		this->sampling[i].print(outfile);
+
+		/* close the stream */
+		outfile.close();
 	}
 
-	/* write the wall samples to the specified dq file */
-	tic(clk);
-	this->sampling.print(outfile);
-	toc(clk, "Exporting wall samples");
-
 	/* success */
-	outfile.close();
+	toc(clk, "Exporting wall samples");
 	return 0;
 }
 
@@ -752,8 +925,11 @@ int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
 	linesegment_2d_t lineseg;
 	vector<quaddata_t*> xings;
 	double score, best_score;
-	size_t node_ind, num_nodes, best_ind;
+	size_t node_ind, num_nodes, best_ind, level_index;
 	
+	/* get the building level that contains the current pose */
+	level_index = this->level_of_elevation(pose.T(2));
+
 	/* extend the line segment by some distance,
 	 * to try to intersect any walls behind 
 	 * objects */
@@ -770,9 +946,13 @@ int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
 
 	/* find the nodes that it intersects 
 	 * in the 2D representation of the 
-	 * environment */
+	 * environment.
+	 *
+	 * Only check for occlusions in the current building
+	 * level, since we don't care about horizontal intersections
+	 * on a completely different vertical level. */
 	xings.clear();
-	this->sampling.raytrace(xings, lineseg);
+	this->sampling[level_index].raytrace(xings, lineseg);
 
 	/* iterate through the intersected
 	 * nodes, and record this pose with the
@@ -885,4 +1065,22 @@ bool process_t::shares_a_wall(quaddata_t* a, quaddata_t* b) const
 			itb->second.begin(), itb->second.end(),
 			intersection.begin());
 	return (xit - intersection.begin() > 0);
+}
+		
+size_t process_t::level_of_elevation(double z) const
+{
+	size_t i, n;
+	
+	/* check base case (no splits) */
+	n = this->level_splits.size();
+	if(n == 0)
+		return 0; /* entire building is 'first level' */
+
+	/* check the elevation against the given set of splits */
+	for(i = 0; i < n; i++)
+		if(z < this->level_splits[i])
+			return i; /* below threshold for i'th level */
+
+	/* must be at the last (top) level */
+	return n; /* there are N-1 splits for N levels */
 }

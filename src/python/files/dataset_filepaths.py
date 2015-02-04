@@ -302,7 +302,6 @@ def get_csv_floorplan_file(fp_file):
 	(body, ext) = os.path.splitext(fp_file)
 	return (body + ".csv")
 
-
 ##
 # Returns the floorplan mesh (obj) file, given the fp
 #
@@ -407,22 +406,38 @@ def get_carving_levels_file(dataset_dir):
 			"building.levels")
 
 ##
-# Returns the dq file generated from an octree
+# Returns the prefix used for the carving-dq wall sampling files
 #
-# TODO NOTE will eventually need to make a dq file for each floor
-#
-def get_carving_dq_file(dataset_dir):
-	return os.path.join(get_carving_fp_dir(dataset_dir), \
-			"wall_samples.dq")
+def get_carving_dq_prefix(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), "level_")
 
 ##
-# Returns the floorplan file generated from an octree's wall samples
+# Returns all the dq files generated from an octree
 #
-# TODO NOTE will need to make a fp file for each level
+def get_carving_dq_files(dataset_dir):
+	
+	# get the floorplan directory
+	fpdir = get_carving_fp_dir(dataset_dir)
+	
+	# get all dq files in this directory
+	dqfiles = [os.path.join(fpdir, f) \
+			for f in os.listdir(fpdir) \
+				if f.endswith(".dq")]
+	return dqfiles
+
+##
+# Returns all the floorplan files generated from an octree
 #
-def get_carving_fp_file(dataset_dir):
-	return os.path.join(get_carving_fp_dir(dataset_dir), \
-			"floorplan.fp")
+def get_carving_fp_files(dataset_dir):
+	
+	# get the floorplan directory
+	fpdir = get_carving_fp_dir(dataset_dir)
+	
+	# get all fp files in this directory
+	fpfiles = [os.path.join(fpdir, f) \
+			for f in os.listdir(fpdir) \
+				if f.endswith(".fp")]
+	return fpfiles
 
 #--------------- Files generated from merging ------------------------
 

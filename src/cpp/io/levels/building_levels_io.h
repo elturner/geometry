@@ -175,7 +175,7 @@ namespace building_levels
 			std::vector<level_t> levels;
 
 		/* functions */
-		private:
+		public:
 
 			/*--------------*/
 			/* constructors */

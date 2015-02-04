@@ -268,7 +268,7 @@ int file_t::write(const std::string& filename) const
 		}
 
 		/* export */
-		outfile << NEW_LEVEL_TAG << " " << i
+		outfile << NEW_LEVEL_TAG << " " << i << " "
 		        << this->levels[i].floor_height << " "
 			<< this->levels[i].ceiling_height << endl;
 	}

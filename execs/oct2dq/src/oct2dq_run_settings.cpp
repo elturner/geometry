@@ -27,13 +27,13 @@ using namespace std;
 
 #define SETTINGS_FLAG     "-s" /* program-specific settings (.xml) */
 #define CONFIGFILE_FLAG   "-c" /* hardware xml config file */
+#define OUTFILE_FLAG      "-o" /* specifies dq file prefix */
 
 /* file extensions to check for */
 
 #define OCT_FILE_EXT    "oct"
 #define PATH_FILE_EXT   "noisypath"
 #define FSS_FILE_EXT    "fss"
-#define DQ_FILE_EXT     "dq"
 #define LEVELS_FILE_EXT "levels"
 
 /* the xml parameters to look for */
@@ -55,11 +55,11 @@ using namespace std;
 oct2dq_run_settings_t::oct2dq_run_settings_t()
 {
 	/* set default values for this program's files */
-	this->octfile    = ""; /* input file */
-	this->pathfile   = ""; /* input path file */
-	this->dqfile     = ""; /* output dq file */
-	this->levelsfile = ""; /* output levels file */
-	this->fssfiles.clear(); /* input scan files */
+	this->octfile           = ""; /* input file */
+	this->pathfile          = ""; /* input path file */
+	this->dqfile_prefix     = ""; /* output dq file */
+	this->levelsfile        = ""; /* output levels file */
+	this->fssfiles.clear();       /* input scan files */
 
 	/* set default parameter values */
 	this->coalesce_distthresh     = 2.0;
@@ -99,14 +99,25 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 			"specifies the location of the sensors with "
 			"with respect to the rest of the hardware system.",
 			false, 1);
+	args.add(OUTFILE_FLAG, "Specifies where to write the output .dq "
+			"files.  This ascii-formatted file indicates "
+			"the extracted wall samples for each level of "
+			"the scanned building environment.\n\n"
+			"Should provide a filepath prefix for "
+			"these output files.  So, if the following value "
+			"is given:\n\n"
+			"\t../foo/bar/output_\n\n"
+			"And if, for example, two dq files are generated, "
+			"then they will be exported to the following "
+			"paths:\n\n"
+			"\t../foo/bar/output_0.dq\n"
+			"\t../foo/bar/output_1.dq\n\n"
+			"The number and extension are appended "
+			"automatically to the given string.", false, 1);
 	args.add_required_file_type(OCT_FILE_EXT, 1,
 			"The input octree file.  This file represent the "
 			"volume information of the scanned environment, and"
 			" are processed at a given resolution.");
-	args.add_required_file_type(DQ_FILE_EXT, 1,
-			"The output wall sampling file.  This ascii-"
-			"formatted file indicates the extracted wall "
-			"sample positions and meta-information.");
 	args.add_required_file_type(PATH_FILE_EXT, 1,
 			"The input path file.  This file represents the "
 			"path the system took to traverse the "
@@ -161,15 +172,6 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 	/* input xml hardware config file */
 	this->configfile = args.get_val(CONFIGFILE_FLAG);
 
-	/* output dq file */
-	files.clear();
-	args.files_of_type(DQ_FILE_EXT, files);
-	if(files.size() > 1)
-		cerr << "[oct2dq_run_settings_t::parse]\t"
-		     << "WARNING: Multiple ." << DQ_FILE_EXT << " files "
-		     << "given, only the first will be used." << endl;
-	this->dqfile = files[0];	
-
 	/* output levels file */
 	files.clear();
 	args.files_of_type(LEVELS_FILE_EXT, files);
@@ -179,9 +181,10 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 		     << " given, only the first will be used." << endl;
 	this->levelsfile = files[0];
 
-	/* retrieve the specified file */
-	settings_file = args.get_val(SETTINGS_FLAG);
-	
+	/* retrieve the specified files from flags */
+	settings_file       = args.get_val(SETTINGS_FLAG);
+	this->dqfile_prefix = args.get_val(OUTFILE_FLAG);
+
 	/* attempt to open and parse the settings file */
 	if(!settings.read(settings_file))
 	{
