@@ -400,6 +400,13 @@ def get_carving_fp_dir(dataset_dir):
 	return os.path.join(get_carving_dir(dataset_dir), "fp")
 
 ##
+# Returns the .levels file generated from an octre by oct2dq
+#
+def get_carving_levels_file(dataset_dir):
+	return os.path.join(get_carving_fp_dir(dataset_dir), \
+			"building.levels")
+
+##
 # Returns the dq file generated from an octree
 #
 # TODO NOTE will eventually need to make a dq file for each floor

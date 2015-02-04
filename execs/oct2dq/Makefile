@@ -31,6 +31,8 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
+		$(SOURCEDIR)io/conf/conf_reader.cpp \
+		$(SOURCEDIR)io/levels/building_levels_io.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
 		$(SOURCEDIR)geometry/octree/octtopo.cpp \
@@ -76,6 +78,8 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
+		$(SOURCEDIR)io/conf/conf_reader.h \
+		$(SOURCEDIR)io/levels/building_levels_io.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
 		$(SOURCEDIR)geometry/octree/octtopo.h \

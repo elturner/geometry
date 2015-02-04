@@ -54,6 +54,11 @@ class oct2dq_run_settings_t
 		 */
 		std::string dqfile;
 
+		/**
+		 * Location of the (optional) output .levels file
+		 */
+		std::string levelsfile;
+
 		/* the following parameters are used for this program */
 
 		/**
@@ -138,6 +143,20 @@ class oct2dq_run_settings_t
 		 * units:  meters squared
 		 */
 		double floorceilsurfareathresh;
+
+		/**
+		 * Minimum height between building levels
+		 *
+		 * This value indicates the minimum possible height
+		 * of a building story, going from the floor surface
+		 * on one level to the floor surface on the next level.
+		 *
+		 * This value should be a loose lower bound, since no
+		 * levels will be detected smaller than this.
+		 *
+		 * units: meters
+		 */
+		double minlevelheight;
 
 		/**
 		 * Minimum room feature length

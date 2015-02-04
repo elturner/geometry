@@ -117,6 +117,15 @@
 	     units:  meters squared -->
 	<oct2dq_floorceilsurfareathresh>2.0</oct2dq_floorceilsurfareathresh>
 
+	<!-- The following specifies a minimum vertical distance between
+	     levels in a building.
+
+	     This minimum bound represents the absolute smallest
+	     floor-to-floor distance between two building levels.
+
+	     units:  meters -->
+	<oct2dq_minlevelheight>2.0</oct2dq_minlevelheight>
+
 	<!-- ************************************ -->
 	<!-- PARAMETERS FOR CREATING WALL SAMPLES -->
 	<!-- ************************************ -->

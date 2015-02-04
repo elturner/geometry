@@ -30,10 +30,11 @@ using namespace std;
 
 /* file extensions to check for */
 
-#define OCT_FILE_EXT   "oct"
-#define PATH_FILE_EXT  "noisypath"
-#define FSS_FILE_EXT   "fss"
-#define DQ_FILE_EXT    "dq"
+#define OCT_FILE_EXT    "oct"
+#define PATH_FILE_EXT   "noisypath"
+#define FSS_FILE_EXT    "fss"
+#define DQ_FILE_EXT     "dq"
+#define LEVELS_FILE_EXT "levels"
 
 /* the xml parameters to look for */
 
@@ -45,6 +46,7 @@ using namespace std;
 #define XML_FLOORCEILSURFAREATHRESH  "oct2dq_floorceilsurfareathresh"
 #define XML_WALLHEIGHTTHRESH         "oct2dq_wallheightthresh"
 #define XML_MINROOMSIZE              "oct2dq_minroomsize"
+#define XML_MINLEVELHEIGHT           "oct2dq_minlevelheight"
 #define XML_CHOICERATIOTHRESH        "oct2dq_choiceratiothresh"
 #define XML_DQ_RESOLUTION            "oct2dq_dq_resolution"
 
@@ -53,9 +55,10 @@ using namespace std;
 oct2dq_run_settings_t::oct2dq_run_settings_t()
 {
 	/* set default values for this program's files */
-	this->octfile  = ""; /* input file */
-	this->pathfile = ""; /* input path file */
-	this->dqfile   = ""; /* output file */
+	this->octfile    = ""; /* input file */
+	this->pathfile   = ""; /* input path file */
+	this->dqfile     = ""; /* output dq file */
+	this->levelsfile = ""; /* output levels file */
 	this->fssfiles.clear(); /* input scan files */
 
 	/* set default parameter values */
@@ -66,6 +69,7 @@ oct2dq_run_settings_t::oct2dq_run_settings_t()
 	this->surfaceareathresh       = 1.0;
 	this->wallheightthresh        = 2.5;
 	this->floorceilsurfareathresh = 2.0;
+	this->minlevelheight          = 2.0;
 	this->minroomsize             = 1.5;
 	this->choiceratiothresh       = 0.1;
 	this->dq_resolution           = -1.0;
@@ -112,6 +116,10 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 			"represents the scanners that observed the "
 			"environment and were used to generate the "
 			"octree.");
+	args.add_required_file_type(LEVELS_FILE_EXT, 0,
+			"The output levels file.  Will specify how many "
+			"building levels (stories) were discovered, and "
+			"the elevation ranges on each.");
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -162,6 +170,15 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 		     << "given, only the first will be used." << endl;
 	this->dqfile = files[0];	
 
+	/* output levels file */
+	files.clear();
+	args.files_of_type(LEVELS_FILE_EXT, files);
+	if(files.size() > 1)
+		cerr << "[oct2dq_run_settings_t::parse]\t"
+		     << "WARNING: Multiple ." << LEVELS_FILE_EXT << " files"
+		     << " given, only the first will be used." << endl;
+	this->levelsfile = files[0];
+
 	/* retrieve the specified file */
 	settings_file = args.get_val(SETTINGS_FLAG);
 	
@@ -201,6 +218,9 @@ int oct2dq_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_FLOORCEILSURFAREATHRESH))
 		this->floorceilsurfareathresh
 			= settings.getAsDouble(XML_FLOORCEILSURFAREATHRESH);
+	if(settings.is_prop(XML_MINLEVELHEIGHT))
+		this->minlevelheight
+			= settings.getAsDouble(XML_MINLEVELHEIGHT);
 	if(settings.is_prop(XML_MINROOMSIZE))
 		this->minroomsize
 			= settings.getAsDouble(XML_MINROOMSIZE);

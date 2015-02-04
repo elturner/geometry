@@ -63,6 +63,7 @@ def run(dataset_dir, madfile, debug=False):
     fssfiles   = dataset_filepaths.get_all_fss_files(dataset_dir)
     pathfile   = dataset_filepaths.get_noisypath_file(dataset_dir)
     octfile    = dataset_filepaths.get_octree(dataset_dir)
+    levelsfile = dataset_filepaths.get_carving_levels_file(dataset_dir)
     dqfile     = dataset_filepaths.get_carving_dq_file(dataset_dir)
     fpfile     = dataset_filepaths.get_carving_fp_file(dataset_dir)
 
@@ -73,7 +74,7 @@ def run(dataset_dir, madfile, debug=False):
 
     # prepare the command-line arguments for the oct2dq code and run it
     args = [OCT2DQ_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
-        pathfile, octfile, dqfile] + fssfiles
+        pathfile, octfile, levelsfile, dqfile] + fssfiles
     ret = callproc(OCT2DQ_EXE, args, dataset_dir, debug)
     if ret != 0:
         print "oct2dq program returned error",ret
