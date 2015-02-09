@@ -42,6 +42,26 @@ using namespace std;
 #define UTM_30LX_MIN_RANGE_MM  500   /* units: millimeters */
 #define UTM_30LX_MAX_RANGE_MM  30000 /* units: millimeters */
 
+/**
+ * The following macros describe the product statistics of a UTM-30LX
+ *
+ * Taken from:
+ *
+ * https://www.hokuyo-aut.jp/02sensor/07scanner/utm_30lx.html
+ *
+ * Synopsis:
+ *
+ * 	Accuracy - 	0.1 to 10m:±30mm, 10 to 30m:±50mm
+ *
+ * This yields a strictly larger stddev of the range value at any distance.
+ */
+#define UTM_30LX_OPT_RANGE_MM      10000 /* units: millimeters */
+#define UTM_30LX_STDDEV_CLOSE_MM   30    /* units: millimeters */
+#define UTM_30LX_STDDEV_FAR_MM     50    /* units: millimeters */
+#define UTM_30LX_NET_STDDEV_MM(d)  ( (d) > UTM_30LX_OPT_RANGE_MM \
+					? UTM_30LX_STDDEV_FAR_MM \
+					: UTM_30LX_STDDEV_CLOSE_MM )
+
 /* function implementations */
 
 int process_scan(SyncXml& timesync, 
@@ -151,7 +171,7 @@ int process_scan(SyncXml& timesync,
 				fss_frame.points[j].bias = 
 					UTM_30LX_BIAS_MM;
 				fss_frame.points[j].stddev = 
-					UTM_30LX_STDDEV_MM;
+					UTM_30LX_NET_STDDEV_MM(d);
 				fss_frame.points[j].width = 
 					UTM_30LX_WIDTH_MM(d);
 			}
