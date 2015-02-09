@@ -253,6 +253,29 @@ class carve_map_t
 		double compute(const Eigen::Vector3d& x,double xsize) const;
 
 		/**
+		 * Performs the same function as compute(x,xsize), but
+		 * also yields the certainty weighting of the output
+		 * value.
+		 *
+		 * Will compute the value of the carve map for a specified
+		 * location 'x' and size 'xsize'.  The output carve map
+		 * probability will be returned, and the confidence
+		 * of this value will be stored in 'w'.
+		 *
+		 * When 'w' is zero (or very small), this indicates no
+		 * confidence in the return value, whereas if 'w' is
+		 * large, this indicates high confidence.
+		 *
+		 * @param x      The volume center in 3D space to analyze
+		 * @param xsize  The feature length of volume at x
+		 * @param w      The confidence weighting of return value
+		 *
+		 * @return   Returns probability that volume is interior
+		 */
+		double compute(const Eigen::Vector3d& x,
+					double xsize, double& w) const;
+
+		/**
 		 * Computes probability the given location is on surface
 		 *
 		 * Using this scanpoint, will determine the probability

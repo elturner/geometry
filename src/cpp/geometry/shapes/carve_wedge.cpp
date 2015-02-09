@@ -247,7 +247,7 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
                                         double hw, octdata_t* d)
 {
-	double val, surf, corner, planar, xsize;
+	double vi, val, wi, weight, surf, corner, planar, xsize;
 	unsigned int i;
 
 	/* sample the originating carve maps at this location */
@@ -256,21 +256,30 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 	corner = 0;
 	planar = 0;
 	xsize = 2*hw;
+	weight = wi = 0;
 	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
 	{
 		/* interpolate between the original carve maps
 		 * to get value at this position */
-		val    += this->maps[i]->compute(c, xsize);
+		vi      = this->maps[i]->compute(c, xsize, wi);
+		val    += wi*vi;
+		weight += wi;
 		surf   *= (1-this->maps[i]->get_surface_prob(c, xsize));
-		corner += this->maps[i]->get_corner_prob();
-		planar += this->maps[i]->get_planar_prob();
+		corner += wi*this->maps[i]->get_corner_prob();
+		planar += wi*this->maps[i]->get_planar_prob();
 	}
 
+	// TODO LEFT OFF HERE
+	// rather than dividing by weight now, keep weights
+	// in the generated octdata structures, so that all
+	// samples in each space are fused at once in a weighted
+	// average representing Maximum A Posteriori (MAP) estimate
+
 	/* use the average of this sample */
-	val    /= NUM_MAPS_PER_WEDGE;
+	val    /= weight;
 	surf    = 1 - surf; /* 1 - Prob(no map on surface) */
-	corner /= NUM_MAPS_PER_WEDGE;
-	planar /= NUM_MAPS_PER_WEDGE;
+	corner /= weight;
+	planar /= weight;
 
 	/* check if data already exist for this spot */
 	if(d == NULL)

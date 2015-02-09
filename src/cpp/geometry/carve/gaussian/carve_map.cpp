@@ -1,5 +1,6 @@
 #include "carve_map.h"
 #include <iostream>
+#include <util/error_codes.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
@@ -158,6 +159,16 @@ void carve_map_t::init(const Vector3d& s_mean,
 
 double carve_map_t::compute(const Vector3d& x, double xsize) const
 {
+	double w;
+	MARK_USED(w);
+
+	/* call the overloaded version of this function */
+	return this->compute(x, xsize, w);
+}
+
+double carve_map_t::compute(const Eigen::Vector3d& x,
+					double xsize, double& w) const
+{
 	Vector3d E, lat;
 	Matrix3d C;
 	double ms_dist, mp_dist, p_forward, p_inrange;
@@ -255,6 +266,11 @@ double carve_map_t::compute(const Vector3d& x, double xsize) const
 		this->print_params(cerr);
 		cerr << endl;
 	}
+
+	/* the weighting of the return value is just the lateral
+	 * probability, since this indicates how far off the scan
+	 * line the query point is */
+	w = p_lat;
 
 	/* return the final probability */
 	return p_total;
