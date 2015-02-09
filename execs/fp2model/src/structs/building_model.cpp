@@ -611,7 +611,7 @@ void building_model_t::write_wall_to_wrl(ostream& outfile) const
 	for(i = 0; i < num_edges; i++)
 	{
 		/* make a shape for this wall */
-		// TODO
+		// TODO COMPLETE [building_model_t::write_wall_to_wrl]
 
 		/* check if this wall has windows */
 		ws.clear();

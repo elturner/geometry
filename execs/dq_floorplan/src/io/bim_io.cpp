@@ -135,9 +135,6 @@ int writeroom(ofstream& outfile, tri_rep_t& trirep,
 			b = i; /* use the biggest boundary by size, which
 				* ideally should be the outermost one */
 
-	// TODO, need to associate the same wall in separate rooms with
-	// each other.
-
 	/* retrieve the height of this room */
 	tit = trirep.tris.find(*(room.begin()));
 	if(tit == trirep.tris.end())
@@ -235,7 +232,7 @@ int writeroom(ofstream& outfile, tri_rep_t& trirep,
 			<< "    Room_" << num << ", !- Zone name" << endl
 			<< "    Surface,       !- Outside Boundary "
 			<< "Condition" << endl
-			<< "    Zn" << num << ":Wall" << i // TODO link
+			<< "    Zn" << num << ":Wall" << i
 			<< ", !- Outside Boundary Condition Object" << endl
 			<< "    NoSun,         !- Sun Exposure" << endl
 			<< "    NoWind,        !- Wind Exposure" << endl

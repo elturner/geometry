@@ -999,7 +999,7 @@ int mesher_t::reassign_boundary_faces()
 		this->regions[r].faces.erase(git->first);
 		this->regions[r_best].faces.insert(git->first);
 
-		// TODO may need to edit region neighbor sets
+		// FOR FUTURE WORK: may need to edit region neighbor sets
 
 		/* since we made a change to this face, recheck its
 		 * neighbors */
@@ -1015,7 +1015,9 @@ int mesher_t::reassign_boundary_faces()
 		}
 	}
 
-	// TODO, to make this K-means, put above in a larger loop, which
+	// If we wanted to actually make this like K-means:
+	//
+	// to make this K-means, put above in a larger loop, which
 	// reevaluates the plane equations for each region
 
 	/* success */

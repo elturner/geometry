@@ -121,7 +121,9 @@ void carve_scan(dgrid_t& g, pose_t& curr, pose_t& next, int sn)
 		ic_next = ic + 1;
 		in_next = in + 1;
 
-		/* TODO, try to reduce skew when selecting indices */
+		/* FOR FUTURE WORK: 
+		 *
+		 * try to reduce skew when selecting indices */
 
 		/* make sure not to go out of bounds */
 		if(ic_next >= nc)

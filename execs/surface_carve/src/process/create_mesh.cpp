@@ -130,7 +130,7 @@ int create_mesh(triangulation_t& tri, vector<planar_region_t>& regions,
 		return PROPEGATE_ERROR(-10, ret);
 	prune_invalid_triangles_from_regions(regions, tri);
 	
-	// TODO: this is commented because it breaks:
+	// ------ this is commented because it breaks: ------
 	/* ret = tri.map_neighbors();
 	 * if(ret)
 	 *	return PROPEGATE_ERROR(-11, ret);
