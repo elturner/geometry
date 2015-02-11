@@ -3,10 +3,15 @@ Octree Serialization File Format Documentation
 ----------------------------------------------
 
 Written by Eric Turner
-February 11, 2015
+February 22, 2014
 
 ----------------------------------------------
 ----------------------------------------------
+
+NOTE:  This file format has been redacted as of
+February 11, 2015.  Datasets older than this date
+may still have files with this format, but all future
+datasets should use the newer version.
 
 This format is meant to represent the information
 stored in an octree.  As such, the file is organized
@@ -24,8 +29,7 @@ Header:
 
 Variable        Type           Size
 --------------------------------------
-magic_number    'octtree\0'    8 bytes
-version         unsigned int   4 bytes
+magic_number    'octfile\0'    8 bytes
 max_depth       unsigned int   4 bytes
 num_nodes       unsigned int   4 bytes
 
@@ -71,7 +75,6 @@ Octdata Serialization:
 Variable        Type           Size
 --------------------------------------
 count           unsigned int   4 bytes
-total_weight    double         8 bytes
 prob_sum        double         8 bytes
 prob_sum_sq     double         8 bytes
 surface_sum     double         8 bytes
