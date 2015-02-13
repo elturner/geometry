@@ -484,6 +484,12 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 		     << cn << " ceiling heights." << endl;
 		return -1;
 	}
+	if(fn == 0)
+	{
+		cerr << "[process_t::compute_level_splits]\tError! "
+		     << "No floors or ceilings found!" << endl;
+		return -2;
+	}
 
 	/* populate the level partition heights, which are the
 	 * elevations where one level is partitioned from its
@@ -514,7 +520,7 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 				cerr << "[process_t::compute_level_splits]"
 				     << "\tError!  Unable to export level"
 				     << " #" << i << endl;
-				return PROPEGATE_ERROR(-2, ret);
+				return PROPEGATE_ERROR(-3, ret);
 			}
 		}
 
@@ -525,7 +531,7 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 			cerr << "[process_t::compute_level_splits]\t"
 			     << "ERROR! Unable to export .levels file "
 			     << "to: " << args.levelsfile << endl;
-			return PROPEGATE_ERROR(-3, ret);
+			return PROPEGATE_ERROR(-4, ret);
 		}
 	}
 
