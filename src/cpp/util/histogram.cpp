@@ -109,7 +109,6 @@ void histogram_t::find_peaks(vector<double>& peaks, vector<double>& counts,
 	vector<pair<int, double> > local_max;
 	bool is_local_max;
 	int i, bi, n;
-	double x2, x, stddev, mean;
 
 	/* convert the minimum buffer space specified into units of
 	 * histogram bins */
@@ -117,23 +116,9 @@ void histogram_t::find_peaks(vector<double>& peaks, vector<double>& counts,
 	if(bi <= 0)
 		bi = 1;
 
-	/* compute the std-dev of the histogram */
-	x2 = x = stddev = 0;
-	for(it = this->hist.begin(); it != this->hist.end(); it++)
-	{
-		x += it->second;
-		x2 += (it->second * it->second);
-	}
-	stddev = sqrt( (x2 - x) / (this->hist.size()) );
-	mean = x / (this->hist.size());
-
 	/* find local maxima that are maxima within neighborhoods of bi */
 	for(it = this->hist.begin(); it != this->hist.end(); it++)
 	{
-		/* check if this value is above one std. dev. of the mean */
-		if(it->second < mean + stddev)
-			continue;
-		
 		/* initially assume it is local max */
 		is_local_max = true;
 
