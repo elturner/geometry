@@ -23,7 +23,8 @@ class octdata_t
 
 		/* the following values are used to track statistical
 		 * samples of the corresponding node to these data */
-		unsigned int count; /* number of observed samples */
+		unsigned int count; /* the number of samples contributing */
+		double total_weight; /* total weight of observed samples */
 		double prob_sum; /* sum of probability samples */
 		double prob_sum_sq; /* sum of square of prob samples */
 
@@ -74,9 +75,16 @@ class octdata_t
 
 		/**
 		 * Initializes octdata object with a single sample
+		 *
+		 * @param w            The weight of the input sample
+		 * @param prob_samp    The prob. value of the sample [0,1]
+		 * @param surface_samp The surface probability [0,1]
+		 * @param corner_samp  The corner probability [0,1]
+		 * @param planar_samp  The planar probability [0,1]
 		 */
-		octdata_t(double prob_samp, double surface_samp=0.0,
-		          double corner_samp=0.0, double planar_samp=0.0);
+		octdata_t(double w,
+			double prob_samp, double surface_samp=0.0,
+			double corner_samp=0.0, double planar_samp=0.0);
 
 		/**
 		 * Frees all memory and resources
@@ -165,10 +173,11 @@ class octdata_t
 		 * function.
 		 *
 		 * @param is  The input binary stream to read from
+		 * @param v   The version number of the file to parse
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
-		int parse(std::istream& is);
+		int parse(std::istream& is, unsigned int v);
 
 		/*
 		 *########################################################
@@ -182,16 +191,20 @@ class octdata_t
 		 * Will increment the observation count, and update
 		 * the appropriate sums based on this observation.
 		 *
+		 * @param w        The weighting given to this sample
 		 * @param prob     The observed carved probability
 		 * @param surf     The observed surface probability
 		 * @param corner   The observed corner coefficient
 		 * @param planar   The observed planarity coefficient
 		 */
-		void add_sample(double prob, double surf=0.0,
+		void add_sample(double w, double prob, double surf=0.0,
 		                double corner=0.0, double planar=0.0);
 
 		/**
 		 * Returns the count of number of observations seen
+		 *
+		 * This count is represented as a sum of weights, and is
+		 * not required to be an integer.
 		 *
 		 * @return  The count of observations seen by this object.
 		 */
@@ -199,13 +212,27 @@ class octdata_t
 		{ return this->count; };
 
 		/**
+		 * Returns the total weight sum for all samples seen so far
+		 *
+		 * @return   Returns the sum of all sample weights.
+		 */
+		inline double get_total_weight() const
+		{ return this->total_weight; };
+
+		/**
 		 * Returns the prob_sum parameter
+		 *
+		 * This is the weighted sum of each probability sample,
+		 * times its corresponding weight.
 		 */
 		inline double get_prob_sum() const
 		{ return this->prob_sum; };
 
 		/**
 		 * Returns the prob_sum_sq parameter
+		 *
+		 * This is the weighted sum of the square of each
+		 * probability sample, times its corresponding weight.
 		 */
 		inline double get_prob_sum_sq() const
 		{ return this->prob_sum_sq; };
@@ -222,8 +249,9 @@ class octdata_t
 		inline double get_probability() const
 		{
 			/* check that we have any observations */
-			if(this->count > 0)
-				return (this->prob_sum / this->count);
+			if(this->count > 0 && this->total_weight > 0)
+				return (this->prob_sum 
+						/ this->total_weight);
 			
 			/* if unobserved, assume unknown */
 			return UNOBSERVED_PROBABILITY; 
@@ -240,21 +268,21 @@ class octdata_t
 		 */
 		inline double get_uncertainty() const
 		{
-			double m, m2, n;
+			double m, m2;
 
 			/* check if we have observed any samples */
-			n = this->count;
-			if(n <= 1) /* don't have multiple samples */
+			if(this->count <= 1 || this->total_weight == 0) 
 				return MAXIMUM_VARIANCE;
-				            /* maximum uncertainty for
+				            /* don't have multiple samples,
+					     * maximum uncertainty for
 				             * values that are restricted
 				             * to a range of [0,1] */
 
-			/* get unbiased estimate of the variance, 
-			 * by using Bessel's correction: */
-			m = this->prob_sum / n; /* mean of samples */
-			m2 = this->prob_sum_sq; /* sum of squared samples */
-			return (m2 - (m*m)) / (n-1);
+			/* compute the variance based on the weighted sums
+			 * of the mean and square-mean */
+			m = this->prob_sum / this->total_weight;
+			m2 = this->prob_sum_sq / this->total_weight;
+			return ( m2 - m*m );
 		};
 		
 		/**
@@ -295,9 +323,9 @@ class octdata_t
 		 */
 		inline double get_surface_prob() const
 		{
-			if(this->count == 0)
+			if(this->count == 0 || this->total_weight == 0)
 				return 0;
-			return ((this->surface_sum) / this->count);
+			return ((this->surface_sum) / this->total_weight);
 		};
 
 		/**
@@ -305,9 +333,9 @@ class octdata_t
 		 */
 		inline double get_planar_prob() const
 		{
-			if(this->count == 0)
+			if(this->count == 0 || this->total_weight == 0)
 				return 0;
-			return ((this->planar_sum) / this->count);
+			return ((this->planar_sum) / this->total_weight);
 		};
 
 		/**
@@ -315,9 +343,9 @@ class octdata_t
 		 */
 		inline double get_corner_prob() const
 		{
-			if(this->count == 0)
+			if(this->count == 0 || this->total_weight == 0)
 				return 0;
-			return ((this->corner_sum) / this->count);
+			return ((this->corner_sum) / this->total_weight);
 		};
 
 		/**

@@ -269,11 +269,9 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 		planar += wi*this->maps[i]->get_planar_prob();
 	}
 
-	// TODO LEFT OFF HERE
-	// rather than dividing by weight now, keep weights
-	// in the generated octdata structures, so that all
-	// samples in each space are fused at once in a weighted
-	// average representing Maximum A Posteriori (MAP) estimate
+	/* keep weights in the generated octdata structures, so that all
+	 * samples in each space are fused at once in a weighted
+	 * average representing Maximum A Posteriori (MAP) estimate */
 
 	/* use the average of this sample */
 	val    /= weight;
@@ -289,7 +287,7 @@ octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,
 	}
 		
 	/* add to data */
-	d->add_sample(val, surf, corner, planar);
+	d->add_sample(weight, val, surf, corner, planar);
 	return d;
 }
 

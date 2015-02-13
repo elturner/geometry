@@ -306,10 +306,11 @@ class octnode_t
 		 * be destroyed.
 		 *
 		 * @param is   The binary input stream to parse
+		 * @param v    The version number of the input file
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int parse(std::istream& is);
+		int parse(std::istream& is, unsigned int v);
 
 		/*-----------*/
 		/* debugging */

@@ -333,13 +333,15 @@ void octree_t::filter(const std::set<octdata_t*>& whitelist)
 }
 
 /* The following defines are used for reading and writing files */
-#define OCTFILE_MAGIC_NUMBER "octfile"
-#define OCTFILE_MAGIC_LENGTH 8
+#define OCTFILE_MAGIC_NUMBER      "octtree"
+#define OCTFILE_OLD_MAGIC_NUMBER  "octfile"
+#define OCTFILE_MAGIC_LENGTH      8
+#define OCTFILE_CURRENT_VERSION   2
 
 int octree_t::serialize(const string& fn) const
 {
 	ofstream outfile;
-	unsigned int c;
+	unsigned int c, v;
 
 	/* open binary file for writing */
 	outfile.open(fn.c_str(), ios_base::out | ios_base::binary);
@@ -348,9 +350,14 @@ int octree_t::serialize(const string& fn) const
 
 	/* get number of nodes in tree */
 	c = (this->root == NULL) ? 0 : this->root->get_num_nodes();
-	
+
+	/* represent the current version of octtree file format as an
+	 * unsigned integer */
+	v = OCTFILE_CURRENT_VERSION;
+
 	/* export header information */
 	outfile.write(OCTFILE_MAGIC_NUMBER, OCTFILE_MAGIC_LENGTH);
+	outfile.write((char*) &v, sizeof(v));
 	outfile.write((char*) &(this->max_depth), sizeof(this->max_depth));
 	outfile.write((char*) &c, sizeof(c));
 
@@ -366,22 +373,74 @@ int octree_t::parse(const string& fn)
 {
 	char magic[OCTFILE_MAGIC_LENGTH];
 	ifstream infile;
-	unsigned int c;
+	unsigned int c, v;
 	int ret;
 
 	/* open binary file for reading */
+	v = 0; /* invalid version */
 	infile.open(fn.c_str(), ios_base::in | ios_base::binary);
 	if(!(infile.is_open()))
+	{
+		cerr << "[octree_t::parse]\tUnable to open file: "
+		     << fn << endl;
 		return -1; /* could not open file */
+	}
 
 	/* check magic number from header */
 	infile.read(magic, OCTFILE_MAGIC_LENGTH);
 	if(strcmp(magic, OCTFILE_MAGIC_NUMBER))
-		return -2; /* not a valid octfile */
-	
-	/* get remainder of header information */
-	infile.read((char*) &(this->max_depth), sizeof(this->max_depth));
-	infile.read((char*) &c, sizeof(c)); /* count # of nodes in tree */
+	{
+		/* check if this is an outdated file */
+		if(!strcmp(magic, OCTFILE_OLD_MAGIC_NUMBER))
+		{
+			cerr << "[octree_t::parse]\tNote: this file is "
+			     << "using outdated version of octree file "
+			     << "format. Attempting to parse..." << endl;
+			v = 1; /* represents old version */
+		}
+		else
+		{
+			/* unknown format */
+			cerr << "[octree_t::parse]\tNot an octree file: "
+			     << fn << endl;
+			infile.close();
+			return -2; /* not a valid octfile */
+		}
+	}
+
+	/* parse header of old version of file */
+	if(v == 1)
+	{
+		/* depth of tree */
+		infile.read((char*) &(this->max_depth), 
+					sizeof(this->max_depth));
+		
+		/* count # of nodes in tree */
+		infile.read((char*) &c, sizeof(c)); 
+	}
+	else /* parse header for newer versions */
+	{
+		/* get remainder of header information */
+		infile.read((char*) &v, sizeof(v)); /* version on file */
+
+		/* depth of tree */
+		infile.read((char*) &(this->max_depth), 
+					sizeof(this->max_depth));
+		
+		/* count # of nodes in tree */
+		infile.read((char*) &c, sizeof(c)); 
+	}
+
+	/* check version info */
+	if(v > OCTFILE_CURRENT_VERSION)
+	{
+		cerr << "[octree_t::parse]\tInput file has version #"
+		     << v << ", while this parser expects version #"
+		     << OCTFILE_CURRENT_VERSION << endl
+		     << "\tfile: " << fn << endl << endl
+		     << "\tPLEASE UPDATE TO LATEST VERSION OF CODE" << endl;
+		return -3;
+	}
 
 	/* destroy any existing information */
 	if(this->root != NULL)
@@ -389,9 +448,14 @@ int octree_t::parse(const string& fn)
 	this->root = new octnode_t();
 
 	/* read in tree information */
-	ret = this->root->parse(infile);
+	ret = this->root->parse(infile, v);
 	if(ret)
-		return PROPEGATE_ERROR(-3, ret);
+	{
+		cerr << "[octree_t::parse]\tUnable to parse octree file: "
+		     << fn << endl;
+		infile.close();
+		return PROPEGATE_ERROR(-4, ret);
+	}
 
 	/* clean up */
 	infile.close();

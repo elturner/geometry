@@ -517,7 +517,7 @@ void octnode_t::serialize(ostream& os) const
 	}
 }
 		
-int octnode_t::parse(std::istream& is)
+int octnode_t::parse(std::istream& is, unsigned int v)
 {
 	double d;
 	char c;
@@ -543,7 +543,7 @@ int octnode_t::parse(std::istream& is)
 	{
 		/* read in data */
 		this->data = new octdata_t();
-		ret = this->data->parse(is);
+		ret = this->data->parse(is, v);
 		if(ret)
 			return -1; /* could not read data */
 	}
@@ -565,7 +565,7 @@ int octnode_t::parse(std::istream& is)
 
 		/* read in child recursively in a depth-first manner */
 		this->children[i] = new octnode_t();
-		ret = this->children[i]->parse(is);
+		ret = this->children[i]->parse(is, v);
 		if(ret)
 			return -2; /* could not parse child */
 
