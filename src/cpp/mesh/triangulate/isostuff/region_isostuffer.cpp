@@ -674,11 +674,18 @@ size_t region_isostuffer_t::add_vertex(const Eigen::Vector2d& p2d,
 	mesh_io::vertex_t vert;
 	Vector3d p3d;
 	size_t v_ind;
+	bool ret;
 
 	/* get the 3d coordinates of point */
 	p3d = this->M.transpose() * p2d;
-	this->plane.get_intersection_of(p3d, p3d, this->nullspace);
-	
+	ret = this->plane.get_intersection_of(p3d, p3d, this->nullspace);
+	if(!ret)
+	{
+		/* this should never happen */
+		cerr << "[region_isostuffer_t::add_vertex]\tError! "
+		     << "Badly formed region found!" << endl << endl;
+	}
+
 	/* populate vertex */
 	vert.x     = p3d(0);
 	vert.y     = p3d(1);
