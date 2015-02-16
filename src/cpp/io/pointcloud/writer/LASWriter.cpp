@@ -79,7 +79,7 @@ bool LASWriter::open(const std::string& output_file_name)
 	_writer = make_shared<liblas::Writer>(_outStream, _header);
 
 	/* reset the point type to have the correct header */
-	this->_point = liblas::Point(&_header);
+	this->_point = make_shared<liblas::Point>(&_header);
 
 	/* return the file status */
 	return this->is_open();
@@ -126,12 +126,12 @@ bool LASWriter::write_point(double x, double y, double z,
 {
 
 	/* fill the point with the correct data */
-	_point.SetX(x);
-	_point.SetY(y);
-	_point.SetZ(z);
-	_point.SetColor(liblas::Color(r,g,b));
-	_point.SetTime(timestamp);
+	_point->SetX(x);
+	_point->SetY(y);
+	_point->SetZ(z);
+	_point->SetColor(liblas::Color(r,g,b));
+	_point->SetTime(timestamp);
 
 	/* write the point and return the success code of the call */
-	return _writer->WritePoint(_point);
+	return _writer->WritePoint(*_point);
 }

@@ -45,7 +45,7 @@ private:
 	*	Holds a copy of the point type that will be passed to the writer
 	*	object when serialization occurs.
 	*/
-	liblas::Point _point;
+	std::shared_ptr<liblas::Point> _point;
 
 public:
 
