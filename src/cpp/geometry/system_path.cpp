@@ -601,7 +601,25 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 		
 bool system_path_t::is_blacklisted(double ts) const
 {
-	return this->timestamp_blacklist.contains(ts);
+	int a, b;
+
+	/* get the range of indices */
+	a = b = this->closest_index(ts);
+	b++;
+	
+	/* error-check */
+	if(a < 0)
+		return true; /* no poses have been read in */
+	
+	/* check if ts is out of bounds */
+	if(ts < this->pl[0] || ts > this->pl[this->pl_size-1])
+		return true; /* out of bounds */
+
+	/* check if any point in the range [a,b] intersects any
+	 * zupts, because this full range will be used to interpolate
+	 * values at this timestamp */
+	range_t r(this->pl[a].timestamp, this->pl[b].timestamp);
+	return this->timestamp_blacklist.intersects(r);
 }
 	
 double system_path_t::starttime() const
