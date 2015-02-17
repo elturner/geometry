@@ -59,6 +59,7 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/OBJ*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/XYZ*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PTS*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PCD*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PointCloudWriter.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/carve/noisypath_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/timestamp/*.cpp

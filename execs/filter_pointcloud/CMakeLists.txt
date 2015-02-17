@@ -43,6 +43,7 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/filter_poi
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/OBJWriter.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PTSWriter.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/XYZWriter.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PCDWriter.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/reader/PointCloudReader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/reader/OBJReader.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/reader/PTSReader.cpp
@@ -52,12 +53,14 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/filter_poi
 #
 # This is used for supporting outputing to .las formats
 IF(LAS_SUPPORT)
-	MESSAGE(STATUS "Liblas tanked their library... this doesnt work right now.")
+	find_package(LibLAS REQUIRED)
+	IF(NOT LIBLAS_FOUND)
+		message( FATAL_ERROR "Unable to find LibLAS library" )
+	ENDIF(NOT LIBLAS_FOUND)
+	add_definitions( -DWITH_LAS_SUPPORT )
+	LIST(APPEND SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/LASWriter.cpp)
+	LIST(APPEND SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/reader/LASReader.cpp)
 ENDIF(LAS_SUPPORT)
 
 add_executable(filter_pointcloud ${SANDBOX_SRC})
-
-# Link libraries needed for las
-IF(LAS_SUPPORT)
-	
-ENDIF(LAS_SUPPORT)
+target_link_libraries(filter_pointcloud ${LIBLAS_LIBRARY})

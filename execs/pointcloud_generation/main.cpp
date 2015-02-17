@@ -155,7 +155,7 @@ void init_args(cmd_args_t& args)
 	args.add(OUTPUT_FILE_FLAG, /* where to store the output */
 	               "Specifies the file location of where to export the "
                        "generated pointcloud file.  Valid file formats are "
-                       "any of:  *.txt, *.xyz, *.obj, *.pts", false, 1);
+                       "any of:  *.txt, *.xyz, *.obj, *.pts, *.pcd", false, 1);
 	args.add(RANGE_LIMIT_FLAG, /* optional range limit (in meters) */
 	               "Specifies a range limit in meters. If this value is"
 	               " non-negative, then any points that are farther "

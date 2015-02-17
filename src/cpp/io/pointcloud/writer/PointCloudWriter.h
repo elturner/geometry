@@ -90,7 +90,8 @@ public:
 	{
 		XYZ,
 		PTS,
-		OBJ
+		OBJ,
+		PCD
 #ifdef WITH_LAS_SUPPORT
 		,
 		LAS,

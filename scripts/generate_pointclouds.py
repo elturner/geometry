@@ -432,7 +432,7 @@ def handle_args() :
 	parser.add_argument("-x", "--output_filetype",
 		required=False,
 		help=("The desired output file type. The default is \"xyz\"."),
-		choices=['txt','pts','xyz','obj','las','laz'],
+		choices=['txt','pts','xyz','obj','las','laz','pcd'],
 		default='xyz')
 	parser.add_argument("--keep_noncolored_points",
 		required=False,

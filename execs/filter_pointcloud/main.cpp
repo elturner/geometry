@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
 		#ifdef WITH_LAS_SUPPORT
 		".las, .laz, "
 		#endif
-		".xyz, .obj, and .pts",
+		".xyz, .obj, .pcd, and .pts",
 		true,
 		cmd_args_t::FLEX_ARGS);
 	parser.add(FLAG_SCRIPT,

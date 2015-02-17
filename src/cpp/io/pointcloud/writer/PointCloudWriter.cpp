@@ -12,6 +12,7 @@
 #include "XYZWriter.h"
 #include "OBJWriter.h"
 #include "PTSWriter.h"
+#include "PCDWriter.h"
 
 /* use if command line says to build with las */
 #ifdef WITH_LAS_SUPPORT
@@ -42,6 +43,9 @@ PointCloudWriter PointCloudWriter::create(POINTCLOUD_FILE_TYPE file_type)
 			break;
 		case PTS :
 			writer._impl = make_shared<PTSWriter>();
+			break;
+		case PCD :
+			writer._impl = make_shared<PCDWriter>();
 			break;
 #ifdef WITH_LAS_SUPPORT
 		case LAS :
@@ -80,6 +84,8 @@ PointCloudWriter PointCloudWriter::create(const std::string& file_name)
 		writer._impl = make_shared<PTSWriter>();
 	else if(ext.compare("obj") == 0)
 		writer._impl = make_shared<OBJWriter>();
+	else if(ext.compare("pcd") == 0)
+		writer._impl = make_shared<PCDWriter>();
 
 #ifdef WITH_LAS_SUPPORT
 	else if(ext.compare("las") == 0)
