@@ -36,6 +36,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/PCDWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.cpp \
 		$(SOURCEDIR)timestamp/sync_xml.cpp \
 		$(SOURCEDIR)image/image_cache.cpp \
@@ -76,6 +77,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.h \
+		$(SOURCEDIR)io/pointcloud/writer/PCDWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)image/image_cache.h \

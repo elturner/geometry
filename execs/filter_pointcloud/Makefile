@@ -15,6 +15,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.cpp \
+		$(SOURCEDIR)io/pointcloud/writer/PCDWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.cpp \
 		$(SOURCEDIR)io/pointcloud/reader/PointCloudReader.cpp \
 		$(SOURCEDIR)io/pointcloud/reader/OBJReader.cpp \
@@ -30,6 +31,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/pointcloud/writer/PointCloudWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/OBJWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/PTSWriter.h \
+		$(SOURCEDIR)io/pointcloud/writer/PCDWriter.h \
 		$(SOURCEDIR)io/pointcloud/writer/XYZWriter.h \
 		$(SOURCEDIR)io/pointcloud/reader/PointCloudReader.h \
 		$(SOURCEDIR)io/pointcloud/reader/OBJReader.h \
