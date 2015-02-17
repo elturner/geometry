@@ -612,7 +612,8 @@ bool system_path_t::is_blacklisted(double ts) const
 		return true; /* no poses have been read in */
 	
 	/* check if ts is out of bounds */
-	if(ts < this->pl[0] || ts > this->pl[this->pl_size-1])
+	if(ts < this->pl[0].timestamp 
+			|| ts > this->pl[this->pl_size-1].timestamp)
 		return true; /* out of bounds */
 
 	/* check if any point in the range [a,b] intersects any
