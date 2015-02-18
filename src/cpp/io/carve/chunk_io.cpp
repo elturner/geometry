@@ -601,6 +601,9 @@ void chunk_writer_t::write(const point_index_t& i)
 {
 	/* write the given point */
 	this->pts.push_back(i);
+
+	/* update count of number of wedges/points in this chunk */
+	this->header.num_points++;
 }
 			
 void chunk_writer_t::close()

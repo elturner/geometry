@@ -28,6 +28,7 @@
  * be exported as chunk files.
  *
  * This class requires the Eigen framework.
+ * This class requires Boost Filesystem.
  */
 
 using namespace std;
