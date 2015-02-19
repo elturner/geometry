@@ -368,7 +368,8 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 
 	% load it
 	fprintf('[TraceFP]\t\tloading (this may take a while)...\n');
-	handles.wall_samples = readMapData(fullfile([pathname, dqfile]));
+	handles.wall_samples = read_wall_samples(...
+				fullfile([pathname, dqfile]));
 
 	% render it
 	if(handles.wall_samples_plot ~= 0)

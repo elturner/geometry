@@ -1,5 +1,5 @@
-function [mapData] = readMapData(mapFileName)
-	% [mapData] = READMAPDATA(filename)
+function [mapData] = read_wall_samples(mapFileName)
+	% [mapData] = READ_WALL_SAMPLES(filename)
 	%
 	%	Read the specified *.dq file, and
 	%	store in the struct mapData
