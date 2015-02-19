@@ -421,91 +421,117 @@ int cell_graph_t::simplify(tri_rep_t& trirep, double threshold,
 	return 0;
 }
 	
-int cell_graph_t::remove_sharps(tri_rep_t& trirep, double threshold)
+int cell_graph_t::remove_sharps(tri_rep_t& trirep, 
+				double threshold, bool simpdoor)
 {
 	map<cell_t*, double> to_remove;
 	map<cell_t*, double>::iterator mit;
 	set<cell_t>::iterator it;
 	set<int> verts_removed;
 	cell_t* a, *b, *c;
-	normal_t ab, ac;
-	double angle;
+	normal_t ab, ca;
+	size_t num_removed_this_round;
+	double val;
 	int ret;
 
-	/* check arguments */
-	if(threshold < 0)
-		return 0; /* do nothing */
-
-	/* iterate over the cells of this graph, checking for sharps */
-	for(it = this->V.begin(); it != this->V.end(); it++)
+	/* keep iterating as long as we are removing points */
+	do
 	{
-		/* get current cell */
-		a = (cell_t*) (&(*it));
+		/* reset our count of how much change we've enacted
+		 * to the graph */
+		num_removed_this_round = 0;
 
-		/* check number of neighbors */
-		if(!(a->is_ordinary()))
-			continue; /* only simplify standard walls */
-
-		/* get neighboring cells */
-		b = *(a->edges.begin());
-		c = *(a->edges.rbegin());
-
-		/* get the angle bac */
-		ab.dir(a->pos, b->pos);
-		ac.dir(a->pos, c->pos);
-		angle = fabs(ab.angle(ac));
-
-		/* compare to threshold */
-		if(threshold > angle)
+		/* iterate over the cells of this graph, 
+		 * checking for sharps */
+		for(it = this->V.begin(); it != this->V.end(); it++)
 		{
-			/* this is a very sharp angle, so
-			 * we want to remove it.  BUT, if we're
-			 * already about to remove one of the neighbors,
-			 * we don't want to remove both.*/
-			if(to_remove.count(b))
+			/* get current cell */
+			a = (cell_t*) (&(*it));
+	
+			/* check number of neighbors */
+			if(!(a->is_ordinary()))
+				continue; /* unusual case, keep it */
+		
+			/* check if a is shared by multiple rooms, in which
+			 * case, we don't want to remove this edge. */
+			if(a->is_room_boundary() && !simpdoor)
+				continue;
+
+			/* get neighboring cells */
+			b = *(a->edges.begin());
+			c = *(a->edges.rbegin());
+
+			/* get the normalized vectors that indicate
+			 * the orientation of the connected edges. */
+			ab.dir(a->pos, b->pos);
+			ca.dir(c->pos, a->pos);
+
+			/* analyze this corner */
+			val = ab.dot(ca);
+			
+			/* compare to threshold */
+			if(threshold > val)
 			{
-				/* check if current sharp is worse
-				 * to remove */
-				if(angle > to_remove[b])
-					continue;
+				/* this is a very sharp angle, so
+				 * we want to remove it.  BUT, if we're
+				 * already about to remove one of the 
+				 * neighbors, we don't want to remove 
+				 * both.  So, we need to check for which
+				 * is the worst of all three, and remove
+				 * that one. */
+				if(to_remove.count(b))
+				{
+					/* check if current sharp is worse
+					 * to remove than b */
+					if(val > to_remove[b])
+						continue; /* not worse */
 
-				/* if got here, then we want to remove
-				 * a instead of b */
-				to_remove.erase(b);
+					/* if got here, then we want to 
+					 * remove a instead of b */
+					to_remove.erase(b);
+				}
+				if(to_remove.count(c))
+				{
+					/* check if current worse than c */
+					if(val > to_remove[c])
+						continue; /* not worse */
+	
+					/* if got here, then we want to 
+					 * remove a instead of c */
+					to_remove.erase(c);
+				}
+
+				/* if got here, then we should remove a 
+				 *
+				 * We also want to record the value at a,
+				 * so we can compare it to its neighboring
+				 * vertices later. */
+				to_remove.insert(
+					pair<cell_t*, double>(a, val));
 			}
-			if(to_remove.count(c))
-			{
-				/* check if current worse than c */
-				if(angle > to_remove[c])
-					continue;
-
-				/* if got here, then we want to remove
-				 * a instead of c */
-				to_remove.erase(c);
-			}
-
-			/* if got here, then we should remove a */
-			to_remove.insert(pair<cell_t*, double>(a, angle));
 		}
-	}
 
-	/* remove all the stored elements */
-	for(mit = to_remove.begin(); mit != to_remove.end(); mit++)
-	{
-		/* remove the vertices */
-		verts_removed.clear();
-		ret = trirep.remove_boundary_vertex(
+		/* remove all the stored elements */
+		for(mit = to_remove.begin(); mit != to_remove.end(); mit++)
+		{
+			/* remove the vertices */
+			verts_removed.clear();
+			ret = trirep.remove_boundary_vertex(
 				mit->first->vertex_index, verts_removed);
-		if(ret)
-		{
-			/* topology prevented edge collapse, so
-			 * move on to next attempt. */
-			continue;
+			if(ret)
+			{
+				/* topology prevented edge collapse, so
+				 * move on to next attempt. */
+				continue;
+			}
+	
+			/* simplify the graph */
+			mit->first->replace_with_clique();
+			num_removed_this_round++;
 		}
-
-		/* simplify the graph */
-		mit->first->replace_with_clique();
+		to_remove.clear();
 	}
+	while(num_removed_this_round > 0);
 	
 	/* success */
 	return 0;

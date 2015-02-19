@@ -158,16 +158,29 @@ class cell_graph_t
 	 * 	the vertex in question.  Such vertices are removed
 	 * 	from both this structure and the trirep structure.
 	 *
+	 *	The angle for node C is measured by comparing
+	 *	the vectors for successive edges PC and CQ.
+	 *
+	 *	P ---------> C ------------> Q
+	 *
+	 * 	It is recommended that the threshold angle be negative,
+	 * 	which indicates that only angles greater than 90 degrees
+	 * 	(which would look like an acute corner angle) be removed.
+	 *
 	 * arguments:
 	 *
 	 * 	trirep -	The spawning triangulation topology
-	 * 	threshold -	The angle threshold, in radians.
+	 * 	threshold -	The cosine angle threshold.  Values less
+	 * 			than this will be removed.
+	 * 	simpdoor -	If true, will even remove sharp features
+	 * 			that occur between rooms.
 	 *
 	 * return value:
 	 *
 	 * 	Returns zero on success, non-zero on failure.
 	 */
-	int remove_sharps(tri_rep_t& trirep, double threshold);
+	int remove_sharps(tri_rep_t& trirep, double threshold, 
+					bool simpdoor=false);
 
 	/* union operations */
 

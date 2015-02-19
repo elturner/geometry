@@ -1,10 +1,20 @@
-/* main.cpp:
+/**
+ * @file     main.cpp
+ * @author   Eric Turner <elturner@eecs.berkeley.edu>
+ * @brief    The main file for the floorplan generation program
  *
- *	This program generates a floor plan using the
- *	output of ncorso's particle filter, which is
- *	represented as a populated grid-map stored in
- *	a dynamic quadtree.
+ * @section DESCRIPTION
  *
+ * This program generates a floor plan using the
+ * output of ncorso's particle filter, which is
+ * represented as a populated grid-map stored in
+ * a dynamic quadtree.
+ *
+ * @section PUBLICATIONS
+ *
+ * E. Turner and A. Zakhor, "Floor Plan Generation and Room Labeling of
+ * Indoor Environments from Laser Range Data," GRAPP 2014, Lisbon,
+ * Portugal, January 2014
  */
 
 #include <iostream>

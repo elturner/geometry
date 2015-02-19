@@ -34,6 +34,26 @@
  * adjacent to. */
 #define DEFAULT_SIMPLIFY_THRESHOLD 0.05 /* units: meters */
 
+/* The following represents the threshold used to remove 'sharps'
+ * from the generated floorplan during the simplification process.
+ *
+ * A 'sharp' feature is an acute angle in the floorplan that represents
+ * incorrect geometry and is aesthetically displeasing.
+ *
+ * We remove these features based on the angle of the corner vertex, under
+ * the assumption that buildings do not have highly acute angles in
+ * their true geometry.
+ *
+ * This value is the cosine of the threshold angle, which will be used
+ * to threshold the SIGNED cosine of adjacent wall edges.
+ *
+ *  Examples:
+ *  	 90 degrees (sharps of 90 deg or less) -->   0
+ *  	120 degrees (sharps of 60 deg or less) -->  -0.5
+ *  	135 degrees (sharps of 45 deg or less) -->  -0.7071
+ */
+#define DEFAULT_SHARPS_REMOVAL_THRESHOLD -0.19
+
 /*** Visualization ***/
 
 /* the following is the assumption about heights of walls. This is
