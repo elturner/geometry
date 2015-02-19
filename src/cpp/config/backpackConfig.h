@@ -143,8 +143,10 @@ public:
 
 	If this fails, an empty vector for the second version.
 */
-template <typename T> void backpackConfig::get_props(std::vector<T>& vector_of_props,
-													 bool trim_by_enable) {
+template <typename T> void backpackConfig::get_props(
+			std::vector<T>& vector_of_props,
+			bool trim_by_enable) 
+{
 
 	// The first thing that we do is clear the output vector
 	vector_of_props.clear();
@@ -161,44 +163,50 @@ template <typename T> void backpackConfig::get_props(std::vector<T>& vector_of_p
 		return;
 	}
 
-	// If it does exist then we need to parse the blocks for the property
-	// maps
+	/* If it does exist then we need to parse the blocks for 
+	 * the property maps */
 	for(size_t i = 0; i < it->second.size(); i++) {
 
 		// Make a copy of the instance pointer
 		TiXmlNode * instance_ptr = it->second[i];
 
-		// Make a map to hold the mapping of the property names to the 
-		// actual properties
+		// Make a map to hold the mapping of the property 
+		// names to the actual properties
 		std::map<std::string,std::string> property_map;
 
 		// Create the new structure
 		T new_prop_struct;
 
 		// Make the property_map
-		if( ! backpackConfig::build_property_map( instance_ptr, property_map) ) {
-			*this->log_stream << "[backpackConfig::get_props] - "
-				<< "Unexpected failure building property map" << std::endl;
+		if( ! backpackConfig::build_property_map( 
+					instance_ptr, property_map) ) 
+		{
+			*this->log_stream 
+				<< "[backpackConfig::get_props] - "
+				<< "Unexpected failure building property "
+				<< "map" << std::endl;
 			vector_of_props.clear();
 			return;
 		}
 		
 		// Add the object to the output structure
-		if( new_prop_struct.assign_props(property_map) != 0) {
-			*this->log_stream << "[backpackConfig::get_props] - "
-				<< "Error assigning properties to sensorProp." 
-				<< " Some property did not contain a single text element" << std::endl;
+		if( new_prop_struct.assign_props(property_map) != 0)
+		{
+			/* no values found for this property.  Just
+			 * return an empty list */
 			vector_of_props.clear();
 			return;
 		}
 
 		// If required we check the enable bit
-		std::map<std::string,std::string>::iterator it = property_map.find("enable");
-		if( it != property_map.end() ) {
-			bool sensor_enabled = sensorProp::extract_as<bool>(it->second);
-			if( !sensor_enabled && trim_by_enable) {
+		std::map<std::string,std::string>::iterator it 
+					= property_map.find("enable");
+		if( it != property_map.end() ) 
+		{
+			bool sensor_enabled 
+				= sensorProp::extract_as<bool>(it->second);
+			if( !sensor_enabled && trim_by_enable) 
 				continue;
-			}
 		}
 		
 		// Pushback onto the output vector
