@@ -71,6 +71,8 @@ def run(dataset_dir, path_file, xyz_file):
 	
 	# determine the expected location of necessary files from
 	# within the dataset
+        path_file     = os.path.abspath(path_file)
+        xyz_file      = os.path.abspath(xyz_file)
 	models_dir    = dataset_filepaths.get_models_dir(dataset_dir)
 	floorplan_dir = dataset_filepaths.get_floorplan_dir(dataset_dir)
 	texture_dir   = dataset_filepaths.get_faketexture_dir(dataset_dir)
