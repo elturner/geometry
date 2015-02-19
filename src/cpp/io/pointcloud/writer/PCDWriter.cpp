@@ -135,7 +135,8 @@ bool PCDWriter::write_point(double x, double y, double z,
 	int index, double timestamp)
 {
 	index = index; /* paramter not actually used */
-	
+	timestamp = timestamp; /* parameter not actually used */
+
 	/* pack the color a single int32 */
 	int rgb = ((int)r) << 16 | ((int)g) << 8 | ((int)b);
 
