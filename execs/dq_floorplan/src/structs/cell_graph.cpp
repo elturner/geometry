@@ -191,7 +191,7 @@ int cell_graph_t::populate(quadtree_t& tree)
 	for(cit = this->V.begin(); cit != this->V.end(); cit++)
 	{
 		/* check heights validity */
-		if(cit->min_z >= cit->max_z)
+		if(cit->min_z > cit->max_z)
 		{
 			/* reset all heights */
 			this->reset_heights();
