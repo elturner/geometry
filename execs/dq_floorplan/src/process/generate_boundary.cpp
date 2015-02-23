@@ -234,10 +234,14 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 		if(pose_map[i].empty())
 		{
 			/* skip this pose, and don't carve the
-			 * pose-to-pose line segments */
+			 * pose-to-pose line segments 
+			 *
+			 * can no longer trust starting triangle
+			 * if we will be skipping one or more poses */
+			st.init(-1,-1,-1);
 			continue;
 		}
-		
+	
 		/* get pose information */
 		pose = path.get_pose(i);
 		system2world.T = pose->T;
@@ -343,12 +347,21 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 				return PROPEGATE_ERROR(-3, ret);
 		}
 
+		/* mark the start triangle (which holds the current
+		 * pose) as visited */
+		visited.insert(st);
+
 		/* next we update to the next pose, so skip this
 		 * step for the end of the path */
 		if(i+1 >= n)
 			continue;
 		if(pose_map[i+1].empty())
+		{
+			/* can no longer trust starting triangle
+			 * if we will be skipping one or more poses */
+			st.init(-1,-1,-1);
 			continue;
+		}
 		pose = path.get_pose(i+1);
 
 		/* ray-trace path from i to i+1 */
@@ -359,7 +372,6 @@ int label_triangulation(set<triple_t>& interior, set<triple_t>& visited,
 			return PROPEGATE_ERROR(-4, ret);
 
 		/* update start triangle */
-		visited.insert(st);
 		st = et;
 	}
 
