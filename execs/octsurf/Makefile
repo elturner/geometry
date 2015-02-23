@@ -35,6 +35,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/shapes/plane.cpp \
 		$(SOURCEDIR)geometry/shapes/bloated_fp.cpp \
+		$(SOURCEDIR)geometry/hist/octhist_2d.cpp \
 		$(SOURCEDIR)mesh/refine/octree_padder.cpp \
 		$(SOURCEDIR)mesh/partition/node_partitioner.cpp \
 		$(SOURCEDIR)mesh/partition/node_set.cpp \
@@ -79,6 +80,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/poly_intersect/poly2d.h \
 		$(SOURCEDIR)geometry/shapes/plane.h \
 		$(SOURCEDIR)geometry/shapes/bloated_fp.h \
+		$(SOURCEDIR)geometry/hist/octhist_2d.h \
 		$(SOURCEDIR)mesh/refine/octree_padder.h \
 		$(SOURCEDIR)mesh/partition/node_partitioner.h \
 		$(SOURCEDIR)mesh/partition/node_set.h \
