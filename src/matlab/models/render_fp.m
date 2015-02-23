@@ -57,10 +57,20 @@ function [] = render_fp(floorplan, color_by_room, c, labels)
 
 	% plot triangles
 	if(c(4) ~= 0)
-		for i = 1:floorplan.num_tris
+		for i = 1:min(floorplan.num_tris, size(floorplan.tris,1))
+		
+			% check if valid room
+			if(floorplan.room_inds(i) == 0)
+				roomcol = [1 0 0];
+				fprintf('Triangle #%d has no room\n', i);
+			else
+				roomcol = colors(floorplan.room_inds(i),:);
+			end
+			
+			% draw it
 			fill(floorplan.verts(floorplan.tris(i,:),1), ...
 				floorplan.verts(floorplan.tris(i,:),2), ...
-				colors(floorplan.room_inds(i),:), ...
+				roomcol, ...
 				'FaceAlpha', c(4), ...
 				'EdgeColor', 'none');
 		end

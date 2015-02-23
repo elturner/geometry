@@ -60,15 +60,26 @@ function floorplan = read_fp(filename)
 					(4+floorplan.num_verts-1) 1]);
 
 	% read triangles
-	offset = 4 + floorplan.num_verts;
-	floorplan.tris = 1 + dlmread(filename, ' ', [offset 0 ...
+	if(floorplan.num_tris > 0)
+		offset = 4 + floorplan.num_verts;
+		floorplan.tris = 1 + dlmread(filename, ' ', [offset 0 ...
 					(offset + floorplan.num_tris-1) 2]);
-	offset = offset + floorplan.num_tris;
+		offset = offset + floorplan.num_tris;
 
-	% compute edges
-	TR = TriRep(floorplan.tris, floorplan.verts(:,1), ...
-					floorplan.verts(:,2));
-	floorplan.edges = freeBoundary(TR);
+		% compute edges
+		TR = TriRep(floorplan.tris, floorplan.verts(:,1), ...
+						floorplan.verts(:,2));
+		floorplan.edges = freeBoundary(TR);
+	else
+		% no triangles defined
+		floorplan.tris = zeros(0,3);
+		floorplan.edges = [];
+	end
+
+	% check if any rooms are defined
+	if(floorplan.num_rooms == 0)
+		return;
+	end
 
 	% read heights
 	h = dlmread(filename, ' ', [offset 0 ...
@@ -114,5 +125,4 @@ function floorplan = read_fp(filename)
 		floorplan.edge_ceilings(i) ...
 			= max(vert_ceilings(floorplan.edges(i,:)));
 	end
-
 end
