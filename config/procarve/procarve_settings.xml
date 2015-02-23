@@ -46,7 +46,7 @@
 	     a smaller chunk size is recommended.  These recommendations
 	     are only for processing-efficiency purposes, and again,
 	     will not affect the quality of the output model. -->
-	<procarve_chunksize>0.5</procarve_chunksize>
+	<procarve_chunksize>2.0</procarve_chunksize>
 
 	<!-- This value represents where on disk the chunk files are stored.
 	     The directory specified is relative to the location of the

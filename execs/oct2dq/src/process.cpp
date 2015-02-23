@@ -431,10 +431,15 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 	ceil_heights.clear();
 	this->level_splits.clear();
 
-	/* find matching floor/ceiling pairs */
+	/* start at the first floor, and find the corresponding first
+	 * ceiling */
 	fn = floor_peaks.size();
 	cn = ceil_peaks.size();
-	fi = fi_next = ci = ci_next = 0;
+	fi = ci = 0;
+	while(ci < cn && ceil_peaks[ci] <= floor_peaks[fi])
+		ci++; /* get to a ceiling that's above the first floor */
+
+	/* find matching floor/ceiling pairs until run out of surfaces */
 	while(fi < fn && ci < cn)
 	{
 		/* find the floor with the highest count that is
@@ -445,7 +450,7 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 
 		/* figure out what the next floor above the current ceiling
 		 * is */
-		fi_next = fi;
+		fi_next = fi+1;
 		while(fi_next < fn 
 				&& floor_peaks[fi_next] < ceil_peaks[ci])
 			fi_next++;
@@ -464,7 +469,7 @@ int process_t::compute_level_splits(const oct2dq_run_settings_t& args)
 		ceil_heights.push_back(ceil_peaks[ci]);
 
 		/* find the next ceiling */
-		ci_next = ci;
+		ci_next = ci+1;
 		while(ci_next < cn && ceil_peaks[ci_next] 
 					< floor_peaks[fi_next])
 			ci_next++;
