@@ -642,7 +642,7 @@ int process_t::compute_wall_samples(const oct2dq_run_settings_t& args)
 				this->walls[wall_index]
 					.vertical.project_onto(p);
 		
-				/* get the appropraite level index for
+				/* get the appropriate level index for
 				 * this point */
 				level_index 
 					= this->level_of_elevation(p(2));
@@ -951,6 +951,7 @@ int process_t::analyze_scan(const transform_t& pose, size_t pose_ind,
 	point_pos = point_pos_orig + dir*(args.minroomsize); 
 	dir2d << dir(0), dir(1); /* projection of 
 				normal into R^2 */
+	dir2d.normalize();
 
 	/* prepare the line segment */
 	lineseg.init(pose.T, point_pos);
