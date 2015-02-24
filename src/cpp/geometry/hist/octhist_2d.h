@@ -53,6 +53,12 @@ class octhist_2d_t : public shape_t
 		 */
 		double resolution;
 
+		/**
+		 * The following represent the indices of the current
+		 * cell being analyzed.
+		 */
+		index_t current_index;
+
 	/* functions */
 	public:
 
@@ -129,27 +135,26 @@ class octhist_2d_t : public shape_t
 		/**
 		 * Overloaded from shape_t class.
 		 *
-		 * Always returns zero
+		 * Always returns one
 		 *
-		 * @return   Returns zero.
+		 * @return   Returns one
 		 */
 		inline unsigned int num_verts() const
-		{ return 0; };
+		{ return 1; };
 		
 		/**
 		 * Overloaded from shape_t class.
 		 *
-		 * Returns default vector
+		 * Returns bin center of current index.
 		 *
 		 * @param i   Unused.
 		 *
-		 * @return    Returns default vector.
+		 * @return    Returns current index bin center.
 		 */
 		inline Eigen::Vector3d get_vertex(unsigned int i) const
 		{
-			Eigen::Vector3d v;
 			MARK_USED(i);
-			return v;
+			return this->bin_center(this->current_index);
 		};
 		
 		/**
@@ -163,13 +168,7 @@ class octhist_2d_t : public shape_t
 		 *
 		 * @return     True, always.
 		 */
-		inline bool intersects(const Eigen::Vector3d& c,
-		                       double hw) const
-		{ 
-			MARK_USED(c);
-			MARK_USED(hw);
-			return true; 
-		};
+		bool intersects(const Eigen::Vector3d& c, double hw) const;
 		
 		/**
 		 * Will analyze the specified data and store in this
@@ -210,6 +209,27 @@ class octhist_2d_t : public shape_t
 
 			/* return the index */
 			return ind;
+		};
+
+		/**
+		 * Gets the center position of the specified index
+		 *
+		 * @param ind   The index to analyze.
+		 *
+		 * @return  Returns the zero-height center position
+		 * of the given bin index.
+		 */
+		inline Eigen::Vector3d bin_center(const index_t& ind) const
+		{
+			Eigen::Vector3d c;
+
+			/* get center position */
+			c(0) = (ind.first + 0.5) * this->resolution; 
+			c(1) = (ind.second + 0.5) * this->resolution; 
+			c(2) = 0.0;
+			
+			/* return it */
+			return c;
 		};
 };
 
