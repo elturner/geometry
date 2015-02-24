@@ -76,7 +76,7 @@ int octhist_2d_t::init(octree_t& octree, double res)
 	 * of the histogram, and checking what each cell intersects
 	 * in the octree. */
 	tic(clk);
-	progbar.set_name("Histogramming");
+	progbar.set_name("Histogram");
 	for(this->current_index.first = min_i.first;
 			this->current_index.first <= max_i.first;
 				this->current_index.first++)
