@@ -130,6 +130,27 @@ class carve_wedge_t : public shape_t
 		 * @return    Returns true iff this intersects given box
 		 */
 		bool intersects(const Eigen::Vector3d& c, double hw) const;
+		
+		/**
+		 * Helper function for intersection()
+		 *
+		 * Performs intersection test by representing the
+		 * wedge as a set of line segments (interpolated within
+		 * wedge volume), and performs a series of line/cube
+		 * intersection tests.
+		 */
+		bool intersects_rays(const Eigen::Vector3d& c,
+				double hw) const;
+		
+		/**
+		 * Helper function for intersection()
+		 *
+		 * Performs intersection test by representing the
+		 * wedge as a set of triangles and performing
+		 * triangle/cube intersections.
+		 */
+		bool intersects_tris(const Eigen::Vector3d& c, 
+				double hw) const;
 
 		/**
 		 * Applies this mapping to the given data element

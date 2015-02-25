@@ -84,6 +84,17 @@ class linesegment_t : public shape_t
 		};
 
 		/**
+		 * Returns the length of the line segment specified
+		 *
+		 * @return   Returns the length of this line segment
+		 */
+		inline double length() const
+		{ 
+			Eigen::Vector3d disp = this->end - this->orig;
+			return disp.norm();
+		};
+
+		/**
 		 * Retrieves the number of vertices that compose this line
 		 *
 		 * @return   The number of vertices in line
