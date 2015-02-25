@@ -55,6 +55,14 @@ class carve_wedge_t : public shape_t
 		 * buffer to carve. */
 		Eigen::Vector3d verts[NUM_VERTICES_PER_WEDGE];
 
+		/* the following values are cached distances between
+		 * vertices.
+		 *
+		 * These distances are used for performing intersection
+		 * tests, so it's easier to cache them here than to
+		 * have to recompute them every time. */
+		double d12, d45, d03, d14, d25;
+
 	/* functions */
 	public:
 

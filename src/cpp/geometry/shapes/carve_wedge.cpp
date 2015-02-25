@@ -170,6 +170,15 @@ void carve_wedge_t::init(carve_map_t* a1, carve_map_t* a2,
 	u.normalize(); /* unit vector in direction away from shape */
 	s = b2->get_scanpoint_var(); /* variance in this direction */
 	this->verts[5] = b2p + nb*sqrt(s)*u;
+	
+	/* what are the distances of adjacent points within a scan? */
+	d12 = (this->verts[1] - this->verts[2]).norm(); /* this frame */
+	d45 = (this->verts[4] - this->verts[5]).norm(); /* next frame */
+	
+	/* what are the distances of successive points between frames? */
+	d03 = (this->verts[0] - this->verts[3]).norm(); /* between poses */
+	d14 = (this->verts[1] - this->verts[4]).norm(); /* scanpoint i */
+	d25 = (this->verts[2] - this->verts[5]).norm(); /* scanpoint i+1 */
 }
 		
 /*----------*/
@@ -188,7 +197,6 @@ bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c,
 {
 	linesegment_t lineseg;
 	Vector3d s, p14, p25, p;
-	double d12, d45, d03, d14, d25;
 	size_t i, j, fh, fv;
 
 	/* check the size of the cube relative to the length
@@ -196,21 +204,10 @@ bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c,
 	 * small, then we will need to interpolate rays within the
 	 * wedge to make sure we've captured any cube intersection. */
 
-	/* what's the biggest distance of adjacent points within
-	 * a scan relative to the halfwidth of the cube? */
-	d12 = (this->verts[1] - this->verts[2]).norm(); /* this frame */
-	d45 = (this->verts[4] - this->verts[5]).norm(); /* next frame */
-	
 	/* fv represents the number of interior interpolation
 	 * positions to be computed within each frame */
 	fv = (size_t) ( max(d12, d45) / hw );
 
-	/* what's the biggest distance of successive points between
-	 * frames relative to the halfwidth of the cube? */
-	d03 = (this->verts[0] - this->verts[3]).norm(); /* between poses */
-	d14 = (this->verts[1] - this->verts[4]).norm(); /* scanpoint i */
-	d25 = (this->verts[2] - this->verts[5]).norm(); /* scanpoint i+1 */
-	
 	/* fh represents the number of interior interpolation
 	 * positions to be computed between frames for a point index */
 	fh = (size_t) (max(d03, max(d14, d25)) / hw);
