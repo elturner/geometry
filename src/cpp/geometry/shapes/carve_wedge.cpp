@@ -189,7 +189,7 @@ bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 {
 	/* perform the intersection test by fitting triangles to
 	 * the wedge geometry */
-	return this->intersects_rays(c, hw);
+	return this->intersects_tris(c, hw);
 }
 
 bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c, 
