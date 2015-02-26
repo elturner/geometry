@@ -1,0 +1,69 @@
+
+***************************************
+* Format Specification for .hia Files *
+***************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+February 25, 2015
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .hia files, which are used
+to store Histograms of Interior Area (HIA) of building models.
+
+Each file represents a 2D projection of the 3D volumetric data in a building
+onto the XY-plane.  Each 2D cell contains information about the height
+distribution of the interior volume along its vertical extent.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+
+All values are stored in binary, in little-endian ordering.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of histogram cells
+
+The header is represented by the following:
+
+-------------------------------------------------------------------
+value     type                 size       description
+-------------------------------------------------------------------
+magic     string               8 bytes    The literal "hiafile\0"
+vermaj    int                  4 bytes    Version (Major)
+vermin    int                  4 bytes    Version (Minor)
+level     int                  4 bytes    Level index
+num_cells unsigned int         4 bytes    file cell count specified
+x_min     double               8 bytes    min x-coordinate of cells
+y_min     double               8 bytes    min y-coordinate of cells
+z_min     double               8 bytes    min z-coordinate of level
+x_max     double               8 bytes    max x-coordinate of cells
+y_max     double               8 bytes    max y-coordinate of cells
+z_max     double               8 bytes    max z-coordinate of level
+res       double               8 bytes    Resolution width of cells
+-------------------------------------------------------------------
+Total size of header on disk: 80 bytes
+
+Following the header is the list of cells.  Each cell is
+represented with the following:
+
+-------------------------------------------------------------------
+value           type             size       description
+-------------------------------------------------------------------
+center_x        double           8 bytes    Center position x-coord
+center_y        double           8 bytes    Center position y-coord
+min_z           double           8 bytes    Cells minimum elevation
+max_z           double           8 bytes    Cells maximum elevation 
+open_height     double           8 bytes    Amount of the elevation
+                                            is marked as open space
+-------------------------------------------------------------------
+Total size of a cell on disk:   40 bytes
+
