@@ -12,6 +12,8 @@
  * information in each node, projected onto the xy-axis.
  */
 
+#include <io/hia/hia_io.h>
+#include <io/levels/building_levels_io.h>
 #include <geometry/octree/octree.h>
 #include <geometry/octree/octdata.h>
 #include <geometry/octree/shape.h>
@@ -30,8 +32,8 @@ class octhist_2d_t : public shape_t
 {
 	/* the following type-definitions are used for convenience
 	 * purposes in this class */
-	typedef std::pair<int, int>           index_t;
-	typedef std::map< index_t, double >   histmap_t;
+	typedef std::pair<int, int>                index_t;
+	typedef std::map< index_t, hia::cell_t >   histmap_t;
 
 	/* parameters */
 	private:
@@ -52,6 +54,16 @@ class octhist_2d_t : public shape_t
 		 * units: meters
 		 */
 		double resolution;
+
+		/**
+		 * The building level to operate on
+		 *
+		 * By default, the entire elevation is considered
+		 * and defined as level "0".  However, a specific
+		 * level can be specified, which limits the aspect of
+		 * the building referenced.
+		 */
+		building_levels::level_t level;
 
 		/**
 		 * The following represent the indices of the current
@@ -84,9 +96,12 @@ class octhist_2d_t : public shape_t
 		 *                  the histogram.  If not specified,
 		 *                  then will use the resolution of
 		 *                  the octree.
+		 * @param lev       The building level to use (OPTIONAL)
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
+		int init(octree_t& octree, double res, 
+				const building_levels::level_t& lev);
 		int init(octree_t& octree, double res);
 		int init(octree_t& octree);
 
@@ -103,11 +118,44 @@ class octhist_2d_t : public shape_t
 		 * Adds the specified weight to the cell covering
 		 * the given position.
 		 *
-		 * @param x   The x-position to lookup
-		 * @param y   The y-position to lookup
-		 * @param w   The weight to add
+		 * @param x    The x-position to lookup
+		 * @param y    The y-position to lookup
+		 * @param minz The minimum z-coordinate of this sample
+		 * @param maxz The maximum z-coordinate of this sample
+		 * @param w    The weight to add
 		 */
-		void insert(double x, double y, double w);
+		void insert(double x, double y, double minz, double maxz,
+					double w);
+
+		/**
+		 * Adds the specified weight to the cell covering
+		 * the given index.
+		 *
+		 * @param ind  The cell index referenced
+		 * @param minz The minimum z-coordinate of this sample
+		 * @param maxz The maximum z-coordinate of this sample
+		 * @param w    The weight to add
+		 */
+		void insert(const index_t& ind, double minz, double maxz,
+					double w);
+		
+		/*----------*/
+		/* geometry */
+		/*----------*/
+
+		/**
+		 * Computes the min and max height bounds based on
+		 * the cell content.
+		 *
+		 * Will compute the bounds of the heights described in
+		 * the cells.  These values may be different than the
+		 * level floor and ceiling heights.
+		 *
+		 * @param minz  Where to store the min height
+		 * @param maxz  Where to store the max height
+		 */
+		void compute_height_bounds(double& minz, 
+				double& maxz) const;
 
 		/*-----*/
 		/* i/o */
@@ -127,6 +175,19 @@ class octhist_2d_t : public shape_t
 		 * @param os  The output stream to write to
 		 */
 		void writetxt(std::ostream& os) const;
+
+		/**
+		 * Exports this histogram to a .hia file
+		 *
+		 * Histrogrammed Interior Area (HIA) files
+		 * represent the interior volume of a building
+		 * as a 2D top-down histogram.
+		 *
+		 * @param filename    Where to write the .hia file
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int writehia(const std::string& filename) const;
 
 		/*----------------------------*/
 		/* overloaded shape functions */
