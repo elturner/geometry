@@ -296,6 +296,15 @@ bool octhist_2d_t::intersects(const Vector3d& c, double hw) const
 	double argy[2];
 	Vector3d mycenter;
 
+	/* check if we should test vertical intersection */
+	if(this->level.is_valid())
+	{
+		/* we have valid level bounds, so check them */
+		if(c(2) - hw > this->level.ceiling_height 
+				|| c(2) + hw < this->level.floor_height)
+			return false; /* no intersection possible */
+	}
+
 	/* get this object's info */
 	mycenter = this->get_vertex(0);
 
