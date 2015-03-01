@@ -35,6 +35,7 @@ procarve_progs:
 	$(MAKE) -w -C scan_chunker $(CMD)
 	$(MAKE) -w -C procarve $(CMD)
 	$(MAKE) -w -C oct2dq $(CMD)
+	$(MAKE) -w -C generate_hia $(CMD)
 	$(MAKE) -w -C fp_optimizer $(CMD)
 	$(MAKE) -w -C merge_fp_oct $(CMD)
 	$(MAKE) -w -C octsurf $(CMD)
