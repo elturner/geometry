@@ -34,8 +34,8 @@ int octhist_2d_t::init(octree_t& octree)
 {
 	int ret;
 
-	/* apply resolution from the octree */
-	ret = this->init(octree, octree.get_resolution());
+	/* apply resolution from the octree and default level info */
+	ret = this->init(octree, octree.get_resolution(), this->level);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 
@@ -49,6 +49,20 @@ int octhist_2d_t::init(octree_t& octree, double res)
 
 	/* just give default level info */
 	ret = this->init(octree, res, this->level);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* success */
+	return 0;
+}
+
+int octhist_2d_t::init(octree_t& octree,
+				const building_levels::level_t& lev)
+{
+	int ret;
+
+	/* just give the default resolution from the octree */
+	ret = this->init(octree, octree.get_resolution(), lev);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
 

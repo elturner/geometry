@@ -109,7 +109,8 @@ class cmd_args_t
 		/**
 		 *	Sets the tab size used for printings
 		 *
-		 *	@param s  The number of white space characters in the tab
+		 *	@param s    The number of white space 
+		 *	            characters in the tab
 		 */
 		inline void set_tab_width(size_t s) 
 			{ this->tab_width = s; };

@@ -102,6 +102,8 @@ class octhist_2d_t : public shape_t
 		 */
 		int init(octree_t& octree, double res, 
 				const building_levels::level_t& lev);
+		int init(octree_t& octree,
+				const building_levels::level_t& lev);
 		int init(octree_t& octree, double res);
 		int init(octree_t& octree);
 

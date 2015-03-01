@@ -114,7 +114,7 @@ int file_t::parse(const std::string& filename)
 	}
 
 	/* read through the rest of the lines */
-	for(i = 0; i < n; i++)
+	for(i = 1; i < n; i++)
 	{
 		/* get the next line from the file */
 		const conf::command_t& line = reader.get(i);
@@ -143,6 +143,7 @@ int file_t::parse(const std::string& filename)
 			/* record the number of levels */
 			this->header.num_levels
 				= line.get_arg_as<size_t>(0);
+			this->levels.resize(this->header.num_levels);
 
 			/* check validity */
 			if(this->header.num_levels == 0)
