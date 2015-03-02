@@ -1,5 +1,4 @@
 #include "horizontal_region_info.h"
-#include "oct2dq_run_settings.h"
 #include <mesh/surface/planar_region.h>
 
 /**
@@ -22,7 +21,8 @@ using namespace std;
 /*--------------------------*/
 
 bool horizontal_region_info_t::init(const planar_region_t& reg,
-			const oct2dq_run_settings_t& args)
+			double verticalitythresh, 
+			double floorceilsurfareathresh)
 {
 	double nx, ny;
 
@@ -38,7 +38,7 @@ bool horizontal_region_info_t::init(const planar_region_t& reg,
 	 * horizontal regions.  If the value is too large,
 	 * then this region is not horizontal enough and
 	 * should be rejected. */
-	if(this->alignment >= args.verticalitythresh)
+	if(this->alignment >= verticalitythresh)
 		return false; /* too slanted */
 
 	/* get the surface area of this region */
@@ -48,7 +48,7 @@ bool horizontal_region_info_t::init(const planar_region_t& reg,
 	 * considered an inlier horizontal surface by
 	 * checking its surface area against our size
 	 * threshold. */
-	if(this->surface_area < args.floorceilsurfareathresh)
+	if(this->surface_area < floorceilsurfareathresh)
 		return false; /* too small */
 
 	/* if got here, then we have a large, horizontal

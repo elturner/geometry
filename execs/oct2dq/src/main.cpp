@@ -12,6 +12,9 @@
  * This is the main file for the wall sampling program.  This program
  * (oct2dq) will form wall samples using the geometry specified
  * in an octree.
+ *
+ * This program also generates the level split elevations and records
+ * the vertical surfaces found in this model.
  */
 
 using namespace std;

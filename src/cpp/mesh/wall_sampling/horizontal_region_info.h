@@ -14,7 +14,6 @@
  * of a scanned environment.
  */
 
-#include "oct2dq_run_settings.h"
 #include <mesh/surface/planar_region.h>
 
 /**
@@ -80,14 +79,21 @@ class horizontal_region_info_t
 		 * does qualify as a horizontal region, then this
 		 * function returns true.
 		 *
-		 * @param reg   The originating region
-		 * @param args  The runtime parameters to use
+		 * @param reg                The originating region
+		 * @param verticalitythresh  The maximum value of the normal
+		 *                           vector's horizontal component
+		 *                           to allow for a horizontal
+		 *                           surface.
+		 * @param floorceilsurfareathresh    The minimum allowed
+		 *                           surface area for a horizontal
+		 *                           region.  Measured in meters^2.
 		 *
 		 * @return      Returns true iff input region qualifies
 		 *              as large and horizontal.
 		 */
 		bool init(const planar_region_t& reg,
-			const oct2dq_run_settings_t& args);
+			double verticalitythresh, 
+			double floorceilsurfareathresh);
 };
 
 #endif

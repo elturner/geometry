@@ -1,7 +1,5 @@
 #include "process.h"
 #include "oct2dq_run_settings.h"
-#include "wall_region_info.h"
-#include "horizontal_region_info.h"
 #include <io/data/fss/fss_io.h>
 #include <io/levels/building_levels_io.h>
 #include <geometry/shapes/shape_wrapper.h>
@@ -16,6 +14,8 @@
 #include <mesh/refine/octree_padder.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
+#include <mesh/wall_sampling/wall_region_info.h>
+#include <mesh/wall_sampling/horizontal_region_info.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/histogram.h>
@@ -284,7 +284,9 @@ int process_t::identify_surfaces(const oct2dq_run_settings_t& args)
 		/* get info about this region, to see
 		 * if it would be a good fit for horizontal
 		 * regions. */
-		if(!(hori_info.init(it->second.get_region(), args)))
+		if(!(hori_info.init(it->second.get_region(), 
+				args.verticalitythresh,
+				args.floorceilsurfareathresh)))
 			continue; /* not a good fit */
 
 		/* insert this info into appropriate structures,

@@ -50,9 +50,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region.cpp \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.cpp \
 		$(SOURCEDIR)mesh/wall_sampling/wall_sampling.cpp \
+		$(SOURCEDIR)mesh/wall_sampling/wall_region_info.cpp \
+		$(SOURCEDIR)mesh/wall_sampling/horizontal_region_info.cpp \
 		src/oct2dq_run_settings.cpp \
-		src/wall_region_info.cpp \
-		src/horizontal_region_info.cpp \
 		src/process.cpp \
 		src/main.cpp
 
@@ -102,9 +102,9 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)mesh/surface/planar_region.h \
 		$(SOURCEDIR)mesh/surface/planar_region_graph.h \
 		$(SOURCEDIR)mesh/wall_sampling/wall_sampling.h \
+		$(SOURCEDIR)mesh/wall_sampling/wall_region_info.h \
+		$(SOURCEDIR)mesh/wall_sampling/horizontal_region_info.h \
 		src/oct2dq_run_settings.h \
-		src/wall_region_info.h \
-		src/horizontal_region_info.h \
 		src/process.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

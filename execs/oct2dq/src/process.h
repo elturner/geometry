@@ -14,14 +14,14 @@
  */
 
 #include "oct2dq_run_settings.h"
-#include "wall_region_info.h"
-#include "horizontal_region_info.h"
 #include <geometry/octree/octree.h>
 #include <geometry/quadtree/quadtree.h>
 #include <geometry/quadtree/quaddata.h>
 #include <geometry/transform.h>
 #include <mesh/surface/node_boundary.h>
 #include <mesh/surface/planar_region_graph.h>
+#include <mesh/wall_sampling/wall_region_info.h>
+#include <mesh/wall_sampling/horizontal_region_info.h>
 #include <Eigen/Dense>
 #include <vector>
 #include <map>
