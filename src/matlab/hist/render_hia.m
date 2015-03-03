@@ -30,6 +30,7 @@ function [] = render_hia(hia)
 				+ [1;1;1;1] * hia.centers(:,2)';
 
 	% render the patches for each pixel
-	patch(pixels_x, pixels_y, hia.open_heights', 'LineStyle', 'None');
+	values = hia.open_heights';
+	patch(pixels_x, pixels_y, values, 'LineStyle', 'None');
 
 end
