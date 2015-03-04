@@ -172,7 +172,7 @@ class hia_cell_info_t
 			/* copy parameters */
 			this->center           = other.center;
 			this->min_z            = other.min_z;
-			this->max_z            = other.max_Z;
+			this->max_z            = other.max_z;
 			this->open_height      = other.open_height;
 			this->neighborhood_sum = other.neighborhood_sum;
 			this->room_index       = other.room_index;

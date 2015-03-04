@@ -19,6 +19,8 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
+		$(SOURCEDIR)geometry/shapes/bounding_box.cpp \
+		$(SOURCEDIR)geometry/hist/hia_analyzer.cpp \
 		src/hia_floorplan_settings.cpp \
 		src/main.cpp
 
@@ -34,6 +36,10 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
+		$(SOURCEDIR)geometry/shapes/bounding_box.h \
+		$(SOURCEDIR)geometry/hist/hia_analyzer.h \
+		$(SOURCEDIR)geometry/hist/hia_cell_index.h \
+		$(SOURCEDIR)geometry/hist/hia_cell_info.h \
 		src/hia_floorplan_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

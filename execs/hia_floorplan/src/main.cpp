@@ -1,5 +1,5 @@
 #include "hia_floorplan_settings.h"
-#include <util/tictoc.h>
+#include <geometry/hist/hia_analyzer.h>
 #include <iostream>
 
 /**
@@ -26,7 +26,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	hia_floorplan_settings_t args;
-	tictoc_t clk;
+	hia_analyzer_t analyzer;
 	int ret;
 
 	/* parse the given parameters */
@@ -36,6 +36,16 @@ int main(int argc, char** argv)
 		cerr << "[main]\tError " << ret << ": "
 		     << "Could not parse parameters" << endl;
 		return 1;
+	}
+
+	/* import the hia file */
+	ret = analyzer.readhia(args.hiafile);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to import hia file: "
+		     << args.hiafile << endl;
+		return 2;
 	}
 
 	// TODO

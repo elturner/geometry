@@ -341,6 +341,10 @@ namespace hia
 			~reader_t()
 			{ this->close(); };
 
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
 			/**
 			 * Opens a file with this reader
 			 *
@@ -353,15 +357,7 @@ namespace hia
 			 * 		non-zero on failure.
 			 */
 			int open(const std::string& filename);
-
-			/**
-			 * Returns the total number of cells in file.
-			 *
-			 * @return   Total number of cells
-			 */
-			inline unsigned int num_cells() const
-			{ return this->header.num_cells; };
-
+			
 			/**
 			 * Reads the next cell from the file
 			 *
@@ -381,6 +377,97 @@ namespace hia
 			 * memory and resources.
 			 */
 			void close();
+	
+			/*-----------*/
+			/* accessors */
+			/*-----------*/
+
+			/**
+			 * Returns the level index stored in this file
+			 *
+			 * @return   Open file's level index
+			 */
+			inline int level_index() const
+			{ return this->header.level_index; };
+
+			/**
+			 * Returns the total number of cells in file.
+			 *
+			 * @return   Total number of cells
+			 */
+			inline unsigned int num_cells() const
+			{ return this->header.num_cells; };
+
+			/**
+			 * Returns the min bound in the x-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the min-x bound
+			 */
+			inline double x_min() const
+			{ return this->header.x_min; };
+
+			/**
+			 * Returns the min bound in the y-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the min-y bound
+			 */
+			inline double y_min() const
+			{ return this->header.y_min; };
+
+			/**
+			 * Returns the min bound in the z-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the min-z bound
+			 */
+			inline double z_min() const
+			{ return this->header.z_min; };
+
+			/**
+			 * Returns the max bound in the x-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the max-x bound
+			 */
+			inline double x_max() const
+			{ return this->header.x_max; };
+
+			/**
+			 * Returns the max bound in the y-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the max-y bound
+			 */
+			inline double y_max() const
+			{ return this->header.y_max; };
+
+			/**
+			 * Returns the max bound in the z-coordinate
+			 *
+			 * Units:  meters
+			 *
+			 * @return   Returns the max-z bound
+			 */
+			inline double z_max() const
+			{ return this->header.z_max; };
+
+			/**
+			 * Returns the resolution of the cells stored
+			 * in the open file.
+			 *
+			 * units: meters
+			 *
+			 * @return   Resolution stored in file.
+			 */
+			inline double resolution() const
+			{ return this->header.resolution; };
 	};
 
 	/*--------------------*/

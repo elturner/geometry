@@ -82,6 +82,24 @@ class bounding_box_t : public shape_t
 		 */
 		void init(octree_t& tree);
 
+		/**
+		 * Initializes this bounding box based on the given
+		 * values.
+		 *
+		 * @param x_min   The minimum x-coordinate value
+		 * @param y_min   The minimum y-coordinate value
+		 * @param z_min   The minimum z-coordinate value
+		 * @param x_max   The maximum x-coordinate value
+		 * @param y_max   The maximum y-coordinate value
+		 * @param z_max   The maximum z-coordinate value
+		 */
+		inline void init(double x_min, double y_min, double z_min,
+				double x_max, double y_max, double z_max)
+		{
+			this->min_corner << x_min, y_min, z_min;
+			this->max_corner << x_max, y_max, z_max;
+		};
+
 		/*-----------*/
 		/* accessors */
 		/*-----------*/
