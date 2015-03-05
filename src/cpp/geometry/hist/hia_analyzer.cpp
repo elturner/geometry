@@ -2,6 +2,7 @@
 #include <io/hia/hia_io.h>
 #include <geometry/shapes/bounding_box.h>
 #include <geometry/hist/hia_cell_info.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <iostream>
@@ -91,12 +92,10 @@ int hia_analyzer_t::readhia(const std::string& filename)
 				hia_cell_info_t>(index,info));
 		if(!(ins.second))
 		{
-			/* overlapping cells should not happen */
-			cerr << "[hia_analyzer_t::readhia]\tEncountered "
-			     << "overlapping cells at index ("
-			     << index.x_ind << ", " << index.y_ind << ") "
-			     << "for file: " << filename << endl;
-			return -5;
+			/* overlapping cells should not happen 
+			 *
+			 * But if they do, then just take one of
+			 * them and ignore the other. */
 		}
 	}
 
@@ -106,10 +105,175 @@ int hia_analyzer_t::readhia(const std::string& filename)
 	return 0;
 }
 		
+int hia_analyzer_t::populate_neighborhood_sums(double dist)
+{
+	cellmap_t::iterator it, neigh_it;
+	set<hia_cell_index_t> neighs;
+	set<hia_cell_index_t>::iterator nit;
+	progress_bar_t progbar;
+	size_t num_so_far;
+	tictoc_t clk;
+	int ret;
+
+	/* begin processing */
+	tic(clk);
+	progbar.set_name("Neighbor sums");
+	num_so_far = 0;
+
+	/* iterate over the cells */
+	for(it = this->cells.begin(); it != this->cells.end(); it++)
+	{
+		/* update progress bar */
+		progbar.update(num_so_far++, this->cells.size());
+
+		/* reset the sum for this cell */
+		it->second.neighborhood_sum = 0;
+
+		/* find the neighbors of this cell */
+		neighs.clear();
+		ret = this->neighbors_within(it->first, dist, neighs);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	
+		/* compute the sum for this cell */
+		for(nit = neighs.begin(); nit != neighs.end(); nit++)
+		{
+			/* get neigh info */
+			neigh_it = this->cells.find(*nit);
+			if(neigh_it == this->cells.end())
+				return PROPEGATE_ERROR(-2, ret);
+
+			/* add to sum */
+			it->second.neighborhood_sum 
+				+= neigh_it->second.open_height;
+		}
+	}
+
+	/* clean up */
+	progbar.clear();
+	toc(clk, "Computing neighbor sums");
+	return 0;
+}
+		
+int hia_analyzer_t::label_local_maxima(double dist)
+{
+	cellmap_t::iterator it, neigh_it;
+	set<hia_cell_index_t> neighs;
+	set<hia_cell_index_t>::iterator nit;
+	progress_bar_t progbar;
+	size_t num_so_far, num_localmaxes;
+	bool islocalmax;
+	tictoc_t clk;
+	int ret;
+
+	/* begin processing */
+	tic(clk);
+	progbar.set_name("Labeling local max");
+	num_so_far = 0;
+	num_localmaxes = 0;
+
+	/* iterate over the cells */
+	for(it = this->cells.begin(); it != this->cells.end(); it++)
+	{
+		/* update progress bar */
+		progbar.update(num_so_far++, this->cells.size());
+
+		/* find the neighbors of this cell */
+		neighs.clear();
+		ret = this->neighbors_within(it->first, dist, neighs);
+		if(ret)
+			return PROPEGATE_ERROR(-1, ret);
+	
+		/* iterate over the neighbors, checking if the current
+		 * cell has the largest sum */
+		islocalmax = true;
+		for(nit = neighs.begin(); nit != neighs.end(); nit++)
+		{
+			/* get neigh info */
+			neigh_it = this->cells.find(*nit);
+			if(neigh_it == this->cells.end())
+				return PROPEGATE_ERROR(-2, ret);
+			
+			/* compare the sums */
+			if(it->second.neighborhood_sum 
+					< neigh_it->second.neighborhood_sum)
+			{
+				/* a neighbor is larger, this cell is NOT
+				 * a local max */
+				islocalmax = false;
+				it->second.room_index = -1;
+				break;
+			}
+			else if(it->second.neighborhood_sum 
+				== neigh_it->second.neighborhood_sum)
+			{
+				/* the neighbor has the same sum.  we should
+				 * only count one of them as a local max,
+				 * so choose the one that is smaller. */
+				if(neigh_it->first < it->first)
+				{
+					/* the other cell is smaller, it
+					 * should be the local max, not
+					 * this one */
+					islocalmax = false;
+					it->second.room_index = -1;
+					break;
+				}
+			}
+			else
+			{ /* this cell is larger, keep searching */ }
+		}
+
+		/* finished with the loop, check if we are local max */
+		if(islocalmax)
+		{
+			/* make a unique index for this localmax */
+			it->second.room_index = num_localmaxes;
+			num_localmaxes++;
+		}
+	}
+
+	/* clean up */
+	progbar.clear();
+	toc(clk, "Computing local maxima");
+	return 0;
+}
+		
+void hia_analyzer_t::write_neighborhood_sums(std::ostream& os) const
+{
+	cellmap_t::const_iterator it;
+
+	/* iterate over the cells */
+	for(it = this->cells.begin(); it != this->cells.end(); it++)
+	{
+		/* write info */
+		os << it->first.x_ind << " " << it->first.y_ind << " "
+			<< it->second.neighborhood_sum << endl;
+	}
+}
+		
+void hia_analyzer_t::write_localmax(std::ostream& os) const
+{
+	cellmap_t::const_iterator it;
+
+	/* iterate over the cells */
+	for(it = this->cells.begin(); it != this->cells.end(); it++)
+	{
+		/* check if room index is valid */
+		if(it->second.room_index < 0)
+			continue; /* skip it */
+
+		/* write info */
+		os << it->second.center.transpose() << " "
+			<< it->second.room_index << endl;
+	}
+}
+		
 int hia_analyzer_t::neighbors_within(const hia_cell_index_t& seed,
 					double dist, 
-				std::set<hia_cell_index_t>& neighs) const
+			std::set<hia_cell_index_t>& neighs) const
 {
+	pair<set<hia_cell_index_t>::iterator, bool> ins;
 	cellmap_t::const_iterator seed_it, curr_it;
 	set<hia_cell_index_t> local;
 	set<hia_cell_index_t>::iterator lit;
@@ -152,7 +316,14 @@ int hia_analyzer_t::neighbors_within(const hia_cell_index_t& seed,
 
 		/* the current cell is valid and within the search
 		 * distance, so add it to our list of neighbors */
-		neighs.insert(curr);
+		ins = neighs.insert(curr);
+		if(!(ins.second))
+		{
+			/* Insert failed because cell already counted
+			 * as a neighbor.  Since we've already seen it
+			 * don't bother proceeding. */
+			continue;
+		}
 
 		/* now search the neighbors of the current cell */
 		local.clear();

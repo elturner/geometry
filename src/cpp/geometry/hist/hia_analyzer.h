@@ -15,6 +15,7 @@
 #include <geometry/shapes/bounding_box.h>
 #include <geometry/hist/hia_cell_index.h>
 #include <geometry/hist/hia_cell_info.h>
+#include <iostream>
 #include <string>
 #include <map>
 #include <set>
@@ -102,8 +103,75 @@ class hia_analyzer_t
 		 */
 		int readhia(const std::string& filename);
 
+		/*------------*/
+		/* processing */
+		/*------------*/
+
+		/**
+		 * Iterates over the cells, computing sum of neighborhood
+		 * values of open_heights.
+		 *
+		 * Will populate the neighborhood_sum field of each cell
+		 * with the sum of its neighborhood's values, given
+		 * a radius for that neighborhood.
+		 *
+		 * @param dist   The radius to search for each cell
+		 *
+		 * @return       Returns zero on success, 
+		 * 			non-zero on failure.
+		 */
+		int populate_neighborhood_sums(double dist);
+
+		/**
+		 * Labels local maxima within the cell map
+		 *
+		 * Must be called after populate_neighborhood_sums().  A
+		 * local max is any cell that has the largest neighborhood
+		 * sum of any cell in its neighborhood.
+		 *
+		 * If a cell is a local max, it will be given a unique,
+		 * non-zero room id.  If a cell is not a local max, it
+		 * will be given a room id of -1.
+		 *
+		 * @param dist   The neighborhood radius distance.
+		 *
+		 * @return       Returns zero on success, 
+		 * 			non-zero on failure.
+		 */
+		int label_local_maxima(double dist);
 
 		// TODO
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Writes the neighborhood sum values for each stored
+		 * cell.
+		 *
+		 * Will export neighborhood sum info to the specified
+		 * stream.  Each line will contain:
+		 *
+		 * 	<index_x> <index_y> <neighborhood_sum>
+		 *
+		 * @param os  The output stream to write to
+		 */
+		void write_neighborhood_sums(std::ostream& os) const;
+
+		/**
+		 * Writes the locations of the local maxima
+		 *
+		 * Will export info to the specified stream.  Each
+		 * line will contain:
+		 *
+		 * 	<center_x> <center_y> <room_index>
+		 *
+		 * For each cell that has non-negative room_index
+		 *
+		 * @param os   The output stream to write to
+		 */
+		void write_localmax(std::ostream& os) const;
 
 	/* helper functions */
 	private:
