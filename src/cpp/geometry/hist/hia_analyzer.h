@@ -15,6 +15,7 @@
 #include <geometry/shapes/bounding_box.h>
 #include <geometry/hist/hia_cell_index.h>
 #include <geometry/hist/hia_cell_info.h>
+#include <geometry/hist/hia_room_info.h>
 #include <iostream>
 #include <string>
 #include <map>
@@ -29,7 +30,8 @@ class hia_analyzer_t
 	/* the following type-definitions are used for convenience
 	 * purposes in this class */
 	typedef std::map<hia_cell_index_t, hia_cell_info_t>   cellmap_t;
-	
+	typedef std::map<hia_cell_index_t, hia_room_info_t>   roommap_t;
+
 	/* paramters */
 	private:
 
@@ -74,6 +76,17 @@ class hia_analyzer_t
 		 */
 		cellmap_t cells;
 
+		/*------------------*/
+		/* room information */
+		/*------------------*/
+
+		/**
+		 * The set of rooms in this map
+		 *
+		 * Each room is made up of a subset of cells
+		 */
+		roommap_t rooms;
+
 	/* functions */
 	public:
 
@@ -85,7 +98,7 @@ class hia_analyzer_t
 		 * Creates an empty analyzer with invalid fields.
 		 */
 		hia_analyzer_t() :
-			level(-1), bounds(), resolution(-1), cells()
+			level(-1),bounds(),resolution(-1),cells(),rooms()
 		{};
 
 		/**
@@ -139,6 +152,25 @@ class hia_analyzer_t
 		 * 			non-zero on failure.
 		 */
 		int label_local_maxima(double dist);
+
+		/**
+		 * Assigns a room index to every cell
+		 *
+		 * This must be called after label_local_maxima() has
+		 * been run successfully.
+		 *
+		 * Will propegate room indices from the labeled seed cells
+		 * and label each non-seed cell with the room index that
+		 * is topologically closest to it.
+		 *
+		 * Note that open_height counts as inverse distance, so
+		 * going through several cells with low open_height will
+		 * be considered farther away than the same number of cells
+		 * with greater open_height.
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int propegate_room_labels();
 
 		// TODO
 

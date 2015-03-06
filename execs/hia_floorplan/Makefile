@@ -40,6 +40,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/hist/hia_analyzer.h \
 		$(SOURCEDIR)geometry/hist/hia_cell_index.h \
 		$(SOURCEDIR)geometry/hist/hia_cell_info.h \
+		$(SOURCEDIR)geometry/hist/hia_room_info.h \
 		src/hia_floorplan_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

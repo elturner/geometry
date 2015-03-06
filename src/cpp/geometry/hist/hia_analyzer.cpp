@@ -10,6 +10,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <float.h>
 
 /**
  * @file   hia_analyzer.cpp
@@ -69,6 +70,7 @@ int hia_analyzer_t::readhia(const std::string& filename)
 
 	/* import cell data from file */
 	this->cells.clear();
+	this->rooms.clear();
 	for(i = 0; i < infile.num_cells(); i++)
 	{
 		/* attempt to get next cell */
@@ -157,6 +159,7 @@ int hia_analyzer_t::populate_neighborhood_sums(double dist)
 		
 int hia_analyzer_t::label_local_maxima(double dist)
 {
+	pair<roommap_t::iterator, bool> ins;
 	cellmap_t::iterator it, neigh_it;
 	set<hia_cell_index_t> neighs;
 	set<hia_cell_index_t>::iterator nit;
@@ -230,12 +233,197 @@ int hia_analyzer_t::label_local_maxima(double dist)
 			/* make a unique index for this localmax */
 			it->second.room_index = num_localmaxes;
 			num_localmaxes++;
+
+			/* add as a new room */
+			ins = this->rooms.insert(pair<hia_cell_index_t,
+				hia_room_info_t>(it->first,
+					hia_room_info_t(it->first)));
+			if(!(ins.second))
+				return -3;
 		}
 	}
 
 	/* clean up */
 	progbar.clear();
 	toc(clk, "Computing local maxima");
+	return 0;
+}
+
+/* the following defines the class used in the priority queue 
+ * in the function propegate_room_labels */
+class pq_dist_val_t
+{
+	/* parameters */
+	public:
+
+		/* the distance of current cell from seed point */
+		double dist;
+
+		/* the current cell */
+		hia_cell_index_t curr;
+
+		/* the seed cell */
+		hia_cell_index_t seed;
+
+	/* functions */
+	public:
+
+		/** 
+		 * make a new dist value from given params
+		 *
+		 * @param s      The original seed
+		 * @param prev_dist_to_seed   The previous distance value
+		 * @param next_oh   The next open_height value
+		 * @param c      The new cell to add to chain
+		 */
+		pq_dist_val_t(const hia_cell_index_t& s,
+				double prev_dist_to_seed,
+				double next_oh,
+				const hia_cell_index_t& c)
+		{
+			/* store indices */
+			this->seed = s;
+			this->curr = c;
+
+			/* the distance between seeds is the sum of
+			 * the inverses of the open_height values of
+			 * each cell in the chain.
+			 *
+			 * If a cell's open_height is 0, then the
+			 * distance is infinite.
+			 */
+			if(next_oh <= 0)
+				this->dist = DBL_MAX;
+			else
+				this->dist = prev_dist_to_seed + 1/next_oh;
+		};
+
+		/* operator indicates how to sort 
+		 *
+		 * We want the smallest values to come up
+		 * in the queue first, so sort backwards. */
+		inline bool operator < (const pq_dist_val_t& other) const
+		{ return this->dist > other.dist; };
+
+		/**
+		 * Copy operator
+		 */
+		inline pq_dist_val_t& operator= (const pq_dist_val_t& other)
+		{
+			this->seed = other.seed;
+			this->curr = other.curr;
+			this->dist = other.dist;
+
+			return *this;
+		};
+};
+		
+int hia_analyzer_t::propegate_room_labels()
+{
+	roommap_t::iterator rit;
+	cellmap_t::iterator cit, sit;
+	priority_queue<pq_dist_val_t> pq;
+	set<hia_cell_index_t> local;
+	set<hia_cell_index_t>::iterator lit;
+	progress_bar_t progbar;
+	tictoc_t clk;
+	size_t num_labeled;
+
+	/* begin processing */
+	tic(clk);
+	progbar.set_name("Labeling rooms");
+	num_labeled = 0;
+
+	/* iterate through all room seeds, adding their neighbors to
+	 * the priority queue */
+	for(rit = this->rooms.begin(); rit != this->rooms.end(); rit++)
+	{
+		/* get the neighbors for the seed cell of this room */
+		local.clear();
+		rit->first.get_neighs(local);
+
+		/* get info for this seed */
+		cit = this->cells.find(rit->first);
+		if(cit == this->cells.end())
+			return -1; /* can't find seed info */
+
+		/* this seed is already in its room */
+		progbar.update(num_labeled++, this->cells.size());
+
+		/* add all these neighbors to the priority queue */
+		for(lit = local.begin(); lit != local.end(); lit++)
+		{
+			/* add this cell as a potential next-step 
+			 *
+			 * Note that these neighbor cells may not
+			 * actually exist, so the next part of this
+			 * function needs to appropriately filter
+			 * those out. */
+			pq.push(pq_dist_val_t(cit->first, 0,
+					cit->second.open_height, *lit));
+		}
+	}
+
+	/* now that we've populated the priority queue, keep running
+	 * until we run out of cells */
+	while(!(pq.empty()))
+	{
+		/* get the next value from the queue */
+		pq_dist_val_t curr = pq.top();
+		pq.pop();
+
+		/* get the info for this cell */
+		cit = this->cells.find(curr.curr);
+		if(cit == this->cells.end())
+			continue; /* can't find info, not valid cell */
+
+		/* check if this value has already been taken */
+		if(cit->second.room_index >= 0)
+			continue; /* already in a room */
+
+		/* add this cell to the room it's closest to,
+		 * which would be its seed room */
+		rit = this->rooms.find(curr.seed);
+		if(rit == this->rooms.end())
+			return -3; /* can't find room */
+
+		/* also get info for the room seed itself */
+		sit = this->cells.find(curr.seed);
+		if(sit == this->cells.end())
+			return -4; /* can't find info for room seed */
+
+		/* add cell to room */
+		rit->second.insert(cit->first);
+		
+		/* set the room index of this cell so that we know
+		 * it has been assigned */
+		cit->second.room_index = sit->second.room_index;
+		
+		/* we've now labeled another cell */
+		progbar.update(num_labeled++, this->cells.size());
+
+		/* now that the current cell has been added to a room,
+		 * check all of its neighbors to see if they should
+		 * also be added to this room. */
+		local.clear();
+		cit->first.get_neighs(local);
+		for(lit = local.begin(); lit != local.end(); lit++)
+		{
+			/* insert this neighbor into the queue to
+			 * check.  Its distance should be increased
+			 * from the current cell based on the open_height
+			 * value of the current cell. */
+			pq.push(pq_dist_val_t(
+				sit->first, /* the room seed */
+				curr.dist, /* distance of current cell */
+				cit->second.open_height, /* delta dist */
+				*lit)); /* the next cell to check */
+		}
+	}
+
+	/* clean up */
+	progbar.clear();
+	toc(clk, "Labeling rooms");
 	return 0;
 }
 		
