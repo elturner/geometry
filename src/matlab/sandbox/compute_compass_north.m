@@ -34,8 +34,14 @@ function ang = compute_compass_north(madfile, ic4file, timefile)
 	% the IC4 is the same as system common coordinates (this is
 	% not the best, but it's a proof-of-concept script)
 
+	figure;
+	render_path(poses);
+	hold on;
+	title('Each sample estimate');
+
 	% iterate over readings
 	T_north = [0;0;0];
+	loc = zeros(2, length(ic4_poses));
 	for i = 1:length(ic4_poses)
 
 		% get best pose
@@ -53,14 +59,20 @@ function ang = compute_compass_north(madfile, ic4file, timefile)
 		% this value, we can get an estimate of the direction to
 		% north.
 		T_north = T_north + -T_wld;
+		loc(:,i) = poses(1:2, ic4_poses(i));
+		plot(loc(1,i)+[0, -T_wld(1)], loc(2,i)+[0, -T_wld(2)],'r-');
 	end
+		
+	plot(loc(1,:), loc(2,:), 'b-', 'LineWidth', 4);
 
 	% get the average reading
 	T_north = T_north / length(ic4_poses);
 	ang = atan2(T_north(2), T_north(1));
 
 	% plot value
+	figure;
 	render_path(poses);
 	plot([0 cos(ang)], [0 sin(ang)], 'r-');
 	plot(0,0,'bo');
+	title('Final estimate of Magnetic North');
 end
