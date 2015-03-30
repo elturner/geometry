@@ -61,7 +61,14 @@ function [counts,locations] = hist_images_by_fp(fp, camposefile, whitelist)
 	% iterate through the rooms of the floorplan
 	counts = zeros(fp.num_rooms, 1);
 	for i = 1:1:fp.num_rooms
-	
+
+		% if there are no more cameras left, just set the room
+		% count to zero
+		if(isempty(cameraX))
+			counts(i) = 0;
+			continue;
+		end
+
 		% Collect all the triangles that are in this room
 		roomtris = fp.tris(fp.room_inds==i,:);
 	
