@@ -28,7 +28,7 @@ int people_t::import(const std::string& filename)
 	ifstream infile;
 	stringstream ss;
 	string tline;
-	size_t c;
+	size_t linenum, c;
 
 	/* clear any existing information */
 	this->clear();
@@ -43,10 +43,12 @@ int people_t::import(const std::string& filename)
 	}
 
 	/* iterate through this file */
+	linenum = 0;
 	while(!(infile.eof()))
 	{
 		/* get the next line of the file */
 		std::getline(infile, tline);
+		linenum++;
 		if(tline.empty())
 			continue; /* skip empty lines */
 
@@ -57,7 +59,8 @@ int people_t::import(const std::string& filename)
 		if(!(ss >> c))
 		{
 			cerr << "[people_t::import]\tError!  Unable to "
-			     << "parse line: \"" << tline << "\""
+			     << "parse line #" << linenum 
+			     << ": \"" << tline << "\""
 			     << endl;
 			return -2;
 		}
