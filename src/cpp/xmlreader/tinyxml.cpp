@@ -972,6 +972,7 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 	if ( file )
 	{
 		bool result = LoadFile( file, encoding );
+		fclose(file);
 		return result;
 	}
 	else
