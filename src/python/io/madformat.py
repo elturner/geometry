@@ -3,8 +3,31 @@
 #
 #	Gives a class for reading .mad path files.
 #
+
 from struct import *
 
+#
+#   This class contains the following fields:
+#
+#       self.poses:     2D array, where self.poses[i] is the info
+#                       for the i'th pose, which is an array containing:
+#
+#                           [ x y z roll pitch yaw ]
+#
+#                       where (x,y,z) is a position in units of meters,
+#                       in ENU coordiantes, and (roll,pitch,yaw) is an
+#                       orientation in NED coordinates in degrees.
+#
+#       self.times:     A 1D array, where self.times[i] is the timestamp
+#                       of the i'th pose, in units of seconds.
+#
+#       self.zupts:     A 2D array, where self.zupts[i] is the i'th zupt
+#                       interval, stored as a two-element array:
+#
+#                               [start_time, end_time]
+#
+#                       Where each time is in the common clock in seconds.
+#
 class Mad :
 
 	#
@@ -61,7 +84,8 @@ class Mad :
 	#
 	def write_mad(self, filename) :
 
-		# Ensure that we have a sane quantity of things stored in the class
+		# Ensure that we have a sane quantity of 
+                # things stored in the class
 		if len(self.times) != len(self.poses) :
 			Exception("File does not contain equal number of times and poses.")
 
@@ -88,10 +112,3 @@ class Mad :
 		# Close like a good citizen
 		f.close()
 
-
-
-
-
-
-		
-		
