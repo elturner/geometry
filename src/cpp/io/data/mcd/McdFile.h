@@ -35,15 +35,15 @@ public:
 		{return _num_images;};
 
 	/* gets the pointer to the K matrix */
-	inline const double * const K() const
+	inline const double * K() const
 		{return _K;};
 
 	/* gets the pointer to the rotation matrix */
-	inline const double * const r_cam_to_common() const
+	inline const double * r_cam_to_common() const
 		{return _r_cam_to_common;};
 
 	/* gets the translation vector */
-	inline const double * const t_cam_to_common() const
+	inline const double * t_cam_to_common() const
 		{return _t_cam_to_common;};
 
 	/* gets the ith timestamp */

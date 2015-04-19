@@ -21,19 +21,6 @@
  */
 class cam_pose_file_t
 {
-	/* parameters */
-	private:
-
-		/**
-		 * Holds the timestamps
-		 */
-		std::vector<double> _timestamps;
-
-		/**
-		 * Holds the poses
-		 */
-		std::vector<Pose> _poses;
-
 	/* helper classes */
 	public:
 
@@ -77,34 +64,47 @@ class cam_pose_file_t
 				inline const double * p() const 
 				{return _p;};
 				
-				inline const double time() const 
+				inline double time() const 
 				{return _time;};
 				
-				inline const double roll() const 
+				inline double roll() const 
 				{return _p[0];};
 				
-				inline const double pitch() const 
+				inline double pitch() const 
 				{return _p[1];};
 				
-				inline const double yaw() const 
+				inline double yaw() const 
 				{return _p[2];};
 				
-				inline const double x() const
+				inline double x() const
 				{return _p[3];};
 				
-				inline const double y() const
+				inline double y() const
 				{return _p[4];};
 				
-				inline const double z() const
+				inline double z() const
 				{return _p[5];};
 		};
+	
+	/* parameters */
+	private:
+
+		/**
+		 * Holds the timestamps
+		 */
+		std::vector<double> _timestamps;
+
+		/**
+		 * Holds the poses
+		 */
+		std::vector<Pose> _poses;
 	
 	/* functions */
 	public:
 
 		/* constructor */
-		PoseFile() {};
-		PoseFile(const std::string& filename)
+		cam_pose_file_t() {};
+		cam_pose_file_t(const std::string& filename)
 		{ read(filename); };
 
 		/* Reader */
