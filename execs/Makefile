@@ -46,6 +46,7 @@ image_progs:
 	@echo ""
 	@echo "Compiling image processing programs..."
 	@echo ""
+	$(MAKE) -w -C rectify_images $(CMD)
 	$(MAKE) -w -C mesh2image $(CMD)
 
 # utility programs
