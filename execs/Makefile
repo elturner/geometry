@@ -40,6 +40,14 @@ procarve_progs:
 	$(MAKE) -w -C merge_fp_oct $(CMD)
 	$(MAKE) -w -C octsurf $(CMD)
 
+# image manipulation programs
+image_progs:
+	@mkdir -p ../bin # ensure output directory exists
+	@echo ""
+	@echo "Compiling image processing programs..."
+	@echo ""
+	$(MAKE) -w -C mesh2image $(CMD)
+
 # utility programs
 util_progs:
 	@mkdir -p ../bin # ensure output directory exists
