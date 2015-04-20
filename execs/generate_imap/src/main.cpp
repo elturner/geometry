@@ -83,7 +83,8 @@ int main(int argc, char * argv[])
 		resolution);
 	if(ret)
 	{
-		cerr << "Image mapping failed with error code : " << ret << endl;
+		cerr << "Image mapping failed with error code : " 
+		     << ret << endl;
 		return 2; 
 	}
 

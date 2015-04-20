@@ -1,0 +1,52 @@
+
+****************************************
+* Format Specification for .imap Files *
+****************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+April 20, 2015
+
+***********
+* Purpose *
+***********
+
+This document describes the file format for .imap files, which are used
+to store imagery index mappings in world coordinates.
+
+Each file indicates which images have light-of-sight views to each 2D
+position on the floor plan.
+
+***************
+* Conventions *
+***************
+
+All distances and positions are in units of meters.
+All indices are zero-indexed.
+All values are stored in ASCII.
+
+**********
+* Format *
+**********
+
+The file contains a header, followed by a list of 2D cells
+
+The header is represented by the following:
+
+	<res>			-	The resolution of the 2D cells
+
+The remainder of the file is a list of 2D cells.  Each cell contains
+a list of camera indices that can "see" that cell.  These indices are
+sorted based on the quality of the line-of-sight.
+
+Each cell is stored on a line, with the following values:
+
+	<cx> <cy> <num_vals> <v_0> <v_1> <v_2> ... <v_(num_vals-1)>
+
+where:
+
+	(cx,cy)		-	The center position of the cell
+	num_vals	-	The number of indices in this cell
+	v_i		-	The i'th camera index that can observe 
+				this cell
+
