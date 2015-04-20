@@ -48,6 +48,7 @@ image_progs:
 	@echo ""
 	$(MAKE) -w -C rectify_images $(CMD)
 	$(MAKE) -w -C mesh2image $(CMD)
+	$(MAKE) -w -C generate_imap $(CMD)
 
 # utility programs
 util_progs:
