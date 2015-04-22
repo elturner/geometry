@@ -106,6 +106,8 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 	# return the final list of fss files
 	return fssfiles
 
+#----------------------- Imagery File Paths ----------------------
+
 ##
 # Retrieves location of camera color metadata file
 #
@@ -123,6 +125,16 @@ def get_color_metadata_file(cam_name, cam_metafile):
 #
 def get_color_image_dir(bayerdir):
 	return os.path.normpath(os.path.join(bayerdir, "..", "color"))
+
+##
+# Retrieves location of directory that contains masks for the camera imagery
+#
+# @param dataset_dir   The location of the root of this dataset
+#
+def get_camera_masks_dir(dataset_dir):
+	return os.path.normpath(os.path.join(dataset_dir, \
+                'calib', 'camera', 'masks'))
+
 
 #--------------- Interfacing with Localization Output --------------
 
