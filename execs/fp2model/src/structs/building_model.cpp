@@ -26,6 +26,7 @@ void building_model_t::clear()
 {
 	/* clear each element */
 	this->floorplan.clear();
+	this->level_name.clear();
 	this->windows.clear();
 }
 	

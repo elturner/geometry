@@ -16,6 +16,10 @@
 
 using namespace std;
 
+/* command-line flags */
+
+#define LEVEL_NAME_FLAG   "-l"
+
 /* desired file formats */
 
 #define FLOORPLAN_FILE_EXT "fp"
@@ -55,6 +59,11 @@ int config_t::parse(int argc, char** argv)
 	args.set_program_description("This program is used to convert "
 		"floorplan geometry that is represented in .fp files to "
 		"other formats.");
+	args.add(LEVEL_NAME_FLAG, "If provided, specifies the level name "
+		"for the input floor plan.  Such a tag is useful for"
+		" multistory buildings.  Value can be any unique string "
+		"for the specified level (e.g. \"Basement\", \"L1\", etc.)"
+		".  No whitespace or special characters, please.", true, 1);
 	args.add_required_file_type(WINDOWS_FILE_EXT, 0, "Specifies "
 		"location of windows relative to the given floorplan.");
 	args.add_required_file_type(LIGHTS_FILE_EXT, 0, "Specifies "
@@ -96,6 +105,12 @@ int config_t::parse(int argc, char** argv)
 	ret = args.parse(argc, argv);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
+
+	/* check for optional arguments */
+	if(args.tag_seen(LEVEL_NAME_FLAG))
+		this->level_name = args.get_val(LEVEL_NAME_FLAG);
+	else
+		this->level_name = "";
 
 	/* retrieve the parsed values */
 	args.files_of_type(FLOORPLAN_FILE_EXT, fp_infile_list);

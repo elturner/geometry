@@ -19,6 +19,7 @@ int parse_input(building_model_t& bim, const config_t& conf)
 	ret = bim.import_floorplan(conf.fp_infile);
 	if(ret)
 		return PROPEGATE_ERROR(-1, ret);
+	bim.level_name = conf.level_name;
 
 	/* read windows info, if available */
 	n = conf.windows_infiles.size();

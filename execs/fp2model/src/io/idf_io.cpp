@@ -100,7 +100,7 @@ void writeroom(ofstream& outfile, const building_model_t& bm,
 	stringstream zonename;
 
 	/* name this zone */
-	zonename << "Room_" << (1+r.ind);
+	zonename << bm.level_name << "_Room_" << (1+r.ind);
 
 	/* create a zone for this room */
 	writesection(outfile, "ROOM GEOMETRY");
@@ -144,17 +144,19 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 
 		/* export stats */
 		outfile << "  People," << "\r\n"
-		        << "    " << zonename << " People 1, !- Name"<<"\r\n"
+		        << "    " << zonename 
+			<< " People 1, !- Name"<<"\r\n"
 		        << "    " << zonename << ", !- Zone name" << "\r\n"
 		        << "    OCCUPY-1, !- Schedule name" << "\r\n"
 		        << "    people,   !- Calculation method" << "\r\n"
-		        << "    " << people << ", !- Number of people"<<"\r\n"
+		        << "    " << people 
+			<< ", !- Number of people"<<"\r\n"
 		        << "    " << (people/floorarea) 
-				<< ", !- people per area {person/m2}"<<"\r\n"
+			<< ", !- people per area {person/m2}"<<"\r\n"
 		        << "    ";
 		if(people > 0)
 			outfile << (floorarea/people);
-		outfile 	<< ", !- area / person {m2/person}" << "\r\n"
+		outfile << ", !- area / person {m2/person}" << "\r\n"
 		        << "    0.3, !- Fraction Radiant " << "\r\n"
 		        << "    , !- Sensible Heat Fraction" << "\r\n"
 		        << "    ActSchd; !- Activity Level Schedule Name" 
@@ -172,27 +174,27 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		/* export stats */
 		outfile << "  Lights," << "\r\n"
 		        << "    " << zonename << " Lights 1,  "
-				<< "!- Name" << "\r\n"
+			<< "!- Name" << "\r\n"
 		        << "    " << zonename << ",           "
-				<< "!- Zone Name" << "\r\n"
+			<< "!- Zone Name" << "\r\n"
 		        << "    LIGHTS-1,   !- Schedule Name" << "\r\n"
 			<< "    LightingLevel,    "
-				<< "!- Design Level Calc Method" << "\r\n"
+			<< "!- Design Level Calc Method" << "\r\n"
 			<< "    " << watts << "   "
-				<< "!- Design Level {Watts}" << "\r\n"
+			<< "!- Design Level {Watts}" << "\r\n"
 			<< "    " << (watts/floorarea) << "    "
-				<< "!- Watts per floor area {W/m2}" << "\r\n"
+			<< "!- Watts per floor area {W/m2}" << "\r\n"
 			<< "    ";
 		if(people > 0)
 			outfile << (watts/people);
-		outfile         << ",    "
-				<< "!- Watts per Person {w/person}" << "\r\n"
+		outfile << ",    "
+			<< "!- Watts per Person {w/person}" << "\r\n"
 			<< "    0, !- Return Air Fraction" << "\r\n"
 			<< "    0.42,   !- Fraction Radiant" << "\r\n"
 			<< "    0.18,   !- Fraction Visible" << "\r\n"
 			<< "    1,     !- Fraction Replaceable" << "\r\n"
 			<< "    GeneralLights;    "
-				<< "!- End-Use Subcategory" << "\r\n" << "\r\n";
+			<< "!- End-Use Subcategory" << "\r\n" << "\r\n";
 	}
 
 	/* check if any plug loads are defined */
@@ -204,21 +206,21 @@ void writelightspeopleandplugloads(std::ostream& outfile,
 		/* export stats */
 		outfile << "  ElectricEquipment," << "\r\n"
 		        << "    " << zonename << " ElecEq 1,  "
-				<< "!- Name" << "\r\n"
+			<< "!- Name" << "\r\n"
 		        << "    " << zonename << ",           "
-				<< "!- Zone Name" << "\r\n"
+			<< "!- Zone Name" << "\r\n"
 		        << "    EQUIP-1,   !- Schedule Name" << "\r\n"
 			<< "    EquipmentLevel,    "
-				<< "!- Design Level Calc Method" << "\r\n"
+			<< "!- Design Level Calc Method" << "\r\n"
 			<< "    " << watts << ",   "
-				<< "!- Design Level {Watts}" << "\r\n"
+			<< "!- Design Level {Watts}" << "\r\n"
 			<< "    " << (watts/floorarea) << ",    "
-				<< "!- Watts per floor area {W/m2}" << "\r\n"
+			<< "!- Watts per floor area {W/m2}" << "\r\n"
 			<< "    ";
 		if(people > 0)
 			outfile << (watts/people);
-		outfile         << ",    "
-				<< "!- Watts per Person {w/person}" << "\r\n"
+		outfile << ",    "
+			<< "!- Watts per Person {w/person}" << "\r\n"
 			<< "    0,   !- Fraction Latent" << "\r\n"
 			<< "    0.3, !- Fraction Radiant" << "\r\n"
 			<< "    0;   !- Fraction Lost" << "\r\n" << "\r\n";

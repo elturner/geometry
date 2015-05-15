@@ -42,6 +42,13 @@ class building_model_t
 		fp::floorplan_t floorplan;
 
 		/**
+		 * The name of the level of the building (e.g. "L1").
+		 *
+		 * If empty, then no name provided.
+		 */
+		std::string level_name;
+
+		/**
 		 * This list describes the location of windows
 		 *
 		 * The window elements reference the edges (aka walls)

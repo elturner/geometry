@@ -27,7 +27,18 @@ class config_t
 		 * This file describes floorplan geometry to import
 		 */
 		std::string fp_infile; 
-	
+
+		/**
+		 * The optional level name of this floor plan.
+		 *
+		 * E.g.:   "Basement", "L1", etc.
+		 *
+		 * This value indicates the level (aka story)
+		 * for the input floor plan.  If this value is empty,
+		 * that indicates no value was provided.
+		 */
+		std::string level_name;
+
 		/**
 		 * Provided windows files
 		 *
