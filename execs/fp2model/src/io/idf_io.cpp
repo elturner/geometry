@@ -264,9 +264,9 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 	outfile << "  BuildingSurface:Detailed," << "\r\n"
 	        << "    " << floorname.str() << ", !- Name" << "\r\n"
 		<< "    Floor,         !- Surface Type" << "\r\n"
-		<< "    Interior Floor,!- Construction Name" << "\r\n"
+		<< "    Exterior Floor,!- Construction Name" << "\r\n"
 		<< "    " << zonename << ", !- Zone Name" << "\r\n"
-		<< "    Surface,       !- Outside Boundary Condition"
+		<< "    Adiabatic,       !- Outside Boundary Condition"
 			<< "\r\n"
 		<< "    , !- Outside Boundary Condition Object" << "\r\n"
 		<< "    NoSun,         !- Sun Exposure" << "\r\n"
@@ -292,9 +292,9 @@ void writefloorandceiling(ofstream& outfile, const building_model_t& bm,
 	outfile << "  BuildingSurface:Detailed," << "\r\n"
 	        << "    " << ceilname.str() << ", !- Name" << "\r\n"
 		<< "    Ceiling,         !- Surface Type" << "\r\n"
-		<< "    Interior Ceiling,!- Construction Name" << "\r\n"
+		<< "    Exterior Roof,!- Construction Name" << "\r\n"
 		<< "    " << zonename << ", !- Zone Name" << "\r\n"
-		<< "    Outdoors,         !- Outside Boundary Condition"
+		<< "    Adiabatic,         !- Outside Boundary Condition"
 			<< "\r\n"
 		<< "    , !- Outside Boundary Condition Object" << "\r\n"
 		<< "    NoSun,           !- Sun Exposure" << "\r\n"
@@ -389,14 +389,14 @@ void writesubwall(ofstream& outfile, double x1, double y1,
 		<< "    NoWind,        !- Wind Exposure" << "\r\n"
 		<< "    Autocalculate, !- View Factor to Ground" << "\r\n"
 		<< "    4,             !- Number of Vertices" << "\r\n"	
-		<< "    " << x1 << "," << y1 << "," << min_z
-			<< ", !- Vertex 1, lower right {m}" << "\r\n"
-		<< "    " << x1 << "," << y1 << "," << max_z
-			<< ", !- Vertex 2, upper right {m}" << "\r\n"
-		<< "    " << x2 << "," << y2 << "," << max_z
-			<< ", !- Vertex 3, upper left {m}" << "\r\n"
 		<< "    " << x2 << "," << y2 << "," << min_z
-			<< "; !- Vertex 4, lower left {m}" << "\r\n"
+			<< ", !- Vertex 1, lower left {m}" << "\r\n"
+		<< "    " << x2 << "," << y2 << "," << max_z
+			<< ", !- Vertex 2, upper left {m}" << "\r\n"
+		<< "    " << x1 << "," << y1 << "," << max_z
+			<< ", !- Vertex 3, upper right {m}" << "\r\n"
+		<< "    " << x1 << "," << y1 << "," << min_z
+			<< "; !- Vertex 4, lower right {m}" << "\r\n"
 		<< "\r\n";
 }
 
