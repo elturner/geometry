@@ -105,8 +105,6 @@ int main(int argc, char * argv[])
 	copy_params(parser, params);
 
 	/* run the code */
-	tictoc_t timer;
-	tic(timer);
 	ret = rectify_images::run(params);
 	if(ret)
 	{
@@ -114,7 +112,6 @@ int main(int argc, char * argv[])
 			<< ret << endl;
 		return 2;
 	}
-	toc(timer, "Image Rectification");
 
 	/* return success */
 	return 0;

@@ -26,10 +26,11 @@ import re
 SCRIPT_LOCATION = os.path.dirname(__file__)
 
 # import local libraries
-sys.path.append(os.path.join(SCRIPT_LOCATION), '..', 'files')
-sys.path.append(os.path.join(SCRIPT_LOCATION), '..', 'config')
+sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'files'))
+sys.path.append(os.path.join(SCRIPT_LOCATION, '..', 'config'))
 import dataset_filepaths
 import backpackconfig
+import config
 
 ### Path to constant files to use
 RECTIFY_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
@@ -76,16 +77,16 @@ def run(datasetDir):
     # Then we loop over the cameraList generating the required things
     for cameraName in cameraList :
 
+        print ""
         print "==== RECTIFYING : " + cameraName + " ===="
-
-        # TODO left off here
 
         # now we need to read find out what the input names should be 
         calibFile = conf.find_sensor_prop(cameraName, 
             "configFile/dalsa_fisheye_calibration_file", "cameras")
         calibFile = os.path.join(datasetDir, calibFile)
-        metaDataFile = conf.find_sensor_prop(cameraName, 
-            "configFile/dalsa_metadata_outfile", "cameras")
+        metaDataFile = os.path.join(datasetDir, \
+            conf.find_sensor_prop(cameraName, \
+            "configFile/dalsa_metadata_outfile", "cameras"))
         metaDataFile = dataset_filepaths.get_color_metadata_file( \
             cameraName, metaDataFile)
         rToCommon = conf.find_sensor_prop(cameraName,
@@ -95,7 +96,8 @@ def run(datasetDir):
         extrinStr =  " ".join((rToCommon + tToCommon))
         outputDirectory = conf.find_sensor_prop(cameraName, 
             "configFile/dalsa_output_directory", "cameras")
-        outputDirectory = os.path.abspath(os.path.join(datasetDir, outputDirectory, '..', 'rectified'))
+        outputDirectory = os.path.abspath(os.path.join( \
+            datasetDir, outputDirectory, '..', 'rectified'))
 
         # Adjust the maskdir
         maskDir = os.path.join(MASK_DIR, cameraName)
@@ -118,7 +120,7 @@ def run(datasetDir):
         serial = camSerial + "0"
 
         # Run the command
-        command = [BINFILE,
+        command = [RECTIFY_EXE,
             "-ic", calibFile,
             "-id", datasetDir,
             "-iv", maskfile,
@@ -148,7 +150,7 @@ def run(datasetDir):
         serial = camSerial + "1"
 
         # Run the command
-        command = [BINFILE,
+        command = [RECTIFY_EXE,
             "-ic", calibFile,
             "-id", datasetDir,
             "-iv", maskfile,
@@ -178,7 +180,7 @@ def run(datasetDir):
         serial = camSerial + "2"
 
         # Run the command
-        command = [BINFILE,
+        command = [RECTIFY_EXE,
             "-ic", calibFile,
             "-id", datasetDir,
             "-iv", maskfile,
