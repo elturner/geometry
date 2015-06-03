@@ -1,0 +1,80 @@
+***************************************
+* Format Specification for .mcd Files *
+***************************************
+
+Written by Eric Turner
+elturner@eecs.berkeley.edu
+Last updated: June 3, 2015
+
+***********
+* Purpose *
+***********
+
+This file specifies the file names and timestamps of images obtained by a particular camera during data acquisition.  The file format was developed by Matthew Carlberg, specifically for the purpose of inputting camera image data to the 3d model generation code.
+
+This format is used to represent the intrinsics and file links of any set of rectilinear camera imagery.
+
+***************
+* Conventions *
+***************
+
+The file is formatted in space-separated ASCII.
+All distance and position units are in millimeters.
+All indices are referenced starting at 0.
+
+**********
+* Format *
+**********
+
+The file is formatted as:
+
+	camSerialNum numImages
+	K(0,0) K(0,1) K(0,2) K(1,0) K(1,1) K( 1,2) K(2,0) K(2,1) K(2,2)
+	Rrigid (0,0) Rrigid(0,1) Rrigid(0,2) Rrigid (1,0) Rrigid(1,1) Rrigid ( 1,2) Rrigid (2,0) Rrigid (2,1) Rrigid(2,2)
+	txrigid tyrigid tz­rigid
+	imgName1 imgTimeStamp1 
+	.
+	.
+	.
+	imgNameN imgTimeStampN
+	maskName
+
+where:
+
+---------------------------------------------------
+Field Name		Type		Description
+---------------------------------------------------
+camSerialNum		Integer		Serial number for camera that
+					generated images referenced in
+					this file
+
+numImages		Integer		The number of images taken
+
+K(i,j)			Decimal		The (i,j)-th component of the
+					3x3 camera calibration matrix,
+					where i is the row number and
+					j is the column number
+
+Rrigid(i,j)		Decimal		The (i,j)-th component of the 3x3
+					rotation from camera to system
+					common frame, where i is the 
+					row number and j is the
+					column number.
+
+txrigid,tyrigid,	Decimal		The x, y, and z components of
+tzrigid					the translation vector in
+					millimeters from camera coords
+					to system common coords.
+
+imgNameJ		String		The file name of J-th image.
+					There should be no spaces in the
+					path of this file.
+
+imgTimeStampJ		Decimal		The time stamp of the J-th image,
+					in seconds.  This number should
+					have at least three decimal places
+					to specify down to the millisecond
+
+maskName		String		The name of the mask file that is
+					to be used for this camera.
+---------------------------------------------------
