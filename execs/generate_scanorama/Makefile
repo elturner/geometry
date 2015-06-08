@@ -65,7 +65,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
 		$(SOURCEDIR)image/image_cache.h \
 		$(SOURCEDIR)image/image_cache.h \
-		$(SOURCEIDR)image/camera.h \
+		$(SOURCEDIR)image/camera.h \
 		$(SOURCEDIR)image/rectilinear/rectilinear_functions.h \
 		$(SOURCEDIR)image/rectilinear/rectilinear_camera.h \
 		$(SOURCEDIR)image/fisheye/ocam_functions.h \
