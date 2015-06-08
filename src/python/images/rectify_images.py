@@ -36,8 +36,6 @@ import config
 RECTIFY_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
         '..', '..', '..', 'bin', 'rectify_images'))
 
-# TODO put config stuff in its own .xml config file
-
 ### CONSTANTS!!!
 # CHANGING THE FOCAL LENGTH HERE WILL ALMOST CERTAINLY REQUIRE YOU TO 
 # CREATE NEW MASK FILES!  IT IS YOUR RESPONSIBILITY TO DO THIS
