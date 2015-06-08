@@ -137,8 +137,8 @@ int pointcloud_writer_t::open(const  string& pcfile,
 	/* Open the file */
 	if(!this->writerObj.open(pcfile))
 	{
-		cerr << "Error! Unable to open output point cloud file for writing!" 
-			 << endl;
+		cerr << "Error! Unable to open output point "
+		     << "cloud file for writing!" << endl;
 		return -7;
 	}
 
@@ -637,7 +637,9 @@ int pointcloud_writer_t::write_to_file(const Eigen::MatrixXd& pts,
 		/* write points to output file */
 		writeSuccessful = this->writerObj.write_point(
 			this->units*x, this->units*y, this->units*z, 
-			(unsigned char)red, (unsigned char)green, (unsigned char)blue,
+			(unsigned char)red, 
+			(unsigned char)green, 
+			(unsigned char)blue,
 			ind, ts);
 
 		if(!writeSuccessful)

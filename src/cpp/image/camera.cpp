@@ -24,7 +24,8 @@ int camera_t::load_mask(const std::string& maskFileName)
 	this->mask = imread(maskFileName, IMREAD_GRAYSCALE);
 	if(this->mask.empty())
 	{
-		cerr << "Error! Unable to load mask file " << maskFileName << endl;
+		cerr << "Error! Unable to load mask file " 
+		     << maskFileName << endl;
 		return -1;
 	}
 

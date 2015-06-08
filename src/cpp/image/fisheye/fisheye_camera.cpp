@@ -188,12 +188,12 @@ int fisheye_camera_t::color_point(double px, double py, double pz, double t,
 	if(point2D[0] >= 0 && point2D[0] < this->calibration.height
 		&& point2D[1] >= 0 && point2D[1] < this->calibration.width)
 	{
-
 		/* Check if there is a mask */
 		if(!this->mask.empty())
 		{
 			/* check if this point is masked out */
-			if(!this->mask.at<unsigned char>((int)point2D[0], (int)point2D[1]))
+			if(!this->mask.at<unsigned char>(
+				(int)point2D[0], (int)point2D[1]))
 			{
 				q = -DBL_MAX;
 				return 0;

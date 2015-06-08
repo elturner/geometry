@@ -39,12 +39,14 @@ class pointcloud_writer_t
 		 */
 		enum COLOR_METHOD
 		{
-			NO_COLOR, 					  /* add no color information */
-			COLOR_BY_HEIGHT, 			  /* color output by height */
-			COLOR_BY_NOISE, 			  /* color output by noise level */
-			COLOR_BY_TIME, 				  /* color output by timestamp */
-			NEAREST_IMAGE, 				  /* color points based on imagery */
-			NEAREST_IMAGE_DROP_UNCOLORED  /* don't export * uncolored points */
+			NO_COLOR,        /* add no color information */
+			COLOR_BY_HEIGHT, /* color output by height */
+			COLOR_BY_NOISE,  /* color output by noise level */
+			COLOR_BY_TIME, 	 /* color output by timestamp */
+			NEAREST_IMAGE, 	 /* color points based on imagery */
+			NEAREST_IMAGE_DROP_UNCOLORED  
+				/* don't export 
+				 * uncolored points */
 		};
 
 		/**
@@ -52,8 +54,8 @@ class pointcloud_writer_t
  		 */
  		enum CAMERA_TYPES
  		{
- 			CAMERA_TYPE_FISHEYE,		  /* fisheye camers */
- 			CAMERA_TYPE_RECTILINEAR  	  /* rectilienar cameras */
+ 			CAMERA_TYPE_FISHEYE,    /* fisheye camers */
+ 			CAMERA_TYPE_RECTILINEAR /* rectilienar cameras */
  		};
 
 	/* parameters */
@@ -115,8 +117,8 @@ class pointcloud_writer_t
 		/*------------------------*/
 	
 		/**
-		 * This specifies the pointcloud writer object that handles the
-		 * actual file serialization
+		 * This specifies the pointcloud writer object that 
+		 * handles the actual file serialization
 		 */
 		PointCloudWriter writerObj;
 
@@ -274,13 +276,20 @@ class pointcloud_writer_t
 		void close();
 
 		/**
-		 *	Sets the default color of points when no available color
-		 *	can be found or no cameras or colorization modes are given
+		 * Sets default point color
+		 *
+		 * Sets the default color of points when no available color
+		 * can be found or no cameras or colorization 
+		 * modes are given
 		 */
 		inline void set_default_color(unsigned char red,
 			unsigned char green,
 			unsigned char blue)
-			{ default_red = red; default_blue = blue; default_green = green; };
+		{ 
+			default_red = red; 
+			default_blue = blue; 
+			default_green = green; 
+		};
 
 	/* helper functions */
 	private:
