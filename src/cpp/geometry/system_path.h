@@ -80,6 +80,18 @@ class system_path_t
 		/*-----*/
 		/* i/o */
 		/*-----*/
+
+		/**
+		 * Reads the input file as a path file
+		 *
+		 * Determines the format of the specified file
+		 * and attempts to read it.
+		 *
+		 * @param pathfile   The path to the file to read
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int read(const std::string& pathfile);
 		
 		/**
 		 * Reads *.mad file and stores results.

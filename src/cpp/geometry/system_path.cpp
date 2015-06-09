@@ -44,6 +44,62 @@ system_path_t::~system_path_t()
 
 /*** i/o ***/
 
+int system_path_t::read(const std::string& pathfile)
+{
+	string file_ext;
+	size_t p;
+	int ret;
+
+	/* determine what type of file was given for the path trajectory */
+	p = pathfile.find_last_of('.');
+	if(p == string::npos)
+		file_ext = "";
+	else 
+		file_ext = pathfile.substr(p+1);
+	
+	/* next, load the path file, based on its type */
+	if(!file_ext.compare("mad"))
+	{
+		/* attempt to read the mad file */
+		ret = this->readmad(pathfile);
+		if(ret)
+		{
+			/* can't read input */
+			ret = PROPEGATE_ERROR(-1, ret);
+			cerr << "[system_path_t::read]\tERROR " << ret
+			     << ": Unable to parse mad path file: "
+			     << pathfile << endl;
+			return ret;
+		}
+	}
+	else if(!file_ext.compare("noisypath"))
+	{
+		/* attempt to parse the noisypath file */
+		ret = this->readnoisypath(pathfile);
+		if(ret)
+		{
+			/* can't read input */
+			ret = PROPEGATE_ERROR(-2, ret);
+			cerr << "[system_path_t::read]\tERROR " << ret
+			     << ": Unable to parse noisy path file: "
+			     << pathfile << endl;
+			return ret;
+		}
+	}
+	else
+	{
+		/* not a recognized format */
+		ret = -3;
+		cerr << "[system_path_t::read]\tERROR " << ret
+		     << ": Invalid file format given for path: "
+		     << pathfile << endl;
+		return ret;
+	}
+
+	/* success */
+	return 0;
+}
+
 /* number of bytes used in file to define elements */
 #define ZUPT_ELEMENT_SIZE 2
 
