@@ -6,6 +6,7 @@
 #include <geometry/system_path.h>
 #include <geometry/raytrace/OctTree.h>
 #include <geometry/raytrace/Triangle3.h>
+#include <util/progress_bar.h>
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <Eigen/Dense>
@@ -172,16 +173,26 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw)
 {
+	progress_bar_t progbar;
 	scanorama_t scan;
 	stringstream ss;
 	ofstream outfile;
+	tictoc_t clk;
 	size_t i, n;
 	int ret;
+
+	/* prepare the progress bar for user */
+	tic(clk);
+	progbar.set_name("Generating scans");
+	progbar.set_color(progress_bar_t::PURPLE);
 
 	/* iterate over the list of timestamps */
 	n = times.size();
 	for(i = 0; i < n; i++)
 	{
+		/* update progress bar */
+		progbar.update(i, n);
+
 		/* populate the scan */
 		ret = this->populate_scanorama(scan, times[i], r, c, bw);
 		if(ret)
@@ -217,6 +228,71 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		/* write it to disk */
 		scan.writeptx(outfile);
 		outfile.close();
+	}
+
+	/* success */
+	progbar.clear();
+	toc(clk, "Generating scans");
+	return 0;
+}
+		
+int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
+			double spacingdist, size_t r, size_t c, double bw)
+{
+	vector<double> times;
+	pose_t* p, *prev_p;
+	double spacingdist_sq, d_sq;
+	tictoc_t clk;
+	size_t i, n;
+	int ret;
+
+	/* we want to iterate over the path to find poses for
+	 * the scanoramas */
+	tic(clk);
+	spacingdist_sq = spacingdist * spacingdist;
+	n = this->path.num_poses();
+	if(n <= 0)
+	{
+		ret = -1;
+		cerr << "[scanorama_maker_t::generate_along_path]\t"
+		     << "ERROR " << ret << ": No poses defined in path"
+		     << endl;
+		return ret; /* no poses */
+	}
+
+	/* put the first scanorama at the first pose */
+	prev_p = this->path.get_pose(0);
+	times.push_back(prev_p->timestamp);
+
+	/* iterate through the path.  Determine the distance spacing between
+	 * poses in order to figure out where to place the generated
+	 * scanoramas. */
+	for(i = 0 ; i < n; i++)
+	{
+		/* get the i'th pose */
+		p = this->path.get_pose(i);
+
+		/* determine the distance of the current pose from
+		 * the last pose where we put a scanorama */
+		d_sq = prev_p->dist_sq(*p);
+		if(d_sq < spacingdist_sq)
+			continue; /* too soon to put another scanorama */
+
+		/* if got here, then we can place another scanorama */
+		times.push_back(p->timestamp);
+		prev_p = p;
+	}
+	toc(clk, "Locating poses");
+	
+	/* now that we've populated the times list, make the scanoramas */
+	ret = this->generate_all(prefix_out, times, r, c, bw);
+	if(ret)
+	{
+		ret = PROPEGATE_ERROR(-2, ret);
+		cerr << "[scanorama_maker_t::generate_along_path]\t"
+		     << "ERROR" << ret << ": Unable to generate poses"
+		     << endl;
+		return ret;
 	}
 
 	/* success */

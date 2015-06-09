@@ -16,8 +16,8 @@
 	     some aliasing effects.
 
 	     units: number of points -->
-	<scanorama_num_rows>2000</scanorama_num_rows>
-	<scanorama_num_cols>4000</scanorama_num_cols>
+	<scanorama_num_rows>1000</scanorama_num_rows>
+	<scanorama_num_cols>2000</scanorama_num_cols>
 	
 	<!-- The blending width when combining imagery from multiple cameras
 

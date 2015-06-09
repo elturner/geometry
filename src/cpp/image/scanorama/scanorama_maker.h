@@ -155,6 +155,29 @@ class scanorama_maker_t
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw);
 
+		/**
+		 * Generates and exports scanoramas along the path at
+		 * the specified spacing.
+		 *
+		 * Given a distance spacing parameter, will determine
+		 * the list of times on which to generate scanoramas.
+		 * These scanoramas will be generated and exported to
+		 * the specified output destination.
+		 *
+		 * This function will internally call the generate_all()
+		 * function.
+		 *
+		 * @param prefix_out  The prefix for the output path
+		 * @param spacingdist The spacing distance (in meters)
+		 * @param r           Number of rows to use
+		 * @param c           Number of columns to use
+		 * @param bw          The blendwidth to use (range [0,1])
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int generate_along_path(const std::string& prefix_out,
+			double spacingdist, size_t r, size_t c, double bw);
+
 	/* helper functions */
 	private:
 

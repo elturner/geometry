@@ -112,6 +112,14 @@ public:
 	 */
 	inline const std::string& name() const 
 		{return cameraName; };
+	
+	/**
+	 * Gets the list of poses for this camera
+	 */
+	inline const std::vector<transform_t,
+	            Eigen::aligned_allocator<transform_t> >& 
+			    get_poses() const
+	{ return this->poses; };
 
 	/**
 	 * Function that attempts to load the image mask.  This function

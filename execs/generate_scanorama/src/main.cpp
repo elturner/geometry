@@ -2,7 +2,6 @@
 #include <image/scanorama/scanorama_maker.h>
 #include <util/tictoc.h>
 #include <iostream>
-#include <vector>
 #include <string>
 
 /**
@@ -30,7 +29,6 @@ int main(int argc, char** argv)
 {
 	generate_scanorama_run_settings_t args;
 	scanorama_maker_t maker;
-	vector<double> times;
 	tictoc_t clk;
 	size_t i, n;
 	int ret;
@@ -72,19 +70,8 @@ int main(int argc, char** argv)
 	}
 	toc(clk, "Initialization");
 
-	/* determine which poses to export */
-	// TODO
-	times.push_back(90);
-	times.push_back(100);
-	times.push_back(110);
-	times.push_back(120);
-	times.push_back(130);
-	times.push_back(140);
-	times.push_back(150);
-	times.push_back(160);
-
 	/* export the scans */
-	ret = maker.generate_all(args.ptx_outfile, times, 
+	ret = maker.generate_along_path(args.ptx_outfile, args.spacing_dist,
 			args.num_rows, args.num_cols, args.blendwidth);
 	if(ret)
 	{
