@@ -27,6 +27,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmlparser.cpp \
 		$(SOURCEDIR)xmlreader/tinyxmltools.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
+		$(SOURCEDIR)io/mesh/mesh_io.cpp \
+		$(SOURCEDIR)io/mesh/mesh_io_obj.cpp \
+		$(SOURCEDIR)io/mesh/mesh_io_ply.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)image/image_cache.cpp \
@@ -35,6 +38,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)image/rectilinear/rectilinear_camera.cpp \
 		$(SOURCEDIR)image/fisheye/ocam_functions.cpp \
 		$(SOURCEDIR)image/fisheye/fisheye_camera.cpp \
+		$(SOURCEDIR)image/scanorama/scanorama_maker.cpp \
 		$(SOURCEDIR)image/scanorama/scanorama.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
@@ -60,6 +64,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxml.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
+		$(SOURCEDIR)io/mesh/mesh_io.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \
@@ -70,10 +75,19 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)image/rectilinear/rectilinear_camera.h \
 		$(SOURCEDIR)image/fisheye/ocam_functions.h \
 		$(SOURCEDIR)image/fisheye/fisheye_camera.h \
+		$(SOURCEDIR)image/scanorama/scanorama_maker.h \
 		$(SOURCEDIR)image/scanorama/scanorama.h \
 		$(SOURCEDIR)image/scanorama/scanorama_point.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
+		$(SOURCEDIR)geometry/raytrace/OctTree.h \
+		$(SOURCEDIR)geometry/raytrace/OctTreeHelper.h \
+		$(SOURCEDIR)geometry/raytrace/ray.h \
+		$(SOURCEDIR)geometry/raytrace/Triangle3.h \
+		$(SOURCEDIR)geometry/raytrace/tribox3.h \
+		$(SOURCEDIR)geometry/raytrace/triray3.h \
+		$(SOURCEDIR)geometry/raytrace/vector3.h \
+		$(SOURCEDIR)geometry/raytrace/Vertex3.h \
 		src/generate_scanorama_run_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))

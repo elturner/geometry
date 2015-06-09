@@ -24,10 +24,12 @@
 using namespace std;
 
 /* the command-line flags to check for */
-// TODO
 
-/* file extensions to check for */
-// TODO
+#define CONFIGFILE_FLAG  "-c"
+#define PATHFILE_FLAG    "-p"
+#define MODELFILE_FLAG   "-m"
+#define FISHEYE_FLAG     "-f"
+#define OUTFILE_FLAG     "-o"
 
 /*--------------------------*/
 /* function implementations */
@@ -35,7 +37,14 @@ using namespace std;
 		
 generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 {
-	// TODO
+	/* initialize fields to default values */
+	this->xml_config   = "";
+	this->pathfile     = "";
+	this->modelfile     = "";
+	this->cam_metafiles.clear();
+	this->cam_calibfiles.clear();
+	this->cam_imgdirs.clear();
+	this->ptx_outfile  = "";
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -43,7 +52,7 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	cmd_args_t args;
 	XmlSettings settings;
 	vector<string> files;
-	string settings_file;
+	size_t i, num_cams;
 	tictoc_t clk;
 	int ret;
 
@@ -54,8 +63,26 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"Scanoramas are a point cloud representation that "
 			"is used to indicate a panoramic image with depth "
 			"at each pixel.");
-
-	// TODO
+	args.add(CONFIGFILE_FLAG, "The hardware configuration .xml file "
+			"for this dataset.", false, 1);
+	args.add(PATHFILE_FLAG, "The path trajectory file (either .mad or "
+			".noisypath) for this dataset.", false, 1);
+	args.add(MODELFILE_FLAG, "The model geometry file (.obj, .ply) for "
+			"this dataset.  If not specified, the output will "
+			"assume a sphere for geometry.", true, 1);
+	args.add(FISHEYE_FLAG, "Specifies a set of fisheye images to use "
+			"to color the output.  Expects three arguments:"
+			"\n\n\t"
+			"<color metadata file> <fisheye calib file> "
+			"<image folder>\n\nThe metadata file should be "
+			"the output file after bayer converting the images."
+			"  The calibration file should be a binary .dat "
+			"file representing the ocam calib results.  The "
+			"image directory should be the same on that is "
+			"referenced by the metadata file.\n\n"
+			"Use this flag multiple times to specify multiple "
+			"sets of images from different cameras.", true, 3);
+	args.add(OUTFILE_FLAG, "The output scanorama file (.ptx).",false,1);
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -72,8 +99,20 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
-
-	// TODO
+	this->xml_config  = args.get_val(CONFIGFILE_FLAG);
+	this->pathfile    = args.get_val(PATHFILE_FLAG);
+	this->modelfile   = args.get_val(MODELFILE_FLAG);
+	files.clear(); args.tag_seen(FISHEYE_FLAG, files);
+	this->ptx_outfile = args.get_val(OUTFILE_FLAG);
+	
+	/* sort the files associated with the camera imagery */
+	num_cams = files.size() / 3;
+	for(i = 0; i < num_cams; i++)
+	{
+		this->cam_metafiles.push_back(  files[3*i]     );
+		this->cam_calibfiles.push_back( files[3*i + 1] );
+		this->cam_imgdirs.push_back(    files[3*i + 2] );
+	}
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

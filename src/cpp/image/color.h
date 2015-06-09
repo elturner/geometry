@@ -178,6 +178,16 @@ class color_t
 			this->blue  = ((float) b) / 255.0f;
 		};
 
+		/**
+		 * Sets a pattern based on 2D index
+		 */
+		inline void set_2d_pattern(int r, int c)
+		{
+			this->set_ints(255 & !(c & r),
+					255 & (c ^ r),
+					255 & (c | r));
+		};
+
 		/*-----------*/
 		/* accessors */
 		/*-----------*/

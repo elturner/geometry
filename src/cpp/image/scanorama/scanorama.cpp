@@ -1,5 +1,9 @@
 #include "scanorama.h"
 #include "scanorama_point.h"
+#include <image/camera.h>
+#include <util/tictoc.h>
+#include <util/error_codes.h>
+#include <util/progress_bar.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -29,7 +33,7 @@ void scanorama_t::init_sphere()
 	Vector3d zero(0,0,0);
 
 	/* call the overloaded function with default arguments */
-	this->init_sphere(0, zero, 1000, 2000);
+	this->init_sphere(0, zero, 500, 1000);
 }
 
 void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
@@ -49,7 +53,7 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 	this->num_cols  = c;
 
 	/* iterate over the points and define the geometry of a sphere */
-	radius = 1;
+	radius = 10;
 	for(ci = 0; ci < this->num_cols; ci++) /* column-major order */
 		for(ri = 0; ri < this->num_rows; ri++)
 		{
@@ -60,7 +64,7 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 			w     = radius * sin(phi);
 			z     = radius * cos(phi);
 			y     =  w * sin(theta);
-			x     = -w * cos(theta);
+			x     =  -w * cos(theta);
 
 			/* store in appropriate point */
 			i = ri*this->num_cols + ci;
@@ -70,7 +74,54 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 
 			/* make some color pattern */
 			this->points[i].color.set_2d_pattern(ri, ci);
+			this->points[i].quality = -DBL_MAX;
 		}
+}
+		
+int scanorama_t::apply(camera_t* cam)
+{
+	progress_bar_t progbar;
+	double px, py, pz, q;
+	int ret, r, g, b;
+	size_t i, n;
+
+	/* iterate through all points */
+	progbar.set_name("Applying image");
+	n = this->points.size();
+	for(i = 0; i < n; i++)
+	{
+		/* update progress bar */
+		progbar.update(i,n);
+
+		/* get the world coordinates for the current point */
+		px = this->center(0) + this->points[i].x;
+		py = this->center(1) + this->points[i].y;
+		pz = this->center(2) + this->points[i].z;
+
+		/* get the color of this point according to the argument
+		 * camera */
+		ret = cam->color_point(px,py,pz,this->timestamp,r,g,b,q);
+		if(ret)
+		{
+			/* report error */
+			ret = PROPEGATE_ERROR(-1, ret);
+			cerr << "[scanorama_t::apply]\tError " 
+			     << ret << ": Unable to color point #"
+			     << i << "/" << n << endl;
+			return ret;
+		}
+
+		/* check if the quality is better */
+		if(q > this->points[i].quality)
+		{
+			/* replace the color */
+			this->points[i].quality = q;
+			this->points[i].color.set_ints(r,g,b);
+		}
+	}
+
+	/* success */
+	return 0;
 }
 		
 void scanorama_t::writeobj(std::ostream& os) const
@@ -101,9 +152,12 @@ void scanorama_t::writeobj(std::ostream& os) const
 	
 void scanorama_t::writeptx(std::ostream& os) const
 {
+	progress_bar_t progbar;
+	tictoc_t clk;
 	size_t i, n;
 	
 	/* export the header of the PTX file */
+	tic(clk);
 	os << this->num_cols << endl /* number of columns */
 	   << this->num_rows << endl /* number of rows */
 	   << this->center(0) << " "
@@ -121,9 +175,13 @@ void scanorama_t::writeptx(std::ostream& os) const
 		/* 4th row of 4x4 transform matrix */
 
 	/* iterate over the points */
+	progbar.set_name("Exporting");
 	n = this->points.size();
 	for(i = 0; i < n; i++)
 	{
+		/* update progress bar */
+		progbar.update(i, n);
+
 		/* each line is a point: x y z intensity r g b
 		 * where intensity is in range [0,1] */
 		os << this->points[i].x << " "
@@ -134,4 +192,6 @@ void scanorama_t::writeptx(std::ostream& os) const
 		   << this->points[i].color.get_green_int() << " "
 		   << this->points[i].color.get_blue_int() << endl;
 	}
+	progbar.clear();
+	toc(clk, "Exporting PTX");
 }

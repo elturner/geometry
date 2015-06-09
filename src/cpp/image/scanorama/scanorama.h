@@ -14,6 +14,7 @@
  */
 
 #include "scanorama_point.h"
+#include <image/camera.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -38,6 +39,11 @@ class scanorama_t
 		 *
 		 * This list should be exactly num_rows * num_cols 
 		 * in length.
+		 *
+		 * These points are stored in world orientation, but NOT
+		 * world translation.  You need to apply the this->center
+		 * translation to go from scan coordinates to world
+		 * coordinates.  No rotation is needed.
 		 */
 		std::vector<scanorama_point_t> points;
 
@@ -131,11 +137,26 @@ class scanorama_t
 		void init_sphere(double t, const Eigen::Vector3d& cen,
 				size_t r, size_t c);
 
+		// TODO use better geometry
+
 		/*-------*/
 		/* color */
 		/*-------*/
 
-		// TODO
+		/**
+		 * Applies color of specified camera to this scanorama
+		 *
+		 * Given a camera object, which tracks a camera through
+		 * time, will use the camera's closest temporal image to
+		 * apply color to the points of this scanorama.  Any point
+		 * whose quality is improved by this camera's imagery will
+		 * have its color replaced.
+		 *
+		 * @param cam  The camera object to utilize
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int apply(camera_t* cam);
 
 		/*-----*/
 		/* i/o */

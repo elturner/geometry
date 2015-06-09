@@ -36,6 +36,13 @@ class scanorama_point_t
 		 * The color of this point
 		 */
 		color_t color;
+
+		/**
+		 * The quality value of the color of this point
+		 *
+		 * Bigger is better for this value.
+		 */
+		double quality;
 };
 
 #endif

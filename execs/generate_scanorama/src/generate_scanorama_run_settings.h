@@ -27,10 +27,61 @@ class generate_scanorama_run_settings_t
 	/* parameters */
 	public:
 
-		/* the following files are necessary for
-		 * this program */
+		/*-------------*/
+		/* input files */
+		/*-------------*/
 
-		// TODO
+		/**
+		 * The xml hardware configuration file for the system
+		 */
+		std::string xml_config;
+
+		/**
+		 * The system path file (.mad or .noisypath)
+		 */
+		std::string pathfile;
+
+		/**
+		 * The geometry model file to import (.obj or .ply)
+		 */
+		std::string modelfile;
+
+		/**
+		 * This vector lists all the metadata files
+		 * given for input fisheye cameras used to
+		 * color the scanorama.
+		 *
+		 * There should be N file paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> cam_metafiles;
+
+		/**
+		 * This vector lists all the fisheye camera calibration
+		 * file paths.
+		 *
+		 * There should be N file paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> cam_calibfiles;
+
+		/**
+		 * This vector lists all the image directory paths
+		 * for each of the cameras used.
+		 *
+		 * There should be N directory paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> cam_imgdirs;
+
+		/**
+		 * The output .ptx file that will be exported by
+		 * this program.
+		 */
+		std::string ptx_outfile;
 
 	/* functions */
 	public:
