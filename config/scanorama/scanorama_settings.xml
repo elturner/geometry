@@ -45,6 +45,6 @@
 	     be exported.
 
 	     units: meters -->
-	<scanorama_spacing_dist>1.0</scanorama_spacing_dist>	
+	<scanorama_spacing_dist>1.5</scanorama_spacing_dist>	
 
 </settings>
