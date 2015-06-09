@@ -14,7 +14,8 @@
  */
 
 #include "scanorama_point.h"
-#include <image/camera.h>
+#include <image/fisheye/fisheye_camera.h>
+#include <geometry/raytrace/OctTree.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -70,6 +71,18 @@ class scanorama_t
 		 */
 		Eigen::Vector3d center;
 
+		/**
+		 * Blending value.
+		 *
+		 * This value represents how aggressively colors
+		 * between separate images will be blended together.
+		 *
+		 * The value should be in the range [0,1].  If zero,
+		 * no blending will occur.  If one, LOTS of blending will
+		 * occur.
+		 */
+		double blendwidth;
+
 	/* functions */
 	public:
 
@@ -92,7 +105,8 @@ class scanorama_t
 			:	points(other.points),
 				num_rows(other.num_rows),
 				num_cols(other.num_cols),
-				timestamp(other.timestamp)
+				timestamp(other.timestamp),
+				blendwidth(other.blendwidth)
 		{};
 
 		/**
@@ -107,9 +121,10 @@ class scanorama_t
 		inline void clear()
 		{
 			this->points.clear();
-			this->num_rows  = 0;
-			this->num_cols  = 0;
-			this->timestamp = 0.0;
+			this->num_rows   = 0;
+			this->num_cols   = 0;
+			this->timestamp  = 0.0;
+			this->blendwidth = 0.0;
 		};
 
 		/*----------*/
@@ -132,12 +147,31 @@ class scanorama_t
 		 * @param cen The center position of this scanorama
 		 * @param r   Number of rows to use
 		 * @param c   Number of columns to use
+		 * @param bw  The blending width to use (range [0,1])
 		 */
 		void init_sphere();
 		void init_sphere(double t, const Eigen::Vector3d& cen,
-				size_t r, size_t c);
+				size_t r, size_t c, double bw);
 
-		// TODO use better geometry
+		/**
+		 * Initialize the point geometry from the specified model
+		 *
+		 * Given a mesh model stored in an octree, position each
+		 * point in this scanorama by raytracing from the scan
+		 * center in each pixel direction.
+		 *
+		 * @param octree   The octree model to use
+		 * @param t        The timestamp to set for this scanorama
+		 * @param cen      The center position of this scanorama
+		 * @param r        Number of rows to use
+		 * @param c        Number of columns to use
+		 * @param bw       The blendwidth to use (range [0,1])
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int init_geometry(const OctTree<float>& octree,
+				double t, const Eigen::Vector3d& cen,
+				size_t r, size_t c, double bw);
 
 		/*-------*/
 		/* color */
@@ -156,7 +190,7 @@ class scanorama_t
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int apply(camera_t* cam);
+		int apply(fisheye_camera_t& cam);
 
 		/*-----*/
 		/* i/o */

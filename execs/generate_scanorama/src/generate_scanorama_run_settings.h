@@ -77,6 +77,46 @@ class generate_scanorama_run_settings_t
 		 */
 		std::vector<std::string> cam_imgdirs;
 
+		/*------------*/
+		/* parameters */
+		/*------------*/
+
+		/**
+		 * The number of rows in the exported scanoramas
+		 */
+		size_t num_rows;
+
+		/**
+		 * The number of columns in the exported scanoramas
+		 */
+		size_t num_cols;
+
+		/**
+		 * The blending width to use for scanoramas
+		 *
+		 * The blendwidth indicates how much blending will
+		 * occur between two images that overlap the same
+		 * viewing angle.  This value should be in the range
+		 * [0,1].  A value of zero indicates no blending, and
+		 * a value 1 indicates a LOT of blending.
+		 */
+		double blendwidth;
+
+		/**
+		 * The spacing distance between scanorama poses
+		 * exported.
+		 *
+		 * The system will need to move at least this distance
+		 * away before another scanorama is generated.
+		 *
+		 * units:  meters
+		 */
+		double spacing_dist;
+
+		/*--------------*/
+		/* output files */
+		/*--------------*/
+
 		/**
 		 * The output .ptx file that will be exported by
 		 * this program.

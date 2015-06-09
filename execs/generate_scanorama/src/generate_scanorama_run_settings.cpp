@@ -25,11 +25,19 @@ using namespace std;
 
 /* the command-line flags to check for */
 
+#define SETTINGS_FILE    "-s"
 #define CONFIGFILE_FLAG  "-c"
 #define PATHFILE_FLAG    "-p"
 #define MODELFILE_FLAG   "-m"
 #define FISHEYE_FLAG     "-f"
 #define OUTFILE_FLAG     "-o"
+
+/* the xml parameters to look for */
+
+#define XML_NUM_ROWS     "scanorama_num_rows"
+#define XML_NUM_COLS     "scanorama_num_cols"
+#define XML_BLENDWIDTH   "scanorama_blendwidth"
+#define XML_SPACING_DIST "scanorama_spacing_dist"
 
 /*--------------------------*/
 /* function implementations */
@@ -40,10 +48,13 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	/* initialize fields to default values */
 	this->xml_config   = "";
 	this->pathfile     = "";
-	this->modelfile     = "";
+	this->modelfile    = "";
 	this->cam_metafiles.clear();
 	this->cam_calibfiles.clear();
 	this->cam_imgdirs.clear();
+	this->num_rows     = 1000;
+	this->num_cols     = 2000;
+	this->spacing_dist = 1.0;
 	this->ptx_outfile  = "";
 }
 
@@ -63,13 +74,15 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"Scanoramas are a point cloud representation that "
 			"is used to indicate a panoramic image with depth "
 			"at each pixel.");
+	args.add(SETTINGS_FILE, "The xml settings file that defines "
+			"parameters used for this scanorama generation.",
+			false, 1);
 	args.add(CONFIGFILE_FLAG, "The hardware configuration .xml file "
 			"for this dataset.", false, 1);
 	args.add(PATHFILE_FLAG, "The path trajectory file (either .mad or "
 			".noisypath) for this dataset.", false, 1);
 	args.add(MODELFILE_FLAG, "The model geometry file (.obj, .ply) for "
-			"this dataset.  If not specified, the output will "
-			"assume a sphere for geometry.", true, 1);
+			"this dataset.", false, 1);
 	args.add(FISHEYE_FLAG, "Specifies a set of fisheye images to use "
 			"to color the output.  Expects three arguments:"
 			"\n\n\t"
@@ -82,7 +95,13 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"referenced by the metadata file.\n\n"
 			"Use this flag multiple times to specify multiple "
 			"sets of images from different cameras.", true, 3);
-	args.add(OUTFILE_FLAG, "The output scanorama file (.ptx).",false,1);
+	args.add(OUTFILE_FLAG, "The prefix file path of where to store the "
+			"output scanorama files (.ptx).  So, if the value "
+			"specified is:\n\n\t\"foo/bar/scan_\"\n\n"
+			"then the exported files will be:\n\n"
+			"\tfoo/bar/scan_00000000.ptx\n"
+			"\tfoo/bar/scan_00000001.ptx\n"
+			"\t...",false,1);
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -113,6 +132,27 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 		this->cam_calibfiles.push_back( files[3*i + 1] );
 		this->cam_imgdirs.push_back(    files[3*i + 2] );
 	}
+
+	/* import settings from xml settings file */
+	if(!settings.read(args.get_val(SETTINGS_FILE)))
+	{
+		/* unable to parse settings file */
+		ret = PROPEGATE_ERROR(-2, ret);
+		cerr << "[generate_scanorama_run_settings_t::parse]\t"
+		     << "Error " << ret << ": Unable to parse xml "
+		     << "settings file for this program." << endl;
+		return ret;
+	}
+
+	/* read in values from settings file */
+	if(settings.is_prop(XML_NUM_ROWS))
+		this->num_rows     = settings.getAsUint(XML_NUM_ROWS);
+	if(settings.is_prop(XML_NUM_COLS))
+		this->num_cols     = settings.getAsUint(XML_NUM_COLS);
+	if(settings.is_prop(XML_BLENDWIDTH))
+		this->blendwidth   = settings.getAsDouble(XML_BLENDWIDTH);
+	if(settings.is_prop(XML_SPACING_DIST))
+		this->spacing_dist = settings.getAsDouble(XML_SPACING_DIST);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

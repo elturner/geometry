@@ -1,0 +1,50 @@
+<settings>
+<!-- This file contains run settings for the generate_scanorama program -->
+
+	<!-- The dimensions of the scanorama grid.
+
+	     These value indicate how many rows and columns are exported 
+	     in each scanorama.  Each scanorama is stored as a gridded 
+	     point cloud, stored in column-major order.
+
+	     These dimensions should be roughly the same as the height
+	     and width of the input imagery used to color the scanorama.
+	     If the scanorama dimensions are larger, then it will take up
+	     a lot of disk space without any additional fidelity.  If
+	     the scanorama dimensions are smaller, then it will save disk
+	     space, but the output scanorama will be low-res and may have
+	     some aliasing effects.
+
+	     units: number of points -->
+	<scanorama_num_rows>2000</scanorama_num_rows>
+	<scanorama_num_cols>4000</scanorama_num_cols>
+	
+	<!-- The blending width when combining imagery from multiple cameras
+
+	     When colors are imported into a scanorama from camera imagery,
+	     they may need to be blended if multiple cameras overlap the
+	     same viewing angle.  This value determines how wide of a strip
+	     to blend between the cameras.  Values outside of this strip
+	     will be taken from just the best camera.
+
+	     The value should be in the range [0,1], and is based off of
+	     the cosine of the angle.  If the value is specified as zero,
+	     then no blending will occur.  If the value is specified as
+	     1, then a huge amount of blending will occur.
+
+	     range: [0,1] -->
+	<scanorama_blendwidth>0.1</scanorama_blendwidth>
+
+	<!-- The spacing distance between successive scanorama poses.
+
+	     Rather than export a scanorama at the pose of every single
+	     camera image, we can instead downsample the output to
+	     only export scanoramas that are at least this distance apart.
+
+	     If the value is set to negative, then every camera pose will
+	     be exported.
+
+	     units: meters -->
+	<scanorama_spacing_dist>1.0</scanorama_spacing_dist>	
+
+</settings>

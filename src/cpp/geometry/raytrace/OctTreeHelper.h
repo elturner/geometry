@@ -162,7 +162,10 @@ bool ray_trace(OctNode<T>* root,
 {
 	/* double check root is not empty */
 	if(root == nullptr)
+	{
+		cout << "root still empty" << endl;
 		return false;
+	}
 
 	/* first convert this to the internal "ray" type */
 	Ray<T> r(Vector3<T>(origin[0], origin[1], origin[2]),

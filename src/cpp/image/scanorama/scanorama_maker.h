@@ -15,9 +15,11 @@
  * Created on June 8, 2015
  */
 
-#include <image/camera.h>
+#include "scanorama.h"
+#include <image/fisheye/fisheye_camera.h>
 #include <geometry/system_path.h>
 #include <geometry/raytrace/OctTree.h>
+#include <Eigen/Dense>
 #include <string>
 #include <vector>
 #include <memory>
@@ -45,7 +47,7 @@ class scanorama_maker_t
 		/**
 		 * The list of all cameras used in this dataset
 		 */
-		std::vector<std::shared_ptr<camera_t> > cameras;
+		std::vector<fisheye_camera_t> cameras;
 
 		/**
 		 * The model geometry, represented as a triangulated mesh.
@@ -111,7 +113,47 @@ class scanorama_maker_t
 		               const std::string& calibfile,
 		               const std::string& imgdir);
 
-		// TODO functions to make scanoramas
+		/*------------*/
+		/* Generation */
+		/*------------*/
+
+		/**
+		 * Populates a scanorama with the given info
+		 *
+		 * @param scan     The scanorama to populate
+		 * @param t        The timestamp to set for this scanorama
+		 * @param r        Number of rows to use
+		 * @param c        Number of columns to use
+		 * @param bw       The blendwidth to use (range [0,1])
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int populate_scanorama(scanorama_t& scan,
+				double t, size_t r, size_t c, double bw);
+
+		/**
+		 * Generates and exports scanoramas for list of timestamps.
+		 *
+		 * Given a list of timestamps and an output destination,
+		 * will export scanoramas for each of the specified
+		 * timestamps.
+		 *
+		 * NOTE:  The scanoramas will be centered at the system 
+		 * common coordiantes.  It may be worthwhile in the future
+		 * to adjust this to center the scanorama at one of the
+		 * cameras instead.
+		 *
+		 * @param prefix_out  The prefix for the output path
+		 * @param times       The input list of timestamps
+		 * @param r           Number of rows to use
+		 * @param c           Number of columns to use
+		 * @param bw          The blendwidth to use (range [0,1])
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int generate_all(const std::string& prefix_out,
+				const std::vector<double>& times,
+				size_t r, size_t c, double bw);
 
 	/* helper functions */
 	private:

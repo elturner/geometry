@@ -1,6 +1,8 @@
 #include "generate_scanorama_run_settings.h"
 #include <image/scanorama/scanorama_maker.h>
+#include <util/tictoc.h>
 #include <iostream>
+#include <vector>
 #include <string>
 
 /**
@@ -28,6 +30,8 @@ int main(int argc, char** argv)
 {
 	generate_scanorama_run_settings_t args;
 	scanorama_maker_t maker;
+	vector<double> times;
+	tictoc_t clk;
 	size_t i, n;
 	int ret;
 
@@ -41,6 +45,7 @@ int main(int argc, char** argv)
 	}
 
 	/* initialize the maker object */
+	tic(clk);
 	ret = maker.init(args.pathfile, args.xml_config, args.modelfile);
 	if(ret)
 	{
@@ -65,8 +70,28 @@ int main(int argc, char** argv)
 			return 3;
 		}
 	}
+	toc(clk, "Initialization");
 
-	// TODO actually make some scanoramas
+	/* determine which poses to export */
+	// TODO
+	times.push_back(90);
+	times.push_back(100);
+	times.push_back(110);
+	times.push_back(120);
+	times.push_back(130);
+	times.push_back(140);
+	times.push_back(150);
+	times.push_back(160);
+
+	/* export the scans */
+	ret = maker.generate_all(args.ptx_outfile, times, 
+			args.num_rows, args.num_cols, args.blendwidth);
+	if(ret)
+	{
+		cerr << "[main]\tError " << ret << ": "
+		     << "Unable to generate scanoramas" << endl;
+		return 4;
+	}
 
 	/* success */
 	return 0;
