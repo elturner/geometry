@@ -75,7 +75,7 @@ int mesh_t::read(const string& filename)
 			{
 				/* report error */
 				cerr << "[mesh_t::read]\tError " << ret 
-				     << "Unable to parse PLY file: "
+				     << ": Unable to parse PLY file: "
 				     << filename << endl;
 				return -3;
 			}

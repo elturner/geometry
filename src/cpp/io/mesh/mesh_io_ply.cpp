@@ -82,13 +82,136 @@ const size_t num_vertex_indices_names  = (sizeof(vertex_indices_names)
 /**
  * check if query string is in array
  */
-bool string_in_arr(const string& query, const string* arr, size_t num)
+inline bool string_in_arr(const string& query,const string* arr,size_t num)
 {
 	size_t i;
 	for(i = 0; i < num; i++)
 		if(query.compare(arr[i]) == 0)
 			return true;
 	return false;
+}
+
+/**
+ * These helper functions read individual elements from the file body
+ */
+int read_vert(ifstream& infile, vertex_t& vert, mesh_io::FILE_FORMAT ff)
+{
+	float xx, yy, zz;
+	unsigned char rr, gg, bb;
+
+	/* how we serialize depends on the file format */
+	switch(ff)
+	{
+		/* non-ply */
+		default:
+		case FORMAT_UNKNOWN:
+		case FORMAT_OBJ:
+		case FORMAT_OBJ_COLOR:
+			
+			cerr << "[mesh_io_ply::read_vert]\t"
+			     << "unknown file format." << endl;
+			return -1; /* unable to serialize to unknown */
+		
+		/* ply */
+		case FORMAT_PLY_ASCII:
+		case FORMAT_PLY_ASCII_COLOR:
+
+			/* read in vertex (assume it's colored) */
+			infile >> vert.x >> vert.y >> vert.z;
+			infile >> vert.red >> vert.green >> vert.blue;
+			break;
+
+		case FORMAT_PLY_BE:
+		case FORMAT_PLY_BE_COLOR:
+
+			/* don't support big endian...yet */
+			cerr << "[mesh_io_ply::read_vert]\tError, format "
+			     << "is not yet supported: "
+			     << ff << endl;
+			return -2;
+
+		case FORMAT_PLY_LE:
+		case FORMAT_PLY_LE_COLOR:
+			
+			/* read in binary (assume it's colored) */
+			infile.read((char*) &xx, sizeof(xx));
+			infile.read((char*) &yy, sizeof(yy));
+			infile.read((char*) &zz, sizeof(zz));
+			infile.read((char*) &rr, sizeof(rr));
+			infile.read((char*) &gg, sizeof(gg));
+			infile.read((char*) &bb, sizeof(bb));
+		
+			/* store in vertex */
+			vert.x     = xx;
+			vert.y     = yy;
+			vert.z     = zz;
+			vert.red   = rr;
+			vert.green = gg;
+			vert.blue  = bb;
+			break;
+	}
+
+	/* success */
+	return 0;
+}
+
+int read_face(ifstream& infile, polygon_t& face, mesh_io::FILE_FORMAT ff)
+{
+	size_t i, n;
+	int v;
+	unsigned char num;
+	
+	/* clear the face */
+	face.clear();
+
+	/* how we serialize depends on the file format */
+	switch(ff)
+	{
+		/* non-ply */
+		default:
+		case FORMAT_UNKNOWN:
+		case FORMAT_OBJ:
+		case FORMAT_OBJ_COLOR:
+			cerr << "[mesh_io_ply::read_face]\t"
+			     << "unknown file format." << endl;
+			return -1; /* unable to serialize to unknown */
+		
+		/* ply */
+		case FORMAT_PLY_ASCII:
+		case FORMAT_PLY_ASCII_COLOR:
+			infile >> n; /* get size of face */
+			for(i = 0; i < n; i++)
+			{
+				/* get next vertex */
+				infile >> v;
+				face.vertices.push_back(v);
+			}
+			break;
+
+		case FORMAT_PLY_BE:
+		case FORMAT_PLY_BE_COLOR:
+			/* don't support big endian...yet */
+			cerr << "[mesh_io_ply::read_face]\tError, format "
+			     << "is not yet supported: "
+			     << ff << endl;
+			return -2;
+
+		case FORMAT_PLY_LE:
+		case FORMAT_PLY_LE_COLOR:
+			/* import size of face as an unsigned char,
+			 * and the face vertex indices as ints */
+			infile.read((char*) &num, sizeof(num));
+			n = (int) num;
+			for(i = 0; i < n; i++)
+			{
+				infile.read((char*) &v, sizeof(v));
+				face.vertices.push_back(v);
+			}
+			break;
+	}
+
+	/* success */
+	return 0;
 }
 
 /*----------------*/
@@ -129,6 +252,7 @@ class ply_element_t
 		vector<ply_property_t> props;
 };
 
+
 /*---------------------------------*/
 /* mesh_t function implementations */ 
 /*---------------------------------*/
@@ -137,9 +261,13 @@ int mesh_t::read_ply(const std::string& filename)
 {
 	ifstream infile;
 	vector<ply_element_t> elements;
+	vertex_t vert;
+	polygon_t face;
 	stringstream ss;
 	string tline, field;
 	bool readingheader;
+	size_t elem_idx, num_elem, vert_idx, num_vert, face_idx, num_face;
+	int ret;
 
 	/* open file for reading */
 	infile.open(filename.c_str(), ios_base::in | ios_base::binary);
@@ -179,11 +307,11 @@ int mesh_t::read_ply(const std::string& filename)
 
 			/* check against known formats */
 			if(field.compare(FORMAT_ASCII_FLAG) == 0)
-				this->format = FORMAT_PLY_ASCII;
+				this->format = FORMAT_PLY_ASCII_COLOR;
 			else if(field.compare(FORMAT_BE_FLAG) == 0)
-				this->format = FORMAT_PLY_BE;
+				this->format = FORMAT_PLY_BE_COLOR;
 			else if(field.compare(FORMAT_LE_FLAG) == 0)
-				this->format = FORMAT_PLY_LE;
+				this->format = FORMAT_PLY_LE_COLOR;
 			else
 			{
 				cerr << "[mesh_t::read_ply]\tUnknown PLY "
@@ -257,16 +385,104 @@ int mesh_t::read_ply(const std::string& filename)
 		}
 	}
 
-	/* inform user that ply reading is not supported */
-	cerr << "[mesh_t::read_ply]\tImporting of PLY files is not "
-	     << "supported at this time.  Note, you can still export "
-	     << "to ply files." << endl;
+	/* iterate over the elements in this file */
+	num_elem = elements.size();
+	for(elem_idx = 0; elem_idx < num_elem; elem_idx++)
+	{
+		/* we only care if this element is a vertex or a face */
+		if(string_in_arr(elements[elem_idx].name, vertex_names,
+					num_vertex_names))
+		{
+			/* we're reading vertices! */
+			num_vert = elements[elem_idx].num_elements;
 
+			/* check that the vertices are defined reasonably */
+			if(elements[elem_idx].props.size() != 6)
+			{
+				cerr << "[mesh_t::read_ply]\tError!  The "
+				     << "input ply file specifies its "
+				     << "vertices in an unexpected way."
+				     << endl << endl
+				     << "This parser assumes they are:"
+				     << endl << "\tx y z red green blue" 
+				     << endl;
+				return -5;
+			}
+
+			/* read the vertices */
+			for(vert_idx = 0; vert_idx < num_vert; vert_idx++)
+			{
+				/* read the next vert */
+				ret = read_vert(infile, vert, this->format);
+				if(ret)
+				{
+					cerr << "[meshj_t::read_ply]\t"
+					     << "Error " << ret << "!"
+					     << "  could not read "
+					     << "vertex #" << vert_idx
+					     << endl;
+					return -6;
+				}
+
+				/* store in mesh */
+				this->add(vert);
+			}
+		}
+		else if(string_in_arr(elements[elem_idx].name, face_names,
+					num_face_names))
+		{
+			/* we're reading faces! */
+			num_face = elements[elem_idx].num_elements;
+
+			/* check that the faces are defined reasonably */
+			if(elements[elem_idx].props.size() != 1)
+			{
+				cerr << "[mesh_t::read_ply]\tError!  The "
+				     << "input ply file specifies its "
+				     << "faces in an unexpected way."
+				     << endl << endl
+				     << "This parser assumes they are:"
+				     << endl 
+				     << "\tlist uchar int vertex_indices"
+				     << endl;
+				return -7;
+			}
+			
+			/* read the faces */
+			for(face_idx = 0; face_idx < num_face; face_idx++)
+			{
+				/* read the next face */
+				ret = read_face(infile, face, this->format);
+				if(ret)
+				{
+					cerr << "[meshj_t::read_ply]\t"
+					     << "Error " << ret << "!"
+					     << "  could not read "
+					     << "face #" << face_idx
+					     << endl;
+					return -8;
+				}
+
+				/* store in mesh */
+				this->add(face);
+			}
+		}
+		else
+		{
+			/* not a recognized element.  Fail */
+			cerr << "[mesh_t::read_ply]\tError!  The element "
+			     << "type " << elements[elem_idx].name
+			     << " is not supported, so the input PLY file "
+			     << "cannot be parsed." << endl;
+			return -9;
+		}
+	}
+	
 	/* clean up */
 	infile.close();
-	return -5;
+	return 0;
 }
-			
+	
 int mesh_t::write_ply(const std::string& filename, FILE_FORMAT ff) const
 {
 	ofstream outfile;
