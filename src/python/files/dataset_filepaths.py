@@ -514,3 +514,19 @@ def get_object_mesh_file(dataset_dir):
 def get_room_mesh_file(dataset_dir):
 	return os.path.join(get_mesh_dir(dataset_dir), "mesh_room.ply")
 
+#--------------- Files generated from scanorama -----------------
+
+##
+# Returns the directory containing all scanorama files
+#
+def get_scanorama_dir(dataset_dir):
+	return os.path.abspath(os.path.join(dataset_dir, "scanorama"))
+
+##
+# Returns the file prefix for scanorama files
+#
+# @param dataset_dir   The dataset directory path
+#
+def get_scanorama_ptx_prefix(dataset_dir):
+	return os.path.join(get_scanorama_dir(dataset_dir), "scan_")
+
