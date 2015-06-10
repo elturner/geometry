@@ -80,6 +80,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 				double t, const Eigen::Vector3d& cen,
 				size_t r, size_t c, double bw)
 {
+	progress_bar_t progbar;
 	double radius, theta, phi, w, x, y, z;
 	float origin[3]; /* origin of raytracing */
 	float d[3]; /* raytracing direction */
@@ -90,6 +91,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 
 	/* first, clear any existing information */
 	this->clear();
+	progbar.set_name("Pose geometry");
 
 	/* next, allocate the appropriate number of points */
 	this->points.resize(r*c);
@@ -107,6 +109,11 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 	/* iterate over the points and define the geometry of a sphere */
 	radius = 1; /* direction is unit-vector */
 	for(ci = 0; ci < this->num_cols; ci++) /* column-major order */
+	{
+		/* update progress bar */
+		progbar.update(ci, this->num_cols);
+
+		/* iterate over rows */
 		for(ri = 0; ri < this->num_rows; ri++)
 		{
 			/* we want to set the current point to reside
@@ -151,6 +158,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 			this->points[i].color.set(0.0f,0.0f,0.0f);
 			this->points[i].quality = -DBL_MAX;
 		}
+	}
 
 	/* success */
 	return 0;
