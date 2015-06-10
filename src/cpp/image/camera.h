@@ -122,6 +122,12 @@ public:
 	{ return this->poses; };
 
 	/**
+	 * Gets the list of timestamps for this camera
+	 */
+	inline const std::vector<double>& get_timestamps() const
+	{ return this->timestamps; };
+
+	/**
 	 * Function that attempts to load the image mask.  This function
 	 * will return non-zero if the mask is unloadable.
 	 */

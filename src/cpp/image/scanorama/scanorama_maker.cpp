@@ -240,20 +240,42 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 			double spacingdist, size_t r, size_t c, double bw)
 {
 	vector<double> times;
-	pose_t* p, *prev_p;
 	double spacingdist_sq, d_sq;
 	tictoc_t clk;
-	size_t i, n;
+	size_t prev_p, i, n;
 	int ret;
+	
+	/* begin processing */
+	tic(clk);
+
+	/* we want to align the scanoramas with the camera poses,
+	 * not just any system pose.  So use a camera as reference */
+
+	/* first check if there are any cameras */
+	if(this->cameras.empty())
+	{
+		/* can't operate without cameras */
+		ret = -1;
+		cerr << "[scanorama_maker_t::generate_along_path]\t"
+		     << "ERROR " << ret << ": No cameras found."
+		     << endl;
+		return ret;
+	}
+	
+	/* get the positions of the first camera */
+	const std::vector<transform_t,
+	            Eigen::aligned_allocator<transform_t> >& camposes
+			    = this->cameras[0].get_poses();
+	const std::vector<double>& camtimes 
+			= this->cameras[0].get_timestamps();
 
 	/* we want to iterate over the path to find poses for
 	 * the scanoramas */
-	tic(clk);
 	spacingdist_sq = spacingdist * spacingdist;
-	n = this->path.num_poses();
+	n = camposes.size();
 	if(n <= 0)
 	{
-		ret = -1;
+		ret = -2;
 		cerr << "[scanorama_maker_t::generate_along_path]\t"
 		     << "ERROR " << ret << ": No poses defined in path"
 		     << endl;
@@ -261,26 +283,23 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	}
 
 	/* put the first scanorama at the first pose */
-	prev_p = this->path.get_pose(0);
-	times.push_back(prev_p->timestamp);
+	prev_p = 0;
+	times.push_back(camtimes[prev_p]);
 
 	/* iterate through the path.  Determine the distance spacing between
 	 * poses in order to figure out where to place the generated
 	 * scanoramas. */
-	for(i = 0 ; i < n; i++)
+	for(i = 1 ; i < n; i++)
 	{
-		/* get the i'th pose */
-		p = this->path.get_pose(i);
-
 		/* determine the distance of the current pose from
 		 * the last pose where we put a scanorama */
-		d_sq = prev_p->dist_sq(*p);
+		d_sq = camposes[prev_p].dist_sq(camposes[i]);
 		if(d_sq < spacingdist_sq)
 			continue; /* too soon to put another scanorama */
 
 		/* if got here, then we can place another scanorama */
-		times.push_back(p->timestamp);
-		prev_p = p;
+		times.push_back(camtimes[i]);
+		prev_p = i;
 	}
 	toc(clk, "Locating poses");
 	

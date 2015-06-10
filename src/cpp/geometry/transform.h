@@ -127,6 +127,28 @@ class transform_t
 		 */
 		void apply_inverse(Eigen::Vector3d& p) const;
 
+		/**
+		 * Get the squared distance from other transform
+		 *
+		 * Will get the displacement of the translations
+		 * between these two transforms, and return the
+		 * squared distance.
+		 *
+		 * @param other   The other transform to compare to
+		 *
+		 * @return    Returns the squared distance to other.T
+		 */
+		inline double dist_sq(const transform_t& other) const
+		{
+			double x, y, z;
+	
+			/* compute distance */
+			x = this->T(0) - other.T(0);
+			y = this->T(1) - other.T(1);
+			z = this->T(2) - other.T(2);
+			return x*x + y*y + z*z;
+		};
+
 		/* operators */
 
 		/**
