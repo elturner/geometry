@@ -91,7 +91,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 
 	/* first, clear any existing information */
 	this->clear();
-	progbar.set_name("Pose geometry");
+	progbar.set_name("   Pose geometry");
 
 	/* next, allocate the appropriate number of points */
 	this->points.resize(r*c);
@@ -174,7 +174,7 @@ int scanorama_t::apply(fisheye_camera_t& cam)
 	size_t i, n;
 
 	/* iterate through all points */
-	progbar.set_name("Applying image");
+	progbar.set_name("  Applying image");
 	n = this->points.size();
 	for(i = 0; i < n; i++)
 	{
@@ -292,7 +292,7 @@ void scanorama_t::writeptx(std::ostream& os) const
 		/* 4th row of 4x4 transform matrix */
 
 	/* iterate over the points */
-	progbar.set_name("Exporting");
+	progbar.set_name("       Exporting");
 	n = this->points.size();
 	for(i = 0; i < n; i++)
 	{
