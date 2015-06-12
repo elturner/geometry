@@ -31,6 +31,8 @@ using namespace std;
 #define MODELFILE_FLAG   "-m"
 #define FISHEYE_FLAG     "-f"
 #define OUTFILE_FLAG     "-o"
+#define BEGIN_IDX_FLAG   "-b"
+#define END_IDX_FLAG     "-e"
 
 /* the xml parameters to look for */
 
@@ -56,6 +58,8 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->num_cols     = 2000;
 	this->spacing_dist = 1.0;
 	this->ptx_outfile  = "";
+	this->begin_idx    = 0;
+	this->end_idx      = -1;
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -102,6 +106,21 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"\tfoo/bar/scan_00000000.ptx\n"
 			"\tfoo/bar/scan_00000001.ptx\n"
 			"\t...",false,1);
+	args.add(BEGIN_IDX_FLAG, "If specified, then only the subset of"
+			" scanoramas starting at this index (inclusive) "
+			"will be exported.  This value is useful if a "
+			"previous run was prematurely terminated, and you "
+			"want to start where you left off.  The index "
+			"specified is in the output indexing, NOT the "
+			"input pose indices.", true, 1);
+	args.add(END_IDX_FLAG, "If specified, then only the subset of "
+			"scanoramas before this index (exclusive) will be "
+			"exported.  This value is useful if you only want "
+			"to export a subset of the total scanoramas for a "
+			"dataset.  If a negative value is specified, then "
+			"all indices until the end of the dataset will be "
+			"exported.  The index specified is in the output "
+			"indexing, NOT the input pose indices.", true, 1);
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -132,6 +151,16 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 		this->cam_calibfiles.push_back( files[3*i + 1] );
 		this->cam_imgdirs.push_back(    files[3*i + 2] );
 	}
+
+	/* get the optional arguments */
+	if(args.tag_seen(BEGIN_IDX_FLAG))
+		this->begin_idx = args.get_val_as<int>(BEGIN_IDX_FLAG);
+	else
+		this->begin_idx = 0;
+	if(args.tag_seen(END_IDX_FLAG))
+		this->end_idx = args.get_val_as<int>(END_IDX_FLAG);
+	else
+		this->end_idx = -1;
 
 	/* import settings from xml settings file */
 	if(!settings.read(args.get_val(SETTINGS_FILE)))

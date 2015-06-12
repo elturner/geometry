@@ -72,7 +72,8 @@ int main(int argc, char** argv)
 
 	/* export the scans */
 	ret = maker.generate_along_path(args.ptx_outfile, args.spacing_dist,
-			args.num_rows, args.num_cols, args.blendwidth);
+			args.num_rows, args.num_cols, args.blendwidth,
+			args.begin_idx, args.end_idx);
 	if(ret)
 	{
 		cerr << "[main]\tError " << ret << ": "

@@ -52,13 +52,9 @@ class scanorama_maker_t
 		/**
 		 * The model geometry, represented as a triangulated mesh.
 		 *
-		 * This octree is constructed with a maximum depth of 12.
-		 * By default, the tree has a maximum depth of 10, which
-		 * tends to not be enough for some of our larger models.
-		 *
 		 * units: meters
 		 */
-		OctTree<float> model(12);
+		OctTree<float> model;
 
 	/* functions */
 	public:
@@ -66,6 +62,18 @@ class scanorama_maker_t
 		/*--------------*/
 		/* constructors */
 		/*--------------*/
+		
+		/**
+		 * Default constructor 
+		 *
+		 * Creates empty object. 
+		 *
+		 * This octree is constructed with a maximum depth of 12.
+		 * By default, the tree has a maximum depth of 10, which
+		 * tends to not be enough for some of our larger models.
+		 */
+		scanorama_maker_t() : path(), cameras(), model(12)
+		{};
 
 		/**
 		 * Frees all memory and resources
@@ -152,12 +160,19 @@ class scanorama_maker_t
 		 * @param r           Number of rows to use
 		 * @param c           Number of columns to use
 		 * @param bw          The blendwidth to use (range [0,1])
+		 * @param begin_idx   The index within times to start
+		 *                    exporting, inclusive (default = 0)
+		 * @param end_idx     The index within times to end
+		 *                    exporting, exclusive (default = -1,
+		 *                    which indicates that all values
+		 *                    should be used)
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_all(const std::string& prefix_out,
 				const std::vector<double>& times,
-				size_t r, size_t c, double bw);
+				size_t r, size_t c, double bw,
+				int begin_idx = 0, int end_idx = -1);
 
 		/**
 		 * Generates and exports scanoramas along the path at
@@ -176,11 +191,21 @@ class scanorama_maker_t
 		 * @param r           Number of rows to use
 		 * @param c           Number of columns to use
 		 * @param bw          The blendwidth to use (range [0,1])
+		 * @param begin_idx   The index within the generated poses
+		 *                    to start exporting, inclusive 
+		 *                    (default = 0)
+		 * @param end_idx     The index within the generated poses
+		 *                    to end exporting, exclusive 
+		 *                    (default = -1,
+		 *                    which indicates that all values
+		 *                    should be used)
+		 *
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_along_path(const std::string& prefix_out,
-			double spacingdist, size_t r, size_t c, double bw);
+			double spacingdist, size_t r, size_t c, double bw,
+				int begin_idx = 0, int end_idx = -1);
 
 	/* helper functions */
 	private:

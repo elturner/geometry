@@ -113,6 +113,36 @@ class generate_scanorama_run_settings_t
 		 */
 		double spacing_dist;
 
+		/**
+		 * Specifies the start index of the exported scanoramas
+		 *
+		 * If specified, then only the subset of scanoramas
+		 * starting at this index (inclusive) will be exported.
+		 *
+		 * This value is useful if a previous run was prematurely
+		 * terminated, and you want to start where you left off.
+		 *
+		 * The index specified is in the output indexing, NOT
+		 * the input pose indices.
+		 */
+		int begin_idx;
+
+		/**
+		 * Specifies the ending index of the exported scanoramas
+		 *
+		 * If specified, then only the subset of scanoramas
+		 * before this index (exclusive) will be exported.
+		 *
+		 * This value is useful if you only want to export a
+		 * subset of the total scanoramas for a dataset.  If
+		 * a negative value is specified, then all indices until
+		 * the end of the dataset will be exported.
+		 *
+		 * The index specified is in the output indexing, NOT
+		 * the input pose indices.
+		 */
+		int end_idx;
+
 		/*--------------*/
 		/* output files */
 		/*--------------*/

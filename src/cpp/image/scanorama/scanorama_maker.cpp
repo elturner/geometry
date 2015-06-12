@@ -171,7 +171,8 @@ int scanorama_maker_t::populate_scanorama(scanorama_t& scan,
 		
 int scanorama_maker_t::generate_all(const std::string& prefix_out,
 				const std::vector<double>& times,
-				size_t r, size_t c, double bw)
+				size_t r, size_t c, double bw,
+				int begin_idx, int end_idx)
 {
 	progress_bar_t progbar;
 	scanorama_t scan;
@@ -186,12 +187,21 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 	progbar.set_name("Generating scans");
 	progbar.set_color(progress_bar_t::PURPLE);
 
-	/* iterate over the list of timestamps */
+	/* determine what subset of times should be generated */
 	n = times.size();
-	for(i = 0; i < n; i++)
+	if(begin_idx < 0)
+		begin_idx = 0; /* can't go before zero */
+	if(end_idx > (int) n || end_idx < 0)
+		end_idx = (int) n; /* can't go past end */
+
+	/* iterate over the list of timestamps */
+	for(i = (size_t) begin_idx; i < (size_t) end_idx; i++)
 	{
-		/* update progress bar */
-		progbar.update(i, n);
+		/* update progress bar 
+		 *
+		 * base progress only on the subset that will
+		 * actually be generated */
+		progbar.update( (i - begin_idx) , (end_idx - begin_idx) );
 
 		/* populate the scan */
 		ret = this->populate_scanorama(scan, times[i], r, c, bw);
@@ -237,7 +247,8 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 }
 		
 int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
-			double spacingdist, size_t r, size_t c, double bw)
+			double spacingdist, size_t r, size_t c, double bw,
+				int begin_idx, int end_idx)
 {
 	vector<double> times;
 	double spacingdist_sq, d_sq;
@@ -304,7 +315,8 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	toc(clk, "Locating poses");
 	
 	/* now that we've populated the times list, make the scanoramas */
-	ret = this->generate_all(prefix_out, times, r, c, bw);
+	ret = this->generate_all(prefix_out, times, r, c, bw, begin_idx,
+				end_idx);
 	if(ret)
 	{
 		ret = PROPEGATE_ERROR(-2, ret);
