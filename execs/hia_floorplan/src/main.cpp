@@ -49,6 +49,10 @@ int main(int argc, char** argv)
 	}
 
 	// TODO
+	cout << "summing: " << analyzer.populate_neighborhood_sums(0.8) << endl;
+	cout << "localmax: " << analyzer.label_local_maxima(0.8) << endl;
+	cout << "rooms: " << analyzer.propegate_room_labels() << endl;
+	analyzer.write_localmax(cerr);
 
 	/* success */
 	return 0;
