@@ -52,9 +52,13 @@ class scanorama_maker_t
 		/**
 		 * The model geometry, represented as a triangulated mesh.
 		 *
+		 * This octree is constructed with a maximum depth of 12.
+		 * By default, the tree has a maximum depth of 10, which
+		 * tends to not be enough for some of our larger models.
+		 *
 		 * units: meters
 		 */
-		OctTree<float> model;
+		OctTree<float> model(12);
 
 	/* functions */
 	public:
