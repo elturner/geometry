@@ -60,6 +60,10 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 #
 def run(dataset_dir, pathfile):
 
+    # ensure abspath for input files
+    dataset_dir = os.path.abspath(dataset_dir)
+    pathfile    = os.path.abspath(pathfile)
+
     # check that executable exists
     if not os.path.exists(SCANORAMA_EXE):
         print "Error!  Could not find pointcloud", \
@@ -107,7 +111,7 @@ def run(dataset_dir, pathfile):
     # Prepare arguments for program
     args = [SCANORAMA_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
                 '-m', modelfile, \
-                '-p', os.path.abspath(pathfile), \
+                '-p', pathfile, \
                 '-o', scanoprefix]
 
     # add camera information
