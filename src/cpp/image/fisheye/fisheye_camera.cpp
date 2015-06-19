@@ -129,7 +129,7 @@ void fisheye_camera_t::clear()
 	this->images.clear();
 	this->image_directory = "";
 }
-		
+
 int fisheye_camera_t::color_point(double px, double py, double pz, double t,
                                   int& r, int& g, int& b, double& q)
 {
@@ -212,6 +212,78 @@ int fisheye_camera_t::color_point(double px, double py, double pz, double t,
 	}
 	else
 		q = -DBL_MAX; /* bad quality */
+
+	/* success */
+	return 0;
+}
+		
+int fisheye_camera_t::color_point(double px, double py, double pz, 
+                                  double rad, double t,
+                                  int& r, int& g, int& b, double& q)
+{
+	const size_t num_samples = 7;
+	size_t i;
+	double dx[] = {0.0, 1.0, 0.0, 0.0, -1.0,  0.0,  0.0};
+	double dy[] = {0.0, 0.0, 1.0, 0.0,  0.0, -1.0,  0.0};
+	double dz[] = {0.0, 0.0, 0.0, 1.0,  0.0,  0.0, -1.0};
+	double q_dummy;
+	int red[num_samples];
+	int green[num_samples];
+	int blue[num_samples];
+	int ret;
+
+	/* this function samples the color space seven times,
+	 * once in the center of the point, and in the six
+	 * coordinate directions. */
+
+	/* first, get the center sample */
+	red[0] = green[0] = blue[0] = 0;
+	ret = this->color_point(px,py,pz,t,red[0],green[0],blue[0],q);
+	if(ret)
+		return PROPEGATE_ERROR(-1, ret);
+
+	/* if given trivial radius, just call the other version
+	 * of this function */
+	if(rad <= 0)
+	{
+		/* copy over colors */
+		r = red[0];
+		g = green[0];
+		b = blue[0];
+		
+		/* no other processing required */
+		return 0; 
+	}
+
+	/* sample at the six other locations */
+	for(i = 1; i < num_samples; i++)
+	{
+		/* get the color at this position */
+		red[i] = green[i] = blue[i] = 0;
+		ret = this->color_point(
+				px + (dx[i]*rad),
+				py + (dy[i]*rad),
+				pz + (dz[i]*rad),
+				t, red[i], green[i], blue[i],
+				q_dummy); /* only keep original q */
+		if(ret)
+			return PROPEGATE_ERROR(-2, ret);
+	}
+
+	/* return the average of all samples */
+	r = g = b = 0;
+	for(i = 0; i < num_samples; i++)
+	{
+		/* add this sample to sum */
+		r +=   red[i];
+		g += green[i];
+		b +=  blue[i];
+	}
+	
+	/* normalize */
+	r /= num_samples;
+	g /= num_samples;
+	b /= num_samples;
 
 	/* success */
 	return 0;

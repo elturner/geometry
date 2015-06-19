@@ -33,6 +33,15 @@ class scanorama_point_t
 		double z;
 
 		/**
+		 * The width of this point
+		 *
+		 * Effectively half the distance to the next point
+		 * in the grid.  This value is used for anti-aliasing
+		 * during coloring the points.
+		 */
+		double width;
+
+		/**
 		 * The color of this point
 		 */
 		color_t color;

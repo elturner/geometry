@@ -39,7 +39,7 @@ void scanorama_t::init_sphere()
 void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 				size_t r, size_t c, double bw)
 {
-	double radius, theta, phi, w, x, y, z;
+	double radius, dt, dp, theta, phi, w, x, y, z, unitwidth;
 	size_t ri, ci, i;
 
 	/* allocate the appropriate number of points */
@@ -52,13 +52,16 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 
 	/* iterate over the points and define the geometry of a sphere */
 	radius = 10;
+	dt = (2 * M_PI) / this->num_cols;
+	dp = (M_PI) / this->num_rows;
+	unitwidth = sin( (dt+dp) / 4.0 );
 	for(ci = 0; ci < this->num_cols; ci++) /* column-major order */
 		for(ri = 0; ri < this->num_rows; ri++)
 		{
 			/* we want to set the current point to reside
 			 * on the unit sphere centered at this->center */
-			theta = (2 * M_PI * ci) / this->num_cols;
-			phi   = (M_PI * ri) / this->num_rows;
+			theta = dt * ci;
+			phi   = dp * ri;
 			w     = radius * sin(phi);
 			z     = radius * cos(phi);
 			y     =  w * sin(theta);
@@ -69,6 +72,11 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 			this->points[i].x = x;
 			this->points[i].y = y;
 			this->points[i].z = z;
+
+			/* estimate the uncertainty width of
+			 * this point, based on half the average
+			 * of the angular difference between points */
+			this->points[i].width = radius * unitwidth;
 
 			/* make some color pattern */
 			this->points[i].color.set_2d_pattern(ri, ci);
@@ -81,7 +89,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 				size_t r, size_t c, double bw)
 {
 	progress_bar_t progbar;
-	double radius, theta, phi, w, x, y, z;
+	double radius, theta, phi, dt, dp, w, x, y, z, unitwidth;
 	float origin[3]; /* origin of raytracing */
 	float d[3]; /* raytracing direction */
 	float inter[3]; /* intersection point */
@@ -108,6 +116,9 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 
 	/* iterate over the points and define the geometry of a sphere */
 	radius = 1; /* direction is unit-vector */
+	dt = (2 * M_PI) / this->num_cols; /* delta-theta */
+	dp = (M_PI) / this->num_rows; /* delta-phi */
+	unitwidth = sin( (dt+dp) / 4.0 );
 	for(ci = 0; ci < this->num_cols; ci++) /* column-major order */
 	{
 		/* update progress bar */
@@ -118,8 +129,8 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 		{
 			/* we want to set the current point to reside
 			 * on the unit sphere centered at this->center */
-			theta = (2 * M_PI * ci) / this->num_cols;
-			phi   = (    M_PI * ri) / this->num_rows;
+			theta = dt * ci;
+			phi   = dp * ri;
 			w     = radius * sin(phi);
 			d[2]  = radius * cos(phi);
 			d[1]  =      w * sin(theta);
@@ -152,6 +163,12 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 			this->points[i].x = x;
 			this->points[i].y = y;
 			this->points[i].z = z;
+			
+			/* estimate the uncertainty width of
+			 * this point, based on half the average
+			 * of the angular difference between points */
+			this->points[i].width = 
+				sqrt(x*x + y*y + z*z) * unitwidth;
 
 			/* No color has been assigned yet, so set
 			 * it to black */
@@ -188,7 +205,9 @@ int scanorama_t::apply(fisheye_camera_t& cam)
 
 		/* get the color of this point according to the argument
 		 * camera */
-		ret = cam.color_point(px,py,pz,this->timestamp,r,g,b,q);
+		ret = cam.color_point(px,py,pz, 
+				this->points[i].width,
+				this->timestamp,r,g,b,q);
 		if(ret)
 		{
 			/* report error */
