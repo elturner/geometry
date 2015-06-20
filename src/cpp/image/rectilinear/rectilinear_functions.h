@@ -44,6 +44,8 @@ public:
 	*/
 	bool read(const std::string& filename);
 
+	// TODO LEFT OFF HERE:  read in a mcd file
+
 	/*
 	*	std::string pretty_print() const
 	*

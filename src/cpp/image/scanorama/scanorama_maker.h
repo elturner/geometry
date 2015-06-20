@@ -47,7 +47,7 @@ class scanorama_maker_t
 		/**
 		 * The list of all cameras used in this dataset
 		 */
-		std::vector<fisheye_camera_t> cameras;
+		std::vector<camera_t*> cameras;
 
 		/**
 		 * The model geometry, represented as a triangulated mesh.
@@ -121,9 +121,9 @@ class scanorama_maker_t
 		 *
 		 * @return    Return zero on success, non-zero on failure.
 		 */
-		int add_camera(const std::string& metafile,
-		               const std::string& calibfile,
-		               const std::string& imgdir);
+		int add_fisheye_camera(const std::string& metafile,
+		                       const std::string& calibfile,
+		                       const std::string& imgdir);
 
 		/*------------*/
 		/* Generation */

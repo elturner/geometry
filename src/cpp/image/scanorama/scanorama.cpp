@@ -181,7 +181,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 	return 0;
 }
 		
-int scanorama_t::apply(fisheye_camera_t& cam)
+int scanorama_t::apply(camera_t* cam)
 {
 	progress_bar_t progbar;
 	color_t newcolor;
@@ -205,7 +205,7 @@ int scanorama_t::apply(fisheye_camera_t& cam)
 
 		/* get the color of this point according to the argument
 		 * camera */
-		ret = cam.color_point(px,py,pz, 
+		ret = cam->color_point_antialias(px,py,pz, 
 				this->points[i].width,
 				this->timestamp,r,g,b,q);
 		if(ret)

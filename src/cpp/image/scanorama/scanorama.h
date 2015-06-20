@@ -190,7 +190,7 @@ class scanorama_t
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
-		int apply(fisheye_camera_t& cam);
+		int apply(camera_t* cam);
 
 		/*-----*/
 		/* i/o */

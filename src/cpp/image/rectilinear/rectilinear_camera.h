@@ -68,7 +68,7 @@ class rectilinear_camera_t : public camera_t
 		int init(const std::string& calibfile,
 		         const std::string& metafile,
 		         const std::string& imgdir,
-			 	 const system_path_t& path);
+		 	 const system_path_t& path);
 
 		/**
 		 * Clears all information from this structure.

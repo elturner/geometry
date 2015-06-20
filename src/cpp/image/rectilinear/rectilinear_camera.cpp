@@ -19,16 +19,18 @@
  *
  * @section DESCRIPTION
  *
- * This file implements the rectilinear_camera_t class functions, which are used
- * to read and process the intrinsic and extrinsic calibration, and the
- * poses, for camera imagery with a rectilinear lens.
+ * This file implements the rectilinear_camera_t class functions, 
+ * which are used to read and process the intrinsic and extrinsic 
+ * calibration, and the poses, for camera imagery with a rectilinear lens.
  */
 
 using namespace std;
 using namespace Eigen;
 using namespace cv;
 
+/*--------------------------*/
 /* function implementations */
+/*--------------------------*/
 
 rectilinear_camera_t::rectilinear_camera_t()
 {

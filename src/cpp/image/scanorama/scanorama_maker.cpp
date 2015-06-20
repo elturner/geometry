@@ -41,7 +41,18 @@ using namespace Eigen;
 
 void scanorama_maker_t::clear()
 {
+	size_t i, n;
+
+	/* free memory for the path */
 	this->path.clear();
+	
+	/* the cameras are dynamically allocated, and
+	 * need to be explicitly deleted */
+	n = this->cameras.size();
+	for(i = 0; i < n; i++)
+		delete (this->cameras[i]);
+
+	/* clear the list */
 	this->cameras.clear();
 }
 		
@@ -91,17 +102,17 @@ int scanorama_maker_t::init(const std::string& pathfile,
 	return 0;
 }
 		
-int scanorama_maker_t::add_camera(const std::string& metafile,
+int scanorama_maker_t::add_fisheye_camera(const std::string& metafile,
 		               const std::string& calibfile,
 		               const std::string& imgdir)
 {
 	int ret;
 
 	/* push a new fisheye camera object */
-	this->cameras.push_back(fisheye_camera_t());
+	this->cameras.push_back(new fisheye_camera_t());
 
 	/* initialize */
-	ret = this->cameras.back().init(calibfile, metafile, 
+	ret = this->cameras.back()->init(calibfile, metafile, 
 			imgdir, this->path);
 	if(ret)
 	{
@@ -276,9 +287,9 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	/* get the positions of the first camera */
 	const std::vector<transform_t,
 	            Eigen::aligned_allocator<transform_t> >& camposes
-			    = this->cameras[0].get_poses();
+			    = this->cameras[0]->get_poses();
 	const std::vector<double>& camtimes 
-			= this->cameras[0].get_timestamps();
+			= this->cameras[0]->get_timestamps();
 
 	/* we want to iterate over the path to find poses for
 	 * the scanoramas */

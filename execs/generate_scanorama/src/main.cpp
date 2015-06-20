@@ -52,12 +52,12 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
-	/* import all cameras that are given */
+	/* import all fisheye cameras that are given */
 	n = args.cam_metafiles.size();
 	for(i = 0; i < n; i++)
 	{
 		/* add this camera */
-		ret = maker.add_camera(
+		ret = maker.add_fisheye_camera(
 				args.cam_metafiles[i],
 				args.cam_calibfiles[i],
 				args.cam_imgdirs[i]);
