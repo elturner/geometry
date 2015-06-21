@@ -53,21 +53,41 @@ int main(int argc, char** argv)
 	}
 
 	/* import all fisheye cameras that are given */
-	n = args.cam_metafiles.size();
+	n = args.fisheye_cam_metafiles.size();
 	for(i = 0; i < n; i++)
 	{
 		/* add this camera */
 		ret = maker.add_fisheye_camera(
-				args.cam_metafiles[i],
-				args.cam_calibfiles[i],
-				args.cam_imgdirs[i]);
+				args.fisheye_cam_metafiles[i],
+				args.fisheye_cam_calibfiles[i],
+				args.fisheye_cam_imgdirs[i]);
 		if(ret)
 		{
 			cerr << "[main]\tError " << ret << ": "
-			     << "Could not add camera #" << i << endl;
+			     << "Could not add fisheye camera #" 
+			     << i << endl;
 			return 3;
 		}
 	}
+
+	/* import all rectilinear cameras */
+	n = args.rectilinear_cam_metafiles.size();
+	for(i = 0; i < n; i++)
+	{
+		/* add this camera */
+		ret = maker.add_rectilinear_camera(
+				args.rectilinear_cam_metafiles[i],
+				args.rectilinear_cam_calibfiles[i],
+				args.rectilinear_cam_imgdirs[i]);
+		if(ret)
+		{
+			cerr << "[main]\tError " << ret << ": "
+			     << "Could not add rectilinear camera #" 
+			     << i << endl;
+			return 3;
+		}
+	}
+
 	toc(clk, "Initialization");
 
 	/* export the scans */

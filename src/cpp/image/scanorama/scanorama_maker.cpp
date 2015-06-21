@@ -3,6 +3,7 @@
 #include <io/mesh/mesh_io.h>
 #include <image/camera.h>
 #include <image/fisheye/fisheye_camera.h>
+#include <image/rectilinear/rectilinear_camera.h>
 #include <geometry/system_path.h>
 #include <geometry/raytrace/OctTree.h>
 #include <geometry/raytrace/Triangle3.h>
@@ -106,24 +107,49 @@ int scanorama_maker_t::add_fisheye_camera(const std::string& metafile,
 		               const std::string& calibfile,
 		               const std::string& imgdir)
 {
+	fisheye_camera_t* cam;
 	int ret;
 
-	/* push a new fisheye camera object */
-	this->cameras.push_back(new fisheye_camera_t());
-
-	/* initialize */
-	ret = this->cameras.back()->init(calibfile, metafile, 
-			imgdir, this->path);
+	/* make a new fisheye camera object and initialize */
+	cam = new fisheye_camera_t();
+	ret = cam->init(calibfile, metafile, imgdir, this->path);
 	if(ret)
 	{
 		/* unable to init */
 		ret = PROPEGATE_ERROR(-1, ret);
-		cerr << "[scanorama_maker_t::add_camera]\tERROR " << ret
+		cerr << "[scanorama_maker_t::add_fisheye_camera]\t"
+		     << "ERROR " << ret
 		     << ": Unable to initialize camera" << endl;
 		return ret;
 	}
 
 	/* success */
+	this->cameras.push_back(cam);
+	return 0;
+}
+		
+int scanorama_maker_t::add_rectilinear_camera(const std::string& metafile,
+                                              const std::string& calibfile,
+                                              const std::string& imgdir)
+{
+	rectilinear_camera_t* cam;
+	int ret;
+
+	/* make a new rectilinear camera object and initialize */
+	cam = new rectilinear_camera_t();
+	ret = cam->init(calibfile, metafile, imgdir, this->path);
+	if(ret)
+	{
+		/* unable to init */
+		ret = PROPEGATE_ERROR(-1, ret);
+		cerr << "[scanorama_maker_t::add_rectilinear_camera]\t"
+		     << "ERROR " << ret
+		     << ": Unable to initialize camera" << endl;
+		return ret;
+	}
+
+	/* success */
+	this->cameras.push_back(cam);
 	return 0;
 }
 		

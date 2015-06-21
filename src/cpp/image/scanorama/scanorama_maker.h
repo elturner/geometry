@@ -125,6 +125,27 @@ class scanorama_maker_t
 		                       const std::string& calibfile,
 		                       const std::string& imgdir);
 
+		/**
+		 * Adds a rectilinear camera to be used to color
+		 * the output scanoramas.
+		 *
+		 * These cameras are defined by a metadata file (which
+		 * includes the list of imagery), a calibration file
+		 * (which includes the K-matrix), and the directory
+		 * containing the imagery.
+		 *
+		 * @param metafile    The metadata file (.txt) for this
+		 *                    camera
+		 * @param calibfile   The calibration file (.dat) for this
+		 *                    camera
+		 * @param imgdir      The folder containing imagery
+		 *
+		 * @return    Return zero on success, non-zero on failure.
+		 */
+		int add_rectilinear_camera(const std::string& metafile,
+		                           const std::string& calibfile,
+		                           const std::string& imgdir);
+
 		/*------------*/
 		/* Generation */
 		/*------------*/

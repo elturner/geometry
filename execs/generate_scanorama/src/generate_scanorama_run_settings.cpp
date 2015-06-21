@@ -30,6 +30,7 @@ using namespace std;
 #define PATHFILE_FLAG    "-p"
 #define MODELFILE_FLAG   "-m"
 #define FISHEYE_FLAG     "-f"
+#define RECTILINEAR_FLAG "-r"
 #define OUTFILE_FLAG     "-o"
 #define BEGIN_IDX_FLAG   "-b"
 #define END_IDX_FLAG     "-e"
@@ -51,9 +52,12 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->xml_config   = "";
 	this->pathfile     = "";
 	this->modelfile    = "";
-	this->cam_metafiles.clear();
-	this->cam_calibfiles.clear();
-	this->cam_imgdirs.clear();
+	this->fisheye_cam_metafiles.clear();
+	this->fisheye_cam_calibfiles.clear();
+	this->fisheye_cam_imgdirs.clear();
+	this->rectilinear_cam_metafiles.clear();
+	this->rectilinear_cam_calibfiles.clear();
+	this->rectilinear_cam_imgdirs.clear();
 	this->num_rows     = 1000;
 	this->num_cols     = 2000;
 	this->spacing_dist = 1.0;
@@ -99,6 +103,19 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"referenced by the metadata file.\n\n"
 			"Use this flag multiple times to specify multiple "
 			"sets of images from different cameras.", true, 3);
+	args.add(RECTILINEAR_FLAG, 
+			"Specifies a set of rectilinear images to use "
+			"to color the output.  Expects three arguments:"
+			"\n\n\t"
+			"<color metadata file> <rectilinear calib file> "
+			"<image folder>\n\nThe metadata file should be "
+			"the output file after bayer converting the images."
+			"  The calibration file should be a binary .dat "
+			"file representing the K-matrix.  The "
+			"image directory should be the same on that is "
+			"referenced by the metadata file.\n\n"
+			"Use this flag multiple times to specify multiple "
+			"sets of images from different cameras.", true, 3);
 	args.add(OUTFILE_FLAG, "The prefix file path of where to store the "
 			"output scanorama files (.ptx).  So, if the value "
 			"specified is:\n\n\t\"foo/bar/scan_\"\n\n"
@@ -140,16 +157,26 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	this->xml_config  = args.get_val(CONFIGFILE_FLAG);
 	this->pathfile    = args.get_val(PATHFILE_FLAG);
 	this->modelfile   = args.get_val(MODELFILE_FLAG);
-	files.clear(); args.tag_seen(FISHEYE_FLAG, files);
 	this->ptx_outfile = args.get_val(OUTFILE_FLAG);
 	
-	/* sort the files associated with the camera imagery */
+	/* sort the files associated with the fisheye camera imagery */
+	files.clear(); args.tag_seen(FISHEYE_FLAG, files);
 	num_cams = files.size() / 3;
 	for(i = 0; i < num_cams; i++)
 	{
-		this->cam_metafiles.push_back(  files[3*i]     );
-		this->cam_calibfiles.push_back( files[3*i + 1] );
-		this->cam_imgdirs.push_back(    files[3*i + 2] );
+		this->fisheye_cam_metafiles.push_back(  files[3*i]     );
+		this->fisheye_cam_calibfiles.push_back( files[3*i + 1] );
+		this->fisheye_cam_imgdirs.push_back(    files[3*i + 2] );
+	}
+
+	/* sort the files associated with the rectilinear camera imagery */
+	files.clear(); args.tag_seen(RECTILINEAR_FLAG, files);
+	num_cams = files.size() / 3;
+	for(i = 0; i < num_cams; i++)
+	{
+		this->rectilinear_cam_metafiles.push_back(  files[3*i]   );
+		this->rectilinear_cam_calibfiles.push_back( files[3*i+1] );
+		this->rectilinear_cam_imgdirs.push_back(    files[3*i+2] );
 	}
 
 	/* get the optional arguments */

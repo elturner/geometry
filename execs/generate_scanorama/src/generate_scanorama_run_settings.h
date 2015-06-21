@@ -55,7 +55,7 @@ class generate_scanorama_run_settings_t
 		 * where N is the number of active cameras on the
 		 * system.
 		 */
-		std::vector<std::string> cam_metafiles;
+		std::vector<std::string> fisheye_cam_metafiles;
 
 		/**
 		 * This vector lists all the fisheye camera calibration
@@ -65,7 +65,7 @@ class generate_scanorama_run_settings_t
 		 * where N is the number of active cameras on the
 		 * system.
 		 */
-		std::vector<std::string> cam_calibfiles;
+		std::vector<std::string> fisheye_cam_calibfiles;
 
 		/**
 		 * This vector lists all the image directory paths
@@ -75,7 +75,38 @@ class generate_scanorama_run_settings_t
 		 * where N is the number of active cameras on the
 		 * system.
 		 */
-		std::vector<std::string> cam_imgdirs;
+		std::vector<std::string> fisheye_cam_imgdirs;
+		
+		/**
+		 * This vector lists all the metadata files
+		 * given for input rectilinear cameras used to
+		 * color the scanorama.
+		 *
+		 * There should be N file paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> rectilinear_cam_metafiles;
+
+		/**
+		 * This vector lists all the rectilinear camera calibration
+		 * file paths.
+		 *
+		 * There should be N file paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> rectilinear_cam_calibfiles;
+
+		/**
+		 * This vector lists all the image directory paths
+		 * for each of the cameras used.
+		 *
+		 * There should be N directory paths in this vector,
+		 * where N is the number of active cameras on the
+		 * system.
+		 */
+		std::vector<std::string> rectilinear_cam_imgdirs;
 
 		/*------------*/
 		/* parameters */
