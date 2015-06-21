@@ -135,6 +135,23 @@ def get_camera_masks_dir(dataset_dir):
 	return os.path.normpath(os.path.join(dataset_dir, \
                 'calib', 'camera', 'masks'))
 
+##
+# Retrieves location of FlIR normalized metadata file
+#
+# @param cam_name      The name of this camera
+# @param cam_metafile  The location of the raw metadata file for camera
+#
+def get_ir_normalized_metadata_file(cam_name, cam_metafile):
+	return os.path.join(os.path.dirname(cam_metafile), \
+		"normalized_" + cam_name + "_metadata.txt")
+
+##
+# Retrieves location of FLIR normalized image directory
+#
+# @param bayerdir   The location of directory that contains normalized IR
+#
+def get_ir_normalized_image_dir(rawirdir):
+	return os.path.normpath(os.path.join(rawirdir, "..", "normalized"))
 
 #--------------- Interfacing with Localization Output --------------
 

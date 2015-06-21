@@ -82,7 +82,15 @@ def run(dataset_dir, pathfile):
     config_xml = dataset_filepaths.get_hardware_config_xml(dataset_dir)
     conf = backpackconfig.Configuration(config_xml, True, dataset_dir)
     
-    # find all active cameras in the file
+    # Prepare arguments for program
+    args = [SCANORAMA_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
+                '-m', modelfile, \
+                '-p', pathfile, \
+                '-o', scanoprefix]
+
+    #--------------------------------------------
+    # find all active FISHEYE cameras in the file
+    #--------------------------------------------
     cam_metas  = []
     cam_calibs = []
     cam_dirs   = []
@@ -108,18 +116,48 @@ def run(dataset_dir, pathfile):
         cam_calibs.append(calibfile)
         cam_dirs.append(imgdir)
 
-    # Prepare arguments for program
-    args = [SCANORAMA_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
-                '-m', modelfile, \
-                '-p', pathfile, \
-                '-o', scanoprefix]
-
-    # add camera information
+    # add FISHEYE camera information
     for ci in range(len(cam_metas)):
         args += ['-f', cam_metas[ci], \
                 cam_calibs[ci], cam_dirs[ci]]
+   
+    #-----------------------------------------
+    # find all active FLIR cameras in the file
+    #-----------------------------------------
+    cam_metas  = []
+    cam_calibs = []
+    cam_dirs   = []
+    cameraList =  conf.find_sensors_by_type("flirs")
+    for cameraName in cameraList:
 
+        # prepare the command-line arguments for this camera
+        metafile = os.path.join(dataset_dir, \
+                conf.find_sensor_prop(cameraName, \
+                    'configFile/flir_metadata_outfile', 'flirs'))
+        metafile = dataset_filepaths.get_ir_normalized_metadata_file( \
+                cameraName, metafile)
+        calibfile = os.path.join(dataset_dir, \
+                conf.find_sensor_prop(cameraName, \
+                    'configFile/flir_rectilinear_calibration_file', \
+                    'flirs'))
+        imgdir = os.path.join(dataset_dir, \
+                dataset_filepaths.get_ir_normalized_image_dir( \
+                    conf.find_sensor_prop(cameraName, \
+                        'configFile/flir_output_directory', 'flirs')))
+
+        # add to arguments lists
+        cam_metas.append(metafile)
+        cam_calibs.append(calibfile)
+        cam_dirs.append(imgdir)
+
+    # add RECTILINEAR camera information
+    for ci in range(len(cam_metas)):
+        args += ['-r', cam_metas[ci], \
+                cam_calibs[ci], cam_dirs[ci]]
+
+    #----------------------------------
     # run pointcloud generation program
+    #----------------------------------
     ret = subprocess.call(args, executable=SCANORAMA_EXE, \
             cwd=dataset_dir, stdout=None, stderr=None, \
             stdin=None, shell=False)
