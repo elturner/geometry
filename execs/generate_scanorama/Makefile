@@ -30,6 +30,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io_obj.cpp \
 		$(SOURCEDIR)io/mesh/mesh_io_ply.cpp \
+		$(SOURCEDIR)io/data/mcd/McdFile.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)image/image_cache.cpp \
@@ -65,6 +66,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/tinyxmltools.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)io/mesh/mesh_io.h \
+		$(SOURCEDIR)io/data/mcd/McdFile.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)timestamp/sync_xml.h \

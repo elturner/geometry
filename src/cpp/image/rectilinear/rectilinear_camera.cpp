@@ -1,4 +1,5 @@
 #include "rectilinear_camera.h"
+#include <io/data/mcd/McdFile.h>
 #include <io/data/color_image/color_image_metadata_reader.h>
 #include <image/rectilinear/rectilinear_functions.h>
 #include <geometry/transform.h>
@@ -91,7 +92,8 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 		ret = infile.next(this->metadata[i]);
 		if(ret)
 		{
-			cerr << "[rectilinear_camera_t::init]\tUnable to parse"
+			cerr << "[rectilinear_camera_t::init]\t"
+			     << "Unable to parse"
 			     << " metadata #" << i << "/"
 			     << infile.get_num_images() << " from "
 			     << metafile << endl;
@@ -111,6 +113,86 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 
 	/* clean up */
 	infile.close();
+	return 0;
+}
+		
+int rectilinear_camera_t::init_mcd(const std::string& mcdfile,
+                                   const system_path_t& path)
+{
+	McdFile infile;
+	pose_t p;
+	transform_t extrinsics, syspose;
+	size_t i, n, r, c;
+	int ret;
+
+	/* clear any existing values */
+	this->clear();
+
+	/* read in the mcd file */
+	if(!(infile.read(mcdfile)))
+	{
+		/* unable to read */
+		cerr << "[rectilinear_camera_t::init_mcd]\tUnable to read "
+		     << "mcd file: " << mcdfile << endl;
+		return -1;
+	}
+
+	/* copy the K-matrix from the MCD file.  NOTE, the mcd
+	 * does not store any linear distortion coefficients, so
+	 * just leave these as zero */
+	this->calibration.set_K(infile.K());
+
+	/* copy translation extrinsics into transform structure */
+	for(r = 0; r < 3; r++)
+		extrinsics.T(r) = infile.t_cam_to_common()[r];
+
+	/* copy rotation extrinsics */
+	for(r = 0; r < 3; r++)
+		for(c = 0; c < 3; c++)
+			extrinsics.R(r,c) = infile.r_cam_to_common()[3*r+c];
+
+	/* do not know the camera name or image path */
+	this->cameraName = infile.serial_num();
+	this->image_directory = ""; /* unknown */
+
+	/* copy over the metadata for each image */
+	n = infile.num_images();
+	this->metadata.resize(n);
+	this->timestamps.resize(n);
+	this->poses.resize(n);
+	for(i = 0; i < n; i++)
+	{
+		/* copy info into each struct */
+		this->metadata[i].image_file = infile.file_name(i);
+		this->metadata[i].index      = i;
+		this->metadata[i].timestamp  = infile.timestamp(i);
+		this->metadata[i].exposure   = -1; /* unknown */
+		this->metadata[i].gain       = -1; /* unknown */
+		this->timestamps[i]          = infile.timestamp(i);
+	
+		/* get the pose of this camera at this index */
+		ret = path.compute_pose_at(p, this->timestamps[i]);
+		if(ret)
+		{
+			/* unable to compute pose */
+			ret = PROPEGATE_ERROR(-2, ret);
+			cerr << "[rectilinear_camera_t::init_mcd]\t"
+			     << "Error " << ret << ": Unable to compute "
+			     << "pose for index #" << i << " of camera "
+			     << this->cameraName << endl;
+			return ret;
+		}
+		syspose.T = p.T;
+		syspose.R = p.R.toRotationMatrix();
+
+		/* now that we have the pose of the system, apply
+		 * the extrinsics from the MCD file to find pose
+		 * of camera */
+		this->poses[i] = extrinsics;
+		this->poses[i].cat(syspose);
+	}
+
+	/* success */
 	return 0;
 }
 

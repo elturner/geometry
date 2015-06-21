@@ -9,6 +9,7 @@
 */
 
 /* includes */
+#include <cstring>
 #include <string>
 
 /* the rcam_model class */
@@ -44,8 +45,6 @@ public:
 	*/
 	bool read(const std::string& filename);
 
-	// TODO LEFT OFF HERE:  read in a mcd file
-
 	/*
 	*	std::string pretty_print() const
 	*
@@ -80,10 +79,14 @@ public:
 		{return _camera_name;};
 	inline std::string& camera_name() 
 		{return _camera_name;};
+	
 	inline const double& K(size_t i, size_t j) const
 		{return _K[3*i+j];};
 	inline double& K(size_t i, size_t j) 
 		{return _K[3*i+j];};
+	inline void set_K(const double* newK)
+		{ memcpy(this->_K, newK, 9*sizeof(double)); };
+	
 	inline const double& kc(size_t i) const
 		{return _kc[i];};
 	inline double& kc(size_t i)

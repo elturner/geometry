@@ -71,6 +71,20 @@ class rectilinear_camera_t : public camera_t
 		 	 const system_path_t& path);
 
 		/**
+		 * Initializes this structure based on input files
+		 *
+		 * Given a MCD (Model Camera Data) file and a path,
+		 * will initialize this camera structure.
+		 *
+		 * @param mcdfile   The MCD file to import
+		 * @param path      The system path structure
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int init_mcd(const std::string& mcdfile,
+		             const system_path_t& path);
+
+		/**
 		 * Clears all information from this structure.
 		 *
 		 * Clears all information from this structure and frees
