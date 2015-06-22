@@ -1,0 +1,33 @@
+After data acquisition, the images retrieved from each camera are converted from bayer to rgb, and have their timestamps synchronized.  A new metadata file is generated for these new images, which has the following format:
+
+This is an ascii file, with the following header:
+
+	<camera_name>
+	<num_images>
+	<jpeg_quality>
+	<output_dir>
+
+The header is followed by a blank line.  The data is stored so each subsequent line reprsents one image file, with the following parameters:
+
+	<image_num> <image_file> <timestamp> <exposure> <gain>
+
+Where:
+
+	<camera_name>	=	The camera name (e.g. "right_camera")
+	<num_images>	=	The number of image files referenced
+				in this file
+	<jpeg_quality>	=	Quality of exported jpegs (range [1-100])
+	<output_dir>	=	The directory to which the output images 
+				were written
+
+	<image_num>	=	The index of the image represented (indices
+				begin at zero)
+	<image_file>	=	The name of the file for this image (but
+				not the directory path)
+	<timestamp>	=	The synchronized timestamp for this image,
+				represented as a double in seconds.
+	<exposure>	=	The exposure of the camera when the image
+				was taken, represented as an integer in
+				microseconds
+	<gain>		=	The gain of the camera when the image was
+				taken, floating-point range [1-4]
