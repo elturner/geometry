@@ -7,7 +7,7 @@
 # by calling their respective makefiles
 #
 
-all: floorplan_progs procarve_progs util_progs
+all: floorplan_progs procarve_progs image_progs util_progs
 	@echo ""
 	@echo "All programs compiled successfully"
 

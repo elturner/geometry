@@ -30,6 +30,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.cpp \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.cpp \
 		$(SOURCEDIR)io/data/fss/fss_io.cpp \
+		$(SOURCEDIR)io/data/mcd/McdFile.cpp \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.cpp \
@@ -71,6 +72,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/data/urg/urg_data_reader.h \
 		$(SOURCEDIR)io/data/d_imager/d_imager_data_reader.h \
 		$(SOURCEDIR)io/data/fss/fss_io.h \
+		$(SOURCEDIR)io/data/mcd/McdFile.h \
 		$(SOURCEDIR)io/data/color_image/color_image_metadata_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)io/pointcloud/pointcloud_writer.h \
