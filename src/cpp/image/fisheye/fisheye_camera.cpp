@@ -107,7 +107,14 @@ int fisheye_camera_t::init(const std::string& calibfile,
 		                    this->metadata[i].timestamp,
 		                    infile.get_camera_name());
 		if(ret)
+		{
+			cerr << "[fisheye_camera_t::init]\tUnable to "
+			     << "get transform for camera \""
+			     << infile.get_camera_name() << "\" ("
+			     << infile.get_camera_name().size() << ")"
+			     << endl;
 			return PROPEGATE_ERROR(-5, ret);
+		}
 
 		/* save timestamp for this frame */
 		this->timestamps[i] = this->metadata[i].timestamp; 
