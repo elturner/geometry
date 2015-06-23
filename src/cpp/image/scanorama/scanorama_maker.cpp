@@ -330,14 +330,36 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 		return ret; /* no poses */
 	}
 
-	/* put the first scanorama at the first pose */
+	/* put the first scanorama at the first pose that occurs
+	 * after the start-time of the path */
 	prev_p = 0;
+	while(camtimes[prev_p] <= this->path.starttime())
+	{
+		/* current pose is too early, try next pose */
+		prev_p++;
+
+		/* make sure we don't run out of poses */
+		if(prev_p >= n-1) /* don't want to reach last pose yet */
+		{
+			/* all cam poses are before start time */
+			ret = -3;
+			cerr << "[scanorama_maker_t::generate_along_path]\t"
+			     << "ERROR " << ret << ": No poses occur at "
+			     << "valid times." << endl;
+			return ret;
+		}
+	}
+	
+	/* the first image is usually not the best, since the camera has
+	 * not adapted to its conditions yet.  So start one the second
+	 * image of the dataset. */
+	prev_p++; 
 	times.push_back(camtimes[prev_p]);
 
 	/* iterate through the path.  Determine the distance spacing between
 	 * poses in order to figure out where to place the generated
 	 * scanoramas. */
-	for(i = 1 ; i < n; i++)
+	for(i = prev_p+1; i < n; i++)
 	{
 		/* determine the distance of the current pose from
 		 * the last pose where we put a scanorama */
@@ -356,7 +378,7 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 				end_idx);
 	if(ret)
 	{
-		ret = PROPEGATE_ERROR(-2, ret);
+		ret = PROPEGATE_ERROR(-4, ret);
 		cerr << "[scanorama_maker_t::generate_along_path]\t"
 		     << "ERROR" << ret << ": Unable to generate poses"
 		     << endl;
