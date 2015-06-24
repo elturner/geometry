@@ -20,8 +20,11 @@ function [] = render_fp(floorplan, color_by_room, c, labels)
 	%			Default is false.
 	%
 
+	% Prepare the figure.  The painters algorithm preserves the
+	% vectorized nature of the floor plan.  Export to PDF to
+	% yield a vectorized figure.
 	hold all;
-	set(gcf, 'renderer', 'opengl');
+	set(gcf, 'renderer', 'Painters');
 	axis equal;
 	axis off;
 
