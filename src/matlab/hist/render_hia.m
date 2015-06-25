@@ -20,6 +20,8 @@ function [] = render_hia(hia)
 	% prepare the figure
 	hold on;
 	axis equal;
+	axis off;
+	set(gcf, 'renderer', 'Painter');
 
 	% prepare the pixels
 	pixels_x = ([-1;-1;1;1] * 0.5 * hia.resolution) ...

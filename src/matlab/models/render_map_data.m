@@ -7,7 +7,8 @@ function [] = render_map_data(map_data, showheights)
 
 	hold all;
 	axis equal;
-	set(gcf, 'renderer', 'opengl');
+	axis off;
+	set(gcf, 'renderer', 'Painter');
 
 	% plot points
 	N = size(map_data.pos, 2);
