@@ -15,7 +15,8 @@ function [] = render_map_data(map_data, showheights)
 	if(~exist('showheights', 'var'))
 		
 		% plot 2D position
-		plot(map_data.pos(1,:), map_data.pos(2,:), 'b.');
+		plot(map_data.pos(1,:), map_data.pos(2,:), 'b.', ...
+					'markers', 0.5);
 		
 	else
 		% plot 2.5 D positions and ranges
