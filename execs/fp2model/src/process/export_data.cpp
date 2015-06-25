@@ -4,6 +4,7 @@
 #include "../io/csv_io.h"
 #include "../io/ply_io.h"
 #include "../io/shp_io.h"
+#include "../io/wrl_io.h"
 #include "../structs/building_model.h"
 #include <util/error_codes.h>
 #include <util/tictoc.h>
@@ -57,7 +58,7 @@ int export_data(const building_model_t& bim, const config_t& conf)
 	for(i = 0; i < n; i++)
 	{
 		/* export to this wrl file */
-		ret = bim.export_wrl(conf.outfile_wrl[i]);
+		ret = wrl_io::export_wrl(conf.outfile_wrl[i], bim);
 		if(ret)
 		{
 			/* error occurred */

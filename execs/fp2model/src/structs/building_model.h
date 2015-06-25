@@ -158,37 +158,7 @@ class building_model_t
 		 *
 		 * @return Returns zero on success, non-zero on failure.
 		 */
-		int export_obj(const std::string& filename) const;
-	 
-		/**
-		 * Exports this building model to the specified VMRL file.
-		 *
-		 * @param filename   Path to the .wrl file to write
-		 *
-		 * @return  Returns zero on success, non-zero on failure.
-		 */
-		int export_wrl(const std::string& filename) const;
-
-	/* helper functions */
-	private:
-
-		/* write_floor_to_wrl:
-		 *
-		 * 	Exports floor as a wrl shape.
-		 */
-		void write_floor_to_wrl(std::ostream& outfile) const;
-		
-		/* write_ceiling_to_wrl:
-		 *
-		 * 	Exports ceiling as a wrl shape.
-		 */
-		void write_ceiling_to_wrl(std::ostream& outfile) const;
-	
-		/* write_wall_to_wrl:
-		 *
-		 * 	Exports walls as a wrl shape.
-		 */
-		void write_wall_to_wrl(std::ostream& outfile) const;
+		int export_obj(const std::string& filename) const;	 
 };
 
 #endif

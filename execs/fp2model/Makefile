@@ -20,6 +20,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		src/io/csv_io.cpp \
 		src/io/ply_io.cpp \
 		src/io/shp_io.cpp \
+		src/io/wrl_io.cpp \
 		src/structs/building_model.cpp \
 		src/structs/window.cpp \
 		src/structs/lights.cpp \
@@ -41,6 +42,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		src/io/csv_io.h \
 		src/io/ply_io.h \
 		src/io/shp_io.h \
+		src/io/wrl_io.h \
 		src/structs/building_model.h \
 		src/structs/window.h \
 		src/structs/lights.h \
