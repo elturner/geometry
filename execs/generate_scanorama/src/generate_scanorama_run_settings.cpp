@@ -37,10 +37,11 @@ using namespace std;
 
 /* the xml parameters to look for */
 
-#define XML_NUM_ROWS     "scanorama_num_rows"
-#define XML_NUM_COLS     "scanorama_num_cols"
-#define XML_BLENDWIDTH   "scanorama_blendwidth"
-#define XML_SPACING_DIST "scanorama_spacing_dist"
+#define XML_NUM_ROWS           "scanorama_num_rows"
+#define XML_NUM_COLS           "scanorama_num_cols"
+#define XML_BLENDWIDTH         "scanorama_blendwidth"
+#define XML_MIN_SPACING_DIST   "scanorama_min_spacing_dist"
+#define XML_MAX_SPACING_DIST   "scanorama_max_spacing_dist"
 
 /*--------------------------*/
 /* function implementations */
@@ -49,21 +50,22 @@ using namespace std;
 generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 {
 	/* initialize fields to default values */
-	this->xml_config   = "";
-	this->pathfile     = "";
-	this->modelfile    = "";
+	this->xml_config       = "";
+	this->pathfile         = "";
+	this->modelfile        = "";
 	this->fisheye_cam_metafiles.clear();
 	this->fisheye_cam_calibfiles.clear();
 	this->fisheye_cam_imgdirs.clear();
 	this->rectilinear_cam_metafiles.clear();
 	this->rectilinear_cam_calibfiles.clear();
 	this->rectilinear_cam_imgdirs.clear();
-	this->num_rows     = 1000;
-	this->num_cols     = 2000;
-	this->spacing_dist = 1.0;
-	this->ptx_outfile  = "";
-	this->begin_idx    = 0;
-	this->end_idx      = -1;
+	this->num_rows         = 1000;
+	this->num_cols         = 2000;
+	this->min_spacing_dist = 2.0;
+	this->max_spacing_dist = 3.0;
+	this->ptx_outfile      = "";
+	this->begin_idx        = 0;
+	this->end_idx          = -1;
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -207,8 +209,12 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 		this->num_cols     = settings.getAsUint(XML_NUM_COLS);
 	if(settings.is_prop(XML_BLENDWIDTH))
 		this->blendwidth   = settings.getAsDouble(XML_BLENDWIDTH);
-	if(settings.is_prop(XML_SPACING_DIST))
-		this->spacing_dist = settings.getAsDouble(XML_SPACING_DIST);
+	if(settings.is_prop(XML_MIN_SPACING_DIST))
+		this->min_spacing_dist 
+			= settings.getAsDouble(XML_MIN_SPACING_DIST);
+	if(settings.is_prop(XML_MAX_SPACING_DIST))
+		this->max_spacing_dist 
+			= settings.getAsDouble(XML_MAX_SPACING_DIST);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

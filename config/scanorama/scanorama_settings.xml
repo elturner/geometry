@@ -35,16 +35,23 @@
 	     range: [0,1] -->
 	<scanorama_blendwidth>0.1</scanorama_blendwidth>
 
-	<!-- The spacing distance between successive scanorama poses.
+	<!-- The range of spacing distance between successive 
+	     scanorama poses.
 
 	     Rather than export a scanorama at the pose of every single
 	     camera image, we can instead downsample the output to
 	     only export scanoramas that are at least this distance apart.
 
-	     If the value is set to negative, then every camera pose will
+	     We specify a min and max spacing so that there are a range of
+	     potential poses within an appropriate distance.  Of this range,
+	     the best pose is chosen.  All successive scanorama poses will
+	     be spaced within this range of each other.
+
+	     If the values are set to negative, then every camera pose will
 	     be exported.
 
 	     units: meters -->
-	<scanorama_spacing_dist>2.0</scanorama_spacing_dist>	
+	<scanorama_min_spacing_dist>2.5</scanorama_min_spacing_dist>	
+	<scanorama_max_spacing_dist>3.5</scanorama_max_spacing_dist>	
 
 </settings>

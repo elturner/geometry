@@ -207,26 +207,28 @@ class scanorama_maker_t
 		 * This function will internally call the generate_all()
 		 * function.
 		 *
-		 * @param prefix_out  The prefix for the output path
-		 * @param spacingdist The spacing distance (in meters)
-		 * @param r           Number of rows to use
-		 * @param c           Number of columns to use
-		 * @param bw          The blendwidth to use (range [0,1])
-		 * @param begin_idx   The index within the generated poses
-		 *                    to start exporting, inclusive 
-		 *                    (default = 0)
-		 * @param end_idx     The index within the generated poses
-		 *                    to end exporting, exclusive 
-		 *                    (default = -1,
-		 *                    which indicates that all values
-		 *                    should be used)
+		 * @param prefix_out   The prefix for the output path
+		 * @param minspacedist The min spacing distance (in meters)
+		 * @param maxspacedist The max spacing distance (in meters)
+		 * @param r            Number of rows to use
+		 * @param c            Number of columns to use
+		 * @param bw           The blendwidth to use (range [0,1])
+		 * @param begin_idx    The index within the generated poses
+		 *                     to start exporting, inclusive 
+		 *                     (default = 0)
+		 * @param end_idx      The index within the generated poses
+		 *                     to end exporting, exclusive 
+		 *                     (default = -1,
+		 *                     which indicates that all values
+		 *                     should be used)
 		 *
 		 *
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_along_path(const std::string& prefix_out,
-			double spacingdist, size_t r, size_t c, double bw,
-				int begin_idx = 0, int end_idx = -1);
+			double minspacedist, double maxspacedist,
+			size_t r, size_t c, double bw,
+			int begin_idx = 0, int end_idx = -1);
 
 	/* helper functions */
 	private:
@@ -240,6 +242,50 @@ class scanorama_maker_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int populate_octree(const std::string& modelfile);
+
+		/**
+		 * Finds the first index that is at least min_dist away
+		 * from reference posiiton.
+		 *
+		 * Given a list of positions and reference point, will
+		 * iterate through the list (starting with the index
+		 * i_start) and will determine the first index that
+		 * is at least min_dist away from poses[i_ref].  If no
+		 * elements meet that criteria, then poses.size() is
+		 * returned.
+		 *
+		 * @param poses     The list of poses to search
+		 * @param i_start   The first index to start searching
+		 * @param i_ref     The index of reference point 
+		 *                  to compare distances to
+		 * @param min_dist  The minimum distance away from
+		 *                  refpoint a returned pose must be.
+		 *
+		 * @return    Returns the index of the first pose >= i_start
+		 *            that is at least min_dist away from refpoint.
+		 */
+		size_t index_jump_by_dist(
+			const std::vector<transform_t,
+	        	    Eigen::aligned_allocator<transform_t> >& poses,
+			size_t i_start, size_t i_ref, 
+			double min_dist) const;
+
+		/**
+		 * Retrieves the best candidate pose in a list of timestamps
+		 *
+		 * For the specified list of possible timestamps for a
+		 * camera pose, will chose the one where the system had
+		 * the minimal rotational velocity.
+		 *
+		 * @parma times    The list of timestamps to check
+		 * @param i_start  The index to start searching (inclusive)
+		 * @param i_end    The index to end searching (exclusive)
+		 *
+		 * @return    Returns i in [i_start,i_end] where the system
+		 *            had the smallest rotational speed.
+		 */
+		size_t get_best_index(const std::vector<double>& times,
+				size_t i_start, size_t i_end) const;
 };
 
 #endif

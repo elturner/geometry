@@ -678,6 +678,19 @@ bool system_path_t::is_blacklisted(double ts) const
 	range_t r(this->pl[a].timestamp, this->pl[b].timestamp);
 	return this->timestamp_blacklist.intersects(r);
 }
+		
+double system_path_t::rotational_speed_at(double ts) const
+{
+	int pose_ind;
+
+	/* get the index of the pose to check */
+	pose_ind = this->closest_index(ts);
+	if(pose_ind < 0)
+		return 0; /* no path defined, no rotation either */
+
+	/* get the magnitude of w at this pose */
+	return (this->pl[pose_ind].w.norm());
+}
 	
 double system_path_t::starttime() const
 {

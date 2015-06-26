@@ -91,7 +91,8 @@ int main(int argc, char** argv)
 	toc(clk, "Initialization");
 
 	/* export the scans */
-	ret = maker.generate_along_path(args.ptx_outfile, args.spacing_dist,
+	ret = maker.generate_along_path(args.ptx_outfile, 
+			args.min_spacing_dist, args.max_spacing_dist,
 			args.num_rows, args.num_cols, args.blendwidth,
 			args.begin_idx, args.end_idx);
 	if(ret)

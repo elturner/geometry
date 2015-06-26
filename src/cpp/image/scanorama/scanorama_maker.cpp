@@ -284,13 +284,13 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 }
 		
 int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
-			double spacingdist, size_t r, size_t c, double bw,
-				int begin_idx, int end_idx)
+			double minspacedist, double maxspacedist,
+			size_t r, size_t c, double bw,
+			int begin_idx, int end_idx)
 {
 	vector<double> times;
-	double spacingdist_sq, d_sq;
 	tictoc_t clk;
-	size_t prev_p, i, n;
+	size_t i_chosen, i_start, i_end, n;
 	int ret;
 	
 	/* begin processing */
@@ -309,7 +309,7 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 		     << endl;
 		return ret;
 	}
-	
+
 	/* get the positions of the first camera */
 	const std::vector<transform_t,
 	            Eigen::aligned_allocator<transform_t> >& camposes
@@ -319,7 +319,6 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 
 	/* we want to iterate over the path to find poses for
 	 * the scanoramas */
-	spacingdist_sq = spacingdist * spacingdist;
 	n = camposes.size();
 	if(n <= 0)
 	{
@@ -332,14 +331,14 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 
 	/* put the first scanorama at the first pose that occurs
 	 * after the start-time of the path */
-	prev_p = 0;
-	while(camtimes[prev_p] <= this->path.starttime())
+	i_start = 0;
+	while(camtimes[i_start] <= this->path.starttime())
 	{
 		/* current pose is too early, try next pose */
-		prev_p++;
+		i_start++;
 
 		/* make sure we don't run out of poses */
-		if(prev_p >= n-1) /* don't want to reach last pose yet */
+		if(i_start >= n) /* don't want to reach last pose yet */
 		{
 			/* all cam poses are before start time */
 			ret = -3;
@@ -352,24 +351,55 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	
 	/* the first image is usually not the best, since the camera has
 	 * not adapted to its conditions yet.  So start one the second
-	 * image of the dataset. */
-	prev_p++; 
-	times.push_back(camtimes[prev_p]);
+	 * image of the dataset. 
+	 *
+	 * Now determine which of the first few poses should be used
+	 * as the first scanorama. */
+	i_start++;
+	i_end = this->index_jump_by_dist(
+			camposes, /* the list of poses to search */
+			i_start, /* start searching here */
+			0, /* measure distance from pose #0 */
+			maxspacedist-minspacedist); /* distance to search */
+	i_chosen = this->get_best_index(camtimes, i_start, i_end);
+	if(i_chosen >= n)
+	{
+		/* went past end of list */
+		ret = -4;
+		cerr << "[scanorama_maker_t::generate_along_path]\t"
+		     << "Couldn't find valid first pose.  Camera "
+		     << this->cameras[0]->name() << " has "
+		     << n << " images.  Is that enough?" << endl;
+		return ret;
+	}
+
+	/* insert as our first scanorama pose */
+	times.push_back(camtimes[i_chosen]);
 
 	/* iterate through the path.  Determine the distance spacing between
 	 * poses in order to figure out where to place the generated
 	 * scanoramas. */
-	for(i = prev_p+1; i < n; i++)
+	while(i_chosen < n && i_end < n)
 	{
-		/* determine the distance of the current pose from
-		 * the last pose where we put a scanorama */
-		d_sq = camposes[prev_p].dist_sq(camposes[i]);
-		if(d_sq < spacingdist_sq)
-			continue; /* too soon to put another scanorama */
+		/* determine when path goes relevant distances */
+		i_start = this->index_jump_by_dist(camposes,
+				i_chosen+1, i_chosen, minspacedist);
+		i_end = this->index_jump_by_dist(camposes,
+				i_start,    i_chosen, maxspacedist);
 
-		/* if got here, then we can place another scanorama */
-		times.push_back(camtimes[i]);
-		prev_p = i;
+		/* now we know that camposes[i_start] is at least
+		 * minspacedist from camposes[i_chosen], and camposes[i_end]
+		 * is at least maxspacedist from camposes[i_chosen] 
+		 *
+		 * find the best index in this range to convert to
+		 * a scanorama */
+		i_chosen = this->get_best_index(camtimes, i_start, i_end);
+		if(i_chosen >= n)
+			break; /* reached end of list, stop iterating */
+
+		/* now that we've selected the desired pose, add its
+		 * timestamp to our list so we can put a scanorama there */
+		times.push_back(camtimes[i_chosen]);
 	}
 	toc(clk, "Locating poses");
 	
@@ -378,7 +408,8 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 				end_idx);
 	if(ret)
 	{
-		ret = PROPEGATE_ERROR(-4, ret);
+		/* some error occurred during processing */
+		ret = PROPEGATE_ERROR(-5, ret);
 		cerr << "[scanorama_maker_t::generate_along_path]\t"
 		     << "ERROR" << ret << ": Unable to generate poses"
 		     << endl;
@@ -448,4 +479,65 @@ int scanorama_maker_t::populate_octree(const std::string& modelfile)
 
 	/* success */
 	return 0;
+}
+		
+size_t scanorama_maker_t::index_jump_by_dist(
+			const std::vector<transform_t,
+	        	    Eigen::aligned_allocator<transform_t> >& poses,
+			size_t i_start, size_t i_ref, 
+			double min_dist) const
+{
+	double dist_sq, min_dist_sq;
+	size_t i, num_poses;
+
+	/* check valid input */
+	num_poses = poses.size();
+	if(i_ref >= num_poses || i_start >= num_poses)
+		return num_poses; /* invalid input */
+
+	/* precompute square of min-dist */
+	min_dist_sq = min_dist * min_dist;
+
+	/* iterate over poses until condition met */
+	for(i = i_start; i < num_poses; i++)
+	{
+		/* get the distance between current pose and the
+		 * reference point */
+		dist_sq = poses[i_ref].dist_sq(poses[i]);
+
+		/* check if min distance met */
+		if(dist_sq >= min_dist_sq)
+			return i; /* found first valid pose */
+	}
+
+	/* no match found, so return end-of-list */
+	return num_poses;
+}
+		
+size_t scanorama_maker_t::get_best_index(const std::vector<double>& times,
+				size_t i_start, size_t i_end) const
+{
+	double w, w_min;
+	size_t i, i_min, num_times;
+	
+	/* initialize variables */
+	w_min     = DBL_MAX;
+	i_min     = i_start;
+	num_times = times.size();
+
+	/* iterate over the range of indices */
+	for(i = i_start; i < i_end && i < num_times; i++)
+	{
+		/* get rotational speed at i */
+		w = this->path.rotational_speed_at(times[i]);
+		if(w < w_min)
+		{
+			/* update min value */
+			i_min = i;
+			w_min = w;
+		}
+	}
+
+	/* return best position */
+	return i_min;
 }

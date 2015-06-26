@@ -134,7 +134,7 @@ class generate_scanorama_run_settings_t
 		double blendwidth;
 
 		/**
-		 * The spacing distance between scanorama poses
+		 * The minimum spacing distance between scanorama poses
 		 * exported.
 		 *
 		 * The system will need to move at least this distance
@@ -142,7 +142,18 @@ class generate_scanorama_run_settings_t
 		 *
 		 * units:  meters
 		 */
-		double spacing_dist;
+		double min_spacing_dist;
+
+		/**
+		 * The maximum spacing distance between scanorama poses
+		 * exported.
+		 *
+		 * The system will move at most this distance
+		 * away before another scanorama is generated.
+		 *
+		 * units:  meters
+		 */
+		double max_spacing_dist;
 
 		/**
 		 * Specifies the start index of the exported scanoramas

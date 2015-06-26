@@ -245,6 +245,21 @@ class system_path_t
 		bool is_blacklisted(double ts) const;
 
 		/**
+		 * Returns the magnitude of the rotational velocity
+		 * at this time.
+		 *
+		 * Will determine the rotational velocity of the
+		 * system at the specified timestamp, and will
+		 * return the magnitude of that value.
+		 *
+		 * @param    The timestamp to check
+		 *
+		 * @return   The magnitude of the rotational velocity,
+		 *           in units of radians/sec.
+		 */
+		double rotational_speed_at(double ts) const;
+
+		/**
 		 * Retrieves stored zupt information
 		 *
 		 * Zupts (or Zero-velocity interrUPTS) specify when the
