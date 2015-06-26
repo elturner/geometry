@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 ##
-# @file generate_scanorama.py
-# @author Eric Turner <elturner@eecs.berkeley.edu>
-# @brief The pointcloud generation python script
+# @file   generate_scanorama.py
+# @author Eric Turner <elturner@indoorreality.com>
+# @brief  The scanorama generation python script
 # 
 # @section DESCRIPTION
 #
@@ -11,6 +11,8 @@
 # executable after verifying that all input files
 # exist, output directories exist, and the given
 # dataset is formatted appropriately.
+#
+# Created June 2015
 #
 
 # import python libraries
