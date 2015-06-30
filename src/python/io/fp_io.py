@@ -29,7 +29,7 @@ class Floorplan:
     #    verts -        Array of vertices, each vert a tuple (x,y)
     #    tris -        Array of triangles, each tri a tuple (i,j,k)
     #    room_tris -    Array of room triangle indices, each element
-    #            an array of triangle indices for given room
+    #                   is an array of triangle indices for given room
     #    room_min_z -    Array of room floor heights (meters)
     #    room_max_z -    Array of room floor heights (meters)
     #
@@ -212,15 +212,48 @@ class Floorplan:
             if (j,i) not in all_edges:
                 boundary_edges.append((i,j))
 
-    
-
         # return boundary edges
+        return boundary_edges
+
+    ##
+    # Computes boundary edges of the specified room
+    #
+    # A boundary edge is between two vertices that share exactly
+    # one triangle.  This means that the edge is not interior
+    # to the floor plan.
+    #
+    # @param roomid     The index of the room to generate edges for
+    #
+    # @return  Returns a list of tuples, each an edge as vertex indices
+    #
+    def compute_room_boundary_edges(self, roomid):
+        
+        # iterate over the triangles in the specified room
+        room_edges = []
+        for ti in self.room_tris[roomid]:
+            # get current triangle in this room
+            (i,j,k) = self.tris[ti]
+
+            # record all edges of this triangle
+            room_edges.append((i,j))
+            room_edges.append((j,k))
+            room_edges.append((k,i))
+
+        # the boundary edges of the room are those that 
+        # don't have a reverse in the list.
+        boundary_edges = []
+        for (i,j) in room_edges:
+            # check if the opposing edge exists
+            if (j,i) not in room_edges:
+                boundary_edges.append((i,j))
+
+        # return the final list of boundary edges for this room
         return boundary_edges
 
     ##
     # Compute the oriented boundary edges of floorplan
     #
-    # Will list allboundary vertices of the given set
+    # Will list all boundary vertices of the given set
     # of triangles in this floorplan, in counter-clockwise
     # order.  Disjoint boundary sets will be placed in their
     # own lists.
