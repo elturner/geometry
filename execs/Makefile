@@ -65,6 +65,7 @@ util_progs:
 	$(MAKE) -w -C transform_model $(CMD)
 	$(MAKE) -w -C filter_pointcloud $(CMD)
 	$(MAKE) -w -C screenshot_pointcloud $(CMD)
+	$(MAKE) -w -C split_image_by_floorplan $(CMD)
 	$(MAKE) -w -C surface_carve $(CMD)
 
 # todo searcher
