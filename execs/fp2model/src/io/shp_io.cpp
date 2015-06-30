@@ -60,6 +60,11 @@ int writeshp(const std::string& filename, const building_model_t& bim)
 	string shxfilename;
 	int ret;
 
+	/* warn user that this program is still buggy */
+	cerr << "[writeshp]\tNOTE:  This implementation is still buggy.  "
+	     << "It is advised to use the fp2shp.py script instead to "
+	     << "convert .fp files to .shp files." << endl << endl;
+
 	/* open file for writing */
 	outfile.open(filename.c_str(), ios_base::out | ios_base::binary);
 	if(!(outfile.is_open()))
