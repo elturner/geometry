@@ -14,9 +14,19 @@
 
 # imports
 import backpackconfig
+import dataset_filepaths
 import sys
 from os import *
 import glob
+
+# Get the location of this file
+SCRIPT_LOCATION = os.path.dirname(__file__)
+
+# store path to executable
+MESH2IMAGE_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, "..", \
+        "..", "..", "bin",  "mesh2image"))
+if sys.platform == 'win32' :
+    MESH2IMAGE_EXE += '.exe'
 
 #---------------------------------------------------#
 #------------------- CODE BODY ---------------------#
@@ -28,13 +38,14 @@ import glob
 # Given a dataset, will generate depth and normal maps for each 'level'
 # rectified image for each available camera.
 #
-def run(datasetDir):
+def run(datasetDir, datasetName):
 
     # The first thing we need to do is import the backpack i
     # configuration file
     # so that we can deduce the locations of all the files names
     configFile = dataset_filepaths.get_hardware_config_xml(datasetDir)
     conf = backpackconfig.Configuration(configFile, True, datasetDir)
+    meshfile = dataset_filepaths.get_full_mesh_file(datasetDir)
 
     # Then we need to get a list of all active cameras for this dataset
     cameras = conf.find_sensors_by_type("cameras")
@@ -68,44 +79,35 @@ def run(datasetDir):
         # Store the final mcd file
         mcdFile = mcdFiles[0]
 
-        # TODO left off here, this currently won't run
-
         # Then locate the pose file for the camera
         poseFiles = glob.glob(path.join(datasetDir,
-            'localization',settings['datasetName'],
+            'localization',datasetName,
             'cameraposes',camera+"_poses.txt"))
         if(len(poseFiles) == 0) :
             print ("No camera pose file for " + camera + " found in " 
                  + path.join(settings['datasetDir'],
-                    'localization',settings['datasetName'],
+                    'localization',datasetName,
                     'cameraposes'))
             return 1
 
         # Store the pose file
         poseFile = poseFiles[0]
-
+        
         # Create the output directory name
-        outDir = path.join(settings['datasetDir'],
+        outDir = path.join(datasetDir,
             'imagemaps',camera)
-
+        
         # Store as a tuple
         code_args.append(tuple([mcdFile, poseFile, outDir, camera]))
-
-    # Creat the binary file name
-    binFile = path.join(settings['binaryDir'],'depth_maps')
-
+        
     # Create the arguments for the C++ code
-    args = [binFile,
-        "-dir", settings['datasetDir'],
-        "-model", settings['modelFile'],
-        "-depth", str(settings['depth'])]
+    args = [MESH2IMAGE_EXE,
+        "-dir",   datasetDir,
+        "-model", meshfile,
+        "-depth", '12']
     for argset in code_args :
         args += ["-i"]
         args += argset[:]
-    if settings['thread'] != None :
-        args += ['-threads',str(settings['thread'])]
-    if settings['downsample'] != None :
-        args += ['-ds',str(settings['downsample'])]
 
     # Run the code
     ret = system(" ".join(args))
@@ -123,16 +125,16 @@ def run(datasetDir):
 def main():
     
     # check the command-line arguments
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print ""
         print " Usage:"
         print ""
-        print "\t", sys.argv[0],"<path_to_dataset>"
+        print "\t", sys.argv[0],"<path_to_dataset>","<dataset_name>"
         print ""
         sys.exit(1)
 
     # run this script with the given dataset
-    ret = run(os.path.abspath(sys.argv[1]))
+    ret = run(os.path.abspath(sys.argv[1]), sys.argv[2])
     sys.exit(ret)
 
 ##
