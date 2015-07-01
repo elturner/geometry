@@ -105,7 +105,7 @@ int frame_model_t::init(const fss::frame_t& frame, double ang,
 	if(ret)
 		return PROPEGATE_ERROR(-2, ret);
 
-	// TODO do corner features
+	// NOTE:  we do not yet do corner features
 
 	/* success */
 	return 0;
