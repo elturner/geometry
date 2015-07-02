@@ -33,13 +33,15 @@ using namespace tango_io;
 tango_reader_t::tango_reader_t()
 {
 	/* reset values */
-	this->read_so_far = 0;
+	this->current_index = 0;
+	this->frame_locs.clear();
 }
 
 tango_reader_t::tango_reader_t(const std::string& filename)
 {
 	/* reset values */
-	this->read_so_far = 0;
+	this->current_index = 0;
+	this->frame_locs.clear();
 
 	/* attempt to open file, ignoring return value */
 	this->open(filename);
@@ -53,7 +55,8 @@ tango_reader_t::~tango_reader_t()
 
 int tango_reader_t::open(const std::string& filename)
 {
-	int magic;
+	tango_frame_t frame;
+	int magic, ret;
 
 	/* close any files if open */
 	this->close();
@@ -97,8 +100,63 @@ int tango_reader_t::open(const std::string& filename)
 		return -3;
 	}
 
+	/* populate the frame locations within the file, 
+	 * for random access */
+	while(!(this->eof()))
+	{
+		/* save the frame position */
+		this->frame_locs.push_back(this->infile.tellg());
+
+		/* get the next frame */
+		ret = this->next(frame);
+		if(ret)
+		{
+			/* first, check for eof */
+			if(this->eof())
+			{
+				/* remove last position from frame_locs
+				 * list, since it's actually the end
+				 * of the file */
+				this->frame_locs.pop_back();
+				break;
+			}
+
+			/* an error occurred */
+			cerr << "[tango_reader_t::open]\tUnable to parse "
+			     << "frame #" << this->current_index
+			     << " (Error " << ret << ") "
+			     << "in file: \"" << filename << "\"" << endl;
+			this->close();
+			return -4;
+		}
+	}
+
+	/* reset to beginning of frames */
+	this->current_index = 0;
+	this->infile.clear();
+	this->infile.seekg(this->frame_locs[0]);
+
 	/* success, ready to start reading frames */
 	return 0;
+}
+			
+int tango_reader_t::get(size_t i, tango_frame_t& frame)
+{
+	/* check that i is a valid index */
+	if(i >= this->frame_locs.size())
+	{
+		cerr << "[tango_reader_t::get]\tGiven invalid index: "
+		     << i << ".  There are " << this->frame_locs.size()
+		     << " frame(s) total." << endl;
+		return -1;
+	}
+
+	/* move to position #i */
+	this->current_index = i;
+	this->infile.seekg(this->frame_locs[i]);
+
+	/* get the next frame */
+	return this->next(frame);
 }
 			
 int tango_reader_t::next(tango_frame_t& frame)
@@ -115,7 +173,7 @@ int tango_reader_t::next(tango_frame_t& frame)
 	}
 
 	/* prepare the frame */
-	frame.index = this->read_so_far;
+	frame.index = this->current_index;
 
 	/* read the pose data from file */
 	frame.timestamp = this->read_double();
@@ -171,7 +229,7 @@ int tango_reader_t::next(tango_frame_t& frame)
 	}
 
 	/* success */
-	this->read_so_far++;
+	this->current_index++;
 	return 0;
 }
 
@@ -185,7 +243,8 @@ void tango_reader_t::close()
 	this->infile.close();
 
 	/* reset the counter */
-	this->read_so_far = 0;
+	this->current_index = 0;
+	this->frame_locs.clear();
 }
 			
 char tango_reader_t::read_char()

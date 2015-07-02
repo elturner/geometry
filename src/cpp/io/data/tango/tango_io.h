@@ -14,6 +14,7 @@
  */
 
 #include <fstream>
+#include <istream>
 #include <string>
 #include <vector>
 
@@ -41,10 +42,20 @@ namespace tango_io
 			std::ifstream infile;
 
 			/**
-			 * The number of frames read so far from 
-			 * the current file
+			 * The current frame index
+			 *
+			 * This value will be incremented after a frame
+			 * is read.
 			 */
-			size_t read_so_far;
+			size_t current_index;
+
+			/**
+			 * The starting position of each frame in the
+			 * input stream.
+			 *
+			 * This is useful for random access of scans.
+			 */
+			std::vector<std::streampos> frame_locs;
 
 		/* functions */
 		public:
@@ -93,6 +104,33 @@ namespace tango_io
 			{ return this->infile.is_open(); };
 
 			/**
+			 * Retrieves the frame at the specified index
+			 *
+			 * Given an index, will populate the specified
+			 * frame structure with the information of that
+			 * frame from the file.
+			 *
+			 * @param i   The index to read
+			 *
+			 * @return    Returns zero on success, non-zero
+			 *            on failure.
+			 */
+			int get(size_t i, tango_frame_t& frame);
+
+			/**
+			 * Returns the total number of frames found in
+			 * the current file.
+			 *
+			 * For an open file, will return the total number
+			 * of frames.  If no file is open, then returns
+			 * zero.
+			 *
+			 * @return    Returns total number of frames.
+			 */
+			inline size_t num_frames() const
+			{ return this->frame_locs.size(); };
+
+			/**
 			 * Retrieves the next frame of tango data.
 			 *
 			 * The parsed data are stored in the specified
@@ -119,15 +157,6 @@ namespace tango_io
 				return (!(this->is_open()) 
 						|| this->infile.eof());
 			};
-
-			/**
-			 * Returns the number of frames read so far
-			 *
-			 * @return  Returns number of frames successfully
-			 *          read from current file.
-			 */
-			inline size_t get_num_read_so_far() const
-			{ return this->read_so_far; };
 
 			/**
 			 * Closes file if open
@@ -209,7 +238,7 @@ namespace tango_io
 			 * The orientation of the tango sensor at the time
 			 * of this frame, represented as a quaternion.
 			 *
-			 * Expressed as a length-4 array: q0,q1,q2,q3
+			 * Expressed as a length-4 array: qx,qy,qz,qw
 			 */
 			double quaternion[4];
 
