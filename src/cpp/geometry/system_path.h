@@ -349,6 +349,40 @@ class system_path_t
 				end_transforms() const
 		{ return this->transform_map.end(); };
 
+		/*----------------------------------*/
+		/* MODIFIERS -- USE AT YOU OWN RISK */
+		/*----------------------------------*/
+
+		/**
+		 * Reallocates the list of poses to be the specified length
+		 *
+		 * After this call, the set of poses in this object will
+		 * be invalid.  There will be capacity for the specified
+		 * number of poses.
+		 *
+		 * WARNING:  this function will make this object invalid,
+		 * use at your own risk.
+		 *
+		 * @param  newlength   The new number of poses to define
+		 */
+		void resize(size_t newlength);
+
+		/**
+		 * Sets the i'th pose to be the specified struct.
+		 *
+		 * After this call, the i'th pose will be equal to the
+		 * provided structure.  This will replace any existing
+		 * information at pose index i.
+		 *
+		 * WARNING:  this function modifies the path, and assumes
+		 * you know what you are doing.  Use at your own risk.
+		 *
+		 * @param i   The index to put the pose p
+		 * @param p   The new pose information to add in path
+		 */
+		void set(size_t i, const pose_t& p);
+
+
 	/* helper functions */
 	public:
 

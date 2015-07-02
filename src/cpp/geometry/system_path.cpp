@@ -730,6 +730,34 @@ double system_path_t::total_distance() const
 	return dist;
 }
 
+void system_path_t::resize(size_t newlength)
+{
+	/* check if it's a no-op */
+	if(this->pl_size == newlength)
+		return;
+
+	/* free any memory currently used */
+	if(this->pl != NULL)
+	{
+		delete[] this->pl;
+		this->pl = NULL;
+	}
+
+	/* allocate new memory */
+	this->pl = new pose_t[newlength];
+	this->pl_size = newlength;
+}
+		
+void system_path_t::set(size_t i, const pose_t& p)
+{
+	/* check if index is in bounds */
+	if(i >= this->pl_size)
+		return; /* do nothing */
+
+	/* replace pose info */
+	this->pl[i] = p;
+}
+
 /*** helper functions ***/
 
 int system_path_t::closest_index(double t) const
