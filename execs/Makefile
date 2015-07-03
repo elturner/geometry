@@ -30,6 +30,7 @@ procarve_progs:
 	@echo "Compiling procarve programs..."
 	@echo ""
 	$(MAKE) -w -C filter_urg_scans $(CMD)
+	$(MAKE) -w -C filter_tango_scans $(CMD)
 	$(MAKE) -w -C generate_noisypath $(CMD)
 	$(MAKE) -w -C wedge_generator $(CMD)
 	$(MAKE) -w -C scan_chunker $(CMD)
