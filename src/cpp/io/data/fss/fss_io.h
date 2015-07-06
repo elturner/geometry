@@ -39,7 +39,7 @@ namespace fss
 
 	/* the following definitions are used for .fss file i/o */
 	static const int         EARLIEST_SUPPORTED_VERSION = 1;
-	static const int         LATEST_SUPPORTED_VERSION   = 2;
+	static const int         LATEST_SUPPORTED_VERSION   = 3;
 	static const std::string MAGIC_NUMBER               = "fss";
 	static const std::string END_HEADER_STRING          = "end_header"; 
 
@@ -293,7 +293,7 @@ namespace fss
 			std::string scanner_type; /* type of scanner */
 			SPATIAL_UNITS units; /* units of point positions */
 			size_t num_scans; /* number of frames */
-			size_t num_points_per_scan;
+			int num_points_per_scan; /* negative --> variable */
 			double angle; /* angular spacing between points */
 
 		/* functions */
@@ -321,7 +321,7 @@ namespace fss
 			void init(const std::string& name, 
 			          const std::string& type, 
 			          size_t num_s,
-			          size_t num_p,
+			          int num_p,
 				  SPATIAL_UNITS u,
 			          double ang=DEFAULT_ANGULAR_SPACING);
 
@@ -561,13 +561,17 @@ namespace fss
 			 * @param name   Name of scanner being stored
 			 * @param type   Type of scanner being stored
 			 * @param num_s  Number of scan frames to store
-			 * @param num_p  Number of points per scan frame
+			 * @param num_p  Number of points per scan frame.
+			 *               If set to negative, then each scan
+			 *               frame will have a variable number
+			 *               of points and will be defined at
+			 *               start of frame.
 			 * @param u      The units of the points
 			 * @param ang    The specified angular spacing
 			 */
 			void init(const std::string& name,
 			          const std::string& type,
-			          size_t num_s, size_t num_p,
+			          size_t num_s, int num_p,
 			          SPATIAL_UNITS u=UNITS_METERS,
 			          double ang=DEFAULT_ANGULAR_SPACING);
 

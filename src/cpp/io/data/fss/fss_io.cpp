@@ -137,7 +137,7 @@ double reader_t::angle() const
 
 int reader_t::get(frame_t& frame, unsigned int i)
 {
-	unsigned int j;
+	size_t j;
 	double c;
 	int ret;
 
@@ -172,13 +172,13 @@ int reader_t::get(frame_t& frame, unsigned int i)
 		c = 1.0/c; /* want to convert TO meters, not FROM meters */
 
 		/* apply to all points */
-		for(j = 0; j < this->header.num_points_per_scan; j++)
+		for(j = 0; j < frame.points.size(); j++)
 			frame.points[j].scale(c);
 	}
 
 	/* there is also an option to auto-subtract bias */
 	if(this->auto_correct_for_bias)
-		for(j = 0; j < this->header.num_points_per_scan; j++)
+		for(j = 0; j < frame.points.size(); j++)
 			frame.points[j].correct_for_bias();
 
 	/* success */
@@ -218,7 +218,7 @@ writer_t::~writer_t()
 }
 
 void writer_t::init(const string& name, const string& type,
-                    size_t num_s, size_t num_p, SPATIAL_UNITS u, double ang)
+                    size_t num_s, int num_p, SPATIAL_UNITS u, double ang)
 {
 	/* initialize values to default */
 	this->header.init(name, type, num_s, num_p, u, ang);
@@ -285,8 +285,11 @@ frame_t::frame_t()
 
 int frame_t::parse(istream& infile, const header_t& header)
 {
-	size_t i;
+	int i, num_points;
 	int ret;
+
+	/* check if header defined a fixed number of points per frame */
+	num_points = header.num_points_per_scan;
 
 	/* how we parse the input depends on the format for this file */
 	switch(header.format)
@@ -294,11 +297,23 @@ int frame_t::parse(istream& infile, const header_t& header)
 		case FORMAT_ASCII:
 			/* the next value in ascii should be a timestamp */
 			infile >> this->timestamp;
+
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(num_points < 0)
+				infile >> num_points;
 			break;
+
 		case FORMAT_LITTLE_ENDIAN:
 			/* the next value in binary is the timestamp */
 			infile.read((char*) &(this->timestamp),
 			            sizeof(this->timestamp));
+			
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(num_points < 0)
+				infile.read((char*) &(num_points),
+				            sizeof(num_points));
 			break;
 		case FORMAT_BIG_ENDIAN:
 			/* the next value in binary is the timestamp */
@@ -308,7 +323,18 @@ int frame_t::parse(istream& infile, const header_t& header)
 			/* the byte ordering in the file is the reverse
 			 * of what is on the machine, so flip dem bits */
 			this->timestamp = be2led(this->timestamp);
+			
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(num_points < 0)
+			{
+				/* read number of points for this frame */
+				infile.read((char*) &(num_points),
+				            sizeof(num_points));
+				num_points = be2leq(num_points);
+			}
 			break;
+
 		default:
 			/* unknown format */
 			return -1;
@@ -319,8 +345,8 @@ int frame_t::parse(istream& infile, const header_t& header)
 		return -2;
 
 	/* parse the points from the file */
-	this->points.resize(header.num_points_per_scan);
-	for(i = 0; i < header.num_points_per_scan; i++)
+	this->points.resize(num_points);
+	for(i = 0; i < num_points; i++)
 	{
 		/* use the point structure to parse the individual
 		 * point information from the stream */
@@ -335,9 +361,12 @@ int frame_t::parse(istream& infile, const header_t& header)
 
 int frame_t::print(ostream& outfile, const header_t& header) const
 {
-	size_t i;
+	int i, num_points, np_flipped;
 	int ret;
 	double t;
+
+	/* get the number of points in this scan frame */
+	num_points = this->points.size();
 
 	/* how we print the output depends on the format for this file */
 	switch(header.format)
@@ -345,11 +374,24 @@ int frame_t::print(ostream& outfile, const header_t& header) const
 		case FORMAT_ASCII:
 			/* the next value in ascii is the timestamp */
 			outfile << this->timestamp << endl;
+			
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(header.num_points_per_scan < 0)
+				outfile << num_points << endl; 
+			
 			break;
 		case FORMAT_LITTLE_ENDIAN:
 			/* the next value in binary is the timestamp */
 			outfile.write((char*) &(this->timestamp),
 			              sizeof(this->timestamp));
+			
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(header.num_points_per_scan < 0)
+				outfile.write((char*) &(num_points),
+				              sizeof(num_points));
+			
 			break;
 		case FORMAT_BIG_ENDIAN:
 			/* the byte ordering in the file is the reverse
@@ -358,6 +400,16 @@ int frame_t::print(ostream& outfile, const header_t& header) const
 			
 			/* the next value in binary is the timestamp */
 			outfile.write((char*) &t, sizeof(t));
+			
+			/* if num_points negative, then it will be defined
+			 * per-frame here */
+			if(header.num_points_per_scan < 0)
+			{	
+				np_flipped = le2beq(num_points);
+				outfile.write((char*) &(np_flipped),
+				              sizeof(np_flipped));
+			}
+
 			break;
 		default:
 			/* unknown format */
@@ -369,7 +421,7 @@ int frame_t::print(ostream& outfile, const header_t& header) const
 		return -2;
 
 	/* print the points from the file */
-	for(i = 0; i < header.num_points_per_scan; i++)
+	for(i = 0; i < num_points; i++)
 	{
 		/* use the point structure to parse the individual
 		 * point information from the stream */
@@ -585,7 +637,7 @@ header_t::header_t()
 }
 			
 void header_t::init(const string& name, const string& type,
-                    size_t num_s, size_t num_p, SPATIAL_UNITS u, double ang)
+                    size_t num_s, int num_p, SPATIAL_UNITS u, double ang)
 {
 	/* set all values in the header to either default values or
 	 * to the provided values */
@@ -616,6 +668,9 @@ int header_t::parse(istream& infile)
 		     << "stream that is not valid .fss format" << endl;
 		return -2; /* not a valid fss file, magic numbers differ */
 	}
+	
+	/* preset defaults */
+	this->num_points_per_scan = -1; /* negative means variable # */
 
 	/* attempt to parse a .fss header from the open file stream */
 	while(infile.good())
@@ -775,10 +830,14 @@ void header_t::print(ostream& outfile) const
 	if(this->angle > 0)
 		outfile << HEADER_TAG_ANGLE << " " << this->angle << endl;
 
+	/* the num-points-per-scan flag is optional only if it is negative,
+	 * in which case that means that each frame may have a different
+	 * number of points */
+	outfile << HEADER_TAG_NUM_POINTS_PER_SCAN 
+		   << " " << this->num_points_per_scan << endl;
+
 	/* the remainder of the tags are required */
 	outfile << HEADER_TAG_NUM_SCANS << " " << this->num_scans << endl
-	   << HEADER_TAG_NUM_POINTS_PER_SCAN 
-	   << " " << this->num_points_per_scan << endl
 	   << HEADER_TAG_UNITS 
 	   << " " << units_to_string(this->units) << endl
 	   << END_HEADER_STRING << endl;

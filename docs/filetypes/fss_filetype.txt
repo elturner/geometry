@@ -44,11 +44,18 @@ These are the required header tags:
 					and a timestamp in the system-synced
 					clock.
 
-	num_points_per_scan <uint>
+	num_points_per_scan <int>
 				:	Number of points per scan frame.
+
 					Each point contains the geometric
 					information, color information, and
 					statistical metadata.
+
+					If not specified, or specified as
+					negative, then each frame will
+					contain a variable number of points,
+					and the start of the frame will
+					indicate the number of points.
 
 	units <string>		:	The units used to represent the
 					points.  Valid options are:
@@ -84,6 +91,14 @@ The body of this file is presented as a list of scan blocks.  Each block represe
 	timestamp	(quantity: 1)
 	list of points	(quantity: num_points_per_scan)
 
+As of version 3, if the header did not have num_points_per_scan defined, 
+or if the value was defined as negative, then each frame can contain a 
+variable number of points.  As such, the start of each frame will be:
+
+	timestamp	(quantity: 1)
+	num_points	(quantity: 1)
+	list of points	(quantity: num_points)
+
 Each point in the list has the following fields:
 
 	x (x-coordinate of point position) 
@@ -101,6 +116,7 @@ If the format is in binary, then the values take up the following sizes:
 Value			Format			Size
 -----			----			----
 timestamp		double			8 bytes
+num_points		unsigned int		4 bytes
 x			double			8 bytes
 y			double			8 bytes
 z			double			8 bytes
