@@ -302,7 +302,7 @@ int system_path_t::writemad(const std::string& filename) const
 		roll  = RAD2DEG(euler(0));
 		pitch = RAD2DEG(euler(1));
 		yaw   = RAD2DEG(euler(2));
-		
+	
 		/* read information for this pose */
 		outfile.write((char*) (&t),     sizeof(t)); 
 		outfile.write((char*) (&x),     sizeof(x)); 

@@ -185,9 +185,9 @@ int tango_reader_t::next(tango_frame_t& frame)
 	frame.position[2] = this->read_double();
 
 	frame.quaternion[0] = this->read_double();
-	frame.quaternion[0] = this->read_double();
-	frame.quaternion[0] = this->read_double();
-	frame.quaternion[0] = this->read_double();
+	frame.quaternion[1] = this->read_double();
+	frame.quaternion[2] = this->read_double();
+	frame.quaternion[3] = this->read_double();
 	
 	/* get the size of the buffer (in bytes) of the depth points */
 	bufsize = this->read_int();

@@ -161,9 +161,16 @@ void rotLib::rot2rpy(const Eigen::Matrix3d &rotationMatrix, Eigen::Vector3d &ret
 	for(int i = 0; i < 3; i++) {
 		tempR(i,i) = 0;
 	}
-	if((Q(0,0) != 1 || Q(1,1) != 1 || Q(2,2) != 1) && tempR.sum() > 0.001) {
-		std::cerr << "Matrix Decomposition into Euler Angles Failed!" << std::endl <<
-					 "Is this really a rotation matrix\?" << std::endl;
+	if((Q(0,0) != 1 || Q(1,1) != 1 || Q(2,2) != 1) 
+			&& tempR.sum() > 0.001) 
+	{
+		std::cerr << "Matrix Decomposition into Euler Angles "
+		          << "Failed!" << std::endl 
+			  << "\tIs this really a rotation matrix\?" 
+			  << std::endl
+			  << "\t" << Q(0,0) << " ?= 1.0" << std::endl
+			  << "\t" << Q(1,1) << " ?= 1.0" << std::endl
+			  << "\t" << Q(2,2) << " ?= 1.0" << std::endl;
 	}
 }
 
