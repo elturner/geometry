@@ -195,6 +195,14 @@ class generate_scanorama_run_settings_t
 		 */
 		std::string ptx_outfile;
 
+		/**
+		 * The output .scanolist metadata file that will
+		 * be export along with the data.
+		 *
+		 * If this is blank, no metadata file is exported
+		 */
+		std::string meta_outfile;
+
 	/* functions */
 	public:
 

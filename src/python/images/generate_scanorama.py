@@ -80,6 +80,7 @@ def run(dataset_dir, pathfile):
 
     # get necessary files for this dataset
     scanoprefix = dataset_filepaths.get_scanorama_ptx_prefix(dataset_dir)
+    metafile = dataset_filepaths.get_scanorama_metadata_file(dataset_dir)
     modelfile = dataset_filepaths.get_full_mesh_file(dataset_dir)
     config_xml = dataset_filepaths.get_hardware_config_xml(dataset_dir)
     conf = backpackconfig.Configuration(config_xml, True, dataset_dir)
@@ -88,7 +89,8 @@ def run(dataset_dir, pathfile):
     args = [SCANORAMA_EXE, '-c', config_xml, '-s', SETTINGS_XML, \
                 '-m', modelfile, \
                 '-p', pathfile, \
-                '-o', scanoprefix]
+                '-o', scanoprefix, \
+                '--meta', metafile]
 
     #--------------------------------------------
     # find all active FISHEYE cameras in the file

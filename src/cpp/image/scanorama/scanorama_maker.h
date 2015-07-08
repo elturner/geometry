@@ -16,7 +16,7 @@
  */
 
 #include "scanorama.h"
-#include <image/fisheye/fisheye_camera.h>
+#include <image/camera.h>
 #include <geometry/system_path.h>
 #include <geometry/raytrace/OctTree.h>
 #include <Eigen/Dense>
@@ -177,6 +177,7 @@ class scanorama_maker_t
 		 * cameras instead.
 		 *
 		 * @param prefix_out  The prefix for the output path
+		 * @param meta_out    The output metadata file
 		 * @param times       The input list of timestamps
 		 * @param r           Number of rows to use
 		 * @param c           Number of columns to use
@@ -191,6 +192,7 @@ class scanorama_maker_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_all(const std::string& prefix_out,
+				const std::string& meta_out,
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw,
 				int begin_idx = 0, int end_idx = -1);
@@ -208,6 +210,7 @@ class scanorama_maker_t
 		 * function.
 		 *
 		 * @param prefix_out   The prefix for the output path
+		 * @param meta_out     The output metadata file
 		 * @param minspacedist The min spacing distance (in meters)
 		 * @param maxspacedist The max spacing distance (in meters)
 		 * @param r            Number of rows to use
@@ -226,6 +229,7 @@ class scanorama_maker_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_along_path(const std::string& prefix_out,
+			const std::string& meta_out,
 			double minspacedist, double maxspacedist,
 			size_t r, size_t c, double bw,
 			int begin_idx = 0, int end_idx = -1);

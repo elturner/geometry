@@ -1,5 +1,6 @@
 #include "scanorama_maker.h"
 #include "scanorama.h"
+#include <io/scanorama/scanolist_io.h>
 #include <io/mesh/mesh_io.h>
 #include <image/camera.h>
 #include <image/fisheye/fisheye_camera.h>
@@ -207,11 +208,13 @@ int scanorama_maker_t::populate_scanorama(scanorama_t& scan,
 }
 		
 int scanorama_maker_t::generate_all(const std::string& prefix_out,
+				const std::string& meta_out,
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw,
 				int begin_idx, int end_idx)
 {
 	progress_bar_t progbar;
+	scanolist_io::scanolist_t metaoutfile;
 	scanorama_t scan;
 	stringstream ss;
 	ofstream outfile;
@@ -230,6 +233,12 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		begin_idx = 0; /* can't go before zero */
 	if(end_idx > (int) n || end_idx < 0)
 		end_idx = (int) n; /* can't go past end */
+
+	/* initialize the output metadata */
+	metaoutfile.set_dims(r, c);
+	n = this->cameras.size();
+	for(i = 0; i < n; i++)
+		metaoutfile.add_camera(this->cameras[i]->name());
 
 	/* iterate over the list of timestamps */
 	for(i = (size_t) begin_idx; i < (size_t) end_idx; i++)
@@ -265,7 +274,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		if(!(outfile.is_open()))
 		{
 			/* error occurred */
-			ret = PROPEGATE_ERROR(-2, ret);
+			ret = -2;
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "ERROR " << ret << ": Unable to open "
 			     << "scanorama file: " << ss.str() << endl;
@@ -275,6 +284,23 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		/* write it to disk */
 		scan.writeptx(outfile);
 		outfile.close();
+
+		/* store metadata */
+		metaoutfile.add(
+			scanolist_io::scanometa_t(i, times[i], ss.str()));
+	}
+
+	/* if specified, write the metadata to output file */
+	if(!(meta_out.empty()))
+	{
+		ret = metaoutfile.write(meta_out);
+		if(ret)
+		{
+			cerr << "[scanorama_maker_t::generate_all]\t"
+			     << "Unable to write output metadata file: \""
+			     << meta_out << "\"" << endl;
+			return ret;
+		}
 	}
 
 	/* success */
@@ -284,6 +310,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 }
 		
 int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
+			const std::string& meta_out,
 			double minspacedist, double maxspacedist,
 			size_t r, size_t c, double bw,
 			int begin_idx, int end_idx)
@@ -404,8 +431,8 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	toc(clk, "Locating poses");
 	
 	/* now that we've populated the times list, make the scanoramas */
-	ret = this->generate_all(prefix_out, times, r, c, bw, begin_idx,
-				end_idx);
+	ret = this->generate_all(prefix_out, meta_out,
+			times, r, c, bw, begin_idx, end_idx);
 	if(ret)
 	{
 		/* some error occurred during processing */

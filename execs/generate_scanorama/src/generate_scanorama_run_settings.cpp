@@ -25,15 +25,16 @@ using namespace std;
 
 /* the command-line flags to check for */
 
-#define SETTINGS_FILE    "-s"
-#define CONFIGFILE_FLAG  "-c"
-#define PATHFILE_FLAG    "-p"
-#define MODELFILE_FLAG   "-m"
-#define FISHEYE_FLAG     "-f"
-#define RECTILINEAR_FLAG "-r"
-#define OUTFILE_FLAG     "-o"
-#define BEGIN_IDX_FLAG   "-b"
-#define END_IDX_FLAG     "-e"
+#define SETTINGS_FILE     "-s"
+#define CONFIGFILE_FLAG   "-c"
+#define PATHFILE_FLAG     "-p"
+#define MODELFILE_FLAG    "-m"
+#define FISHEYE_FLAG      "-f"
+#define RECTILINEAR_FLAG  "-r"
+#define OUTFILE_FLAG      "-o"
+#define BEGIN_IDX_FLAG    "-b"
+#define END_IDX_FLAG      "-e"
+#define META_OUTFILE_FLAG "--meta"
 
 /* the xml parameters to look for */
 
@@ -64,6 +65,7 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->min_spacing_dist = 2.0;
 	this->max_spacing_dist = 3.0;
 	this->ptx_outfile      = "";
+	this->meta_outfile     = "";
 	this->begin_idx        = 0;
 	this->end_idx          = -1;
 }
@@ -125,6 +127,11 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			"\tfoo/bar/scan_00000000.ptx\n"
 			"\tfoo/bar/scan_00000001.ptx\n"
 			"\t...",false,1);
+	args.add(META_OUTFILE_FLAG, "Specifies where to store the output "
+			"metadata associated with each generated scanorama "
+			"pose, including file paths and timestamps.  If "
+			"specified, this file will be formatted as an "
+			"ASCII .scanolist file.", true, 1);
 	args.add(BEGIN_IDX_FLAG, "If specified, then only the subset of"
 			" scanoramas starting at this index (inclusive) "
 			"will be exported.  This value is useful if a "
@@ -190,6 +197,10 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 		this->end_idx = args.get_val_as<int>(END_IDX_FLAG);
 	else
 		this->end_idx = -1;
+	if(args.tag_seen(META_OUTFILE_FLAG))
+		this->meta_outfile = args.get_val(META_OUTFILE_FLAG);
+	else
+		this->meta_outfile = "";
 
 	/* import settings from xml settings file */
 	if(!settings.read(args.get_val(SETTINGS_FILE)))
