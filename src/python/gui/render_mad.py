@@ -45,6 +45,7 @@ def run(input_file):
     y = [mad.poses[i][1] for i in range(len(mad.poses))]
     pyplot.plot(x, y)
     pyplot.axis('equal')
+    pyplot.title('Duration: %f sec' % (mad.times[-1] - mad.times[0]))
 
     # render it
     pyplot.show()
