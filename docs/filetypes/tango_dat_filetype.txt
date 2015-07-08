@@ -57,9 +57,9 @@ quaternion_y		double		8 bytes		Big-Endian
 quaternion_z		double		8 bytes		Big-Endian
 quaternion_w		double		8 bytes		Big-Endian
 bufsize	(# of bytes)	int		4 bytes		Big-Endian
-buf[0].x (millimeters)	float		4 bytes		Little-Endian
-buf[0].y (millimeters)	float		4 bytes		Little-Endian
-buf[0].z (millimeters)	float		4 bytes		Little-Endian
+buf[0].x (meters)	float		4 bytes		Little-Endian
+buf[0].y (meters)	float		4 bytes		Little-Endian
+buf[0].z (meters)	float		4 bytes		Little-Endian
 buf[1].x		float		4 bytes		Little-Endian
 buf[1].y		float		4 bytes		Little-Endian
 buf[1].z		float		4 bytes		Little-Endian
@@ -75,7 +75,7 @@ of the buffer of scan data, so
 	N = bufsize / (3 * sizeof(float)) = bufsize / 12
 
 Each point in the buffer is represented by three floats (x,y,z), in units
-of millimeters, and stored in little-endian format.  All other values in
+of meters, and stored in little-endian format.  All other values in
 the file are stored in big-endian format.
 
 

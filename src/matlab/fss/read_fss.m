@@ -58,7 +58,7 @@ function fss = read_fss(filename, NUM_SCANS)
 	fss.scanner_name = 'unknown';
 	fss.scanner_type = 'unknown';
 	fss.num_scans = 0;
-	fss.num_points_per_scan = 0;
+	fss.num_points_per_scan = -1;
 	fss.units = 'unknown';
 	fss.scans = [];
 	while(true)
@@ -98,7 +98,7 @@ function fss = read_fss(filename, NUM_SCANS)
 			case 'units'
 				fss.units = sscanf(tline, 'units %s');
 			otherwise
-				error(['Unknown header field ', ...
+				warning(['Unknown header field ', ...
 				       'in fss file: ', key]);
 		end
 	end
@@ -137,8 +137,14 @@ function fss = read_fss(filename, NUM_SCANS)
 			      '/',num2str(N),'...']);
 		end
 
-		% prepare fields for this scan
+		% read top of current scan
 		fss.scans(i).timestamp = fread(fid, 1, 'double', 0, format);
+
+		if(fss.num_points_per_scan < 0)
+			M = fread(fid, 1, 'int32', 0, format);
+		end
+
+		% prepare fields for this scan
 		fss.scans(i).pts = zeros(3,M);
 		fss.scans(i).intensity = zeros(1,M);
 		fss.scans(i).bias = zeros(1,M);
