@@ -36,7 +36,7 @@ class scanorama_t
 		 *
 		 * The scanorama is composed of a grid of points, where
 		 * each point contains a 3D position and a color.  The
-		 * grid should be complete and stored in row-major order.
+		 * grid should be complete and stored in column-major order.
 		 *
 		 * This list should be exactly num_rows * num_cols 
 		 * in length.
@@ -51,9 +51,9 @@ class scanorama_t
 		/**
 		 * These values indicate the number of points stored
 		 *
-		 * The points should be in "gridded" row-major order.
+		 * The points should be in "gridded" column-major order.
 		 * 
-		 * (num_rows * num_cols) should equal points.cols()
+		 * (num_rows * num_cols) should equal points.size()
 		 */
 		size_t num_rows, num_cols;
 
@@ -221,6 +221,18 @@ class scanorama_t
 		 * @param os   The output stream to write to 
 		 */
 		void writeptx(std::ostream& os) const;
+
+		/**
+		 * Export to PNG image
+		 *
+		 * Exports the content of this scanorama to the
+		 * specified png image file.
+		 *
+		 * @param filename   The file to write to as a png image
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int writepng(const std::string& filename) const;
 };
 
 #endif

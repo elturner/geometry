@@ -4,6 +4,7 @@
 #include <util/tictoc.h>
 #include <util/error_codes.h>
 #include <util/progress_bar.h>
+#include <lodepng/lodepng.h>
 #include <Eigen/Dense>
 #include <iostream>
 #include <vector>
@@ -329,4 +330,38 @@ void scanorama_t::writeptx(std::ostream& os) const
 		   << this->points[i].color.get_blue_int() << endl;
 	}
 	progbar.clear();
+}
+		
+int scanorama_t::writepng(const std::string& filename) const
+{
+	vector<unsigned char> image; /* RGBA pixel values */
+	size_t i, n;
+	unsigned int error;
+
+	/* create list of pixels to encode as a png */
+	n = this->points.size();
+	image.resize(4*n);
+	for(i = 0; i < n; i++)
+	{
+		/* encode the four color components of each point */
+		image[4*i    ] = this->points[i].color.get_red_int();
+		image[4*i + 1] = this->points[i].color.get_green_int();
+		image[4*i + 2] = this->points[i].color.get_blue_int();
+		image[4*i + 3] = 255; /* alpha value */
+	}
+
+	/* encode as a png */
+	error = lodepng::encode(filename.c_str(), image,
+					this->num_cols, this->num_rows);
+	if(error)
+	{
+		cerr << "[scanorama_t::writepng[\tError " << error
+		     << ": Unable to export to .png file: \""
+		     << filename << "\"" << endl
+		     << lodepng_error_text(error) << endl;
+		return -1;
+	}
+
+	/* success */
+	return 0;
 }

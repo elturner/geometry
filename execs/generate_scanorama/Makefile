@@ -4,13 +4,15 @@ LFLAGS = -lm -lopencv_core -lopencv_imgproc -lopencv_highgui
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
-IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR)
+INCLUDEDIR = $(SOURCEDIR)include/
+IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR) -I$(INCLUDEDIR)
 BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/generate_scanorama
 
 # defines for the program
 
-SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
+SOURCES =	$(INCLUDEDIR)lodepng/lodepng.cpp \
+		$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
@@ -47,7 +49,8 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		src/generate_scanorama_run_settings.cpp \
 		src/main.cpp
 
-HEADERS =	$(SOURCEDIR)util/error_codes.h \
+HEADERS =	$(INCLUDEDIR)lodepng/lodepng.h \
+		$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/tictoc.h \
 		$(SOURCEDIR)util/cmd_args.h \
 		$(SOURCEDIR)util/endian.h \

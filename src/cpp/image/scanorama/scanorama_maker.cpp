@@ -254,6 +254,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		if(ret)
 		{
 			/* error occurred */
+			progbar.clear();
 			ret = PROPEGATE_ERROR(-1, ret);
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "ERROR " << ret << ": Unable to generate "
@@ -274,6 +275,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		if(!(outfile.is_open()))
 		{
 			/* error occurred */
+			progbar.clear();
 			ret = -2;
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "ERROR " << ret << ": Unable to open "
@@ -285,6 +287,24 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		scan.writeptx(outfile);
 		outfile.close();
 
+		/* write to png as well */
+		ss.clear();
+		ss.str("");
+		ss << prefix_out;
+		ss << std::setfill('0') << std::setw(8) << i;
+		ss << ".png";
+		ret = scan.writepng(ss.str());
+		if(ret)
+		{
+			/* unable to export png */
+			progbar.clear();
+			cerr << "[scanorama_maker_t::generate_all]\t"
+			     << "ERROR " << ret << ": Unable to export "
+			     << "scanorama #" << i << " as a PNG image"
+			     << endl;
+			return PROPEGATE_ERROR(-3, ret);
+		}
+		
 		/* store metadata */
 		metaoutfile.add(
 			scanolist_io::scanometa_t(i, times[i], ss.str()));
@@ -296,6 +316,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		ret = metaoutfile.write(meta_out);
 		if(ret)
 		{
+			progbar.clear();
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "Unable to write output metadata file: \""
 			     << meta_out << "\"" << endl;
