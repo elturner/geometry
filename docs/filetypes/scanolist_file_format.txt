@@ -1,0 +1,62 @@
+
+-----------------------------------------------------------
+	SCANOLIST file format specification
+
+	Written by Eric Turner <elturner@indoorreality.com>
+
+	Last modified July 8, 2015
+-----------------------------------------------------------
+
+-------
+Purpose
+-------
+
+This file contains metadata information for a list of scanorama files,
+which are typically stored as .ptx files
+
+------
+Format
+------
+
+This is formatted as an ascii file.
+Values are separated by whitespace.
+Indexing begins at 0.
+
+------
+Header
+------
+
+The following header is given:
+
+	scanolist		// magic number
+	<num_rows> <num_cols>
+	<num_poses>
+	<camera0> <camera1> ... <cameraM>
+
+Where:
+
+	Each scanorama image is of dimension <num_rows> x <num_cols>,
+	and is in column-major order.
+
+	There are <num_poses> scanoramas listed in this file.
+
+	The scanoramas were colored using the cameras whose names are
+	given in the list <camera0> <camera1> ... <cameraM>
+
+	After the header, there is an extra blank line.
+
+---------
+File Body
+---------
+
+After the header (and its extra blank line), each following line represents
+one scanorama pose, as a space-seperated list of values:
+
+	<index> <timestamp> <filepath>
+
+where:
+
+	<index>		The zero-indexed index of this pose
+	<timestamp>	The timestamp of pose, in seconds (common clock)
+	<filepath>	The path to the scanorama data file
+
