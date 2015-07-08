@@ -38,45 +38,99 @@ def run(fpfile, dxffile):
     # prepare the output dxf file
     drawing = dxf.drawing(dxffile)
 
-    # add a layer with all vertices
-    points_layer_name = 'wall_samples'
-    points_layer = dxf.layer(points_layer_name)
-    points_layer['color'] = 1 # valid colors: [1,255]
-    drawing.layers.add(points_layer)
-    for (vx,vy) in fp.verts:
-        # add each point to this layer
-        point = dxf.point((vx,vy))
-        point['layer']       = points_layer_name
-        point['color']       = 256 # color by layer
-        point['paper_space'] = 0 # put in model space
-        drawing.add(point)
-
     # iterate over the rooms of the floor plan
     for room_id in range(fp.num_rooms):
 
-        # generate the boundary for this room
-        #
-        # room_edges is a list of tuples, where each
-        # tuple is two vertex indices
-        room_edges = fp.compute_room_boundary_edges(room_id)
-        
         # make a layer for this room
         room_layer_name = 'room_' + str(room_id+1)
         room_layer = dxf.layer(room_layer_name) 
-        room_layer['color'] = 2+room_id # valid colors: [1,255]
+        room_layer['color'] = 1+room_id # valid colors: [1,255]
         drawing.layers.add(room_layer)
+        
+        # generate the polylines for this room's boundaries
+        polyline_arr = room_to_polylines(fp, room_id)
 
-        # draw each edge
-        for (vi,vj) in room_edges:
-            # add each edge as a line in the drawing
-            line = dxf.line( fp.verts[vi], fp.verts[vj] )
-            line['layer']       = room_layer_name
-            line['color']       = 256 # color by layer
-            line['paper_space'] = 0 # put in model space
-            drawing.add(line)
+        # draw each polyline
+        for pi in range(len(polyline_arr)):
+            # add each polyline to the drawing
+            polyline_arr[pi]['layer'] = room_layer_name
+            polyline_arr[pi]['color'] = 256 # color by layer
+            polyline_arr[pi]['paper_space'] = 0 # put in model space
+            drawing.add(polyline_arr[pi])
 
     # save the drawing to file
     drawing.save()
+
+#----------------------------------------------------------------
+#--------------------- Helper Functions -------------------------
+#----------------------------------------------------------------
+
+##
+# Creates a .dxf polyface object from a room
+#
+# @param fp        The floor plan object
+# @param room_id   The index of the room
+#
+# @return    Returns the dxf polyface object
+#
+def room_to_polyface(fp, room_id):
+
+    # prepare the polyface object
+    pface = dxf.polyface()
+
+    # add each triangle to the face
+    for ti in fp.room_tris[room_id]:
+
+        # get the vertices of this triangle
+        (i,j,k) = fp.tris[ti]
+
+        # add this triangle to the polyface
+        pface.add_face( [ fp.verts[i], fp.verts[j], fp.verts[k] ] )
+
+    # return the final polyface
+    return pface
+
+##
+# Creates a .dxf polyline object from a room
+#
+# Since a room might have genus >= 1, it may be
+# represented by multiple disjoint borders.  This
+# function will return an array of polyline objects
+# based on the room.
+#
+# @param fp        The floor plan object
+# @param room_id   The index of the room
+#
+# @return    Returns the array of dxf polyline objects
+#
+def room_to_polylines(fp, room_id):
+
+    # prepare the array to return
+    polyline_arr = []
+
+    # compute the oriented boundary
+    boundary_list = fp.compute_room_oriented_boundary(room_id)
+    
+    # iterate over each boundary
+    for bi in range(len(boundary_list)):
+        
+        # prepare the next polyline
+        pl = dxf.polyline()
+
+        # make the array of vertices
+        verts = [ fp.verts[vi] for vi in boundary_list[bi] ]
+        pl.add_vertices(verts)
+        pl.close()
+
+        # make the polyline
+        polyline_arr.append(pl)
+
+    # return the final list
+    return polyline_arr
+
+#----------------------------------------------------------------
+#----------------------------------------------------------------
+#----------------------------------------------------------------
 
 ##
 # The main function

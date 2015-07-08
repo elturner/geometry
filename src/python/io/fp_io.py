@@ -194,27 +194,11 @@ class Floorplan:
     # A boundary edge is a triangle edge that represents a 
     # in the floorplan
     #
-    # @return  Returns a list of tuples, each an edges as vertex indices
+    # @return  Returns a list of tuples, each an edge as vertex indices
     #
     def compute_boundary_edges(self):
-        
-        # put edges into a list
-        all_edges = []
-        for (i,j,k) in self.tris:
-            # record all edges
-            all_edges.append((i,j))
-            all_edges.append((j,k))
-            all_edges.append((k,i))
-            
-        boundary_edges = []
-        for (i,j) in all_edges:
-            # check if the opposing edge exists
-            if (j,i) not in all_edges:
-                boundary_edges.append((i,j))
-
-        # return boundary edges
-        return boundary_edges
-
+        return self.compute_boundary_edges_for(range(len(self.tris)))
+    
     ##
     # Computes boundary edges of the specified room
     #
@@ -227,27 +211,38 @@ class Floorplan:
     # @return  Returns a list of tuples, each an edge as vertex indices
     #
     def compute_room_boundary_edges(self, roomid):
-        
-        # iterate over the triangles in the specified room
-        room_edges = []
-        for ti in self.room_tris[roomid]:
-            # get current triangle in this room
+        return self.compute_boundary_edges_for(self.room_tris[roomid])
+
+    ##
+    # Computes boundary edges for a subset of triangles in this floorplan
+    #
+    # Given a list of triangles, will compute all edges that occur
+    # in exactly one triangle in the list without the reverse edge appearing
+    # which denotes a boundary edge.
+    #
+    # @param tri_inds   The list of indices of triangles to use
+    #
+    # @return   Returns a list of tuples, each an edge as vertex indices
+    def compute_boundary_edges_for(self, tri_inds):
+
+        # put edges into a list
+        all_edges = []
+        for ti in tri_inds:
+            # get the triangle
             (i,j,k) = self.tris[ti]
-
-            # record all edges of this triangle
-            room_edges.append((i,j))
-            room_edges.append((j,k))
-            room_edges.append((k,i))
-
-        # the boundary edges of the room are those that 
-        # don't have a reverse in the list.
+            
+            # record all edges
+            all_edges.append((i,j))
+            all_edges.append((j,k))
+            all_edges.append((k,i))
+            
         boundary_edges = []
-        for (i,j) in room_edges:
+        for (i,j) in all_edges:
             # check if the opposing edge exists
-            if (j,i) not in room_edges:
+            if (j,i) not in all_edges:
                 boundary_edges.append((i,j))
 
-        # return the final list of boundary edges for this room
+        # return boundary edges
         return boundary_edges
 
     ##
@@ -264,9 +259,41 @@ class Floorplan:
     # @return  Returns list of boundaries
     #
     def compute_oriented_boundary(self):
+        return self.compute_oriented_boundary_edges_for( \
+                                range(len(self.tris)))
+
+    ##
+    # Compute the oriented boundary edges for a single room in the floorplan
+    #
+    # Will list all boundary vertices of the set of triangles in the given
+    # room, in counter-clockwise order.  Disjoint boundary sets will be
+    # placed in their own lists.
+    #
+    # Exports a list of lists.  Each sublist corresponds to a connected
+    # boundary in the room.
+    #
+    # @return   Returns list of boundaries
+    #
+    def compute_room_oriented_boundary(self, roomid):
+        return self.compute_oriented_boundary_for(self.room_tris[roomid])
+
+
+    ##
+    # Compute the oriented boundary edges for a subset of triangles
+    #   
+    # Given a subset of triangles from this floorplan, will compute
+    # the oriented set of boundary edges.  Will list edges in counter-
+    # clockwise order.  Disjoint boundary sets will be placed in their
+    # own lists.
+    #
+    # Exports a list of lists.  Each sublist corresponds to a connected
+    # boundary in the floorplan.
+    #
+    # @return   Returns list of boundaries
+    def compute_oriented_boundary_for(self, tri_inds):
 
         # compute all boundary edges
-        all_edges = self.compute_boundary_edges()
+        all_edges = self.compute_boundary_edges_for(tri_inds)
 
         # generate a mapping between starting vertex and edges
         edge_map = {}
@@ -310,4 +337,4 @@ class Floorplan:
                 boundary_list[-1].append(last)
 
         # we've populated all boundaries
-        return boundary_list
+        return boundary_list 
