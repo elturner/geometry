@@ -160,7 +160,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 			}
 
 			/* store in appropriate point */
-			i = ri*this->num_cols + ci;
+			i = ci*this->num_rows + ri; /* column major */
 			this->points[i].x = x;
 			this->points[i].y = y;
 			this->points[i].z = z;
@@ -295,8 +295,8 @@ void scanorama_t::writeptx(std::ostream& os) const
 	size_t i, n;
 	
 	/* export the header of the PTX file */
-	os << this->num_rows << endl /* number of rows */
-	   << this->num_cols << endl /* number of columns */
+	os << this->num_cols << endl /* number of columns */
+	   << this->num_rows << endl /* number of rows */
 	   << this->center(0) << " "
 	   << this->center(1) << " "
 	   << this->center(2) << endl /* scanner position */
@@ -335,7 +335,7 @@ void scanorama_t::writeptx(std::ostream& os) const
 int scanorama_t::writepng(const std::string& filename) const
 {
 	vector<unsigned char> image; /* RGBA pixel values */
-	size_t i, n;
+	size_t i, j, r, c, n;
 	unsigned int error;
 
 	/* create list of pixels to encode as a png */
@@ -343,11 +343,20 @@ int scanorama_t::writepng(const std::string& filename) const
 	image.resize(4*n);
 	for(i = 0; i < n; i++)
 	{
+		/* get the row,col index of this point */
+		c = i / this->num_rows; /* column-major */
+		r = i % this->num_rows; /* column-major */
+
+		/* since the points are stored in column-major order,
+		 * but the image wants them in row-major order, save
+		 * the colors appropriately */
+		j = r * this->num_cols + c; /* row-major, for image */
+
 		/* encode the four color components of each point */
-		image[4*i    ] = this->points[i].color.get_red_int();
-		image[4*i + 1] = this->points[i].color.get_green_int();
-		image[4*i + 2] = this->points[i].color.get_blue_int();
-		image[4*i + 3] = 255; /* alpha value */
+		image[4*j    ] = this->points[i].color.get_red_int();
+		image[4*j + 1] = this->points[i].color.get_green_int();
+		image[4*j + 2] = this->points[i].color.get_blue_int();
+		image[4*j + 3] = 255; /* alpha value */
 	}
 
 	/* encode as a png */
