@@ -295,8 +295,8 @@ void scanorama_t::writeptx(std::ostream& os) const
 	size_t i, n;
 	
 	/* export the header of the PTX file */
-	os << this->num_cols << endl /* number of columns */
-	   << this->num_rows << endl /* number of rows */
+	os << this->num_rows << endl /* number of rows */
+	   << this->num_cols << endl /* number of columns */
 	   << this->center(0) << " "
 	   << this->center(1) << " "
 	   << this->center(2) << endl /* scanner position */
