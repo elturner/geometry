@@ -21,7 +21,7 @@ function [] = render_hia(hia)
 	hold on;
 	axis equal;
 	axis off;
-	set(gcf, 'renderer', 'Painter');
+	set(gcf, 'renderer', 'opengl');
 
 	% prepare the pixels
 	pixels_x = ([-1;-1;1;1] * 0.5 * hia.resolution) ...
@@ -33,6 +33,7 @@ function [] = render_hia(hia)
 
 	% render the patches for each pixel
 	values = hia.open_heights';
-	patch(pixels_x, pixels_y, values, 'LineStyle', 'None');
+	white = (values > 1.5 & values < 2.5);
+	patch(pixels_x(white), pixels_y(white), values(white), 'LineStyle', 'None');
 
 end
