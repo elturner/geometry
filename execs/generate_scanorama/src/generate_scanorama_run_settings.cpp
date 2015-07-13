@@ -206,7 +206,7 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	if(!settings.read(args.get_val(SETTINGS_FILE)))
 	{
 		/* unable to parse settings file */
-		ret = PROPEGATE_ERROR(-2, ret);
+		ret = -2;
 		cerr << "[generate_scanorama_run_settings_t::parse]\t"
 		     << "Error " << ret << ": Unable to parse xml "
 		     << "settings file for this program." << endl;
