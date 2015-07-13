@@ -15,7 +15,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/progress_bar.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
 		$(SOURCEDIR)util/range_list.cpp \
+		$(SOURCEDIR)io/conf/conf_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
+		$(SOURCEDIR)io/levels/building_levels_io.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
@@ -30,12 +32,15 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)xmlreader/xmlsettings.cpp \
 		$(SOURCEDIR)geometry/system_path.cpp \
 		$(SOURCEDIR)geometry/transform.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadtree.cpp \
+		$(SOURCEDIR)geometry/quadtree/quadnode.cpp \
+		$(SOURCEDIR)geometry/quadtree/quaddata.cpp \
 		$(SOURCEDIR)geometry/octree/octree.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/octree/octtopo.cpp \
-		src/door_finder.cpp \
-		src/find_doors_settings.cpp \
+		src/process/door_finder.cpp \
+		src/io/find_doors_settings.cpp \
 		src/main.cpp
 
 HEADERS =	$(SOURCEDIR)util/error_codes.h \
@@ -45,7 +50,9 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/progress_bar.h \
 		$(SOURCEDIR)util/rotLib.h \
 		$(SOURCEDIR)util/range_list.h \
+		$(SOURCEDIR)io/conf/conf_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
+		$(SOURCEDIR)io/levels/building_levels_io.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \
 		$(SOURCEDIR)config/imuProp.h \
@@ -59,15 +66,19 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)xmlreader/xmlsettings.h \
 		$(SOURCEDIR)geometry/system_path.h \
 		$(SOURCEDIR)geometry/transform.h \
+		$(SOURCEDIR)geometry/quadtree/quadtree.h \
+		$(SOURCEDIR)geometry/quadtree/quadnode.h \
+		$(SOURCEDIR)geometry/quadtree/quaddata.h \
 		$(SOURCEDIR)geometry/octree/octree.h \
 		$(SOURCEDIR)geometry/octree/octnode.h \
 		$(SOURCEDIR)geometry/octree/octdata.h \
 		$(SOURCEDIR)geometry/octree/shape.h \
 		$(SOURCEDIR)geometry/octree/octtopo.h \
 		$(SOURCEDIR)geometry/shapes/shape_wrapper.h \
-		$(SOURCEDIR)geometry/shapes/linesegment.h \
-		src/door_finder.h \
-		src/find_doors_settings.h
+		$(SOURCEDIR)geometry/shapes/point_2d.h \
+		$(SOURCEDIR)geometry/shapes/linesegment_2d.h \
+		src/process/door_finder.h \
+		src/io/find_doors_settings.h
 
 OBJECTS = $(patsubst %.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 

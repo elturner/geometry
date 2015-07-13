@@ -26,8 +26,9 @@ class find_doors_settings_t
 	/* parameters */
 	public:
 
-		/* the following files are necessary for
-		 * this program */
+		/*-------------*/
+		/* input files */
+		/*-------------*/
 
 		/**
 		 * The input octree file
@@ -40,6 +41,56 @@ class find_doors_settings_t
 		 * Can be either .mad or .noisypath
 		 */
 		std::string pathfile;
+
+		/**
+		 * The building levels file.
+		 *
+		 * If not specified, building is assumed to be all
+		 * a single level.
+		 */
+		std::string levelsfile;
+
+		/*-------------*/
+		/* output file */
+		/*-------------*/
+
+		/**
+		 * The exported file
+		 */
+		std::string outfile;
+	
+		/*-----------------------*/
+		/* processing parameters */
+		/*-----------------------*/
+
+		/**
+		 * Minimum door width
+		 *
+		 * This value is used to define a search area when
+		 * optimizing the position and extent of doors.
+		 *
+		 * units:  meters
+		 */
+		double door_min_width;
+
+		/**
+		 * Maximum door width
+		 *
+		 * This value is used to define a search area when
+		 * optimizing geometry of doors
+		 *
+		 * units:  meters
+		 */
+		double door_max_width;
+
+		/**
+		 * Default door height
+		 *
+		 * This value is used to estimate the height of doors
+		 *
+		 * units: meters
+		 */
+		double door_max_height;
 
 	/* functions */
 	public:

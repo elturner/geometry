@@ -1,5 +1,5 @@
-#include "find_doors_settings.h"
-#include "door_finder.h"
+#include "io/find_doors_settings.h"
+#include "process/door_finder.h"
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
 #include <util/tictoc.h>
@@ -64,8 +64,12 @@ int main(int argc, char** argv)
 	}
 	toc(clk, "Importing files");
 
+	/* initialize parameters */
+	door_finder.init(args.door_min_width, args.door_max_width,
+			args.door_max_height);
+
 	/* perform analysis */
-	ret = door_finder.analyze(tree, path);
+	ret = door_finder.analyze(tree, path, args.levelsfile);
 	if(ret)
 	{
 		cerr << "[main]\tUnable to perform analysis, Error "
@@ -74,7 +78,13 @@ int main(int argc, char** argv)
 	}
 
 	/* export data */
-	// TODO
+	ret = door_finder.writetxt(args.outfile);
+	if(ret)
+	{
+		cerr << "[main]\tUnable to export output file, Error "
+		     << ret << endl;
+		return 5;
+	}
 
 	/* success */
 	return 0;

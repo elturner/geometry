@@ -1,0 +1,36 @@
+<settings>
+<!-- This file contains run settings for the find_doors program -->
+
+	<!-- ************************************************ -->
+	<!-- Constraints on doors by ADA compliance standards -->
+	<!-- ************************************************ -->
+
+	<!-- The minimum width of doors considered.
+
+	     This value indicates the minimum width of a door.  According
+	     to ADA compliance standards, a door must be at least 32
+	     inches (0.8128 meters) wide.
+
+	     units: meters -->
+	<find_doors_min_width>0.8128</find_doors_min_width>
+
+	<!-- The maximum width of doors considered.
+
+	     This value indicates the maximum width of a door.  According
+	     to ADA compliance standards, a single door must be at most
+	     48 inches (1.2192 meters) wide.
+
+	     units:  meters -->
+	<find_doors_max_width>1.2192</find_doors_max_width>
+
+	<!-- The max height of doors considered.
+
+	     This is the expected max height of doors to locate in the
+	     model.  The exported doors by this process may differ
+	     from this provided height, but this value is given to
+	     provide an initial condition.
+
+	     units:  meters -->
+	<find_doors_max_height>2.7432</find_doors_max_height>
+
+</settings>

@@ -23,24 +23,42 @@
 
 using namespace std;
 
+/* the command-line arguments to look for */
+
+#define SETTINGS_FILE      "-s"
+#define OUTFILE_FLAG       "-o"
+
 /* the file formats to check for */
 
 #define OCTFILE_EXT        "oct"
 #define MADFILE_EXT        "mad"
+#define LEVELSFILE_EXT     "levels"
 #define NOISYPATHFILE_EXT  "noisypath"
+
+/* the xml parameters to look for */
+
+#define XML_MIN_WIDTH      "find_doors_min_width"
+#define XML_MAX_WIDTH      "find_doors_max_width"
+#define XML_MAX_HEIGHT     "find_doors_max_height"
 
 /* function implementations */
 		
 find_doors_settings_t::find_doors_settings_t()
 {
 	/* set default values for this program's files */
-	this->octfile     = "";
-	this->pathfile    = "";
+	this->octfile         = "";
+	this->pathfile        = "";
+	this->levelsfile      = "";
+	this->outfile         = "";
+	this->door_min_width  = 0.8128; /* in meters, or about 32 inches */
+	this->door_max_width  = 1.2192; /* in meters, or about 48 inches */
+	this->door_max_height = 2.7432; /* in meters, or about 9 feet */
 }
 
 int find_doors_settings_t::parse(int argc, char** argv)
 {
 	vector<string> files, path_files;
+	XmlSettings settings;
 	cmd_args_t args;
 	tictoc_t clk;
 	int ret;
@@ -51,6 +69,14 @@ int find_doors_settings_t::parse(int argc, char** argv)
 			"of doors in a scanned model by detecting the "
 			"locations in an octree where the specified path "
 			"moves from one room to another.");
+	args.add(SETTINGS_FILE, "The xml settings file that defines "
+			"parameters used for this analysis.  If not "
+			"specified, default parameters will be used.",
+			true, 1);
+	args.add(OUTFILE_FLAG, "The file path to write the output of "
+			"this processing.  This program will export an "
+			"ascii file that has a door position (x,y,z) on "
+			"each line.  The units are in meters.", false, 1);
 	args.add_required_file_type(OCTFILE_EXT, 1, "The octree file "
 			"representing the model geometry.  This must "
 			"already be merged with the floor plan data "
@@ -67,6 +93,11 @@ int find_doors_settings_t::parse(int argc, char** argv)
 			"should be given, which can be formatted either "
 			"as a ." MADFILE_EXT " or a ." NOISYPATHFILE_EXT
 			" file.");
+	args.add_required_file_type(LEVELSFILE_EXT, 0, "If specified, "
+			"this file indicates the different building levels "
+			"(or stories) present in the model.  If not "
+			"specified, then the building is assumed to be "
+			"single-story.");
 
 	/* parse the command-line arguments */
 	ret = args.parse(argc, argv);
@@ -83,6 +114,9 @@ int find_doors_settings_t::parse(int argc, char** argv)
 
 	/* populate this object with what was parsed from
 	 * the command-line */
+
+	/* get location of output file */
+	this->outfile = args.get_val(OUTFILE_FLAG);
 
 	/* get octree file */
 	files.clear();
@@ -116,6 +150,49 @@ int find_doors_settings_t::parse(int argc, char** argv)
 		     << "given, only the first will be used: "
 		     << path_files[0] << endl;
 	this->pathfile = path_files[0];
+
+	/* get levels file, which may be optional */
+	files.clear();
+	args.files_of_type(LEVELSFILE_EXT, files);
+	if(files.empty())
+		this->levelsfile = "";
+	else
+	{
+		/* check for multiple */
+		if(files.size() > 1)
+			cerr << "[find_doors_settings_t::parse]\t"
+			     << "WARING: Multiple levels files "
+			     << "given, only the first will be used: "
+			     << files[0] << endl;
+
+		/* save this file path */
+		this->levelsfile = files[0];
+	}
+
+	/* check to see if the xml settings file is provided.  If so,
+	 * then read its contents */
+	if(args.tag_seen(SETTINGS_FILE))
+	{
+		/* read the file */
+		if(!(settings.read(args.get_val(SETTINGS_FILE))))
+		{
+			cerr << "[find_doors_settings::parse]\t"
+			     << "Error!  Unable to read xml settings "
+			     << "file for this program." << endl;
+			return -3;
+		}
+
+		/* read in values from settings file */
+		if(settings.is_prop(XML_MIN_WIDTH))
+			this->door_min_width 
+				= settings.getAsDouble(XML_MIN_WIDTH);
+		if(settings.is_prop(XML_MAX_WIDTH))
+			this->door_max_width 
+				= settings.getAsDouble(XML_MAX_WIDTH);
+		if(settings.is_prop(XML_MAX_HEIGHT))
+			this->door_max_height
+				= settings.getAsDouble(XML_MAX_HEIGHT);
+	}
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
