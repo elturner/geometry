@@ -29,6 +29,8 @@ class hia_analyzer_t
 {
 	/* the following type-definitions are used for convenience
 	 * purposes in this class */
+	public:
+
 	typedef std::map<hia_cell_index_t, hia_cell_info_t>   cellmap_t;
 	typedef std::map<hia_cell_index_t, hia_room_info_t>   roommap_t;
 
@@ -115,10 +117,116 @@ class hia_analyzer_t
 		 * 			non-zero on failure.
 		 */
 		int readhia(const std::string& filename);
+		
+		/*--------------------*/
+		/* geometry accessors */
+		/*--------------------*/
 
-		/*------------*/
-		/* processing */
-		/*------------*/
+		/**
+		 * The resolution of this model
+		 */
+		inline double get_resolution() const
+		{ return this->resolution; };
+
+		/**
+		 * The start of the list of cells
+		 */
+		inline const cellmap_t::const_iterator begin() const
+		{ return this->cells.begin(); };
+
+		/**
+		 * The end of the list of cells
+		 */
+		inline const cellmap_t::const_iterator end() const
+		{ return this->cells.end(); };
+
+		/**
+		 * Generates the index for the given position
+		 *
+		 * Given a continuous 2D position, will return
+		 * the index that occupies that position.
+		 *
+		 * @param p   The position to analyze
+		 *
+		 * @return    Returns the index of p
+		 */
+		inline hia_cell_index_t get_index_of(
+				const Eigen::Vector2d& p) const
+		{
+			hia_cell_index_t ind;
+
+			/* check if we have a valid resolution */
+			if(this->resolution <= 0)
+				return ind;
+
+			/* populate the index */
+			ind.set(this->resolution, p);
+
+			/* return the index */
+			return ind;
+		};
+
+		/**
+		 * Retrieves the info for the specified index
+		 *
+		 * @param ind   The index to search
+		 *
+		 * @return      the <cell_index_t, cell_info_t> pair
+		 */
+		inline cellmap_t::const_iterator get_info_for(
+				const hia_cell_index_t& ind) const
+		{ return this->cells.find(ind); };
+
+
+		/**
+		 * For a given cell, will find all neighboring cells within
+		 * the specified distance.
+		 *
+		 * Will find any cells that can be reached from the seed
+		 * cell by not going more than the given distance away from
+		 * the seed cell.
+		 *
+		 * The seed cell is considered a neighbor of itself.
+		 *
+		 * neighs will not be cleared before processing. Any values
+		 * in this set before this call will remain in this set.
+		 *
+		 * @param seed    The index of the seed cell
+		 * @param dist    The maximum distance to travel
+		 * @param neighs  Where to store all neighboring cells.
+		 *
+		 * @return        Returns zero on success, 
+		 * 			non-zero on failure.
+		 */
+		int neighbors_within(const hia_cell_index_t& seed,
+					double dist, 
+				std::set<hia_cell_index_t>& neighs) const;
+
+		/**
+		 * Retrieves the bounds for this hia level
+		 *
+		 * @return   The bounds for this level
+		 */
+		inline const bounding_box_t& get_bounds() const
+		{ return this->bounds; };
+
+		/**
+		 * Returns the open height at the given position in the
+		 * model.
+		 *
+		 * If the specified position is not in the model, a
+		 * negative value is given.  Otherwise, will perform
+		 * the cell_info lookup and find the open height value.
+		 *
+		 * @param p   The position to investigae
+		 *
+		 * @return    The open height value at p
+		 */
+		double get_open_height_at(const Eigen::Vector2d& p) const;
+
+		/*-----------------*/
+		/* room processing */
+		/*-----------------*/
 
 		/**
 		 * Iterates over the cells, computing sum of neighborhood
@@ -204,59 +312,6 @@ class hia_analyzer_t
 		 * @param os   The output stream to write to
 		 */
 		void write_localmax(std::ostream& os) const;
-
-	/* helper functions */
-	private:
-
-		/**
-		 * Generates the index for the given position
-		 *
-		 * Given a continuous 2D position, will return
-		 * the index that occupies that position.
-		 *
-		 * @param p   The position to analyze
-		 *
-		 * @return    Returns the index of p
-		 */
-		inline hia_cell_index_t get_index_of(
-				const Eigen::Vector2d& p) const
-		{
-			hia_cell_index_t ind;
-
-			/* check if we have a valid resolution */
-			if(this->resolution <= 0)
-				return ind;
-
-			/* populate the index */
-			ind.set(this->resolution, p);
-
-			/* return the index */
-			return ind;
-		};
-
-		/**
-		 * For a given cell, will find all neighboring cells within
-		 * the specified distance.
-		 *
-		 * Will find any cells that can be reached from the seed
-		 * cell by not going more than the given distance away from
-		 * the seed cell.
-		 *
-		 * The seed cell is considered a neighbor of itself.
-		 *
-		 * neighs will not be cleared before processing. Any values
-		 * in this set before this call will remain in this set.
-		 *
-		 * @param seed    The index of the seed cell
-		 * @param dist    The maximum distance to travel
-		 * @param neighs  Where to store all neighboring cells.
-		 *
-		 * @return        Returns zero on success, 
-		 * 			non-zero on failure.
-		 */
-		int neighbors_within(const hia_cell_index_t& seed,
-					double dist, 
-				std::set<hia_cell_index_t>& neighs) const;
 };
 
 #endif

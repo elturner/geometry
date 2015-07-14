@@ -107,6 +107,23 @@ int hia_analyzer_t::readhia(const std::string& filename)
 	return 0;
 }
 		
+double hia_analyzer_t::get_open_height_at(const Eigen::Vector2d& p) const
+{
+	hia_cell_index_t ind;
+	cellmap_t::const_iterator it;
+
+	/* get the index of this posiiton */
+	ind = this->get_index_of(p);
+
+	/* get the info at this index */
+	it = this->get_info_for(ind);
+	if(it == this->end())
+		return -1; /* invalid */
+
+	/* return the open height amount */
+	return it->second.open_height;
+}
+		
 int hia_analyzer_t::populate_neighborhood_sums(double dist)
 {
 	cellmap_t::iterator it, neigh_it;
