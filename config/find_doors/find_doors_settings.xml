@@ -23,6 +23,14 @@
 	     units:  meters -->
 	<find_doors_max_width>1.2192</find_doors_max_width>
 
+	<!-- The min height of doors considered.
+
+	     This is the minimum allowed height for exported door
+	     geometry.
+
+	     units: meters -->
+	<find_doors_min_height>2.0</find_doors_min_height>
+
 	<!-- The max height of doors considered.
 
 	     This is the expected max height of doors to locate in the
@@ -31,6 +39,17 @@
 	     provide an initial condition.
 
 	     units:  meters -->
-	<find_doors_max_height>2.7432</find_doors_max_height>
+	<find_doors_max_height>2.4384</find_doors_max_height>
+
+	<!-- ******************* -->
+	<!-- Search optimization -->
+	<!-- ******************* -->
+
+	<!-- When determining the orientation (angle) of doors, will
+	     search through a series of possible angles.  This value
+	     denotes the step size to search.
+
+	     units:  degrees -->
+	<find_doors_angle_stepsize>10</find_doors_angle_stepsize>
 
 </settings>

@@ -12,8 +12,10 @@
  * of doors in the model.
  */
 
+#include "../structs/door.h"
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
+#include <geometry/hist/hia_analyzer.h>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <vector>
@@ -41,20 +43,27 @@ class door_finder_t
 		 */
 		double door_max_width;
 
-		/* the default height of a door, in meters.
+		/* the min allowed height for a detected door, in meters
+		 */
+		double door_min_height;
+
+		/* the max height of a door, in meters.
 		 *
 		 * This is used as an initial condition for fitting
 		 * door geometry.
 		 */
 		double door_max_height;
 
+		/* the angular stepsize to search for door orientations
+		 *
+		 * units: radians
+		 */
+		double angle_stepsize;
+
 		/**
 		 * Positions for each door found
 		 */
-		std::vector<Eigen::Vector3d, 
-			Eigen::aligned_allocator<Eigen::Vector3d> >
-				door_positions;
-
+		std::vector<door_t> doors; 
 
 	/* functions */
 	public:
@@ -65,14 +74,18 @@ class door_finder_t
 		 * @param minwidth   The minimum width of doors
 		 * @param maxwidth   The maximum width of doors
 		 * @param maxheight  The maximum height of doors
+		 * @param anglestep  The angular stepsize (radians)
 		 */
 		inline void init(double minwidth, double maxwidth,
-				double maxheight)
+				double minheight, double maxheight, 
+				double anglestep)
 		{
 			this->door_min_width  = minwidth;
 			this->door_max_width  = maxwidth;
+			this->door_min_height = minheight;
 			this->door_max_height = maxheight;
-			this->door_positions.clear();
+			this->angle_stepsize  = anglestep;
+			this->doors.clear();
 		};
 
 		/**
@@ -80,14 +93,15 @@ class door_finder_t
 		 * the location of doors
 		 *
 		 * @param tree         The octree model
+		 * @param hia          The hia data for the current level
 		 * @param path         The path to traverse
-		 * @param levelsfile   The optional .levels file to read
 		 *
 		 * @return       Returns zero on success, non-zero on
 		 *               failure.
 		 */
-		int analyze(octree_t& tree, const system_path_t& path,
-				const std::string& levelsfile);
+		int analyze(octree_t& tree, 
+				const hia_analyzer_t& hia,
+				const system_path_t& path);
 
 		/*-----*/
 		/* i/o */
@@ -147,17 +161,34 @@ class door_finder_t
 		 * Remove duplicate door positions
 		 *
 		 * Will iterate over the doors found so far,
-		 * and if two doors are close enough and at the
-		 * same level, will merge them into a single position.
+		 * and if two doors are close enough, will merge 
+		 * them into a single position.
 		 *
-		 * @param octree       The octree containing the model
-		 * @param levelsfile   The levels file to use.  If blank,
-		 *                     will assume single-level.
+		 * NOTE:  assumes all doors are in the same level.
+		 *
+		 * @param octree        The octree containing the model
+		 * @param floor_height  Height of floor for this level
+		 * @param ceil_height   Height of ceiling for level
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int remove_duplicates(const octree_t& octree,
-				const std::string& levelsfile);
+				double floor_height, double ceil_height);
+
+		/**
+		 * Estimates the geometry of a door given its
+		 * center position.
+		 *
+		 * The detected geometry will be stored in each
+		 * door structure.
+		 *
+		 * @param hia       The hia info for this level
+		 * @param door_ind  The index of the door to analyze
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int estimate_door_geom(const hia_analyzer_t& hia, 
+					size_t door_ind);
 };
 
 #endif

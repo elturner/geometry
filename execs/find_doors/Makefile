@@ -18,6 +18,7 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)io/conf/conf_reader.cpp \
 		$(SOURCEDIR)io/carve/noisypath_io.cpp \
 		$(SOURCEDIR)io/levels/building_levels_io.cpp \
+		$(SOURCEDIR)io/hia/hia_io.cpp \
 		$(SOURCEDIR)config/backpackConfig.cpp \
 		$(SOURCEDIR)config/cameraProp.cpp \
 		$(SOURCEDIR)config/imuProp.cpp \
@@ -39,6 +40,9 @@ SOURCES =	$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)geometry/octree/octnode.cpp \
 		$(SOURCEDIR)geometry/octree/octdata.cpp \
 		$(SOURCEDIR)geometry/octree/octtopo.cpp \
+		$(SOURCEDIR)geometry/shapes/bounding_box.cpp \
+		$(SOURCEDIR)geometry/hist/hia_analyzer.cpp \
+		src/structs/door.cpp \
 		src/process/door_finder.cpp \
 		src/io/find_doors_settings.cpp \
 		src/main.cpp
@@ -53,6 +57,7 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)io/conf/conf_reader.h \
 		$(SOURCEDIR)io/carve/noisypath_io.h \
 		$(SOURCEDIR)io/levels/building_levels_io.h \
+		$(SOURCEDIR)io/hia/hia_io.h \
 		$(SOURCEDIR)config/backpackConfig.h \
 		$(SOURCEDIR)config/cameraProp.h \
 		$(SOURCEDIR)config/imuProp.h \
@@ -77,6 +82,12 @@ HEADERS =	$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)geometry/shapes/shape_wrapper.h \
 		$(SOURCEDIR)geometry/shapes/point_2d.h \
 		$(SOURCEDIR)geometry/shapes/linesegment_2d.h \
+		$(SOURCEDIR)geometry/shapes/bounding_box.h \
+		$(SOURCEDIR)geometry/hist/hia_analyzer.h \
+		$(SOURCEDIR)geometry/hist/hia_cell_index.h \
+		$(SOURCEDIR)geometry/hist/hia_cell_info.h \
+		$(SOURCEDIR)geometry/hist/hia_room_info.h \
+		src/structs/door.h \
 		src/process/door_finder.h \
 		src/io/find_doors_settings.h
 

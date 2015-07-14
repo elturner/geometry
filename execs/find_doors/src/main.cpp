@@ -2,6 +2,7 @@
 #include "process/door_finder.h"
 #include <geometry/system_path.h>
 #include <geometry/octree/octree.h>
+#include <geometry/hist/hia_analyzer.h>
 #include <util/tictoc.h>
 #include <iostream>
 
@@ -32,7 +33,9 @@ int main(int argc, char** argv)
 	door_finder_t door_finder;
 	system_path_t path;
 	octree_t tree;
+	hia_analyzer_t hia;
 	tictoc_t clk;
+	size_t hia_index, num_hia;
 	int ret;
 
 	/* parse the given parameters */
@@ -64,26 +67,41 @@ int main(int argc, char** argv)
 	}
 	toc(clk, "Importing files");
 
-	/* initialize parameters */
-	door_finder.init(args.door_min_width, args.door_max_width,
-			args.door_max_height);
-
-	/* perform analysis */
-	ret = door_finder.analyze(tree, path, args.levelsfile);
-	if(ret)
+	/* find doors for each hia file specified */
+	num_hia = args.hiafiles.size();
+	for(hia_index = 0; hia_index < num_hia; hia_index++)
 	{
-		cerr << "[main]\tUnable to perform analysis, Error "
-		     << ret << endl;
-		return 4;
-	}
+		/* read in the hia information */
+		ret = hia.readhia(args.hiafiles[hia_index]);
+		if(ret)
+		{
+			cerr << "[main]\tUnable to read .hia file: \""
+			     << args.hiafiles[hia_index] << "\"" << endl;
+			return 4;
+		}
 
-	/* export data */
-	ret = door_finder.writetxt(args.outfile);
-	if(ret)
-	{
-		cerr << "[main]\tUnable to export output file, Error "
-		     << ret << endl;
-		return 5;
+		/* initialize parameters */
+		door_finder.init(args.door_min_width, args.door_max_width,
+				args.door_min_height, args.door_max_height,
+				args.angle_stepsize);
+
+		/* perform analysis */
+		ret = door_finder.analyze(tree, hia, path);
+		if(ret)
+		{
+			cerr << "[main]\tUnable to perform analysis, Error "
+			     << ret << endl;
+			return 4;
+		}
+
+		/* export data */
+		ret = door_finder.writetxt(args.outfile);
+		if(ret)
+		{
+			cerr << "[main]\tUnable to export output file, "
+			     << "Error " << ret << endl;
+			return 5;
+		}
 	}
 
 	/* success */

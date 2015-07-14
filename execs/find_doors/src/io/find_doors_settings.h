@@ -43,12 +43,13 @@ class find_doors_settings_t
 		std::string pathfile;
 
 		/**
-		 * The building levels file.
+		 * The Histogram of Interior Area (hia) file for
+		 * current level.
 		 *
-		 * If not specified, building is assumed to be all
-		 * a single level.
+		 * If multiple are specified, they will be treated
+		 * as separate levels in the same building.
 		 */
-		std::string levelsfile;
+		std::vector<std::string> hiafiles;
 
 		/*-------------*/
 		/* output file */
@@ -84,13 +85,29 @@ class find_doors_settings_t
 		double door_max_width;
 
 		/**
-		 * Default door height
+		 * Minimum door height
+		 *
+		 * This value is used to optimize the height of doors
+		 *
+		 * units: meters
+		 */
+		double door_min_height;
+
+		/**
+		 * Maximum door height
 		 *
 		 * This value is used to estimate the height of doors
 		 *
 		 * units: meters
 		 */
 		double door_max_height;
+
+		/**
+		 * The angular stepsize to search for door orientation
+		 *
+		 * units:  radians
+		 */
+		double angle_stepsize;
 
 	/* functions */
 	public:
