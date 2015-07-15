@@ -6,6 +6,8 @@
 #include <util/error_codes.h>
 #include <util/tictoc.h>
 #include <iostream>
+#include <float.h>
+#include <cmath>
 
 /**
  * @file   main.cpp
@@ -22,6 +24,28 @@
 
 using namespace std;
 using namespace tango_io;
+
+/* the following constants are used to define the tango depth sensor's
+ * noise characteristics 
+ *
+ * These values were acquired from experimental testing and
+ * from the source:
+ *
+ * https://developers.google.com/project-tango/overview/depth-perception
+ *
+ * The standard deviation of the points is reported to be "a few 
+ * centimeters".  Experimental measurements put it at less than a centimeter
+ * average, so this program will model a linear increase in stddev based
+ * on distance, adding one centimeter of stddev for each meter the
+ * point is away from the optimal distance.
+ */
+#define TANGO_MIN_DISTANCE  0.5   /* units: meters */
+#define TANGO_BEST_DISTANCE 1.0   /* units: meters */
+#define TANGO_MAX_DISTANCE  4.0   /* units: meters */
+#define TANGO_MIN_STD       0.001 /* units: meters */
+
+#define TANGO_STD_FOR_DIST(d) ( TANGO_MIN_STD + \
+		(abs((d) - TANGO_BEST_DISTANCE) / 100.0 ) )
 
 /* helper functions */
 int export_fss(const filter_tango_scans_run_settings_t& args,
@@ -90,6 +114,7 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 	tango_frame_t inframe;
 	progress_bar_t progbar;
 	tictoc_t clk;
+	double dist;
 	size_t i, i_start, i_end, j, n;
 	int ret;
 
@@ -144,15 +169,34 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 			/* put the tango points into more reasonable
 			 * coordinate system */
 			outframe.points[j].x =  inframe.points[j].x;
-			outframe.points[j].y = -inframe.points[j].z;
-			outframe.points[j].z =  inframe.points[j].y;
+			outframe.points[j].y =  inframe.points[j].y;
+			outframe.points[j].z =  inframe.points[j].z;
 			
+			/* assume no intensity */
+			outframe.points[j].intensity = 0;
+		
+			/* compute the distance from the scan point
+			 * to the device.  This value is used to
+			 * determine the accuracy of the scans */
+			dist = sqrt(
+				 (inframe.points[j].x * inframe.points[j].x)
+				+(inframe.points[j].y * inframe.points[j].y)
+				+(inframe.points[j].z * inframe.points[j].z)
+				);
+
+			/* check that this distance is within reasonable
+			 * range */
+			if(dist < TANGO_MIN_DISTANCE 
+					|| dist > TANGO_MAX_DISTANCE)
+				outframe.points[j].stddev = DBL_MAX;
+			else
+				outframe.points[j].stddev 
+					= TANGO_STD_FOR_DIST(dist);
+
 			/* the following values are based on the
 			 * statistics of the sensor */
-			outframe.points[j].intensity = 0;
-			outframe.points[j].bias      = 0; // TODO
-			outframe.points[j].stddev    = 0; // TODO
-			outframe.points[j].width     = 0; // TODO
+			outframe.points[j].bias = 0; /* no bias */
+			outframe.points[j].width = 0; /* no width for now */
 		}
 
 		/* export fss frame */
