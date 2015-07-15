@@ -129,6 +129,12 @@ class hia_analyzer_t
 		{ return this->resolution; };
 
 		/**
+		 * The index of this level in the building model
+		 */
+		inline int get_level() const
+		{ return this->level; };
+
+		/**
 		 * The start of the list of cells
 		 */
 		inline const cellmap_t::const_iterator begin() const

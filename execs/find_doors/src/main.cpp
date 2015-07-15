@@ -91,16 +91,17 @@ int main(int argc, char** argv)
 		{
 			cerr << "[main]\tUnable to perform analysis, Error "
 			     << ret << endl;
-			return 4;
+			return 5;
 		}
 
 		/* export data */
-		ret = door_finder.writetxt(args.outfile);
+		ret = door_finder.writedoors(args.outfile_prefix,
+						hia.get_level());
 		if(ret)
 		{
 			cerr << "[main]\tUnable to export output file, "
 			     << "Error " << ret << endl;
-			return 5;
+			return 6;
 		}
 	}
 

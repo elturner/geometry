@@ -108,23 +108,20 @@ class door_finder_t
 		/*-----*/
 
 		/**
-		 * Exports the detected door positions to a text file.
+		 * Exports the detected door positions to a .doors file
 		 *
-		 * Each line in the file is a 3D point that is an estimated
-		 * location of a door.
+		 * A .doors file is formatted in ascii, where each door
+		 * is represented by a line.  The file will be named
+		 * based on the given level index.
 		 *
-		 * 		<x1> <y1> <z1>
-		 * 		<x2> <y2> <z2>
-		 * 		...
-		 * 		<xn> <yn> <zn>
-		 *
-		 * Where n is the number of doors.
-		 *
-		 * @param txtfile   The path to the txt file to write
+		 * @param file_prefix   The beginning of the file path to
+		 *                      write
+		 * @param level_index   The level index of these floors
 		 *
 		 * @return     Returns zero on success, non-zero on failure
 		 */
-		int writetxt(const std::string& txtfile) const;
+		int writedoors(const std::string& file_prefix,
+					int level_index) const;
 
 	/* helper functions */
 	private:

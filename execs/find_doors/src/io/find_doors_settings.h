@@ -56,9 +56,16 @@ class find_doors_settings_t
 		/*-------------*/
 
 		/**
-		 * The exported file
+		 * The exported files will start with this file prefix
+		 *
+		 * So, if we are generating doors for levels #0 and #1,
+		 * and the outfile_prefix = "foo/bar_", then the generated
+		 * files will be named:
+		 *
+		 * 	foo/bar_0.doors
+		 * 	foo/bar_1.doors
 		 */
-		std::string outfile;
+		std::string outfile_prefix;
 	
 		/*-----------------------*/
 		/* processing parameters */

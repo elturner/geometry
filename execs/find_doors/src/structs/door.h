@@ -112,6 +112,13 @@ class door_t
 		 */
 		void writeobj(std::ostream& os) const;
 
+		/**
+		 * Exports the door info to the .doors file stream
+		 *
+		 * @param os    The output file stream to write to
+		 */
+		void writedoors(std::ostream& os) const;
+
 		/*-----------*/
 		/* operators */
 		/*-----------*/

@@ -64,3 +64,16 @@ void door_t::writeobj(std::ostream& os) const
 	   << "f -4 -3 -2 -1" << endl  /* rectangle face */
 	   << "f -1 -2 -3 -4" << endl; /* both directions! */
 }
+		
+void door_t::writedoors(std::ostream& os) const
+{
+	os << "door "
+	   << this->endpoints[0](0) << " "
+	   << this->endpoints[0](1) << " "
+	   << this->endpoints[1](0) << " "
+	   << this->endpoints[1](1) << " "
+	   << this->z_min << " " << this->z_max << " "
+	   << this->center(0) << " "
+	   << this->center(1) << " "
+	   << this->center(2) << endl;
+}
