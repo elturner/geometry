@@ -1,4 +1,8 @@
 function R = quat2rot(q)
+    % R = QUAT2ROT(q)
+    %
+    %   Assumes Q = [W X Y Z]
+    %
 
 a = q(1);
 b = q(2);
