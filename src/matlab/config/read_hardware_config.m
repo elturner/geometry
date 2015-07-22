@@ -8,7 +8,8 @@ function conf = read_hardware_config(filename)
 
 	try
 	   tree = xmlread(filename(filename ~= '"'));
-	catch
+    catch ME
+       display(ME.message)
 	   error('Failed to read XML file %s.',filename);
 	end
 
@@ -44,6 +45,11 @@ function conf = read_hardware_config(filename)
 
 		% get sensor type
 		type = sensors(i).Name;
+        
+        % Check for the hardware block
+        if(strcmp(type,'hardware'))
+            continue;
+        end
 
 		% iterate over the individual sensors for this type
 		for j = 1:length(sensors(i).Children)
