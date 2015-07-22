@@ -10,9 +10,25 @@
 %   filename - the name of the file you want to read.
 %
 % Outputs:
-%   data - The data stored in the binary file.  This is timestamps, range
-%          data and optionally intensity data if that was stored in the 
-%          file.
+%   data - The data stored in the binary file.  The data output struct
+%          contains the following fields, which are lists that contain
+%          data for each frame:
+%
+%          	timestamps
+%          	still_time
+%          	euler
+%          	quaternion
+%          	compass_yaw
+%          	angular_vel_body
+%          	angular_vel_nav
+%          	accel_body
+%          	accel_nav
+%          	velocity_nav
+%          	angular_vel_raw
+%          	mag_body
+%          	temperature
+%          	tracking_status
+%
 %   header - The header information stored in the file.
 function [data,header] = read_ic4_data(filename)
 
