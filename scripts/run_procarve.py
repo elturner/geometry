@@ -28,6 +28,7 @@ NUM_STAGES = 9
 # import local libraries
 sys.path.append(os.path.join(PYTHON_SRC_LOC, 'geometry'))
 import filter_urg_scans
+import filter_tango_scans
 import noisypath_gen
 import wedge_gen
 import chunker
@@ -69,7 +70,10 @@ def run(dataset_dir, madfile, stages):
         print ""
         ret = filter_urg_scans.run(dataset_dir)
         if ret != 0:
-            return -1; # an error occurred
+            return -1 # an error occurred
+        ret = filter_tango_scans.run(dataset_dir)
+        if ret != 0:
+            return -1 # an error occurred
     
     # convert the mad file into a noisypath file
     if 2 in stages:
