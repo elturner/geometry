@@ -332,7 +332,8 @@ int frame_model_t::serialize_wedges(wedge::writer_t& wos,
 	}
 
 	/* iterate over the wedges between these frames */
-	n = this->num_points - 1; /* number of edges in scan frame */
+	n = std::min(this->num_points, next.num_points) - 1; 
+				/* number of edges in scan frame */
 	for(i = 0; i < n; i++)
 	{
 		/* get the indices for this wedge */
