@@ -79,6 +79,7 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 	# find the scan files to use as input
 	fssfiles = []
 	for si in range(len(sensor_types)):	
+
 		# check for laser scanners
 		if sensor_types[si] == 'laser':
 
@@ -102,6 +103,30 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 
 			# add to our list
 			fssfiles.append(urg_outname)
+		
+                # check for tof scanners as well
+		elif sensor_types[si] == 'tof_camera':
+
+			# check if a whitelist is specified
+			if whitelist != None \
+				and sensor_names[si] not in whitelist:
+				continue
+
+			# parse the settings file for this sensor
+			tof_settings = config.parse_settings_xml( \
+					os.path.normpath(os.path.join( \
+					dataset_dir, sensor_cfn[si])))
+			if tof_settings is None:
+				return None # unable to parse settings
+
+			# the fss file is named the same as the raw
+			# data file, but with a different file ext
+			tof_filename = urg_settings["tof_datafile"]
+			tof_outname,ext = os.path.splitext(tof_filename)
+			tof_outname += '.fss'
+
+			# add to our list
+			fssfiles.append(tof_outname)
 
 	# return the final list of fss files
 	return fssfiles
