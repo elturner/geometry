@@ -121,7 +121,7 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 
 			# the fss file is named the same as the raw
 			# data file, but with a different file ext
-			tof_filename = urg_settings["tof_datafile"]
+			tof_filename = tof_settings["tof_datafile"]
 			tof_outname,ext = os.path.splitext(tof_filename)
 			tof_outname += '.fss'
 
