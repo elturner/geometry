@@ -39,13 +39,34 @@ using namespace tango_io;
  * on distance, adding one centimeter of stddev for each meter the
  * point is away from the optimal distance.
  */
-#define TANGO_MIN_DISTANCE  0.5   /* units: meters */
-#define TANGO_BEST_DISTANCE 1.0   /* units: meters */
-#define TANGO_MAX_DISTANCE  4.0   /* units: meters */
-#define TANGO_MIN_STD       0.001 /* units: meters */
+#define TANGO_MIN_CUTOFF_DISTANCE 0.1   /* units: meters */
+#define TANGO_MIN_GOOD_DISTANCE   0.5   /* units: meters */
+#define TANGO_BEST_DISTANCE       1.0   /* units: meters */
+#define TANGO_MAX_GOOD_DISTANCE   4.0   /* units: meters */
+#define TANGO_MAX_CUTOFF_DISTANCE 6.0   /* units: meters */
 
-#define TANGO_STD_FOR_DIST(d) ( TANGO_MIN_STD + \
-		(abs((d) - TANGO_BEST_DISTANCE) / 100.0 ) )
+/* these offsets define a base level std. dev. given to every point.
+ *
+ * This base changes with respect to which operating zone a point is in,
+ * whether it is in the optimal operating distance (i.e. "good") or
+ * not (i.e. "bad") */
+#define TANGO_MIN_STD_GOOD        0.001 /* units: meters */
+#define TANGO_MIN_STD_BAD         0.05  /* units: meters */
+
+/* these slopes indicate how much increase a point's estimated
+ * standard deviation receives based on how it deviates from the
+ * tango's optimum operating distance */
+#define TANGO_STD_SLOPE_GOOD      0.01  /* units: meters */
+#define TNAGO_STD_SLOPE_BAD       0.02  /* units: meters */
+
+/* the std. dev. to use when a point is in the "good distance" range */
+#define TANGO_STD_FOR_GOOD_DIST(d) ( TANGO_MIN_STD_GOOD + \
+		(abs((d) - TANGO_BEST_DISTANCE) * TANGO_STD_SLOPE_GOOD ) )
+
+/* the std. dev. to use when a point is in the "bad distance" range */
+#define TANGO_STD_FOR_BAD_DIST(d)  ( TANGO_MIN_STD_BAD + \
+		(abs((d) - TANGO_BEST_DISTANCE) * TANGO_STD_SLOPE_BAD ) )
+
 
 /* helper functions */
 int export_fss(const filter_tango_scans_run_settings_t& args,
@@ -186,12 +207,28 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 
 			/* check that this distance is within reasonable
 			 * range */
-			if(dist < TANGO_MIN_DISTANCE 
-					|| dist > TANGO_MAX_DISTANCE)
+			if(dist < TANGO_MIN_CUTOFF_DISTANCE 
+					|| dist > TANGO_MAX_CUTOFF_DISTANCE)
+			{
+				/* way outside of valid range,
+				 * give it infinite error */
 				outframe.points[j].stddev = DBL_MAX;
+			}
+			else if(dist < TANGO_MIN_GOOD_DISTANCE
+					|| dist > TANGO_MAX_GOOD_DISTANCE)
+			{
+				/* outside of optimum range, give
+				 * it more penalized std. dev. */
+				outframe.points[j].stddev
+					= TANGO_STD_FOR_BAD_DIST(dist);
+			}
 			else
+			{
+				/* inside optimum operating range, give it
+				 * an optimistic std. dev. */
 				outframe.points[j].stddev 
-					= TANGO_STD_FOR_DIST(dist);
+					= TANGO_STD_FOR_GOOD_DIST(dist);
+			}
 
 			/* the following values are based on the
 			 * statistics of the sensor */
