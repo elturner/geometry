@@ -1,17 +1,22 @@
 CC = g++
 CFLAGS = -g -O2 -W -Wall -Wextra -std=c++0x
-LFLAGS = -lm -lopencv_core -lopencv_imgproc -lopencv_highgui
+LFLAGS = -lm -lopencv_core -lopencv_imgproc -lopencv_highgui -lboost_system -lboost_thread -lxerces-c
 PFLAGS = #-pg
 SOURCEDIR = ../../src/cpp/
 EIGENDIR = /usr/include/eigen3/
 INCLUDEDIR = $(SOURCEDIR)include/
-IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR) -I$(INCLUDEDIR)
+IFLAGS = -I$(SOURCEDIR) -I$(EIGENDIR) -isystem $(INCLUDEDIR)
 BUILDDIR = build/src/cpp
 EXECUTABLE = ../../bin/generate_scanorama
 
 # defines for the program
 
 SOURCES =	$(INCLUDEDIR)lodepng/lodepng.cpp \
+		$(INCLUDEDIR)libe57/E57Foundation.cpp \
+		$(INCLUDEDIR)libe57/E57FoundationImpl.cpp \
+		$(INCLUDEDIR)libe57/E57Simple.cpp \
+		$(INCLUDEDIR)libe57/E57SimpleImpl.cpp \
+		$(INCLUDEDIR)libe57/time_conversion.cpp \
 		$(SOURCEDIR)util/tictoc.cpp \
 		$(SOURCEDIR)util/cmd_args.cpp \
 		$(SOURCEDIR)util/rotLib.cpp \
@@ -50,6 +55,11 @@ SOURCES =	$(INCLUDEDIR)lodepng/lodepng.cpp \
 		src/main.cpp
 
 HEADERS =	$(INCLUDEDIR)lodepng/lodepng.h \
+		$(INCLUDEDIR)libe57/E57Foundation.h \
+		$(INCLUDEDIR)libe57/E57FoundationImpl.h \
+		$(INCLUDEDIR)libe57/E57Simple.h \
+		$(INCLUDEDIR)libe57/E57SimpleImpl.h \
+		$(INCLUDEDIR)libe57/time_conversion.h \
 		$(SOURCEDIR)util/error_codes.h \
 		$(SOURCEDIR)util/tictoc.h \
 		$(SOURCEDIR)util/cmd_args.h \
