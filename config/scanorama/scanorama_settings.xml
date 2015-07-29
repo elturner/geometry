@@ -54,4 +54,16 @@
 	<scanorama_min_spacing_dist>2.5</scanorama_min_spacing_dist>	
 	<scanorama_max_spacing_dist>3.5</scanorama_max_spacing_dist>	
 
+	<!-- The following specify which file formats to export
+	     for each scanorama position.  Each format is togglable
+	     so that multiple files can be exported for each pose
+	     at once.
+
+	     If '0', then the specified format will not be exported.
+	     If '1', then the specified format will be exported.
+	     -->
+	<scanorama_export_ptx>1</scanorama_export_ptx>
+	<scanorama_export_e57>1</scanorama_export_e57>
+	<scanorama_export_png>1</scanorama_export_png>
+
 </settings>

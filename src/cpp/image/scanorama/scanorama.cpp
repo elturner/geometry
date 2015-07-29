@@ -314,7 +314,7 @@ void scanorama_t::writeptx(std::ostream& os) const
 		/* 4th row of 4x4 transform matrix */
 
 	/* iterate over the points */
-	progbar.set_name("       Exporting");
+	progbar.set_name("   Exporting PTX");
 	n = this->points.size();
 	for(i = 0; i < n; i++)
 	{
@@ -340,13 +340,19 @@ int scanorama_t::writee57(const std::string& filename) const
 	string coordinate_metadata(""); /* optional string */
 	e57::Writer outfile(filename, coordinate_metadata);
 	e57::Data3D header;
-	double* xdata;
-	double* ydata;
-	double* zdata;
+	double*   xdata;
+	double*   ydata;
+	double*   zdata;
+	int8_t*   xyzinvalid;
+	double*   intdata; /* intensity */
+	int8_t*   intinvalid;
 	uint16_t* reddata;
 	uint16_t* greendata;
 	uint16_t* bluedata;
-	int8_t* colorinvalid;
+	int8_t*   colorinvalid;
+	int32_t*  rowindex;
+	int32_t*  colindex;
+	double*   timedata;
 	size_t bpos, epos, nSize, r, c, i;
 	int scan_index;
 
@@ -369,50 +375,66 @@ int scanorama_t::writee57(const std::string& filename) const
 
 	/* populate the header of the output e57 file */
 	header.guid = "{D3817EC3-A3DD-4a81-9EF5-2FFD0EC91D5A}";
-	header.acquisitionStart.dateTimeValue  = this->timestamp;
-	header.acquisitionEnd.dateTimeValue    = this->timestamp;
-	header.pointsSize                      = this->points.size(); 
-	header.pointFields.cartesianXField     = true;
-	header.pointFields.cartesianYField     = true;
-	header.pointFields.cartesianZField     = true;
-	header.pointFields.colorRedField       = true;
-	header.pointFields.colorGreenField     = true;
-	header.pointFields.colorBlueField      = true;
-	header.pointFields.isColorInvalidField = true;
-	header.indexBounds.rowMinimum          = 0;
-	header.indexBounds.rowMaximum          = this->num_rows - 1;
-	header.indexBounds.columnMinimum       = 0;
-	header.indexBounds.columnMaximum       = this->num_cols - 1;
-	header.indexBounds.returnMinimum       = 0;
-	header.indexBounds.returnMaximum       = 0;
-	header.colorLimits.colorRedMinimum     = 0;
-	header.colorLimits.colorRedMaximum     = 255;
-	header.colorLimits.colorGreenMinimum   = 0;
-	header.colorLimits.colorGreenMaximum   = 255;
-	header.colorLimits.colorBlueMinimum    = 0;
-	header.colorLimits.colorBlueMaximum    = 255;
-	header.pose.rotation.w                 = 1;
-	header.pose.rotation.x                 = 0;
-	header.pose.rotation.y                 = 0;
-	header.pose.rotation.z                 = 0;
-	header.pose.translation.x              = this->center(0);
-	header.pose.translation.y              = this->center(1);
-	header.pose.translation.z              = this->center(2);
+	header.acquisitionStart.dateTimeValue   = this->timestamp;
+	header.acquisitionEnd.dateTimeValue     = this->timestamp;
+	header.pointsSize                       = this->points.size(); 
+	
+	header.pointFields.cartesianXField      = true;
+	header.pointFields.cartesianYField      = true;
+	header.pointFields.cartesianZField      = true;
+	header.pointFields.cartesianInvalidStateField = true;
+	header.pointFields.intensityField       = true;
+	header.pointFields.isIntensityInvalidField = true;
+	header.pointFields.colorRedField        = true;
+	header.pointFields.colorGreenField      = true;
+	header.pointFields.colorBlueField       = true;
+	header.pointFields.isColorInvalidField  = true;
+	header.pointFields.rowIndexField        = true;
+	header.pointFields.columnIndexField     = true;
+	header.pointFields.timeStampField       = true;
+	
+	header.indexBounds.rowMinimum           = 0;
+	header.indexBounds.rowMaximum           = this->num_rows - 1;
+	header.indexBounds.columnMinimum        = 0;
+	header.indexBounds.columnMaximum        = this->num_cols - 1;
+	header.indexBounds.returnMinimum        = 0;
+	header.indexBounds.returnMaximum        = 0;
+	header.intensityLimits.intensityMinimum = 0.0;
+	header.intensityLimits.intensityMaximum = 1.0;
+	header.colorLimits.colorRedMinimum      = 0;
+	header.colorLimits.colorRedMaximum      = 255;
+	header.colorLimits.colorGreenMinimum    = 0;
+	header.colorLimits.colorGreenMaximum    = 255;
+	header.colorLimits.colorBlueMinimum     = 0;
+	header.colorLimits.colorBlueMaximum     = 255;
+	header.pose.rotation.w                  = 1;
+	header.pose.rotation.x                  = 0;
+	header.pose.rotation.y                  = 0;
+	header.pose.rotation.z                  = 0;
+	header.pose.translation.x               = this->center(0);
+	header.pose.translation.y               = this->center(1);
+	header.pose.translation.z               = this->center(2);
 	header.pointGroupingSchemes.groupingByLine.groupsSize 
 						= this->num_cols;
 	header.pointGroupingSchemes.groupingByLine.pointCountSize
 						= this->num_rows;
 	scan_index = outfile.NewData3D(header);
-
+	
 	/* set up scan buffers to write the points */
 	nSize        = this->num_rows;
 	xdata        = new double[nSize];
 	ydata        = new double[nSize];
 	zdata        = new double[nSize];
+	xyzinvalid   = new int8_t[nSize];
+	intdata      = new double[nSize];
+	intinvalid   = new int8_t[nSize];
 	reddata      = new uint16_t[nSize];
 	greendata    = new uint16_t[nSize];
 	bluedata     = new uint16_t[nSize];
 	colorinvalid = new int8_t[nSize];
+	rowindex     = new int32_t[nSize];
+	colindex     = new int32_t[nSize];
+	timedata     = new double[nSize];
 	e57::CompressedVectorWriter datawriter
 			= outfile.SetUpData3DPointsData(
 					scan_index, /* data block index */
@@ -420,13 +442,23 @@ int scanorama_t::writee57(const std::string& filename) const
 					xdata, 
 					ydata,
 					zdata,
-					NULL, /* cartesian invalid buff */
-					NULL, /* intensity buffer */
-					NULL, /* intensity invalid buff */
+					xyzinvalid,
+					intdata,
+					intinvalid,
 					reddata,
 					greendata,
 					bluedata,
-					colorinvalid
+					colorinvalid,
+					NULL, /* spherical range */
+					NULL, /* spherical azimuth */
+					NULL, /* spherical elevation */
+					NULL, /* spherical invalid */
+					rowindex,
+					colindex,
+					NULL, /* return index */
+					NULL, /* return count */
+					timedata,
+					NULL  /* time invalid */
 					);
 
 	/* iterate over the points, inserting into output file 
@@ -444,10 +476,14 @@ int scanorama_t::writee57(const std::string& filename) const
 			/* get index of this point */
 			i = r + (c * this->num_rows);
 
-			/* add this point to the buffer */
+			/* add this point to the buffers */
 			xdata[r]        = this->points[i].x;
 			ydata[r]        = this->points[i].y;
 			zdata[r]        = this->points[i].z;
+			xyzinvalid[r]   = false;
+			intdata[r]      =
+				this->points[i].color.get_grayscale();
+			intinvalid[r]   = (this->points[i].quality <= 0);
 			reddata[r]      = 
 				this->points[i].color.get_red_int();
 			greendata[r]    =
@@ -455,6 +491,9 @@ int scanorama_t::writee57(const std::string& filename) const
 			bluedata[r]     = 
 				this->points[i].color.get_blue_int();
 			colorinvalid[r] = (this->points[i].quality <= 0);
+			rowindex[r]     = this->num_rows - r - 1;
+			colindex[r]     = c;
+			timedata[r]     = this->timestamp;
 		}
 
 		/* export buffer */
@@ -465,9 +504,19 @@ int scanorama_t::writee57(const std::string& filename) const
 	progbar.clear();
 	datawriter.close();
 	outfile.Close();
-	delete xdata;
-	delete ydata;
-	delete zdata;
+	delete[] xdata;
+	delete[] ydata;
+	delete[] zdata;
+	delete[] xyzinvalid;
+	delete[] intdata;
+	delete[] intinvalid;
+	delete[] reddata;
+	delete[] greendata;
+	delete[] bluedata;
+	delete[] colorinvalid;
+	delete[] rowindex;
+	delete[] colindex;
+	delete[] timedata;
 	return 0;
 }
 		

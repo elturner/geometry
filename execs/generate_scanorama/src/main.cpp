@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 {
 	generate_scanorama_run_settings_t args;
 	scanorama_maker_t maker;
+	scanorama_maker_t::scano_format_t out_format;
 	tictoc_t clk;
 	size_t i, n;
 	int ret;
@@ -90,8 +91,18 @@ int main(int argc, char** argv)
 
 	toc(clk, "Initialization");
 
+	/* prepare output format */
+	out_format = 0;
+	if(args.export_ptx)
+		out_format |= scanorama_maker_t::PTX_FORMAT;
+	if(args.export_e57)
+		out_format |= scanorama_maker_t::E57_FORMAT;
+	if(args.export_png)
+		out_format |= scanorama_maker_t::PNG_FORMAT;
+
 	/* export the scans */
-	ret = maker.generate_along_path(args.ptx_outfile, args.meta_outfile,
+	ret = maker.generate_along_path(args.scano_outfile, out_format, 
+			args.meta_outfile,
 			args.min_spacing_dist, args.max_spacing_dist,
 			args.num_rows, args.num_cols, args.blendwidth,
 			args.begin_idx, args.end_idx);

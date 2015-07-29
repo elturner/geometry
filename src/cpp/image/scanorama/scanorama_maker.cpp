@@ -208,6 +208,7 @@ int scanorama_maker_t::populate_scanorama(scanorama_t& scan,
 }
 		
 int scanorama_maker_t::generate_all(const std::string& prefix_out,
+				scano_format_t out_format,
 				const std::string& meta_out,
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw,
@@ -216,7 +217,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 	progress_bar_t progbar;
 	scanolist_io::scanolist_t metaoutfile;
 	scanorama_t scan;
-	stringstream ss;
+	stringstream ss_prefix, ss_full;
 	tictoc_t clk;
 	size_t i, n;
 	int ret;
@@ -263,46 +264,87 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		}
 
 		/* determine where to export this scanorama */
-		ss.clear();
-		ss.str("");
-		ss << prefix_out;
-		ss << std::setfill('0') << std::setw(8) << i;
-		ss << ".e57";
+		ss_prefix.clear();
+		ss_prefix.str("");
+		ss_prefix << prefix_out;
+		ss_prefix << std::setfill('0') << std::setw(8) << i;
 
-		/* write it to disk */
-		ret = scan.writee57(ss.str());
-		if(ret)
+		/* check if we want to export .ptx file */
+		if((out_format & PTX_FORMAT) != 0)
 		{
-			/* error occurred */
-			progbar.clear();
-			ret = PROPEGATE_ERROR(-2, ret);
-			cerr << "[scanorama_maker_t::generate_all]\t"
-			     << "ERROR " << ret << ": Unable to open "
-			     << "scanorama file: " << ss.str() << endl;
-			return ret;
+			/* prepare output file */
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << ".ptx";
+			ofstream outfile(ss_full.str());
+			if(!(outfile.is_open()))
+			{
+				progbar.clear();
+				ret = PROPEGATE_ERROR(-2, ret);
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "Unable to export to .ptx "
+				     << "file: "
+				     << ss_full.str() << endl;
+				return ret;
+			}
+
+			/* export to file */
+			scan.writeptx(outfile);
+			outfile.close();
+		}
+
+		/* check if we want to export .e57 */
+		if((out_format & E57_FORMAT) != 0)
+		{
+			/* make output file name */
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << ".e57";
+
+			/* write it to disk */
+			ret = scan.writee57(ss_full.str());
+			if(ret)
+			{
+				/* error occurred */
+				progbar.clear();
+				ret = PROPEGATE_ERROR(-3, ret);
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "ERROR " << ret 
+				     << ": Unable to open "
+				     << "scanorama file: " 
+				     << ss_full.str() << endl;
+				return ret;
+			}
 		}
 		
 		/* write to png as well */
-		ss.clear();
-		ss.str("");
-		ss << prefix_out;
-		ss << std::setfill('0') << std::setw(8) << i;
-		ss << ".png";
-		ret = scan.writepng(ss.str());
-		if(ret)
+		if((out_format & PNG_FORMAT) != 0)
 		{
-			/* unable to export png */
-			progbar.clear();
-			cerr << "[scanorama_maker_t::generate_all]\t"
-			     << "ERROR " << ret << ": Unable to export "
-			     << "scanorama #" << i << " as a PNG image"
-			     << endl;
-			return PROPEGATE_ERROR(-3, ret);
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << ".png";
+			ret = scan.writepng(ss_full.str());
+			if(ret)
+			{
+				/* unable to export png */
+				progbar.clear();
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "ERROR " << ret 
+				     << ": Unable to export "
+				     << "scanorama #" << i 
+				     << " as a PNG image"
+				     << endl;
+				return PROPEGATE_ERROR(-4, ret);
+			}
 		}
 		
 		/* store metadata */
 		metaoutfile.add(
-			scanolist_io::scanometa_t(i, times[i], ss.str()));
+			scanolist_io::scanometa_t(i, times[i], 
+						ss_prefix.str()));
 	}
 
 	/* if specified, write the metadata to output file */
@@ -326,6 +368,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 }
 		
 int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
+			scano_format_t out_format,
 			const std::string& meta_out,
 			double minspacedist, double maxspacedist,
 			size_t r, size_t c, double bw,
@@ -447,7 +490,7 @@ int scanorama_maker_t::generate_along_path(const std::string& prefix_out,
 	toc(clk, "Locating poses");
 	
 	/* now that we've populated the times list, make the scanoramas */
-	ret = this->generate_all(prefix_out, meta_out,
+	ret = this->generate_all(prefix_out, out_format, meta_out,
 			times, r, c, bw, begin_idx, end_idx);
 	if(ret)
 	{

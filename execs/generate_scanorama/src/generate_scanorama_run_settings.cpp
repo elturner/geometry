@@ -43,6 +43,9 @@ using namespace std;
 #define XML_BLENDWIDTH         "scanorama_blendwidth"
 #define XML_MIN_SPACING_DIST   "scanorama_min_spacing_dist"
 #define XML_MAX_SPACING_DIST   "scanorama_max_spacing_dist"
+#define XML_EXPORT_PTX         "scanorama_export_ptx"
+#define XML_EXPORT_E57         "scanorama_export_e57"
+#define XML_EXPORT_PNG         "scanorama_export_png"
 
 /*--------------------------*/
 /* function implementations */
@@ -64,10 +67,13 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->num_cols         = 2000;
 	this->min_spacing_dist = 2.0;
 	this->max_spacing_dist = 3.0;
-	this->ptx_outfile      = "";
+	this->scano_outfile    = "";
 	this->meta_outfile     = "";
 	this->begin_idx        = 0;
 	this->end_idx          = -1;
+	this->export_ptx       = true;
+	this->export_e57       = false;
+	this->export_png       = false;
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -166,7 +172,7 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	this->xml_config  = args.get_val(CONFIGFILE_FLAG);
 	this->pathfile    = args.get_val(PATHFILE_FLAG);
 	this->modelfile   = args.get_val(MODELFILE_FLAG);
-	this->ptx_outfile = args.get_val(OUTFILE_FLAG);
+	this->scano_outfile = args.get_val(OUTFILE_FLAG);
 	
 	/* sort the files associated with the fisheye camera imagery */
 	files.clear(); args.tag_seen(FISHEYE_FLAG, files);
@@ -226,6 +232,12 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_MAX_SPACING_DIST))
 		this->max_spacing_dist 
 			= settings.getAsDouble(XML_MAX_SPACING_DIST);
+	if(settings.is_prop(XML_EXPORT_PTX))
+		this->export_ptx = (settings.getAsUint(XML_EXPORT_PTX)!=0);
+	if(settings.is_prop(XML_EXPORT_E57))
+		this->export_e57 = (settings.getAsUint(XML_EXPORT_E57)!=0);
+	if(settings.is_prop(XML_EXPORT_PNG))
+		this->export_png = (settings.getAsUint(XML_EXPORT_PNG)!=0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

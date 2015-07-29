@@ -185,15 +185,33 @@ class generate_scanorama_run_settings_t
 		 */
 		int end_idx;
 
+		/**
+		 * If true, will export .ptx files for each
+		 * scanorama position.
+		 */
+		bool export_ptx;
+
+		/**
+		 * If true, will export .e57 files for each
+		 * scanorama position.
+		 */
+		bool export_e57;
+
+		/**
+		 * If true, will export .png image files for
+		 * each scanorama position.
+		 */
+		bool export_png;
+
 		/*--------------*/
 		/* output files */
 		/*--------------*/
 
 		/**
-		 * The output .ptx file that will be exported by
+		 * The output scanorama file that will be exported by
 		 * this program.
 		 */
-		std::string ptx_outfile;
+		std::string scano_outfile;
 
 		/**
 		 * The output .scanolist metadata file that will

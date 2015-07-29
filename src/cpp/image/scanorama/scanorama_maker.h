@@ -33,6 +33,22 @@
  */
 class scanorama_maker_t
 {
+	/* public parameters */
+	public:
+
+		/**
+		 * The following fields represent the differnet
+		 * file formats that a scanorama can export.
+		 *
+		 * By masking together multiple of these values,
+		 * a call to generate_all() will export multiple
+		 * files per pose.
+		 */
+		typedef unsigned int scano_format_t;
+		static const scano_format_t PTX_FORMAT = 0x1;
+		static const scano_format_t E57_FORMAT = 0x2;
+		static const scano_format_t PNG_FORMAT = 0x4;
+
 	/* parameters */
 	private:
 
@@ -177,6 +193,7 @@ class scanorama_maker_t
 		 * cameras instead.
 		 *
 		 * @param prefix_out  The prefix for the output path
+		 * @param out_format  The output file format
 		 * @param meta_out    The output metadata file
 		 * @param times       The input list of timestamps
 		 * @param r           Number of rows to use
@@ -192,6 +209,7 @@ class scanorama_maker_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_all(const std::string& prefix_out,
+				scano_format_t out_format,
 				const std::string& meta_out,
 				const std::vector<double>& times,
 				size_t r, size_t c, double bw,
@@ -210,6 +228,7 @@ class scanorama_maker_t
 		 * function.
 		 *
 		 * @param prefix_out   The prefix for the output path
+		 * @param out_format   The output file format
 		 * @param meta_out     The output metadata file
 		 * @param minspacedist The min spacing distance (in meters)
 		 * @param maxspacedist The max spacing distance (in meters)
@@ -229,6 +248,7 @@ class scanorama_maker_t
 		 * @return    Returns zero on success, non-zero on failure.
 		 */
 		int generate_along_path(const std::string& prefix_out,
+			scano_format_t out_format,
 			const std::string& meta_out,
 			double minspacedist, double maxspacedist,
 			size_t r, size_t c, double bw,
