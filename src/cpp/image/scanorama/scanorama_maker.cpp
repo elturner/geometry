@@ -217,7 +217,6 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 	scanolist_io::scanolist_t metaoutfile;
 	scanorama_t scan;
 	stringstream ss;
-	ofstream outfile;
 	tictoc_t clk;
 	size_t i, n;
 	int ret;
@@ -268,25 +267,21 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		ss.str("");
 		ss << prefix_out;
 		ss << std::setfill('0') << std::setw(8) << i;
-		ss << ".ptx";
+		ss << ".e57";
 
-		/* open file for writing */
-		outfile.open(ss.str());
-		if(!(outfile.is_open()))
+		/* write it to disk */
+		ret = scan.writee57(ss.str());
+		if(ret)
 		{
 			/* error occurred */
 			progbar.clear();
-			ret = -2;
+			ret = PROPEGATE_ERROR(-2, ret);
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "ERROR " << ret << ": Unable to open "
 			     << "scanorama file: " << ss.str() << endl;
 			return ret;
 		}
 		
-		/* write it to disk */
-		scan.writeptx(outfile);
-		outfile.close();
-
 		/* write to png as well */
 		ss.clear();
 		ss.str("");

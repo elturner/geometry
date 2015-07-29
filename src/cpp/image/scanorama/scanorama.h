@@ -223,6 +223,21 @@ class scanorama_t
 		void writeptx(std::ostream& os) const;
 
 		/**
+		 * Export to E57 output file
+		 *
+		 * Will export this scanorama to a E57 file, as specified
+		 * by the ASTM E57.3 data interchange standard for 3D
+		 * laser scanning.
+		 *
+		 * This function makes calls to the libe57 library.
+		 *
+		 * @param filename    The .e57 file to write to.
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int writee57(const std::string& filename) const;
+
+		/**
 		 * Export to PNG image
 		 *
 		 * Exports the content of this scanorama to the

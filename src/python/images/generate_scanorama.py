@@ -59,8 +59,9 @@ SETTINGS_XML = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
 #
 # @param dataset_dir   Path to dataset directory
 # @param pathfile      Path to 3D .mad path file
+# @param debug         Optional.  If true, will run in gdb
 #
-def run(dataset_dir, pathfile):
+def run(dataset_dir, pathfile, debug=False):
 
     # ensure abspath for input files
     dataset_dir = os.path.abspath(dataset_dir)
@@ -91,6 +92,8 @@ def run(dataset_dir, pathfile):
                 '-p', pathfile, \
                 '-o', scanoprefix, \
                 '--meta', metafile]
+    if debug:
+        args = ['gdb', '--args'] + args
 
     #--------------------------------------------
     # find all active FISHEYE cameras in the file
@@ -162,7 +165,10 @@ def run(dataset_dir, pathfile):
     #----------------------------------
     # run pointcloud generation program
     #----------------------------------
-    ret = subprocess.call(args, executable=SCANORAMA_EXE, \
+    exe_to_run = SCANORAMA_EXE
+    if debug:
+        exe_to_run = 'gdb'
+    ret = subprocess.call(args, executable=exe_to_run, \
             cwd=dataset_dir, stdout=None, stderr=None, \
             stdin=None, shell=False)
     if ret != 0:

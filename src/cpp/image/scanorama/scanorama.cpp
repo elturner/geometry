@@ -4,6 +4,8 @@
 #include <util/tictoc.h>
 #include <util/error_codes.h>
 #include <util/progress_bar.h>
+#include <libe57/E57Foundation.h>
+#include <libe57/E57Simple.h>
 #include <lodepng/lodepng.h>
 #include <Eigen/Dense>
 #include <iostream>
@@ -330,6 +332,143 @@ void scanorama_t::writeptx(std::ostream& os) const
 		   << this->points[i].color.get_blue_int() << endl;
 	}
 	progbar.clear();
+}
+		
+int scanorama_t::writee57(const std::string& filename) const
+{
+	progress_bar_t progbar;
+	string coordinate_metadata(""); /* optional string */
+	e57::Writer outfile(filename, coordinate_metadata);
+	e57::Data3D header;
+	double* xdata;
+	double* ydata;
+	double* zdata;
+	uint16_t* reddata;
+	uint16_t* greendata;
+	uint16_t* bluedata;
+	int8_t* colorinvalid;
+	size_t bpos, epos, nSize, r, c, i;
+	int scan_index;
+
+	/* make sure the file is open */
+	if(!(outfile.IsOpen()))
+	{
+		cerr << "[scanorama_t::writee57]\tUnable to open output "
+		     << "file: \"" << filename << "\"" << endl;
+		return -1;
+	}
+
+	/* get the name of this scan position by parsing the filename */
+	bpos = filename.find_last_of("\\/");
+	if(bpos == string::npos)
+		bpos = 0;
+	else
+		bpos++;
+	epos = filename.find_last_of(".");
+	header.name = filename.substr(bpos, epos);
+
+	/* populate the header of the output e57 file */
+	header.guid = "{D3817EC3-A3DD-4a81-9EF5-2FFD0EC91D5A}";
+	header.acquisitionStart.dateTimeValue  = this->timestamp;
+	header.acquisitionEnd.dateTimeValue    = this->timestamp;
+	header.pointsSize                      = this->points.size(); 
+	header.pointFields.cartesianXField     = true;
+	header.pointFields.cartesianYField     = true;
+	header.pointFields.cartesianZField     = true;
+	header.pointFields.colorRedField       = true;
+	header.pointFields.colorGreenField     = true;
+	header.pointFields.colorBlueField      = true;
+	header.pointFields.isColorInvalidField = true;
+	header.indexBounds.rowMinimum          = 0;
+	header.indexBounds.rowMaximum          = this->num_rows - 1;
+	header.indexBounds.columnMinimum       = 0;
+	header.indexBounds.columnMaximum       = this->num_cols - 1;
+	header.indexBounds.returnMinimum       = 0;
+	header.indexBounds.returnMaximum       = 0;
+	header.colorLimits.colorRedMinimum     = 0;
+	header.colorLimits.colorRedMaximum     = 255;
+	header.colorLimits.colorGreenMinimum   = 0;
+	header.colorLimits.colorGreenMaximum   = 255;
+	header.colorLimits.colorBlueMinimum    = 0;
+	header.colorLimits.colorBlueMaximum    = 255;
+	header.pose.rotation.w                 = 1;
+	header.pose.rotation.x                 = 0;
+	header.pose.rotation.y                 = 0;
+	header.pose.rotation.z                 = 0;
+	header.pose.translation.x              = this->center(0);
+	header.pose.translation.y              = this->center(1);
+	header.pose.translation.z              = this->center(2);
+	header.pointGroupingSchemes.groupingByLine.groupsSize 
+						= this->num_cols;
+	header.pointGroupingSchemes.groupingByLine.pointCountSize
+						= this->num_rows;
+	scan_index = outfile.NewData3D(header);
+
+	/* set up scan buffers to write the points */
+	nSize        = this->num_rows;
+	xdata        = new double[nSize];
+	ydata        = new double[nSize];
+	zdata        = new double[nSize];
+	reddata      = new uint16_t[nSize];
+	greendata    = new uint16_t[nSize];
+	bluedata     = new uint16_t[nSize];
+	colorinvalid = new int8_t[nSize];
+	e57::CompressedVectorWriter datawriter
+			= outfile.SetUpData3DPointsData(
+					scan_index, /* data block index */
+					nSize, /* size of each buffer */
+					xdata, 
+					ydata,
+					zdata,
+					NULL, /* cartesian invalid buff */
+					NULL, /* intensity buffer */
+					NULL, /* intensity invalid buff */
+					reddata,
+					greendata,
+					bluedata,
+					colorinvalid
+					);
+
+	/* iterate over the points, inserting into output file 
+	 *
+	 * Remember, scanoramas are in column-major order */
+	progbar.set_name("   Exporting E57");
+	for(c = 0; c < this->num_cols; c++)
+	{
+		/* update user on progress */
+		progbar.update(c, this->num_cols);
+
+		/* populate buffer with current column */
+		for(r = 0; r < this->num_rows; r++)
+		{
+			/* get index of this point */
+			i = r + (c * this->num_rows);
+
+			/* add this point to the buffer */
+			xdata[r]        = this->points[i].x;
+			ydata[r]        = this->points[i].y;
+			zdata[r]        = this->points[i].z;
+			reddata[r]      = 
+				this->points[i].color.get_red_int();
+			greendata[r]    =
+				this->points[i].color.get_green_int();
+			bluedata[r]     = 
+				this->points[i].color.get_blue_int();
+			colorinvalid[r] = (this->points[i].quality <= 0);
+		}
+
+		/* export buffer */
+		datawriter.write(nSize);
+	}
+
+	/* success */
+	progbar.clear();
+	datawriter.close();
+	outfile.Close();
+	delete xdata;
+	delete ydata;
+	delete zdata;
+	return 0;
 }
 		
 int scanorama_t::writepng(const std::string& filename) const
