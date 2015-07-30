@@ -130,7 +130,7 @@ target_link_libraries(pointcloud_gen ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_L
 MESSAGE(STATUS "Including binary \"partition_pointcloud_levels\"")
 file(GLOB_RECURSE PARTITION_POINTCLOUD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/partition_pointcloud_levels/*.cpp)
 add_executable(partition_pointcloud_levels ${PARTITION_POINTCLOUD_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(partition_pointcloud_levesl ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(partition_pointcloud_levels ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ xyz2dq ------
 MESSAGE(STATUS "Including binary \"xyz2dq\"")
