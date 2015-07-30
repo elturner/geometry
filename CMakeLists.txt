@@ -44,7 +44,8 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
 
 # set required c++ version
-SET(CMAKE_CXX_FLAGS "-std=c++0x")
+#set(CMAKE_CXX_COMPILER "g++-5")
+set(CMAKE_CXX_FLAGS "-std=c++0x")
 
 # --------------------------------------------
 # -------- Find External Libraries -----------
@@ -83,7 +84,36 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/include/)
 
 # Grab all of the common source and complie it into a library
-file(GLOB_RECURSE COMMON_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/*.cpp)
+file(GLOB_RECURSE COMMON_SRC 
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/config/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/geometry/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/image/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/include/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/carve/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/conf/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/data/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/hia/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/images/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/latex/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/levels/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/mesh/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/octree/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/pointcloud_writer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/writer/OBJ*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/writer/XYZ*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/writer/PTS*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/writer/PCD*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/writer/PointCloudWriter.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/reader/OBJ*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/reader/XYZ*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/reader/PTS*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/pointcloud/reader/PointCloudReader.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/io/scanorama/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/mesh/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/timestamp/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/util/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/xmlreader/*.cpp
+	)
 add_library(core OBJECT ${COMMON_SRC})
 
 # ---------------------------------------------------
