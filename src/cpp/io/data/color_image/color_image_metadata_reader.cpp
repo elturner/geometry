@@ -92,7 +92,7 @@ color_image_reader_t::~color_image_reader_t()
  * Removes all occurances of carriage returns
  * from the string.
  */
-void remove_all_cr(string& m)
+void color_image_reader_remove_all_cr(string& m)
 {
 	size_t pos;
 	
@@ -133,13 +133,13 @@ int color_image_reader_t::open(const std::string& filename)
 	do
 	{
 		getline(this->infile, this->output_dir);
-		remove_all_cr(this->output_dir);
+		color_image_reader_remove_all_cr(this->output_dir);
 	}
 	while(this->output_dir.empty()); /* ignore blank lines */
 
 	/* the header should end with an extra newline */
 	getline(this->infile, m);
-	remove_all_cr(m);
+	color_image_reader_remove_all_cr(m);
 	if(m.size() > 0)
 	{
 		this->close();
