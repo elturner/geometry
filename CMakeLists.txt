@@ -124,104 +124,115 @@ add_library(core OBJECT ${COMMON_SRC})
 MESSAGE(STATUS "Including binary \"pointcloud_gen\"")
 file(GLOB_RECURSE POINTCLOUD_GEN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/pointcloud_generation/*.cpp)
 add_executable(pointcloud_gen ${POINTCLOUD_GEN_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(pointcloud_gen ${OpenCV_LIBS})
+target_link_libraries(pointcloud_gen ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ partition_pointcloud_levels ------
 MESSAGE(STATUS "Including binary \"partition_pointcloud_levels\"")
 file(GLOB_RECURSE PARTITION_POINTCLOUD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/partition_pointcloud_levels/*.cpp)
 add_executable(partition_pointcloud_levels ${PARTITION_POINTCLOUD_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(partition_pointcloud_levesl ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ xyz2dq ------
 MESSAGE(STATUS "Including binary \"xyz2dq\"")
 file(GLOB_RECURSE XYZ2DQ_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/xyz2dq/*.cpp)
 add_executable(xyz2dq ${XYZ2DQ_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(xyz2dq ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ floorplan_gen ------
 MESSAGE(STATUS "Including binary \"floorplan_gen\"")
 file(GLOB_RECURSE FLOORPLAN_GEN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/dq_floorplan/*.cpp)
 add_executable(floorplan_gen ${FLOORPLAN_GEN_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(floorplan_gen ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ fp2model ------
 MESSAGE(STATUS "Including binary \"fp2model\"")
 file(GLOB_RECURSE FP2MODEL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/fp2model/*.cpp)
 add_executable(fp2model ${FP2MODEL_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(fp2model ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ filter_urg_scans ------
 MESSAGE(STATUS "Including binary \"filter_urg_scans\"")
 file(GLOB_RECURSE FILTER_URG_SCANS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/filter_urg_scans/*.cpp)
 add_executable(filter_urg_scans ${FILTER_URG_SCANS_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(filter_urg_scans ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ filter_tango_scans ------
 MESSAGE(STATUS "Including binary \"filter_tango_scans\"")
 file(GLOB_RECURSE FILTER_TANGO_SCANS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/filter_tango_scans/*.cpp)
 add_executable(filter_tango_scans ${FILTER_TANGO_SCANS_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(filter_tango_scans ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_noisypath ------
 MESSAGE(STATUS "Including binary \"generate_noisypath\"")
 file(GLOB_RECURSE GENERATE_NOISYPATH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/generate_noisypath/*.cpp)
 add_executable(generate_noisypath ${GENERATE_NOISYPATH_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(generate_noisypath ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ wedge_gen ------
 MESSAGE(STATUS "Including binary \"wedge_gen\"")
 file(GLOB_RECURSE WEDGE_GEN_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/wedge_generator/*.cpp)
 add_executable(wedge_gen ${WEDGE_GEN_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(wedge_gen ${Boost_LIBRARIES})
+target_link_libraries(wedge_gen ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ scan_chunker ------
 MESSAGE(STATUS "Including binary \"scan_chunker\"")
 file(GLOB_RECURSE SCAN_CHUNKER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/scan_chunker/*.cpp)
 add_executable(scan_chunker ${SCAN_CHUNKER_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(scan_chunker ${Boost_LIBRARIES})
+target_link_libraries(scan_chunker ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ procarve ------
 MESSAGE(STATUS "Including binary \"procarve\"")
 file(GLOB_RECURSE PROCARVE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/procarve/*.cpp)
 add_executable(procarve ${PROCARVE_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(procarve ${Boost_LIBRARIES})
+target_link_libraries(procarve ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ oct2dq ------
 MESSAGE(STATUS "Including binary \"oct2dq\"")
 file(GLOB_RECURSE OCT2DQ_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/oct2dq/*.cpp)
 add_executable(oct2dq ${OCT2DQ_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(oct2dq ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_hia ------
 MESSAGE(STATUS "Including binary \"generate_hia\"")
 file(GLOB_RECURSE GENERATE_HIA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/generate_hia/*.cpp)
 add_executable(generate_hia ${GENERATE_HIA_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(generate_hia ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ fp_optimizer ------
 MESSAGE(STATUS "Including binary \"fp_optimizer\"")
 file(GLOB_RECURSE FP_OPTIMIZER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/fp_optimizer/*.cpp)
 add_executable(fp_optimizer ${FP_OPTIMIZER_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(fp_optimizer ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ merge_fp_oct ------
 MESSAGE(STATUS "Including binary \"merge_fp_oct\"")
 file(GLOB_RECURSE MERGE_FP_OCT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/merge_fp_oct/*.cpp)
 add_executable(merge_fp_oct ${MERGE_FP_OCT_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(merge_fp_oct ${Boost_LIBRARIES})
+target_link_libraries(merge_fp_oct ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ octsurf ------
 MESSAGE(STATUS "Including binary \"octsurf\"")
 file(GLOB_RECURSE OCTSURF_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/octsurf/*.cpp)
 add_executable(octsurf ${OCTSURF_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(octsurf ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ rectify_images ------
 MESSAGE(STATUS "Including binary \"rectify_images\"")
 file(GLOB_RECURSE RECTIFY_IMAGES_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/rectify_images/*.cpp)
 add_executable(rectify_images ${RECTIFY_IMAGES_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(rectify_images ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(rectify_images ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ mesh2image ------
 MESSAGE(STATUS "Including binary \"mesh2image\"")
 file(GLOB_RECURSE MESH2IMAGE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/mesh2image/*.cpp)
 add_executable(mesh2image ${MESH2IMAGE_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(mesh2image ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(mesh2image ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_imap ------
 MESSAGE(STATUS "Including binary \"generate_imap\"")
 file(GLOB_RECURSE GENERATE_IMAP_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/generate_imap/*.cpp)
 add_executable(generate_imap ${GENERATE_IMAP_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(generate_imap ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(generate_imap ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_scanorama ------
 MESSAGE(STATUS "Including binary \"generate_scanorama\"")
@@ -233,47 +244,53 @@ target_link_libraries(generate_scanorama ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boo
 MESSAGE(STATUS "Including binary \"generate_tex\"")
 file(GLOB_RECURSE GENERATE_TEX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/generate_tex/*.cpp)
 add_executable(generate_tex ${GENERATE_TEX_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(generate_tex ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ wedge2xyz ------
 MESSAGE(STATUS "Including binary \"wedge2xyz\"")
 file(GLOB_RECURSE WEDGE2XYZ_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/wedge2xyz/*.cpp)
 add_executable(wedge2xyz ${WEDGE2XYZ_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(wedge2xyz ${Boost_LIBRARIES})
+target_link_libraries(wedge2xyz ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_msd ------
 MESSAGE(STATUS "Including binary \"generate_msd\"")
 file(GLOB_RECURSE GENERATE_MSD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/generate_msd/*.cpp)
 add_executable(generate_msd ${GENERATE_MSD_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(generate_msd ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ transform_model ------
 MESSAGE(STATUS "Including binary \"transform_model\"")
 file(GLOB_RECURSE TRANSFORM_MODEL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/transform_model/*.cpp)
 add_executable(transform_model ${TRANSFORM_MODEL_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(transform_model ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ filter_pointcloud ------
 MESSAGE(STATUS "Including binary \"filter_pointcloud\"")
 file(GLOB_RECURSE FILTER_POINTCLOUD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/filter_pointcloud/*.cpp)
 add_executable(filter_pointcloud ${FILTER_POINTCLOUD_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(filter_pointcloud ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ find_doors ------
 MESSAGE(STATUS "Including binary \"find_doors\"")
 file(GLOB_RECURSE FIND_DOORS_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/find_doors/*.cpp)
 add_executable(find_doors ${FIND_DOORS_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(find_doors ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ screenshot_pointcloud ------
 MESSAGE(STATUS "Including binary \"screenshot_pointcloud\"")
 file(GLOB_RECURSE SCREENSHOT_POINTCLOUD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/screenshot_pointcloud/*.cpp)
 add_executable(screenshot_pointcloud ${SCREENSHOT_POINTCLOUD_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(screenshot_pointcloud ${OpenCV_LIBS})
+target_link_libraries(screenshot_pointcloud ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ split_image_by_floorplan ------
 MESSAGE(STATUS "Including binary \"split_image_by_floorplan\"")
 file(GLOB_RECURSE SPLIT_IMG_BY_FP_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/split_image_by_floorplan/*.cpp)
 add_executable(split_image_by_floorplan ${SPLIT_IMG_BY_FP_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(split_image_by_floorplan ${OpenCV_LIBS} ${Boost_LIBRARIES})
+target_link_libraries(split_image_by_floorplan ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ surface_carve ------
 MESSAGE(STATUS "Including binary \"surface_carve\"")
 file(GLOB_RECURSE SURFACE_CARVE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/surface_carve/*.cpp)
 add_executable(surface_carve ${SURFACE_CARVE_SRC} $<TARGET_OBJECTS:core>)
+target_link_libraries(surface_carve ${XercesC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
