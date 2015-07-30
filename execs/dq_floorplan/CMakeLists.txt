@@ -25,6 +25,11 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/)
 # This makes it so that our compiler can find all the header files
 # in the src/cpp directory and the z_estimation includes
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp)
+
+# add linker to eigen
+include_directories(/usr/local/include/eigen3/)
+include_directories(/usr/include/eigen3/)
 
 # Make the test sandbox executable
 MESSAGE(STATUS "Including binary \"floorplan_gen\"")
