@@ -72,4 +72,4 @@ util_progs:
 
 # todo searcher
 todo:
-	@grep -n --color=auto -R --exclude=Makefile --exclude-dir=boost --exclude-dir=pint "TODO" ../src/ .
+	@grep -n --color=auto -R --exclude=Makefile --exclude-dir=boost --exclude-dir=pint --exclude-dir=lodepng "TODO" ../src/ .
