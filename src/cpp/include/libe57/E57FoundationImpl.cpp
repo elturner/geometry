@@ -4767,7 +4767,8 @@ uint64_t CheckedFile::lseek64(int64_t offset, int whence)
 #    error "no supported compiler defined"
 #  endif
 #elif defined(LINUX)
-    int64_t result = ::lseek64(fd_, offset, whence);
+    #define _FILE_OFFSET_BITS 64
+    int64_t result = ::lseek(fd_, offset, whence);
 #else
 #  error "no supported OS platform defined"
 #endif
