@@ -48,6 +48,16 @@ class random_carver_t
 		 * cores detected. */
 		unsigned int num_threads;
 
+		/* indicates whether or not the carving process should
+		 * perform interpolation when performing intersection
+		 * tests.
+		 *
+		 * If interpolation is on, intersection tests will be
+		 * done with a wedge shape.  If interpolation is off,
+		 * intersection tests will be done with a line segment.
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 
@@ -65,8 +75,10 @@ class random_carver_t
 		 *
 		 * @param res       The carve resolution, in meters
 		 * @param nt        The number of threads to use
+		 * @param interp    Indicates whether scans should be
+		 *                  interpolated
 		 */
-		void init(double res, unsigned int nt);
+		void init(double res, unsigned int nt, bool interp);
 
 		/**
 		 * Finds and exports all chunks to disk
@@ -166,6 +178,8 @@ class random_carver_t
 		 * @param carvemaps   The referenced input carve maps
 		 * @param wedges      The referenced input carve wedges
 		 * @param maxdepth    The relative max depth to carve
+		 * @param interp      Whether to interpolate the wedge
+		 *                    geometry.
 		 * @param verbose     If true, will print a progress bar
 		 *
 		 * @return     Returns zero on success, non-zero on failure.
@@ -174,7 +188,8 @@ class random_carver_t
 			std::set<chunk::point_index_t> inds,
 			cm_io::reader_t& carvemaps,
 			wedge::reader_t& wedges,
-			unsigned int maxdepth, bool verbose);
+			unsigned int maxdepth, 
+			bool interp, bool verbose);
 };
 
 #endif

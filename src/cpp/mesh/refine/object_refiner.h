@@ -89,6 +89,13 @@ class object_refiner_t : public shape_t
 		 */
 		cm_io::reader_t carvemaps;
 
+		/**
+		 * Indicates whether the full wedge geometry should
+		 * be interpolated when performing intersection
+		 * and carving operations with the random_carver_t.
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 
@@ -107,13 +114,15 @@ class object_refiner_t : public shape_t
 		 * @param chunklistfile     The input .chunklist file
 		 * @param wedgefile         The input .wedge file
 		 * @param cmfile            The input .carvemap file
+		 * @param interp            Whether to interpolate wedges
 		 *
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int init(unsigned int inc_depth,
 		         const std::string& chunklistfile,
 		         const std::string& wedgefile,
-		         const std::string& cmfile);
+		         const std::string& cmfile,
+			 bool interp);
 
 		/**
 		 * Refines nodes of the given octree that represent objects

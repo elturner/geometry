@@ -39,6 +39,7 @@ using namespace std;
 /* xml settings flags */
 
 #define XML_OBJECT_REFINE_DEPTH "object_refine_depth"
+#define XML_INTERPOLATE_TAG     "procarve_interpolate"
 
 /* function implementations */
 		
@@ -52,6 +53,7 @@ merge_run_settings_t::merge_run_settings_t()
 	this->output_octfile      = "";
 	this->fpfiles.clear();
 	this->object_refine_depth = 0;
+	this->interpolate         = true;
 }
 
 int merge_run_settings_t::parse(int argc, char** argv)
@@ -156,6 +158,9 @@ int merge_run_settings_t::parse(int argc, char** argv)
 	}
 	this->object_refine_depth 
 		= settings.getAsUint(XML_OBJECT_REFINE_DEPTH);
+	if(settings.is_prop(XML_INTERPOLATE_TAG))
+		this->interpolate
+			= (settings.getAsUint(XML_INTERPOLATE_TAG) != 0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

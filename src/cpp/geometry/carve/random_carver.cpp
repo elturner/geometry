@@ -40,13 +40,15 @@ random_carver_t::random_carver_t()
 {
 	/* default parameter values */
 	this->num_threads = 1;
+	this->interpolate = true;
 }
 
-void random_carver_t::init(double res, unsigned int nt)
+void random_carver_t::init(double res, unsigned int nt, bool interp)
 {
 	/* initialize octree and algorithm parameters */
 	this->tree.set_resolution(res);
 	this->num_threads = nt;
+	this->interpolate = interp;
 }
 		
 int random_carver_t::export_chunks(const string& cmfile,
@@ -185,7 +187,9 @@ int random_carver_t::export_chunks(const string& cmfile,
 		}
 		
 		/* prepare wedge information */
-		w.init(&a1, &a2, &b1, &b2, wedge_infile.carving_buf()); 
+		w.init(&a1, &a2, &b1, &b2, 
+				wedge_infile.carving_buf(),
+				this->interpolate); 
 
 		/* prepare the chunker with the info for this wedge */
 		vals.resize(1);
@@ -436,7 +440,7 @@ int random_carver_t::carve_chunk(cm_io::reader_t& carvemaps,
 		tp.schedule(boost::bind(random_carver_t::carve_node,
 			chunknode, inds, boost::ref(carvemaps),
 			boost::ref(wedges),
-			chunkdepth, false));
+			chunkdepth, this->interpolate, false));
 	}
 	else
 	{
@@ -444,7 +448,8 @@ int random_carver_t::carve_chunk(cm_io::reader_t& carvemaps,
 		 * bother using the threadpool at all, and instead just
 		 * process the chunk using a direct function call */
 		ret = random_carver_t::carve_node(chunknode, inds,
-				carvemaps, wedges, chunkdepth, true);
+				carvemaps, wedges, chunkdepth, 
+				this->interpolate, true);
 		if(ret)
 		{
 			/* error occurred */
@@ -464,7 +469,8 @@ int random_carver_t::carve_node(octnode_t* chunknode,
 			set<chunk::point_index_t> inds,
 			cm_io::reader_t& carvemaps,
 			wedge::reader_t& wedges,
-			unsigned int maxdepth, bool verbose)
+			unsigned int maxdepth, 
+			bool interp, bool verbose)
 {
 	set<chunk::point_index_t>::iterator it;
 	unsigned int ia, ib; /* frame indices */
@@ -555,7 +561,9 @@ int random_carver_t::carve_node(octnode_t* chunknode,
 		}
 		
 		/* prepare wedge information */
-		w.init(&a1, &a2, &b1, &b2, wedges.carving_buf()); 
+		w.init(&a1, &a2, &b1, &b2, 
+				wedges.carving_buf(),
+				interp);
 
 		/* carve the referenced wedge only in the domain of the
 		 * given node */

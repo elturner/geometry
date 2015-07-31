@@ -40,6 +40,7 @@ using namespace std;
 #define XML_RESOLUTION_TAG            "procarve_resolution"
 #define XML_CHUNKDIR_TAG              "procarve_chunkdir"
 #define XML_NUM_THREADS_TAG           "procarve_num_threads"
+#define XML_INTERPOLATE_TAG           "procarve_interpolate"
 
 /* function implementations */
 		
@@ -55,8 +56,9 @@ procarve_run_settings_t::procarve_run_settings_t()
 	/* the following values are read from an input xml settings
 	 * file.  If that file does not have the setting listed, then
 	 * the following default settings will be used. */
-	this->resolution = 0.01; /* units: meters */
+	this->resolution  = 0.01; /* units: meters */
 	this->num_threads = 1; /* by default, don't use threading */
+	this->interpolate = true;
 }
 
 int procarve_run_settings_t::parse(int argc, char** argv)
@@ -134,6 +136,9 @@ int procarve_run_settings_t::parse(int argc, char** argv)
 		this->resolution = settings.getAsDouble(XML_RESOLUTION_TAG);
 	if(settings.is_prop(XML_NUM_THREADS_TAG))
 		this->num_threads = settings.getAsUint(XML_NUM_THREADS_TAG);
+	if(settings.is_prop(XML_INTERPOLATE_TAG))
+		this->interpolate 
+			= (settings.getAsUint(XML_INTERPOLATE_TAG) != 0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

@@ -63,6 +63,19 @@ class carve_wedge_t : public shape_t
 		 * have to recompute them every time. */
 		double d12, d45, d03, d14, d25;
 
+		/**
+		 * Indicates whether the wedge should interpolate
+		 * its shape for intersection tests.
+		 *
+		 * If true, then will perform intersection tests
+		 * with a set of triangles representing the wedge
+		 * geometry.
+		 *
+		 * If false, then will perform intersection tests
+		 * with a line segment ONLY at maps[0].
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 
@@ -94,10 +107,12 @@ class carve_wedge_t : public shape_t
 		 * @param b1   carve map indicating frame #j+1, point #i
 		 * @param b2   carve map indicating frame #j+1, point #i+1
 		 * @param nb   number of standard deviations of buffer
+		 * @param interp   Whether to interpolate in intersection
+		 *                 tests.
 		 */
 		void init(carve_map_t* a1, carve_map_t* a2,
 		          carve_map_t* b1, carve_map_t* b2,
-			  double nb);
+			  double nb, bool interp);
 
 		/*-----------*/
 		/* accessors */
@@ -147,7 +162,7 @@ class carve_wedge_t : public shape_t
 		 * wedge volume), and performs a series of line/cube
 		 * intersection tests.
 		 */
-		bool intersects_rays(const Eigen::Vector3d& c,
+		inline bool intersects_rays(const Eigen::Vector3d& c,
 				double hw) const;
 		
 		/**
@@ -157,7 +172,20 @@ class carve_wedge_t : public shape_t
 		 * wedge as a set of triangles and performing
 		 * triangle/cube intersections.
 		 */
-		bool intersects_tris(const Eigen::Vector3d& c, 
+		inline bool intersects_tris(const Eigen::Vector3d& c, 
+				double hw) const;
+
+		/**
+		 * Helper function for intersection()
+		 *
+		 * Performs intersection with only a line segment
+		 * positioned at the carvemap located at index #0.
+		 *
+		 * This test effectively reduces the geometry of
+		 * the wedge to the the line segment of its first
+		 * carve map.
+		 */
+		inline bool intersects_nointerp(const Eigen::Vector3d& c,
 				double hw) const;
 
 		/**

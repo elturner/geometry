@@ -113,11 +113,14 @@ carve_wedge_t::carve_wedge_t()
 	/* initialize empty maps */
 	for(i = 0; i < NUM_MAPS_PER_WEDGE; i++)
 		this->maps[i] = NULL;
+
+	/* initialize parameters */
+	this->interpolate = true;
 }
 
 void carve_wedge_t::init(carve_map_t* a1, carve_map_t* a2,
                          carve_map_t* b1, carve_map_t* b2,
-                         double nb)
+                         double nb, bool interp)
 {
 	Vector3d u, as, bs, a1p, a2p, b1p, b2p;
 	double s;
@@ -179,6 +182,9 @@ void carve_wedge_t::init(carve_map_t* a1, carve_map_t* a2,
 	d03 = (this->verts[0] - this->verts[3]).norm(); /* between poses */
 	d14 = (this->verts[1] - this->verts[4]).norm(); /* scanpoint i */
 	d25 = (this->verts[2] - this->verts[5]).norm(); /* scanpoint i+1 */
+
+	/* save interpolation value */
+	this->interpolate = interp;
 }
 		
 /*----------*/
@@ -187,12 +193,21 @@ void carve_wedge_t::init(carve_map_t* a1, carve_map_t* a2,
 
 bool carve_wedge_t::intersects(const Eigen::Vector3d& c, double hw) const
 {
-	/* perform the intersection test by fitting triangles to
-	 * the wedge geometry */
-	return this->intersects_tris(c, hw);
+	/* check whether we want to perform interpolation */
+	if(this->interpolate)
+	{
+		/* perform the intersection test by fitting triangles to
+		 * the wedge geometry */
+		return this->intersects_tris(c, hw);
+	}
+	
+	/* if got here, then we are NOT interpolating scans, so only
+	 * perform a single line-segment intersection test with the
+	 * first carve map. */
+	return this->intersects_nointerp(c, hw);
 }
 
-bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c, 
+inline bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c, 
 						double hw) const
 {
 	linesegment_t lineseg;
@@ -256,7 +271,7 @@ bool carve_wedge_t::intersects_rays(const Eigen::Vector3d& c,
 	return false;
 }
 
-bool carve_wedge_t::intersects_tris(const Eigen::Vector3d& c, 
+inline bool carve_wedge_t::intersects_tris(const Eigen::Vector3d& c, 
 						double hw) const
 {
 	double vs[NUM_VERTICES_PER_WEDGE][3];
@@ -324,6 +339,30 @@ bool carve_wedge_t::intersects_tris(const Eigen::Vector3d& c,
 
 	/* no intersections were found */
 	return false;
+}
+		
+inline bool carve_wedge_t::intersects_nointerp(const Eigen::Vector3d& c,
+				double hw) const
+{
+	double vs[2][3]; /* we only need to represent the first two verts */
+	double s;
+	unsigned int i, j;
+	
+	/* prepare array of transformed vertices, which are the
+	 * vertices of this wedge in the transform where this box
+	 * is the unit box centered at the origin. 
+	 *
+	 * Since we are not interpolating at all, we only need to
+	 * represent the first edge, which is just the first two
+	 * vertices. */
+	s = 0.5/hw; /* scale factor */
+	for(i = 0; i < 2; i++)
+		for(j = 0; j < 3; j++) /* iterate over dimensions */
+			vs[i][j] = (this->verts[i](j) - c(j)) * s;
+	
+	/* perform the intersection test on the line segment of
+	 * the first carve map */
+	return segment_intersects_cube(vs[0], vs[1]);
 }
 		
 octdata_t* carve_wedge_t::apply_to_leaf(const Eigen::Vector3d& c,

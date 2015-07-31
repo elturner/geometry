@@ -74,6 +74,15 @@ class procarve_run_settings_t
 		 */
 		double resolution;
 
+		/**
+		 * This flag indicates whether the imported wedges
+		 * should be fully interpolated as wedges when testing
+		 * geometry intersection, or if they should just be
+		 * represented by the line segment of their first
+		 * carvemap and not interpolated.
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 

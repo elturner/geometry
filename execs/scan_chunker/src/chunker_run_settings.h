@@ -63,6 +63,12 @@ class chunker_run_settings_t
 		 */
 		std::string chunkdir;
 
+		/**
+		 * Flag determines whether scans should be interpolated
+		 * into full wedges during geometric intersection tests.
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 

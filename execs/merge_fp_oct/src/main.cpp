@@ -88,7 +88,8 @@ int main(int argc, char** argv)
 		ret = refiner.init(args.object_refine_depth,
 				args.input_chunklistfile,
 				args.input_wedgefile,
-				args.input_carvemapfile);
+				args.input_carvemapfile,
+				args.interpolate);
 		if(ret)
 		{
 			/* inform user of initialization error */

@@ -171,7 +171,8 @@ int frame_model_t::export_chunks(octree_t& tree, const frame_model_t& next,
 		/* generate a wedge from two points in the current
 		 * scan and two points in the next scan */
 		wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
-		           &(next.map_list[na]), &(next.map_list[nb]), buf);
+		           &(next.map_list[na]), &(next.map_list[nb]), 
+			   buf, true);
 
 		/* set the chunker to this shape */
 		chunker.set(&wedge, vals);
@@ -240,7 +241,8 @@ int frame_model_t::carve_single(octree_t& tree, const frame_model_t& next,
 	/* generate a wedge from two points in the current
 	 * scan and two points in the next scan */
 	wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
-	           &(next.map_list[na]), &(next.map_list[nb]), buf);
+	           &(next.map_list[na]), &(next.map_list[nb]), 
+		   buf, true);
 
 	/* carve this wedge in the tree */
 	ret = tree.insert(wedge);
@@ -268,7 +270,8 @@ int frame_model_t::carve_single(octnode_t* node, unsigned int depth,
 	/* generate a wedge from two points in the current
 	 * scan and two points in the next scan */
 	wedge.init(&(this->map_list[ta]), &(this->map_list[tb]),
-	           &(next.map_list[na]), &(next.map_list[nb]), buf);
+	           &(next.map_list[na]), &(next.map_list[nb]), 
+		   buf, true);
 
 	/* carve this wedge in the tree */
 	node->insert(wedge, depth);

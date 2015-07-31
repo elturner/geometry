@@ -70,6 +70,17 @@ class merge_run_settings_t
 		 */
 		unsigned int object_refine_depth;
 
+		/**
+		 * Whether to interpolate wedges when recarving an
+		 * area.
+		 *
+		 * Interpolating wedges will provide more accurate geometry,
+		 * but will take longer.  It is highly recommended to
+		 * interpolate if the original procarving used interpolated
+		 * wedges.
+		 */
+		bool interpolate;
+
 	/* functions */
 	public:
 

@@ -88,4 +88,15 @@
 	     units:  number of octree levels -->
 	<object_refine_depth>2</object_refine_depth>
 
+	<!-- This value indicates whether to use interpolated wedges
+	     when recarving chunks marked for refinement.  Using
+	     interpolated wedges will take longer, but result
+	     in more accurate geometry.
+
+	     It is highly recommended to use interpolated wedges
+	     here if the original procarve used interpolated wedges.
+
+	     value:  boolean (either '0' or '1') -->
+	<procarve_interpolate>1</procarve_interpolate>
+
 </settings>

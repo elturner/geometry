@@ -37,7 +37,8 @@ int main(int argc, char** argv)
 	}
 
 	/* initialize */
-	carver.init(settings.resolution, settings.num_threads);
+	carver.init(settings.resolution, settings.num_threads, 
+				settings.interpolate);
 
 	/* process */
 	ret = carver.carve_all_chunks(settings.carvemapfile,

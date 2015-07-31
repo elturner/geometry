@@ -88,4 +88,19 @@
 	     Units: meters -->
 	<procarve_linefit_dist>0.2</procarve_linefit_dist>
 
+	<!-- Determines whether the carving program should interpolate
+	     between scans.
+
+	     For 2D scanners, it is highly recommended to turn interpolation
+	     on.  For 3D depth cameras, it is recommended to turn this
+	     feature off.
+
+	     Turning interpolation off will improve speed, but if the
+	     scans are too sparse, may result in reduced quality in the
+	     geometry.
+
+	     A value of '1' indicates that interpolation is active.
+	     A value of '0' indicates that interpolation is disabled. -->
+	<procarve_interpolate>1</procarve_interpolate>
+
 </settings>

@@ -43,12 +43,14 @@ using namespace Eigen;
 int object_refiner_t::init(unsigned int inc_depth,
                            const string& chunklistfile,
                            const string& wedgefile,
-                           const string& cmfile)
+                           const string& cmfile,
+			   bool interp)
 {
 	int ret;
 
 	/* store parameters */
 	this->object_depth_increase = inc_depth;
+	this->interpolate = interp;
 
 	/* open input files */
 	ret = this->chunk_map.init(chunklistfile);
@@ -141,7 +143,7 @@ int object_refiner_t::refine(octree_t& tree)
 		/* replace this chunk in the tree */
 		ret = random_carver_t::carve_node(chunknode, inds,
 				this->carvemaps, this->wedges, 
-				chunkdepth, true);
+				chunkdepth, this->interpolate, true);
 		if(ret)
 		{
 			/* error occurred */

@@ -37,8 +37,9 @@ using namespace std;
 
 /* xml tags to check for in settings file */
 
-#define XML_CHUNKSIZE_TAG "procarve_chunksize"
-#define XML_CHUNKDIR_TAG  "procarve_chunkdir"
+#define XML_CHUNKSIZE_TAG    "procarve_chunksize"
+#define XML_CHUNKDIR_TAG     "procarve_chunkdir"
+#define XML_INTERPOLATE_TAG  "procarve_interpolate"
 
 /* function implementations */
 		
@@ -54,6 +55,7 @@ chunker_run_settings_t::chunker_run_settings_t()
 	 * the following default settings will be used. */
 	this->chunk_size = 2.0; /* default chunks: cube edge two meters */
 	this->chunkdir  = "chunks"; /* by default, put chunks in a subdir */
+	this->interpolate = true; /* by default, treat wedges like wedges */
 }
 
 int chunker_run_settings_t::parse(int argc, char** argv)
@@ -126,6 +128,9 @@ int chunker_run_settings_t::parse(int argc, char** argv)
 		this->chunk_size = settings.getAsDouble(XML_CHUNKSIZE_TAG);
 	if(settings.is_prop(XML_CHUNKDIR_TAG))
 		this->chunkdir = settings.get(XML_CHUNKDIR_TAG);
+	if(settings.is_prop(XML_INTERPOLATE_TAG))
+		this->interpolate 
+			= (settings.getAsUint(XML_INTERPOLATE_TAG) != 0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
