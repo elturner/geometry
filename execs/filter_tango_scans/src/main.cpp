@@ -57,7 +57,7 @@ using namespace tango_io;
  * standard deviation receives based on how it deviates from the
  * tango's optimum operating distance */
 #define TANGO_STD_SLOPE_GOOD      0.01  /* units: meters */
-#define TNAGO_STD_SLOPE_BAD       0.02  /* units: meters */
+#define TANGO_STD_SLOPE_BAD       0.02  /* units: meters */
 
 /* the std. dev. to use when a point is in the "good distance" range */
 #define TANGO_STD_FOR_GOOD_DIST(d) ( TANGO_MIN_STD_GOOD + \
