@@ -191,6 +191,11 @@ class generate_scanorama_run_settings_t
 		 */
 		bool export_ptx;
 
+		/* If true, will export .ptg files for each
+		 * scanorama position.
+		 */
+		bool export_ptg;
+
 		/**
 		 * If true, will export .e57 files for each
 		 * scanorama position.

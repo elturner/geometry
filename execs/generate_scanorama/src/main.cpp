@@ -95,6 +95,8 @@ int main(int argc, char** argv)
 	out_format = 0;
 	if(args.export_ptx)
 		out_format |= scanorama_maker_t::PTX_FORMAT;
+	if(args.export_ptg)
+		out_format |= scanorama_maker_t::PTG_FORMAT;
 	if(args.export_e57)
 		out_format |= scanorama_maker_t::E57_FORMAT;
 	if(args.export_png)

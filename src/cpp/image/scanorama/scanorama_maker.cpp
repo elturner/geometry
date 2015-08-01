@@ -294,6 +294,31 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 			outfile.close();
 		}
 
+		/* check if we want to export .ptg */
+		if((out_format & PTG_FORMAT) != 0)
+		{
+			/* make output file name */
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << ".ptg";
+
+			/* write it to disk */
+			ret = scan.writeptg(ss_full.str());
+			if(ret)
+			{
+				/* error occurred */
+				progbar.clear();
+				ret = PROPEGATE_ERROR(-3, ret);
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "ERROR " << ret 
+				     << ": Unable to open "
+				     << "scanorama file: " 
+				     << ss_full.str() << endl;
+				return ret;
+			}
+		}
+
 		/* check if we want to export .e57 */
 		if((out_format & E57_FORMAT) != 0)
 		{
@@ -308,7 +333,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 			{
 				/* error occurred */
 				progbar.clear();
-				ret = PROPEGATE_ERROR(-3, ret);
+				ret = PROPEGATE_ERROR(-4, ret);
 				cerr << "[scanorama_maker_t::"
 				     << "generate_all]\t"
 				     << "ERROR " << ret 
@@ -337,7 +362,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 				     << "scanorama #" << i 
 				     << " as a PNG image"
 				     << endl;
-				return PROPEGATE_ERROR(-4, ret);
+				return PROPEGATE_ERROR(-5, ret);
 			}
 		}
 		
@@ -354,6 +379,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		if(ret)
 		{
 			progbar.clear();
+			ret = PROPEGATE_ERROR(-6, ret);
 			cerr << "[scanorama_maker_t::generate_all]\t"
 			     << "Unable to write output metadata file: \""
 			     << meta_out << "\"" << endl;

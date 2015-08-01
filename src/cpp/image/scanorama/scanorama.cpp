@@ -9,6 +9,7 @@
 #include <lodepng/lodepng.h>
 #include <Eigen/Dense>
 #include <iostream>
+#include <cstring>
 #include <vector>
 #include <cmath>
 
@@ -333,7 +334,187 @@ void scanorama_t::writeptx(std::ostream& os) const
 	}
 	progbar.clear();
 }
-		
+
+int scanorama_t::writeptg(const std::string& filename) const
+{
+	const char*   ptg_filestart   = "PTG";
+	const int32_t ptg_magic       = 2458887111;
+	const char*   ptg_headerstart = "%%header_begin";
+	const char*   ptg_versionkey  = "%%version";
+	const int32_t ptg_versionnum  = 1;
+	const char*   ptg_colskey     = "%%cols";
+	const char*   ptg_rowskey     = "%%rows";
+	const char*   ptg_transkey    = "%%transform";
+	const char*   ptg_propskey    = "%%properties";
+	const int32_t ptg_propsval    = (0x1 | 0x8);
+	const char*   ptg_headerend   = "%%header_end";
+	progress_bar_t progbar;
+	double d0, d1;
+	float x,y,z;
+	unsigned char r,g,b;
+	int32_t v;
+	ofstream outfile;
+	streampos bodystart, colstart;
+	int64_t colstart_int;
+	size_t ci, ri, i;
+
+	/* start progress bar */
+	progbar.set_name("   Exporting PTG");
+
+	/* attempt to open the file */
+	outfile.open(filename.c_str(), ios::out | ios::binary);
+	if(!(outfile.is_open()))
+	{
+		progbar.clear();
+		cerr << "[scanorama_t::writeptg]\tUnable to export "
+		     << "to file: \"" << filename << "\"" << endl;
+		return -1;
+	}
+
+	/* write the header information 
+	 *
+	 * Note:  PTG is in little-endian format, so we don't
+	 * need to do any bit-flipping */
+	outfile.write(ptg_filestart, 1+strlen(ptg_filestart));
+	outfile.write((char*) &ptg_magic, sizeof(ptg_magic));
+	
+	v = 1+strlen(ptg_headerstart);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_headerstart, v);
+
+	v = 1+strlen(ptg_versionkey);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_versionkey, v);
+	outfile.write((char*) &ptg_versionnum, sizeof(ptg_versionnum));
+	
+	/* write # of cols and rows to header */
+	v = 1+strlen(ptg_colskey);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_colskey, v);
+	v = (int32_t) (this->num_cols);
+	outfile.write((char*) &v, sizeof(v));
+	
+	v = 1+strlen(ptg_rowskey);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_rowskey, v);
+	v = (int32_t) (this->num_rows);
+	outfile.write((char*) &v, sizeof(v));
+
+	/* write scanner transform to header
+	 *
+	 * We are writing the following 4x4 matrix in row-major order:
+	 *
+	 * 	1	0	0	0
+	 * 	0	1	0	0
+	 * 	0	0	1	0
+	 * 	cx	cy	cz	1
+	 *
+	 */
+	v = 1+strlen(ptg_transkey);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_transkey, v);
+	d0 = 0.0; d1 = 1.0;
+	
+	outfile.write((char*) &d1, sizeof(d1));
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d0, sizeof(d0));
+	
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d1, sizeof(d1));
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d0, sizeof(d0));
+
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d0, sizeof(d0));
+	outfile.write((char*) &d1, sizeof(d1));
+	outfile.write((char*) &d0, sizeof(d0));
+
+	outfile.write((char*) &(this->center(0)), sizeof(this->center(0)));
+	outfile.write((char*) &(this->center(1)), sizeof(this->center(1)));
+	outfile.write((char*) &(this->center(2)), sizeof(this->center(2)));
+	outfile.write((char*) &d1, sizeof(d1));
+
+	/* write properties to header.  this states that we will
+	 * export (x,y,z) as floats, then (r,g,b) each as unsigned chars */
+	v = 1+strlen(ptg_propskey);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_propskey, v);
+	outfile.write((char*) &ptg_propsval, sizeof(ptg_propsval));
+	
+	/* end the header */
+	v = 1+strlen(ptg_headerend);
+	outfile.write((char*) &v, sizeof(v));
+	outfile.write(ptg_headerend, v);
+
+	/* write the body of the file:
+	 *
+	 * The start of the body is a list of num_col int64_t's that
+	 * denote the file position of each column.
+	 *
+	 * This values are populated as we write out each column,
+	 * so for now export junk bytes */
+	bodystart = outfile.tellp();
+	colstart_int = 0;
+	for(ci = 0; ci < this->num_cols; ci++)
+		outfile.write((char*) &colstart_int, sizeof(colstart_int));
+
+	/* now write the actual point data, in column-major order */
+	for(ci = 0; ci < this->num_cols; ci++)
+	{
+		/* update progress bar */
+		progbar.update(ci, this->num_cols);
+
+		/* record the start of this column */
+		colstart = outfile.tellp();
+		outfile.seekp(bodystart);
+		outfile.seekp(ci*sizeof(colstart_int), ios_base::cur);
+		colstart_int = (int64_t) colstart;
+		outfile.write((char*) &colstart_int, sizeof(colstart_int));
+		outfile.seekp(colstart);
+
+		/* write out the bitmask indicating that all points
+		 * are valid */
+		for(ri = 0; ri < ceil(this->num_rows/8); ri++)
+			outfile.put(0xFF);
+
+		/* iterate over the points in this column */
+		for(ri = 0; ri < this->num_rows; ri++)
+		{
+			/* get index of this point */
+			i = ri + (ci * this->num_rows);
+
+			/* each point is: x y z r g b */
+
+			/* geometry in scanner local coords */
+			x = (float)  (this->points[i].x - this->center(0));
+			y = (float)  (this->points[i].y - this->center(1));
+			z = (float)  (this->points[i].z - this->center(2));
+
+			/* color is in range [0-255] */
+			r = (unsigned char) 
+				this->points[i].color.get_red_int();
+			g = (unsigned char) 
+				this->points[i].color.get_green_int();
+			b = (unsigned char) 
+				this->points[i].color.get_blue_int();
+
+			/* export to file */
+			outfile.write((char*) &x, sizeof(x));
+			outfile.write((char*) &y, sizeof(y));
+			outfile.write((char*) &z, sizeof(z));
+			outfile.write((char*) &r, sizeof(r));
+			outfile.write((char*) &g, sizeof(g));
+			outfile.write((char*) &b, sizeof(b));
+		}
+	}
+
+	/* clean up */
+	progbar.clear();
+	outfile.close();
+	return 0;
+}
+
 int scanorama_t::writee57(const std::string& filename) const
 {
 	progress_bar_t progbar;

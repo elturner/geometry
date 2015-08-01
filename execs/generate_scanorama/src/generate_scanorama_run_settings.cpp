@@ -44,6 +44,7 @@ using namespace std;
 #define XML_MIN_SPACING_DIST   "scanorama_min_spacing_dist"
 #define XML_MAX_SPACING_DIST   "scanorama_max_spacing_dist"
 #define XML_EXPORT_PTX         "scanorama_export_ptx"
+#define XML_EXPORT_PTG         "scanorama_export_ptg"
 #define XML_EXPORT_E57         "scanorama_export_e57"
 #define XML_EXPORT_PNG         "scanorama_export_png"
 
@@ -72,6 +73,7 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->begin_idx        = 0;
 	this->end_idx          = -1;
 	this->export_ptx       = true;
+	this->export_ptg       = false;
 	this->export_e57       = false;
 	this->export_png       = false;
 }
@@ -234,6 +236,8 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 			= settings.getAsDouble(XML_MAX_SPACING_DIST);
 	if(settings.is_prop(XML_EXPORT_PTX))
 		this->export_ptx = (settings.getAsUint(XML_EXPORT_PTX)!=0);
+	if(settings.is_prop(XML_EXPORT_PTG))
+		this->export_ptg = (settings.getAsUint(XML_EXPORT_PTG)!=0);
 	if(settings.is_prop(XML_EXPORT_E57))
 		this->export_e57 = (settings.getAsUint(XML_EXPORT_E57)!=0);
 	if(settings.is_prop(XML_EXPORT_PNG))

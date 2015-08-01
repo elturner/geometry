@@ -223,6 +223,26 @@ class scanorama_t
 		void writeptx(std::ostream& os) const;
 
 		/**
+		 * Export to PTG file
+		 *
+		 * Exports the contents of this scanorama to the
+		 * specified .ptg file.  The Cyclone PTG File
+		 * Format was developed by Leica and its 
+		 * specification can be found here:
+		 *
+		 * www.xdesy.de/freeware/PTG-DLL/PTG-1.0.pdf
+		 *
+		 * This function will export one binary file based
+		 * on this specification.
+		 *
+		 * @param filename   The path to output file to write
+		 *
+		 * @return     Returns zero on success, non-zero on
+		 *             failure.
+		 */
+		int writeptg(const std::string& filename) const;
+
+		/**
 		 * Export to E57 output file
 		 *
 		 * Will export this scanorama to a E57 file, as specified
