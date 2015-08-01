@@ -97,6 +97,6 @@
 	     here if the original procarve used interpolated wedges.
 
 	     value:  boolean (either '0' or '1') -->
-	<procarve_interpolate>1</procarve_interpolate>
+	<procarve_interpolate>0</procarve_interpolate>
 
 </settings>
