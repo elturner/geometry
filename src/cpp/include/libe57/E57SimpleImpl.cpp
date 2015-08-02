@@ -143,6 +143,7 @@ double             gps_tow;	  //!< GPS time of week (0-604800.0) [s]
 
 BOOL ret = TIMECONV_GetSystemTime(&utc_year, &utc_month, &utc_day, &utc_hour, &utc_minute, &utc_seconds,
 	&utc_offset, &julian_date, &gps_week, &gps_tow);
+ret = ret; // added 8/2/2015, by elturner, to prevent compiler warnings
 
 double gpsTime = (gps_week * 604800.) + gps_tow;
 
@@ -293,6 +294,8 @@ double	e57::GetGPSDateTimeFromUTC(
 		&gps_week,
 		&gps_tow );
 
+	((void) &result); // added 8/2/2015, by elturner
+
 	double gpsTime = (gps_week * 604800.) + gps_tow;
 
 #elif defined(WIN32)
@@ -345,6 +348,7 @@ void	e57::GetUTCFromGPSDateTime(
 		&utc_hour,
 		&utc_minute,
 		&utc_seconds);
+	result = result; // added 8/2/2015, by elturner
 
 	utc_Year = utc_year;
 	utc_Month = utc_month;
@@ -662,6 +666,7 @@ int64_t ReaderImpl :: ReadImage2DNode(
 	int64_t transferred = 0;
 	switch(imageType)
 	{
+	default: // added 8/2/2015, by elturner, to prevent compiler warn
 	case	E57_JPEG_IMAGE:
 		{
 			if(image.isDefined("jpegImage"))
@@ -811,6 +816,7 @@ int64_t	ReaderImpl :: ReadImage2DData(
 
 	switch(imageProjection)
 	{
+	default:  // added 8/2/2015, by elturner, prevents compiler warn
 	case	E57_VISUAL:
 		if(image.isDefined("visualReferenceRepresentation"))
 		{
@@ -1552,6 +1558,7 @@ CompressedVectorReader	ReaderImpl :: SetUpData3DPointsData(
 	)
 {
 	int64_t		readCount = 0;
+	readCount = readCount; // added 8/2/2015, by elturner
 
 	StructureNode scan(data3D_.get(dataIndex));
 	CompressedVectorNode points(scan.get("points"));
@@ -1936,6 +1943,7 @@ int64_t WriterImpl :: WriteImage2DNode(
 	int64_t transferred = 0;
 	switch(imageType)
 	{
+	default:  // added 8/2/2015, by elturner, prevents compiler warn
 	case	E57_JPEG_IMAGE:
 		{
 			if(image.isDefined("jpegImage"))
@@ -1987,6 +1995,7 @@ int64_t	WriterImpl :: WriteImage2DData(
 
 	switch(imageProjection)
 	{
+	default:  // added 8/2/2015, by elturner
 	case	E57_VISUAL:
 		if(image.isDefined("visualReferenceRepresentation"))
 		{
@@ -2032,6 +2041,8 @@ int32_t	WriterImpl :: NewData3D(
 		(int32_t) data3DHeader.indexBounds.rowMinimum + 1;
 	int32_t col = (int32_t) data3DHeader.indexBounds.columnMaximum -
 		(int32_t) data3DHeader.indexBounds.columnMinimum + 1;
+	row = row; // added 8/2/2015, by elturner
+	col = col; // added 8/2/2015, by elturner
 
 	if(data3DHeader.guid.empty())
 		return -1;

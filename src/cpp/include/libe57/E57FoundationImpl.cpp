@@ -34,7 +34,6 @@
 
 /* added by elturner on 7/28/2015 */
 #define LINUX 1
-#include <memory>
 /* end of elturner additions */
 
 #if defined(WIN32)
@@ -54,7 +53,9 @@
 #    error "no supported compiler defined"
 #  endif
 #elif defined(LINUX)
-#  define _LARGEFILE64_SOURCE
+#  ifndef _LARGEFILE64_SOURCE
+#     define _LARGEFILE64_SOURCE
+#  endif
 #  define __LARGE64_FILES
 #  include <sys/types.h>
 #  include <sys/stat.h>
@@ -67,7 +68,7 @@
 #endif
 
 #include <sstream>
-//#include <memory> //??? needed?
+#include <memory> //??? needed?
 #include <fstream> //??? needed?
 #include <iomanip> //??? needed?
 #include <cmath> //??? needed?
@@ -3658,6 +3659,7 @@ void E57XmlParser::processingInstruction(const XMLCh* const /*target*/,
 void E57XmlParser::characters(const   XMLCh* const chars,
                               const   XMLSize_t    length)
 {
+	((void) &length); // added by elturner 8/1/2015, prevent g++ warn
 //??? use length to make ustring
 #ifdef E57_MAX_VERBOSE
     cout << "characters, chars=\"" << toUString(chars) << "\" length=" << length << endl;
@@ -4937,6 +4939,7 @@ void CheckedFile::unlink()
     if (result < 0)
         cout << "::unlink() failed, result=" << result << endl;
 #endif
+    result = result; // added by elturner 8/1/2015, to prevent g++ warn
 }
 
 size_t CheckedFile::efficientBufferSize(size_t logicalBytes)
@@ -5643,9 +5646,10 @@ struct SortByBytestreamNumber {
 };
 
 CompressedVectorWriterImpl::CompressedVectorWriterImpl(shared_ptr<CompressedVectorNodeImpl> ni, vector<SourceDestBuffer>& sbufs)
-: isOpen_(false),  // set to true when succeed below
-  cVector_(ni),
-  seekIndex_()      /// Init seek index for random access to beginning of chunks
+: 
+  cVector_(ni),    // args reordered by elturner on 8/2/2015
+  seekIndex_(),      /// Init seek index for random access to beginning of chunks
+  isOpen_(false)  // set to true when succeed below
 {
     //???  check if cvector already been written (can't write twice)
 
@@ -5905,13 +5909,15 @@ void CompressedVectorWriterImpl::write(const size_t requestedRecordCount)
         ///??? useful?
         /// Get approximation of number of bytes per record of CompressedVector and total of bytes used
         float totalBitsPerRecord = 0;  // an estimate of future performance
-        for (unsigned i=0; i < bytestreams_.size(); i++)
+	for (unsigned i=0; i < bytestreams_.size(); i++)
             totalBitsPerRecord += bytestreams_.at(i)->bitsPerRecord();
         float totalBytesPerRecord = max(totalBitsPerRecord/8, 0.1F); //??? trust
+	totalBytesPerRecord = totalBytesPerRecord; // added 8/2/2015,elturner
 
 #ifdef E57_MAX_VERBOSE
         cout << "  totalBytesPerRecord=" << totalBytesPerRecord << endl; //???
 #endif
+        totalBitsPerRecord = totalBitsPerRecord; //added 8/2/2015,elturner
 
 //!!!        unsigned spaceRemaining = E57_DATA_PACKET_MAX - currentPacketSize();
 //!!!        unsigned appoxRecordsNeeded = static_cast<unsigned>(floor(spaceRemaining / totalBytesPerRecord)); //??? divide by zero if all constants
@@ -6131,6 +6137,11 @@ void CompressedVectorWriterImpl::flush()
 
 void CompressedVectorWriterImpl::checkImageFileOpen(const char* srcFileName, int srcLineNumber, const char* srcFunctionName)
 {
+	// added 8/2/2015, by elturner to prevent compiler warnings
+	srcFileName = srcFileName;
+	srcLineNumber = srcLineNumber;
+	srcFunctionName = srcFunctionName;
+
 #if 0
 !!! how get destImageFile?
     /// Throw an exception if destImageFile (destImageFile_) isn't open
@@ -6416,6 +6427,7 @@ uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
 {
     uint64_t earliestPacketLogicalOffset = E57_UINT64_MAX;
     unsigned earliestChannel = 0;
+    ((void) &earliestChannel); // added 8/2/2015, by elturner
     for (unsigned i = 0; i < channels_.size(); i++) {
         DecodeChannel* chan = &channels_[i];
 
@@ -6623,6 +6635,9 @@ void CompressedVectorReaderImpl::close()
 
 void CompressedVectorReaderImpl::checkImageFileOpen(const char* srcFileName, int srcLineNumber, const char* srcFunctionName)
 {
+	((void) &srcFileName); // added 8/2/2015, elturner
+	((void) &srcLineNumber); // added 8/2/2015, elturner
+	((void) &srcFunctionName); // added 8/2/2015, elturner
 #if 0
 !!! how get destImageFile?
     /// Throw an exception if destImageFile (destImageFile_) isn't open
@@ -7723,6 +7738,8 @@ size_t ConstantIntegerDecoder::inputProcess(const char* source, const size_t ava
 #ifdef E57_MAX_VERBOSE
     cout << "ConstantIntegerDecoder::inputprocess() called, source=" << (unsigned)source << " availableByteCount=" << availableByteCount << endl;
 #endif
+	((void) &source); // added 8/2/2015, by elturner
+    	((void) &availableByteCount); //added 8/2/2015,elturner
 
     /// We don't need any input bytes to produce output, so ignore source and availableByteCount.
 
@@ -7894,6 +7911,7 @@ void PacketReadCache::unlock(unsigned lockedEntry)
 #ifdef E57_MAX_VERBOSE
     cout << "PacketReadCache::unlock() called, lockedEntry=" << lockedEntry << endl;
 #endif
+    lockedEntry = lockedEntry; //added 8/2/2015, elturner
 
     if (lockCount_ != 1)
         throw E57_EXCEPTION2(E57_ERROR_INTERNAL, "lockCount=" + toString(lockCount_));
