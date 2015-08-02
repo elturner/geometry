@@ -155,7 +155,7 @@ void rotLib::rot2rpy(const Eigen::Matrix3d &rotationMatrix, Eigen::Vector3d &ret
 	Eigen::Matrix3d Q = Rroll*tempR;
 	for(int i = 0; i<3; i++) {
 		for(int j = 0; j < 3; j++) {
-			tempR(i,j) = abs(Q(i,j));
+			tempR(i,j) = std::abs(Q(i,j));
 		}
 	}
 	for(int i = 0; i < 3; i++) {

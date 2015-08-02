@@ -55,6 +55,7 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/d_imager/d_imager_data_reader.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/fss/fss_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/color_image/color_image_metadata_reader.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/data/mcd/McdFile.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/pointcloud_writer.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/OBJ*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/XYZ*.cpp
@@ -63,7 +64,11 @@ file(GLOB_RECURSE SANDBOX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../execs/pointcloud
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/pointcloud/writer/PointCloudWriter.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/io/carve/noisypath_io.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/timestamp/*.cpp
-							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/camera.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/colormap.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/image_cache.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/fisheye/*.cpp
+							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/image/rectilinear/*.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/system_path.cpp
 							  ${CMAKE_CURRENT_SOURCE_DIR}/../../src/cpp/geometry/transform.cpp)
 
