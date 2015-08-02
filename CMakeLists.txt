@@ -44,12 +44,18 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
 
 # set required c++ version
-#set(CMAKE_CXX_COMPILER "g++-5")
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_COMPILER "g++-4.8")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # --------------------------------------------
 # -------- Find External Libraries -----------
 # --------------------------------------------
+
+#
+# Required libraries:
+#
+#	boost opencv opencv3 xerces-c-dev eigen
+#
 
 # Find Boost
 #
@@ -61,6 +67,7 @@ include_directories(${Boost_INCLUDE_DIR})
 #
 # Used for image reading and feature tracking
 find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 # Find xerces
 #
