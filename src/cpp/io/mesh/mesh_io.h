@@ -27,9 +27,9 @@
 namespace mesh_io
 {
 	/* the following classes are defined in this namespace */
-	class mesh_t;
 	class vertex_t;
 	class polygon_t;
+	class mesh_t;
 	
 	/**
 	 * This enumeration describes the supported file formats
@@ -46,6 +46,246 @@ namespace mesh_io
 		FORMAT_PLY_ASCII_COLOR, /* with color */
 		FORMAT_PLY_BE_COLOR, /* big-endian, color */
 		FORMAT_PLY_LE_COLOR  /* little-endian, color */
+	};
+	
+	/**
+	 * The vertex_t class represents a single vertex in the mesh
+	 *
+	 * A vertex is represented by a point in 3D.  It may optionally
+	 * have color information.
+	 */
+	class vertex_t
+	{
+		/* parameters */
+		public:
+
+			/**
+			 * The positional coordinates of the vertex
+			 */
+			double x, y, z;
+
+			/**
+			 * The vertex may optionally have color
+			 */
+			int red, green, blue;
+		
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Initializes default vertex
+			 */
+			vertex_t() 
+				: x(0), y(0), z(0), 
+				  red(255), green(255), blue(255)
+			{};
+
+			/**
+			 * Initializes vertex given another vertex
+			 *
+			 * @param other   The other vertex to copy
+			 */
+			vertex_t(const vertex_t& other)
+				: x(other.x), y(other.y), z(other.z),
+				  red(other.red), green(other.green),
+				  blue(other.blue)
+			{};
+
+			/**
+			 * Initializes vertex from coordinates
+			 *
+			 * @param xx  The x-coordinate of vertex
+			 * @param yy  The y-coordinate of vertex
+			 * @param zz  The z-coordinate of vertex
+			 */
+			vertex_t(double xx, double yy, double zz)
+				: x(xx), y(yy), z(zz),
+				  red(0), green(0), blue(0)
+			{};
+
+			/*-----------*/
+			/* modifiers */
+			/*-----------*/
+
+			/**
+			 * Sets the position of this vertex
+			 *
+			 * @param xx  The x-coordinate of vertex
+			 * @param yy  The y-coordinate of vertex
+			 * @param zz  The z-coordinate of vertex
+			 */
+			inline void set_pos(double xx, double yy, double zz)
+			{
+				this->x = xx;
+				this->y = yy;
+				this->z = zz;
+			};
+
+			/**
+			 * Sets the color of this vertex
+			 *
+			 * @param r  The red component of color
+			 * @param g  The green component of color
+			 * @param b  The blue component of color
+			 */
+			inline void set_color(int r, int g, int b)
+			{
+				this->red = r;
+				this->green = g;
+				this->blue = b;
+			};
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Writes this point to the specified file stream
+			 *
+			 * Given an output file stream and the format
+			 * of the stream, will export this point to the
+			 * stream.
+			 *
+			 * @param os   The output stream
+			 * @param ff   The file format
+			 *
+			 * @return     Returns zero on success, non-zero
+			 *             on failure.
+			 */
+			int serialize(std::ostream& os,
+					FILE_FORMAT ff) const;
+	};
+
+	/**
+	 * The polygon_t class represents a single triangle in the mesh.
+	 *
+	 * Note that polygons are defined by referencing N vertex
+	 * points, so each of the values in this polygon structure are
+	 * indices into the list of vertices.
+	 */
+	class polygon_t
+	{
+		/* parameters */
+		public:
+			
+			/**
+			 * The indices of the vertices that make
+			 * up this polygon
+			 */
+			std::vector<size_t> vertices;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Constructs a default (empty) polygon
+			 */
+			polygon_t() {};
+
+			/**
+			 * Contructs a triangle from the given vertices
+			 *
+			 * @param i  The first vertex index
+			 * @param j  The second vertex index
+			 * @param k  The third vertex index
+			 */
+			polygon_t(size_t i, size_t j, size_t k);
+
+			/**
+			 * Constructs a general polygon from the given list
+			 *
+			 * @param vs   The list of vertices to represent
+			 *             this polygon
+			 */
+			polygon_t(const std::vector<size_t>& inds)
+				: vertices(inds)
+			{};
+
+			/**
+			 * Contructs the triangle from the other triangle
+			 * given.
+			 *
+			 * @param other     The other triangle to copy to
+			 *                  this one
+			 */
+			polygon_t(const polygon_t& other)
+				:	vertices(other.vertices)
+			{};
+
+			/*-----------*/
+			/* modifiers */
+			/*-----------*/
+
+			/**
+			 * Clears all vertex indices from this polygon
+			 */
+			inline void clear()
+			{ this->vertices.clear(); };
+
+			/**
+			 * Sets this triangle to a particular value
+			 *
+			 * @param i  The first vertex index
+			 * @param j  The second vertex index
+			 * @param k  The third vertex index
+			 */
+			inline void set(size_t i, size_t j, size_t k)
+			{
+				this->vertices.clear();
+				this->vertices.push_back(i);
+				this->vertices.push_back(j);
+				this->vertices.push_back(k);
+			};
+
+			/**
+			 * Sets this polygon to the list of vertices
+			 *
+			 * @param vs   The vertices to use for this polygon
+			 */
+			inline void set(const std::vector<size_t>& vs)
+			{
+				this->vertices.clear();
+				this->vertices.insert(
+					this->vertices.begin(),
+					vs.begin(), vs.end());
+			};
+
+			/**
+			 * Checks if this polygon is degenerate
+			 *
+			 * A degenerate polygon is one that contains
+			 * multiple instances of a single vertex.
+			 *
+			 * @return   Returns true iff this poly 
+			 *           is degenerate
+			 */
+			bool is_degenerate() const;
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Exports the triangle information to the given
+			 * file stream, based on the specified format of
+			 * the stream.
+			 *
+			 * @param os   The output stream to write to
+			 * @param ff   The format of the stream
+			 *
+			 * @return     Returns zero on success, non-zero on
+			 *             failure.
+			 */
+			int serialize(std::ostream& os,
+						FILE_FORMAT ff) const;
 	};
 
 	/**
@@ -413,246 +653,6 @@ namespace mesh_io
 			 */
 			int write_ply(const std::string& filename,
 			              FILE_FORMAT ff) const;
-	};
-
-	/**
-	 * The vertex_t class represents a single vertex in the mesh
-	 *
-	 * A vertex is represented by a point in 3D.  It may optionally
-	 * have color information.
-	 */
-	class vertex_t
-	{
-		/* parameters */
-		public:
-
-			/**
-			 * The positional coordinates of the vertex
-			 */
-			double x, y, z;
-
-			/**
-			 * The vertex may optionally have color
-			 */
-			int red, green, blue;
-		
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-
-			/**
-			 * Initializes default vertex
-			 */
-			vertex_t() 
-				: x(0), y(0), z(0), 
-				  red(255), green(255), blue(255)
-			{};
-
-			/**
-			 * Initializes vertex given another vertex
-			 *
-			 * @param other   The other vertex to copy
-			 */
-			vertex_t(const vertex_t& other)
-				: x(other.x), y(other.y), z(other.z),
-				  red(other.red), green(other.green),
-				  blue(other.blue)
-			{};
-
-			/**
-			 * Initializes vertex from coordinates
-			 *
-			 * @param xx  The x-coordinate of vertex
-			 * @param yy  The y-coordinate of vertex
-			 * @param zz  The z-coordinate of vertex
-			 */
-			vertex_t(double xx, double yy, double zz)
-				: x(xx), y(yy), z(zz),
-				  red(0), green(0), blue(0)
-			{};
-
-			/*-----------*/
-			/* modifiers */
-			/*-----------*/
-
-			/**
-			 * Sets the position of this vertex
-			 *
-			 * @param xx  The x-coordinate of vertex
-			 * @param yy  The y-coordinate of vertex
-			 * @param zz  The z-coordinate of vertex
-			 */
-			inline void set_pos(double xx, double yy, double zz)
-			{
-				this->x = xx;
-				this->y = yy;
-				this->z = zz;
-			};
-
-			/**
-			 * Sets the color of this vertex
-			 *
-			 * @param r  The red component of color
-			 * @param g  The green component of color
-			 * @param b  The blue component of color
-			 */
-			inline void set_color(int r, int g, int b)
-			{
-				this->red = r;
-				this->green = g;
-				this->blue = b;
-			};
-
-			/*-----*/
-			/* i/o */
-			/*-----*/
-
-			/**
-			 * Writes this point to the specified file stream
-			 *
-			 * Given an output file stream and the format
-			 * of the stream, will export this point to the
-			 * stream.
-			 *
-			 * @param os   The output stream
-			 * @param ff   The file format
-			 *
-			 * @return     Returns zero on success, non-zero
-			 *             on failure.
-			 */
-			int serialize(std::ostream& os,
-					FILE_FORMAT ff) const;
-	};
-
-	/**
-	 * The polygon_t class represents a single triangle in the mesh.
-	 *
-	 * Note that polygons are defined by referencing N vertex
-	 * points, so each of the values in this polygon structure are
-	 * indices into the list of vertices.
-	 */
-	class polygon_t
-	{
-		/* parameters */
-		public:
-			
-			/**
-			 * The indices of the vertices that make
-			 * up this polygon
-			 */
-			std::vector<size_t> vertices;
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-
-			/**
-			 * Constructs a default (empty) polygon
-			 */
-			polygon_t() {};
-
-			/**
-			 * Contructs a triangle from the given vertices
-			 *
-			 * @param i  The first vertex index
-			 * @param j  The second vertex index
-			 * @param k  The third vertex index
-			 */
-			polygon_t(size_t i, size_t j, size_t k);
-
-			/**
-			 * Constructs a general polygon from the given list
-			 *
-			 * @param vs   The list of vertices to represent
-			 *             this polygon
-			 */
-			polygon_t(const std::vector<size_t>& inds)
-				: vertices(inds)
-			{};
-
-			/**
-			 * Contructs the triangle from the other triangle
-			 * given.
-			 *
-			 * @param other     The other triangle to copy to
-			 *                  this one
-			 */
-			polygon_t(const polygon_t& other)
-				:	vertices(other.vertices)
-			{};
-
-			/*-----------*/
-			/* modifiers */
-			/*-----------*/
-
-			/**
-			 * Clears all vertex indices from this polygon
-			 */
-			inline void clear()
-			{ this->vertices.clear(); };
-
-			/**
-			 * Sets this triangle to a particular value
-			 *
-			 * @param i  The first vertex index
-			 * @param j  The second vertex index
-			 * @param k  The third vertex index
-			 */
-			inline void set(size_t i, size_t j, size_t k)
-			{
-				this->vertices.clear();
-				this->vertices.push_back(i);
-				this->vertices.push_back(j);
-				this->vertices.push_back(k);
-			};
-
-			/**
-			 * Sets this polygon to the list of vertices
-			 *
-			 * @param vs   The vertices to use for this polygon
-			 */
-			inline void set(const std::vector<size_t>& vs)
-			{
-				this->vertices.clear();
-				this->vertices.insert(
-					this->vertices.begin(),
-					vs.begin(), vs.end());
-			};
-
-			/**
-			 * Checks if this polygon is degenerate
-			 *
-			 * A degenerate polygon is one that contains
-			 * multiple instances of a single vertex.
-			 *
-			 * @return   Returns true iff this poly 
-			 *           is degenerate
-			 */
-			bool is_degenerate() const;
-
-			/*-----*/
-			/* i/o */
-			/*-----*/
-
-			/**
-			 * Exports the triangle information to the given
-			 * file stream, based on the specified format of
-			 * the stream.
-			 *
-			 * @param os   The output stream to write to
-			 * @param ff   The format of the stream
-			 *
-			 * @return     Returns zero on success, non-zero on
-			 *             failure.
-			 */
-			int serialize(std::ostream& os,
-						FILE_FORMAT ff) const;
 	};
 }
 

@@ -85,8 +85,7 @@ class door_t
 		door_t(const door_t& other) 
 			: center(other.center), 
 			  z_min(other.z_min),
-			  z_max(other.z_max),
-			  endpoints(other.endpoints)
+			  z_max(other.z_max)
 		{
 			this->endpoints[0] = other.endpoints[0];
 			this->endpoints[1] = other.endpoints[1];

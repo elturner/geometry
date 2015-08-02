@@ -26,280 +26,14 @@
 #include <set>
 
 /* the following classes are defined in this file */
-class node_boundary_t;
 class node_face_t;
 class node_face_info_t;
+class node_boundary_t;
 
 /* the following typedefs are used for these classes */
 typedef std::multimap<octnode_t*, node_face_t>  nodefacemap_t;
 typedef std::map<node_face_t, node_face_info_t> facemap_t;
 typedef std::set<node_face_t>                   faceset_t;
-
-/**
- * The node_boundary_t class can compute the subset of nodes
- * that represent the boundary.
- *
- * Boundary nodes are interior nodes that are adjacent to the
- * exterior sections of the tree.
- */
-class node_boundary_t
-{
-	/* enumerations */
-	public:
-
-		/**
-		 * The mode of the node boundary represents how
-		 * the nodes of the tree are partitioned into
-		 * "interior" and "exterior" sets, which affects
-		 * where the boundary is placed.
-		 *
-		 * These different modalities allow for the boundary
-		 * to be around all interior nodes, only object nodes,
-		 * only building-surface nodes, etc.
-		 */
-		enum SEG_SCHEME
-		{
-			SEG_ALL, /* use interior/exterior of octdata */
-			SEG_OBJECTS, /* only object nodes are exterior */
-			SEG_ROOM  /* only non-room nodes are exterior */
-		};
-
-	/* parameters */
-	private:
-
-		/**
-		 * A mapping from octnodes to faces
-		 *
-		 * This mapping represents, for each octnode,
-		 * which faces abut that node.  The node can be
-		 * either interior or exterior.  Since multiple
-		 * faces can abut each node, this must be stored
-		 * as a multimap.
-		 */
-		nodefacemap_t node_face_map;
-
-		/**
-		 * The boundary faces and their topology
-		 *
-		 * The set of faces is populated using the
-		 * boundary nodes.  This mapping gives information
-		 * about each node face, such as what adjoining faces
-		 * it touches.
-		 */
-		facemap_t faces;
-
-		/**
-		 * The segmentation scheme used for this boundary
-		 *
-		 * This value indicates how to separate the nodes
-		 * into "interior" and "exterior" sets.
-		 */
-		SEG_SCHEME scheme;
-
-	/* functions */
-	public:
-
-		/*----------------*/
-		/* initialization */
-		/*----------------*/
-
-		/**
-		 * Default constructor for node boundary object.
-		 */
-		node_boundary_t();
-
-		/**
-		 * Frees all memory and resources.
-		 */
-		~node_boundary_t();
-
-		/**
-		 * Generates a set of boundary nodes from an octree topology
-		 *
-		 * This call will populate this boundary object.
-		 *
-		 * @param topo   The octree topology to use to populate this
-		 *               object.
-		 * @param segscheme   The segmentation scheme to use.  By
-		 *                    default, nodes will be segmented as
-		 *                    'interior' and 'exterior' based on
-		 *                    the octdata_t.is_interior() function.
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int populate(const octtopo::octtopo_t& topo,
-				SEG_SCHEME segscheme=SEG_ALL);
-
-		/**
-		 * Clears all info stored in this boundary.
-		 *
-		 * This will clear any stored boundary information.
-		 * To repopulate the boundary, call populate().
-		 */
-		inline void clear()
-		{
-			this->node_face_map.clear();
-			this->faces.clear();
-			this->scheme = SEG_ALL;
-		};
-
-		/*-----------*/
-		/* accessors */
-		/*-----------*/
-
-		/**
-		 * Returns an iterator to the beginning of the set of faces
-		 */
-		inline facemap_t::const_iterator begin() const
-		{ return this->faces.begin(); };
-
-		/**
-		 * Returns an iterator to the end of the set of faces
-		 */
-		inline facemap_t::const_iterator end() const
-		{ return this->faces.end(); };
-		
-
-		/*------------*/
-		/* processing */
-		/*------------*/
-
-		/**
-		 * Will specify if a given node is interior, based on
-		 * the current segmentation scheme.
-		 *
-		 * The current segmentation scheme is specified by
-		 * this->scheme.  It specifies whether to use the
-		 * natural interior/exterior segmentation of the nodes,
-		 * or to count only object nodes as exterior, or only
-		 * non-room nodes as exterior, etc.
-		 *
-		 * @param node   The node to analyze
-		 *
-		 * @return       Returns true iff 'node' is considered
-		 *               interior under the current scheme.
-		 */
-		bool node_is_interior(octnode_t* node) const;
-
-		/**
-		 * Retrieves a faces that neighbor a node
-		 *
-		 * Given an octnode, will retrieve all faces
-		 * that either abut the given node or abut a neighbor
-		 * of the given node.
-		 * 
-		 * Note that this casts a wide net if all you want the
-		 * faces that actually touch the node, and should be
-		 * treated as a superset of that.
-		 *
-		 * Any values that were stored in nfs before this call
-		 * will remain in nfs.
-		 *
-		 * @param topo       The octree topology
-		 * @param node       The node to analyze
-		 * @param nfs        The neighboring face set to modify
-		 *
-		 * @return      Returns zero on success, non-zero on failure
-		 */
-		int get_nearby_faces(const octtopo::octtopo_t& topo,
-			octnode_t* node, faceset_t& nfs) const;
-
-		/**
-		 * Given a face, will retrieve iterators to neighbor set
-		 *
-		 * Given a face, this function call will return a 
-		 * pair of iterators <begin, end>, which will allow
-		 * for iteration over the neighbors of the given face.
-		 *
-		 * @param f   The face to analyze
-		 *
-		 * @return    The start/end pair of iterators to f's neighs
-		 */
-		std::pair<faceset_t::const_iterator,
-			faceset_t::const_iterator>
-				get_neighbors(const node_face_t& f) const;
-
-		/**
-		 * Finds all faces that are abutting the given node
-		 *
-		 * Given an octnode in the tree, will find all computed
-		 * node faces that are abutting the specified node.  This
-		 * list is returned as an iterator pair, so that one can
-		 * iterate from the first value to the last value in order
-		 * to access all faces.
-		 *
-		 * @param node   The octnode to analyze
-		 *
-		 * @return   Returns start/end pair of iterators for
-		 *           the retrieved faces.
-		 */
-		inline std::pair<nodefacemap_t::const_iterator,
-			nodefacemap_t::const_iterator>
-				find_node(octnode_t* node) const
-		{ return this->node_face_map.equal_range(node); };
-
-		/*-----------*/
-		/* debugging */
-		/*-----------*/
-
-		/**
-		 * Exports a Wavefront OBJ file representing the boundary
-		 *
-		 * Given an output file path, will export the faces
-		 * of internal nodes (as measured by 
-		 * octdata->is_interior()) that border with external
-		 * nodes (or null nodes).  The output will be
-		 * formatted as a wavefront .obj file.
-		 *
-		 * @param filename   The output file location
-		 *
-		 * @return     Returns zero on success, non-zero
-		 *             on failure.
-		 */
-		int writeobj(const std::string& filename) const;
-
-		/**
-		 * Exports a Wavefront OBJ file representing cliques in
-		 * boundary graph
-		 *
-		 * Given an output file paht, will epxort the discovered
-		 * cliques in the graph representation of the boundary
-		 * faces each as a triangle.
-		 *
-		 * @param filename   The output file location
-		 *
-		 * @return     Returns zero on success, non-zero on failure.
-		 */
-		int writeobj_cliques(const std::string& filename) const;
-
-	/* helper functions */
-	private:
-
-		/**
-		 * Populates the faces struct inside this object
-		 *
-		 * This function is called within the populate()
-		 * function.  populate_boundary() must be called first.
-		 *
-		 * @param topo   The original, full topology
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int populate_faces(const octtopo::octtopo_t& topo);
-
-		/**
-		 * Populates the linkages between faces
-		 *
-		 * Will compute which faces are neighbors to which other
-		 * faces. populate_faces() must have already been called
-		 * before calling this function.
-		 *
-		 * @param topo   The original, full topology
-		 *
-		 * @return    Returns zero on success, non-zero on failure.
-		 */
-		int populate_face_linkages(const octtopo::octtopo_t& topo);
-};
 
 /**
  * This class represents a face of a node
@@ -677,6 +411,272 @@ class node_face_info_t
 			/* return the result */
 			return (*this);
 		};
+};
+
+/**
+ * The node_boundary_t class can compute the subset of nodes
+ * that represent the boundary.
+ *
+ * Boundary nodes are interior nodes that are adjacent to the
+ * exterior sections of the tree.
+ */
+class node_boundary_t
+{
+	/* enumerations */
+	public:
+
+		/**
+		 * The mode of the node boundary represents how
+		 * the nodes of the tree are partitioned into
+		 * "interior" and "exterior" sets, which affects
+		 * where the boundary is placed.
+		 *
+		 * These different modalities allow for the boundary
+		 * to be around all interior nodes, only object nodes,
+		 * only building-surface nodes, etc.
+		 */
+		enum SEG_SCHEME
+		{
+			SEG_ALL, /* use interior/exterior of octdata */
+			SEG_OBJECTS, /* only object nodes are exterior */
+			SEG_ROOM  /* only non-room nodes are exterior */
+		};
+
+	/* parameters */
+	private:
+
+		/**
+		 * A mapping from octnodes to faces
+		 *
+		 * This mapping represents, for each octnode,
+		 * which faces abut that node.  The node can be
+		 * either interior or exterior.  Since multiple
+		 * faces can abut each node, this must be stored
+		 * as a multimap.
+		 */
+		nodefacemap_t node_face_map;
+
+		/**
+		 * The boundary faces and their topology
+		 *
+		 * The set of faces is populated using the
+		 * boundary nodes.  This mapping gives information
+		 * about each node face, such as what adjoining faces
+		 * it touches.
+		 */
+		facemap_t faces;
+
+		/**
+		 * The segmentation scheme used for this boundary
+		 *
+		 * This value indicates how to separate the nodes
+		 * into "interior" and "exterior" sets.
+		 */
+		SEG_SCHEME scheme;
+
+	/* functions */
+	public:
+
+		/*----------------*/
+		/* initialization */
+		/*----------------*/
+
+		/**
+		 * Default constructor for node boundary object.
+		 */
+		node_boundary_t();
+
+		/**
+		 * Frees all memory and resources.
+		 */
+		~node_boundary_t();
+
+		/**
+		 * Generates a set of boundary nodes from an octree topology
+		 *
+		 * This call will populate this boundary object.
+		 *
+		 * @param topo   The octree topology to use to populate this
+		 *               object.
+		 * @param segscheme   The segmentation scheme to use.  By
+		 *                    default, nodes will be segmented as
+		 *                    'interior' and 'exterior' based on
+		 *                    the octdata_t.is_interior() function.
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate(const octtopo::octtopo_t& topo,
+				SEG_SCHEME segscheme=SEG_ALL);
+
+		/**
+		 * Clears all info stored in this boundary.
+		 *
+		 * This will clear any stored boundary information.
+		 * To repopulate the boundary, call populate().
+		 */
+		inline void clear()
+		{
+			this->node_face_map.clear();
+			this->faces.clear();
+			this->scheme = SEG_ALL;
+		};
+
+		/*-----------*/
+		/* accessors */
+		/*-----------*/
+
+		/**
+		 * Returns an iterator to the beginning of the set of faces
+		 */
+		inline facemap_t::const_iterator begin() const
+		{ return this->faces.begin(); };
+
+		/**
+		 * Returns an iterator to the end of the set of faces
+		 */
+		inline facemap_t::const_iterator end() const
+		{ return this->faces.end(); };
+		
+
+		/*------------*/
+		/* processing */
+		/*------------*/
+
+		/**
+		 * Will specify if a given node is interior, based on
+		 * the current segmentation scheme.
+		 *
+		 * The current segmentation scheme is specified by
+		 * this->scheme.  It specifies whether to use the
+		 * natural interior/exterior segmentation of the nodes,
+		 * or to count only object nodes as exterior, or only
+		 * non-room nodes as exterior, etc.
+		 *
+		 * @param node   The node to analyze
+		 *
+		 * @return       Returns true iff 'node' is considered
+		 *               interior under the current scheme.
+		 */
+		bool node_is_interior(octnode_t* node) const;
+
+		/**
+		 * Retrieves a faces that neighbor a node
+		 *
+		 * Given an octnode, will retrieve all faces
+		 * that either abut the given node or abut a neighbor
+		 * of the given node.
+		 * 
+		 * Note that this casts a wide net if all you want the
+		 * faces that actually touch the node, and should be
+		 * treated as a superset of that.
+		 *
+		 * Any values that were stored in nfs before this call
+		 * will remain in nfs.
+		 *
+		 * @param topo       The octree topology
+		 * @param node       The node to analyze
+		 * @param nfs        The neighboring face set to modify
+		 *
+		 * @return      Returns zero on success, non-zero on failure
+		 */
+		int get_nearby_faces(const octtopo::octtopo_t& topo,
+			octnode_t* node, faceset_t& nfs) const;
+
+		/**
+		 * Given a face, will retrieve iterators to neighbor set
+		 *
+		 * Given a face, this function call will return a 
+		 * pair of iterators <begin, end>, which will allow
+		 * for iteration over the neighbors of the given face.
+		 *
+		 * @param f   The face to analyze
+		 *
+		 * @return    The start/end pair of iterators to f's neighs
+		 */
+		std::pair<faceset_t::const_iterator,
+			faceset_t::const_iterator>
+				get_neighbors(const node_face_t& f) const;
+
+		/**
+		 * Finds all faces that are abutting the given node
+		 *
+		 * Given an octnode in the tree, will find all computed
+		 * node faces that are abutting the specified node.  This
+		 * list is returned as an iterator pair, so that one can
+		 * iterate from the first value to the last value in order
+		 * to access all faces.
+		 *
+		 * @param node   The octnode to analyze
+		 *
+		 * @return   Returns start/end pair of iterators for
+		 *           the retrieved faces.
+		 */
+		inline std::pair<nodefacemap_t::const_iterator,
+			nodefacemap_t::const_iterator>
+				find_node(octnode_t* node) const
+		{ return this->node_face_map.equal_range(node); };
+
+		/*-----------*/
+		/* debugging */
+		/*-----------*/
+
+		/**
+		 * Exports a Wavefront OBJ file representing the boundary
+		 *
+		 * Given an output file path, will export the faces
+		 * of internal nodes (as measured by 
+		 * octdata->is_interior()) that border with external
+		 * nodes (or null nodes).  The output will be
+		 * formatted as a wavefront .obj file.
+		 *
+		 * @param filename   The output file location
+		 *
+		 * @return     Returns zero on success, non-zero
+		 *             on failure.
+		 */
+		int writeobj(const std::string& filename) const;
+
+		/**
+		 * Exports a Wavefront OBJ file representing cliques in
+		 * boundary graph
+		 *
+		 * Given an output file paht, will epxort the discovered
+		 * cliques in the graph representation of the boundary
+		 * faces each as a triangle.
+		 *
+		 * @param filename   The output file location
+		 *
+		 * @return     Returns zero on success, non-zero on failure.
+		 */
+		int writeobj_cliques(const std::string& filename) const;
+
+	/* helper functions */
+	private:
+
+		/**
+		 * Populates the faces struct inside this object
+		 *
+		 * This function is called within the populate()
+		 * function.  populate_boundary() must be called first.
+		 *
+		 * @param topo   The original, full topology
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate_faces(const octtopo::octtopo_t& topo);
+
+		/**
+		 * Populates the linkages between faces
+		 *
+		 * Will compute which faces are neighbors to which other
+		 * faces. populate_faces() must have already been called
+		 * before calling this function.
+		 *
+		 * @param topo   The original, full topology
+		 *
+		 * @return    Returns zero on success, non-zero on failure.
+		 */
+		int populate_face_linkages(const octtopo::octtopo_t& topo);
 };
 
 #endif

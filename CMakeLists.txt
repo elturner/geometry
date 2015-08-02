@@ -44,7 +44,6 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
 
 # set required c++ version
-set(CMAKE_CXX_COMPILER "g++-4.8")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # --------------------------------------------
@@ -232,14 +231,16 @@ target_link_libraries(octsurf ${XERCESC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIE
 # ------ rectify_images ------
 MESSAGE(STATUS "Including binary \"rectify_images\"")
 file(GLOB_RECURSE RECTIFY_IMAGES_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/rectify_images/src/*.cpp)
-add_executable(rectify_images ${RECTIFY_IMAGES_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(rectify_images ${XERCESC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
+# TODO
+#add_executable(rectify_images ${RECTIFY_IMAGES_SRC} $<TARGET_OBJECTS:core>)
+#target_link_libraries(rectify_images ${XERCESC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ mesh2image ------
 MESSAGE(STATUS "Including binary \"mesh2image\"")
 file(GLOB_RECURSE MESH2IMAGE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/execs/mesh2image/src/*.cpp)
-add_executable(mesh2image ${MESH2IMAGE_SRC} $<TARGET_OBJECTS:core>)
-target_link_libraries(mesh2image ${XERCESC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
+# TODO
+#add_executable(mesh2image ${MESH2IMAGE_SRC} $<TARGET_OBJECTS:core>)
+#target_link_libraries(mesh2image ${XERCESC_LIBRARY} ${OpenCV_LIBS} ${Boost_LIBRARIES})
 
 # ------ generate_imap ------
 MESSAGE(STATUS "Including binary \"generate_imap\"")

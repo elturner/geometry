@@ -32,13 +32,283 @@
 #include <Eigen/StdVector>
 
 /* the following classes are defined in this file */
-class planar_region_graph_t;
 class planar_region_info_t;
 class planar_region_pair_t;
+class planar_region_graph_t;
 
 /* the following types are defined in this file */
 typedef std::map<node_face_t, planar_region_info_t> regionmap_t;
 typedef std::map<node_face_t, node_face_t>          seedmap_t;
+
+/**
+ * This class represents a planar region along with its connectivity info
+ */
+class planar_region_info_t
+{
+	/* security */
+	friend class planar_region_graph_t;
+
+	/* parameters */
+	private:
+
+		/**
+		 * The region in question
+		 */
+		planar_region_t region;
+
+		/**
+		 * This set represents the seed faces for each region
+		 * that neighbors the region represented by this object
+		 *
+		 * Note that these links are symmetric, and need to be
+		 * updated after each coalescion.
+		 */
+		faceset_t neighbor_seeds;
+
+		/**
+		 * The following vectors store the center positions for
+		 * each face in this region.
+		 *
+		 * If the vector is empty, that means that the centers
+		 * have not yet been computed.  Note that the 'centers'
+		 * vector should always be the same length as the
+		 * 'variances' vector.
+		 *
+		 * These values are cached so not to be doubly-computed.
+		 * Note that they are not necessarily stored in any
+		 * particular order, except that each index in 'centers'
+		 * corresponds to each index in 'variances'.
+		 */
+		std::vector<Eigen::Vector3d, 
+			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
+		std::vector<double> variances;
+
+		/**
+		 * The planarity in this region
+		 *
+		 * This value indicates the planarity of this
+		 * region.  If this value is set to be negative, then
+		 * that means that the value has not yet been computed.
+		 *
+		 * Note that this value is not explicitly specified
+		 * as the average planarity, min planarity, or max
+		 * planarity, since the author (Eric Turner)
+		 * wants the freedom to try different methods.
+		 */
+		double planarity;
+
+	/* functions */
+	public:
+
+		/**
+		 * Constructs empty region
+		 */
+		planar_region_info_t()
+		{
+			this->planarity = -1; /* not yet computed */
+		};
+
+		/**
+		 * Constructs region based on flood-fill operation
+		 *
+		 * Given necessary face-linkage information, will perform
+		 * flood-fill on the given face in order to form a region.
+		 *
+		 * @param f           The face to use as a seed for this 
+		 *                    region
+		 * @param boundary    The node_boundary_t that represents
+		 *                    face connectivity
+		 * @param blacklist   List of face not allowed to be a part
+		 *                    of this region (typically because
+		 *                    they've already been allocated
+		 *                    another region).
+		 * @param planethresh The minimum planarity threshold to use
+		 */
+		planar_region_info_t(const node_face_t& f,
+				const node_boundary_t& boundary,
+				faceset_t& blacklist, double planethresh);
+
+		/**
+		 * Returns a reference to the stored region
+		 */
+		inline const planar_region_t& get_region() const
+		{ return this->region; };
+
+		/**
+		 * Retrieves the beginning iterator to neighbor set
+		 */
+		inline faceset_t::const_iterator begin_neighs() const
+		{ return this->neighbor_seeds.begin(); };
+
+		/**
+		 * Retrieves the end iterator for the neighbor set
+		 */
+		inline faceset_t::const_iterator end_neighs() const
+		{ return this->neighbor_seeds.end(); };
+
+		/**
+		 * Get the computed planarity of this region
+		 *
+		 * Will return the cached value for the
+		 * planarity of this region.  If this value has not
+		 * yet been cached, then it will be computed, cached,
+		 * and returned.
+		 *
+		 * @return   Returns the region's planarity value [0,1]
+		 */
+		double get_planarity();
+
+		/**
+		 * Get the computed planarity of this region
+		 *
+		 * Will return the cached value for the
+		 * planarity of this region.  If this value has not
+		 * yet been cached, then it will be computed
+		 * and returned, but not cached.
+		 *
+		 * @return   Returns the region's planarity value [0,1]
+		 */
+		double compute_planarity() const;
+};
+
+/**
+ * This class is used to represent two neighboring regions for coalescing.
+ *
+ * Objects of this class contain references to the seeds of two regions,
+ * which can be used to compute the merged plane geometry of the two
+ * regions.  This can be used to quantify the cost of merging the two
+ * regions.
+ */
+class planar_region_pair_t
+{
+	/* parameters */
+	public:
+
+		/* the two regions to compare, as represented by their
+		 * node face seeds */
+		node_face_t first;
+		node_face_t second;
+
+		/* the following parameters represent the result of
+		 * plane fit analysis on the two regions in this pair */
+		plane_t plane; /* the computed best-fit plane */
+		double err; /* normalized error in the fit */
+
+		/**
+		 * The sum of the number of faces in the two regions
+		 *
+		 * this value represents a checksum on the two regions
+		 * described in this structure.  If these regions have
+		 * been merged with other regions since this pair was
+		 * initialized, then the plane/max_err parameters may
+		 * be out of date.  By comparing this value to the
+		 * observed sum of faces between the two regions, we
+		 * can determine if these parameters should be recomputed.
+		 */
+		size_t num_faces;
+
+	/* functions */
+	public:
+
+		/**
+		 * Constructs a default pair
+		 */
+		planar_region_pair_t()
+		{ 
+			this->err = DBL_MAX; 
+			this->num_faces = 0;
+		};
+
+		/**
+		 * Constructs a pair from a given pair
+		 */
+		planar_region_pair_t(const planar_region_pair_t& other)
+			:	first(other.first),
+				second(other.second),
+				plane(other.plane),
+				err(other.err),
+				num_faces(other.num_faces)
+		{};
+
+		/*-----------*/
+		/* operators */
+		/*-----------*/
+
+		/**
+		 * Checks if two pairs represent the same set of regions
+		 *
+		 * Note that this operation is different than calling '==',
+		 * since this will check if the regions referenced in the
+		 * two pairs are the same, whereas calling '==' will
+		 * compare each pair's error value.
+		 *
+		 * @param other   The other pair to compare to
+		 *
+		 * @return  Returns true iff pairs are same regions
+		 */
+		inline bool equivalent_to(
+				const planar_region_pair_t& other) const
+		{
+			return (this->first == other.first) 
+				&& (this->second == other.second)
+				&& (this->num_faces == other.num_faces);
+		};
+
+		/**
+		 * Sets the value of this pair, given the provided argument
+		 */
+		inline planar_region_pair_t& operator = (
+				const planar_region_pair_t& other)
+		{
+			/* copy values */
+			this->first = other.first;
+			this->second = other.second;
+			this->plane = other.plane;
+			this->err = other.err;
+			this->num_faces = other.num_faces;
+
+			/* return the modified result */
+			return (*this);
+		};
+
+		/**
+		 * Determines if this pair is equal to the provided argument
+		 *
+		 * Pairs are compared based on the 'max_err' parameter.
+		 */
+		inline bool operator == (
+				const planar_region_pair_t& other) const
+		{
+			return (this->err == other.err);
+		};
+
+		/**
+		 * Compares the ordering for two pairs
+		 *
+		 * Checks if this pair is less than the given argument.
+		 *
+		 * These are compared based on the negation of the err
+		 * parameter, which means that, when sorted, the element
+		 * with the highest error will appear first.
+		 *
+		 * The reason for this is so these pairs can be put into
+		 * a priority queue, and the pair with the smallest error
+		 * will appear at the top.
+		 */
+		inline bool operator < (
+				const planar_region_pair_t& other) const
+		{
+			/* sort the largest errors first */
+			if(this->err > other.err)
+				return true;
+			if(this->err < other.err)
+				return false;
+			
+			/* all else being equal, sort the smallest regions
+			 * first */
+			return (this->num_faces < other.num_faces); 
+		};
+};
 
 /**
  * The planar_region_graph_t represents the set of regions on a model
@@ -332,276 +602,6 @@ class planar_region_graph_t
 		 * @return     Returns zero on success, non-zero on failure.
 		 */
 		int merge_regions(const planar_region_pair_t& pair);
-};
-
-/**
- * This class represents a planar region along with its connectivity info
- */
-class planar_region_info_t
-{
-	/* security */
-	friend class planar_region_graph_t;
-
-	/* parameters */
-	private:
-
-		/**
-		 * The region in question
-		 */
-		planar_region_t region;
-
-		/**
-		 * This set represents the seed faces for each region
-		 * that neighbors the region represented by this object
-		 *
-		 * Note that these links are symmetric, and need to be
-		 * updated after each coalescion.
-		 */
-		faceset_t neighbor_seeds;
-
-		/**
-		 * The following vectors store the center positions for
-		 * each face in this region.
-		 *
-		 * If the vector is empty, that means that the centers
-		 * have not yet been computed.  Note that the 'centers'
-		 * vector should always be the same length as the
-		 * 'variances' vector.
-		 *
-		 * These values are cached so not to be doubly-computed.
-		 * Note that they are not necessarily stored in any
-		 * particular order, except that each index in 'centers'
-		 * corresponds to each index in 'variances'.
-		 */
-		std::vector<Eigen::Vector3d, 
-			Eigen::aligned_allocator<Eigen::Vector3d> > centers;
-		std::vector<double> variances;
-
-		/**
-		 * The planarity in this region
-		 *
-		 * This value indicates the planarity of this
-		 * region.  If this value is set to be negative, then
-		 * that means that the value has not yet been computed.
-		 *
-		 * Note that this value is not explicitly specified
-		 * as the average planarity, min planarity, or max
-		 * planarity, since the author (Eric Turner)
-		 * wants the freedom to try different methods.
-		 */
-		double planarity;
-
-	/* functions */
-	public:
-
-		/**
-		 * Constructs empty region
-		 */
-		planar_region_info_t()
-		{
-			this->planarity = -1; /* not yet computed */
-		};
-
-		/**
-		 * Constructs region based on flood-fill operation
-		 *
-		 * Given necessary face-linkage information, will perform
-		 * flood-fill on the given face in order to form a region.
-		 *
-		 * @param f           The face to use as a seed for this 
-		 *                    region
-		 * @param boundary    The node_boundary_t that represents
-		 *                    face connectivity
-		 * @param blacklist   List of face not allowed to be a part
-		 *                    of this region (typically because
-		 *                    they've already been allocated
-		 *                    another region).
-		 * @param planethresh The minimum planarity threshold to use
-		 */
-		planar_region_info_t(const node_face_t& f,
-				const node_boundary_t& boundary,
-				faceset_t& blacklist, double planethresh);
-
-		/**
-		 * Returns a reference to the stored region
-		 */
-		inline const planar_region_t& get_region() const
-		{ return this->region; };
-
-		/**
-		 * Retrieves the beginning iterator to neighbor set
-		 */
-		inline faceset_t::const_iterator begin_neighs() const
-		{ return this->neighbor_seeds.begin(); };
-
-		/**
-		 * Retrieves the end iterator for the neighbor set
-		 */
-		inline faceset_t::const_iterator end_neighs() const
-		{ return this->neighbor_seeds.end(); };
-
-		/**
-		 * Get the computed planarity of this region
-		 *
-		 * Will return the cached value for the
-		 * planarity of this region.  If this value has not
-		 * yet been cached, then it will be computed, cached,
-		 * and returned.
-		 *
-		 * @return   Returns the region's planarity value [0,1]
-		 */
-		double get_planarity();
-
-		/**
-		 * Get the computed planarity of this region
-		 *
-		 * Will return the cached value for the
-		 * planarity of this region.  If this value has not
-		 * yet been cached, then it will be computed
-		 * and returned, but not cached.
-		 *
-		 * @return   Returns the region's planarity value [0,1]
-		 */
-		double compute_planarity() const;
-};
-
-/**
- * This class is used to represent two neighboring regions for coalescing.
- *
- * Objects of this class contain references to the seeds of two regions,
- * which can be used to compute the merged plane geometry of the two
- * regions.  This can be used to quantify the cost of merging the two
- * regions.
- */
-class planar_region_pair_t
-{
-	/* parameters */
-	public:
-
-		/* the two regions to compare, as represented by their
-		 * node face seeds */
-		node_face_t first;
-		node_face_t second;
-
-		/* the following parameters represent the result of
-		 * plane fit analysis on the two regions in this pair */
-		plane_t plane; /* the computed best-fit plane */
-		double err; /* normalized error in the fit */
-
-		/**
-		 * The sum of the number of faces in the two regions
-		 *
-		 * this value represents a checksum on the two regions
-		 * described in this structure.  If these regions have
-		 * been merged with other regions since this pair was
-		 * initialized, then the plane/max_err parameters may
-		 * be out of date.  By comparing this value to the
-		 * observed sum of faces between the two regions, we
-		 * can determine if these parameters should be recomputed.
-		 */
-		size_t num_faces;
-
-	/* functions */
-	public:
-
-		/**
-		 * Constructs a default pair
-		 */
-		planar_region_pair_t()
-		{ 
-			this->err = DBL_MAX; 
-			this->num_faces = 0;
-		};
-
-		/**
-		 * Constructs a pair from a given pair
-		 */
-		planar_region_pair_t(const planar_region_pair_t& other)
-			:	first(other.first),
-				second(other.second),
-				plane(other.plane),
-				err(other.err),
-				num_faces(other.num_faces)
-		{};
-
-		/*-----------*/
-		/* operators */
-		/*-----------*/
-
-		/**
-		 * Checks if two pairs represent the same set of regions
-		 *
-		 * Note that this operation is different than calling '==',
-		 * since this will check if the regions referenced in the
-		 * two pairs are the same, whereas calling '==' will
-		 * compare each pair's error value.
-		 *
-		 * @param other   The other pair to compare to
-		 *
-		 * @return  Returns true iff pairs are same regions
-		 */
-		inline bool equivalent_to(
-				const planar_region_pair_t& other) const
-		{
-			return (this->first == other.first) 
-				&& (this->second == other.second)
-				&& (this->num_faces == other.num_faces);
-		};
-
-		/**
-		 * Sets the value of this pair, given the provided argument
-		 */
-		inline planar_region_pair_t& operator = (
-				const planar_region_pair_t& other)
-		{
-			/* copy values */
-			this->first = other.first;
-			this->second = other.second;
-			this->plane = other.plane;
-			this->err = other.err;
-			this->num_faces = other.num_faces;
-
-			/* return the modified result */
-			return (*this);
-		};
-
-		/**
-		 * Determines if this pair is equal to the provided argument
-		 *
-		 * Pairs are compared based on the 'max_err' parameter.
-		 */
-		inline bool operator == (
-				const planar_region_pair_t& other) const
-		{
-			return (this->err == other.err);
-		};
-
-		/**
-		 * Compares the ordering for two pairs
-		 *
-		 * Checks if this pair is less than the given argument.
-		 *
-		 * These are compared based on the negation of the err
-		 * parameter, which means that, when sorted, the element
-		 * with the highest error will appear first.
-		 *
-		 * The reason for this is so these pairs can be put into
-		 * a priority queue, and the pair with the smallest error
-		 * will appear at the top.
-		 */
-		inline bool operator < (
-				const planar_region_pair_t& other) const
-		{
-			/* sort the largest errors first */
-			if(this->err > other.err)
-				return true;
-			if(this->err < other.err)
-				return false;
-			
-			/* all else being equal, sort the smallest regions
-			 * first */
-			return (this->num_faces < other.num_faces); 
-		};
 };
 
 #endif
