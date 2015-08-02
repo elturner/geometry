@@ -62,8 +62,8 @@
 	     If '0', then the specified format will not be exported.
 	     If '1', then the specified format will be exported.
 	     -->
-	<scanorama_export_ptx>1</scanorama_export_ptx>
-	<scanorama_export_ptg>0</scanorama_export_ptg>
+	<scanorama_export_ptx>0</scanorama_export_ptx>
+	<scanorama_export_ptg>1</scanorama_export_ptg>
 	<scanorama_export_e57>0</scanorama_export_e57>
 	<scanorama_export_png>1</scanorama_export_png>
 

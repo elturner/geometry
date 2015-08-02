@@ -337,21 +337,21 @@ void scanorama_t::writeptx(std::ostream& os) const
 
 int scanorama_t::writeptg(const std::string& filename) const
 {
-	const char*   ptg_filestart   = "PTG";
-	const int32_t ptg_magic       = 2458887111;
-	const char*   ptg_headerstart = "%%header_begin";
-	const char*   ptg_versionkey  = "%%version";
-	const int32_t ptg_versionnum  = 1;
-	const char*   ptg_colskey     = "%%cols";
-	const char*   ptg_rowskey     = "%%rows";
-	const char*   ptg_transkey    = "%%transform";
-	const char*   ptg_propskey    = "%%properties";
-	const int32_t ptg_propsval    = (0x1 | 0x8);
-	const char*   ptg_headerend   = "%%header_end";
+	const char*    ptg_filestart   = "PTG";
+	const uint32_t ptg_magic       = 2458887111;
+	const char*    ptg_headerstart = "%%header_begin";
+	const char*    ptg_versionkey  = "%%version";
+	const int32_t  ptg_versionnum  = 1;
+	const char*    ptg_colskey     = "%%cols";
+	const char*    ptg_rowskey     = "%%rows";
+	const char*    ptg_transkey    = "%%transform";
+	const char*    ptg_propskey    = "%%properties";
+	const int32_t  ptg_propsval    = (0x1 | 0x8);
+	const char*    ptg_headerend   = "%%header_end";
 	progress_bar_t progbar;
 	double d0, d1;
 	float x,y,z;
-	unsigned char r,g,b;
+	unsigned char r,g,b, validitybits;
 	int32_t v;
 	ofstream outfile;
 	streampos bodystart, colstart;
@@ -467,16 +467,17 @@ int scanorama_t::writeptg(const std::string& filename) const
 
 		/* record the start of this column */
 		colstart = outfile.tellp();
-		outfile.seekp(bodystart);
-		outfile.seekp(ci*sizeof(colstart_int), ios_base::cur);
+		outfile.seekp(bodystart 
+				+ (streamoff) (ci*sizeof(colstart_int)));
 		colstart_int = (int64_t) colstart;
 		outfile.write((char*) &colstart_int, sizeof(colstart_int));
 		outfile.seekp(colstart);
 
 		/* write out the bitmask indicating that all points
 		 * are valid */
-		for(ri = 0; ri < ceil(this->num_rows/8); ri++)
-			outfile.put(0xFF);
+		validitybits = 0xFF; /* all ones --> all valid */
+		for(ri = 0; ri < ceil(this->num_rows/8.0); ri++)
+			outfile.put(validitybits);
 
 		/* iterate over the points in this column */
 		for(ri = 0; ri < this->num_rows; ri++)
@@ -487,9 +488,9 @@ int scanorama_t::writeptg(const std::string& filename) const
 			/* each point is: x y z r g b */
 
 			/* geometry in scanner local coords */
-			x = (float)  (this->points[i].x - this->center(0));
-			y = (float)  (this->points[i].y - this->center(1));
-			z = (float)  (this->points[i].z - this->center(2));
+			x = (float)  this->points[i].x;
+			y = (float)  this->points[i].y;
+			z = (float)  this->points[i].z;
 
 			/* color is in range [0-255] */
 			r = (unsigned char) 
