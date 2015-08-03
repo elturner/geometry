@@ -71,8 +71,8 @@ void region_grow_all(vector<planar_region_t>& rl, triangulation_t& tri)
 				if((*it2)->v[j] == NULL)
 				{
 					PRINT_ERROR("OH NOES!");
-					x = x;
-					y = y;
+					((void) &x);
+					((void) &y);
 				}
 
 				x += (*it2)->v[j]->x;

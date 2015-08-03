@@ -205,8 +205,7 @@ polygon_intersects_cube(int nverts, const real verts[/* nverts */][3],
     real p[3], t;
 
     /* currently unused parameter */
-    already_know_vertices_are_outside_cube
-    	= already_know_vertices_are_outside_cube;
+    ((void) &already_know_vertices_are_outside_cube);
 
     /*
      * If any edge intersects the cube, return 1.

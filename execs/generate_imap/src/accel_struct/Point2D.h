@@ -85,8 +85,8 @@ public:
 	*/
 	inline double inf_dist_to(const Point2D& other) const
 	{
-		const double xDist = abs(this->x() - other.x());
-		const double yDist = abs(this->y() - other.y());
+		const double xDist = std::abs(this->x() - other.x());
+		const double yDist = std::abs(this->y() - other.y());
 		return (xDist > yDist ? xDist : yDist);
 	};
 

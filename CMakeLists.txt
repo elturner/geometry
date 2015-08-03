@@ -44,7 +44,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin/)
 
 # set required c++ version
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -W -Wall -Wextra")
 
 # --------------------------------------------
 # -------- Find External Libraries -----------
