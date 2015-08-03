@@ -137,8 +137,8 @@ class Floorplan:
                         + str(r))
 
             # get room-level info
-            self.room_min_z = float(r[0])
-            self.room_max_z = float(r[1])
+            self.room_min_z.append(float(r[0]))
+            self.room_max_z.append(float(r[1]))
             num_tris = int(r[2])
 
             # check validity of the remainder of the line
