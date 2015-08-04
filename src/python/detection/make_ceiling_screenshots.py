@@ -241,8 +241,8 @@ def call_exe(exe, args, rundir, debug=False):
 	# check for debug
 	exe_to_run = exe
 	if debug:
-		exe_to_run = 'gdb'
-		args = ['gdb', '--args'] + args
+		exe_to_run = 'lldb'
+		args = [exe_to_run, '--'] + args
 	ret = subprocess.call(args, executable=exe_to_run, \
 			cwd=rundir, stdout=None, stderr=None, \
 			stdin=None, shell=False)

@@ -652,7 +652,7 @@ def get_light_detection_level_ceiling_coordmap(dataset_dir, level_index):
 def get_light_detection_level_ceiling_timemap(dataset_dir, level_index):
 	return os.path.join(get_light_detection_level_dir( \
 		dataset_dir, level_index), \
-		"level_" + str(level_index) + "_ceiling_timemap.txt")
+		"level_" + str(level_index) + "_ceiling_timemap.png")
 
 ##
 # Folder where the room-specific pointcloud ceiling screenshots are stored
