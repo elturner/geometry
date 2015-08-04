@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ##
-# @file	levels_io.py
+# @file	   levels_io.py
 # @author  Eric Turner <elturner@indoorreality.com>
 # @brief   I/O functionality for .levels files
 #
@@ -160,3 +160,6 @@ class Levels:
 				+ self.ceiling_heights[i])) \
 					for i in range(self.num_levels - 1)]
 
+
+		# success
+		return 0

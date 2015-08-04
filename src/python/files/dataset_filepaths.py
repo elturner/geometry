@@ -581,3 +581,85 @@ def get_scanorama_metadata_file(dataset_dir):
 	return os.path.join(get_scanorama_dir(dataset_dir), \
 				"scan_metadata.scanolist")
 
+#--------------- files generated for light detection ---------------
+
+##
+# The directory containing all detection data
+#
+# @param dataset_dir   The root dataset directory
+#
+def get_detection_dir(dataset_dir):
+	return os.path.abspath(os.path.join(dataset_dir, "detection"))
+
+##
+# The directory containing light detection information
+#
+# @param dataset_dir   The root dataset directory
+#
+def get_light_detection_dir(dataset_dir):
+	return os.path.join(get_detection_dir(dataset_dir), "lights")
+
+##
+# The directory containing light detection info
+# for the given building level
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_dir(dataset_dir, level_index):
+	return os.path.join(get_light_detection_dir(dataset_dir), \
+			"level_" + str(level_index))
+
+##
+# Where the cropped pointcloud containing just the level ceiling is stored
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_ceiling_pc(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+			dataset_dir, level_index), \
+			"level_" + str(level_index) + "_ceiling.xyz")
+
+##
+# Where the screenshot of the full level ceiling pointcloud is stored
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_ceiling_image(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+			dataset_dir, level_index), \
+			"level_" + str(level_index) + "_ceiling.png")
+
+##
+# Where the coordinate mapping file associated with the screenshot is stored
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_ceiling_coordmap(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+		dataset_dir, level_index), \
+		"level_" + str(level_index) + "_ceiling_coordmap.txt")
+
+##
+# Where the time mapping file associated with the screenshot is stored
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_ceiling_timemap(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+		dataset_dir, level_index), \
+		"level_" + str(level_index) + "_ceiling_timemap.txt")
+
+##
+# Folder where the room-specific pointcloud ceiling screenshots are stored
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level in question
+#
+def get_light_detection_level_ceiling_rooms(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+		dataset_dir, level_index), "rooms")
