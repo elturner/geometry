@@ -1,0 +1,43 @@
+
+******************************
+Coordinate Mapping File Format
+******************************
+
+Written by Eric Turner <elturner@indoorreality.com>
+Last Modified:  August 4, 2015
+
+
+*******
+Purpose
+*******
+
+This format is used to express the conversion between the a global model's coordinate map and an image of that model.  The values given will convert from the image coordinates (pixels) to the model coordinates (meters).
+
+This format was originally developed by Nicholas Corso when auto-generating screenshots of pointclouds.
+
+******
+Format
+******
+
+This file is formatted as a newline-separated ASCII file, with extension ".txt".  Only the first three lines are parsed:
+
+	<resolution>
+	<offsetX>
+	<offsetY>
+
+All remaining lines in the file are considered comments.  To map from image coordinates to model coordinates, perform the following operation:
+
+ model_x = (image_x - offsetX)*resolution
+ model_y = (image_y - offsetY)*resolution
+
+ Image Coordinate System : 
+ -------------------> +y
+ |
+ |
+ |
+ |
+ |
+ |
+\/
++x
+
