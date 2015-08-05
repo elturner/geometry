@@ -168,12 +168,14 @@ def make_ceiling_screenshot_for_level( \
 	# of the current level elevation to the boundary of the next level
 	crop_minz = (0.5 * (levels.floor_heights[level_index] \
 				+ levels.ceiling_heights[level_index]))
+        crop_minz *= 1000 # convert from meters to millimeters
 	filterscript = "PartitionPlane 0 0 1 0 0 %f; Kill INVALID; " \
 					% crop_minz
 	if level_index < (levels.num_levels-1):
 		# since this is not the top level, we also need
 		# to crop everything above it
 		crop_maxz = levels.split_heights[level_index]
+                crop_maxz *= 1000 # convert from meters to millimeters
 		filterscript += ("PartitionPlane 0 0 -1 0 0 %f; " \
 				+ "Kill INVALID; ") % crop_maxz
 	
