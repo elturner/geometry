@@ -663,3 +663,51 @@ def get_light_detection_level_ceiling_timemap(dataset_dir, level_index):
 def get_light_detection_level_ceiling_rooms(dataset_dir, level_index):
 	return os.path.join(get_light_detection_level_dir( \
 		dataset_dir, level_index), "rooms")
+
+##
+# The pointcloud ceiling screenshot for a specific room
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level of this floorplan
+# @param room_index    The index of the room within the floorplan
+#
+def get_light_detection_room_ceiling_image( \
+		dataset_dir, level_index, room_index):
+	return os.path.join(get_light_detection_level_ceiling_rooms( \
+			dataset_dir, level_index), \
+			('room%04d.png' % room_index))
+	
+##
+# The labeled version of the pointcloud ceiling screenshot given
+#
+# @param imagefile   The original image file
+#
+def get_light_detection_labeled_image(imagefile):
+	(body, ext) = os.path.splitext(imagefile)
+	return os.path.join(body + "_labeled.png")
+
+##
+# The pointcloud ceiling coordinate map file for a specific room
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level of this floorplan
+# @param room_index    The index of the room within the floorplan
+#
+def get_light_detection_room_ceiling_coordmap( \
+		dataset_dir, level_index, room_index):
+	return os.path.join(get_light_detection_level_ceiling_rooms( \
+			dataset_dir, level_index), \
+			('coordinate_mapping_room%04d.txt' % room_index))
+
+##
+# The pointcloud ceiling time map file for a specific room
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level of this floorplan
+# @param room_index    The index of the room within the floorplan
+#
+def get_light_detection_room_ceiling_timemap( \
+		dataset_dir, level_index, room_index):
+	return os.path.join(get_light_detection_level_ceiling_rooms( \
+			dataset_dir, level_index), \
+			('time_mapping_room%04d.png' % room_index))
