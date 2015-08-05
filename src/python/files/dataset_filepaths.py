@@ -711,3 +711,14 @@ def get_light_detection_room_ceiling_timemap( \
 	return os.path.join(get_light_detection_level_ceiling_rooms( \
 			dataset_dir, level_index), \
 			('time_mapping_room%04d.png' % room_index))
+
+##
+# The light wattages file for a given level of the building
+#
+# @param dataset_dir   The root directory of the dataset
+# @param level_index   The index of the level of this floorplan
+#
+def get_light_detection_level_wattages(dataset_dir, level_index):
+	return os.path.join(get_light_detection_level_dir( \
+			dataset_dir, level_index), \
+			"level_" + str(level_index) + "_wattages.lights")

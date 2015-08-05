@@ -113,6 +113,9 @@ def process_model_lights(dataset_dir):
 
 		# read this floorplan's information
 		fp = Floorplan(fpfiles[level_index])
+		
+		# prepare list of wattages for each room
+		wattages = [0.0] * (fp.num_rooms)
 
 		# iterate over the rooms of this floorplan
 		for room_index in range(fp.num_rooms):
@@ -130,10 +133,17 @@ def process_model_lights(dataset_dir):
 						room_index)
 
 			# process this room
-			roomwatts = count_room_lights( \
+			wattages[room_index] = count_room_lights( \
 					room_image_file, room_coord_file)
-			# TODO LEFT OFF HERE
 
+		# export the esimated wattages to the output file
+		wattsfile = open(dataset_filepaths \
+				.get_light_detection_level_wattages( \
+					dataset_dir, level_index), 'w')
+		for w in wattages:
+			  wattsfile.write("%f\n" % w)
+		wattsfile.close()
+		
 	# success
 	return 0
 
