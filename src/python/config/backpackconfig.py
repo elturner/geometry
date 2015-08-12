@@ -272,14 +272,19 @@ def clone_tree(inroot, outroot) :
 def trim_by_enable(root) :
 
 	# Check if the child has an enable flag
+	toRemove = []
 	for child in root :
 		enableElem = child.find("./enable")
 		if enableElem != None :
 			
-			# if it is not enabled destroy it
+			# if it is not enabled flag it for descruction it
 			isEnabled = (int(enableElem.text) != 0) 
 			if not isEnabled :
-				root.remove(child)
+				toRemove.append(child)
+
+	# Destory things to remove
+	for child in toRemove :
+		root.remove(child)
 
 	# Recurse
 	for child in root :
