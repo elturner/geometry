@@ -104,6 +104,11 @@ def run(dataset_dir, pathfile, debug=False):
     cameraList =  conf.find_sensors_by_type("cameras")
     for cameraName in cameraList:
 
+	# check if this sensor is enabled
+	e = conf.find_sensor_prop(cameraName, 'enable', 'cameras')
+	if e == '0':
+		continue
+
         # prepare the command-line arguments for this camera
         metafile = os.path.join(dataset_dir, \
                 conf.find_sensor_prop(cameraName, \
@@ -136,6 +141,11 @@ def run(dataset_dir, pathfile, debug=False):
     cam_dirs   = []
     cameraList =  conf.find_sensors_by_type("flirs")
     for cameraName in cameraList:
+
+	# check if this sensor is enabled
+	e = conf.find_sensor_prop(cameraName, 'enable', 'flirs')
+	if e == '0':
+		continue
 
         # prepare the command-line arguments for this camera
         metafile = os.path.join(dataset_dir, \
