@@ -153,7 +153,7 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 	n = i_end - i_start;
 
 	/* attempt to open the output file for writing */
-	outfile.init("tango", /* unique name of sensor on system */
+	outfile.init("tango_depth", /* unique name of sensor on system */
 		"Google_Tango", /* type of sensor */
 		n,  /* number of scan frames */
 		-1, /* variable number of points per frame */
