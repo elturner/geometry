@@ -36,9 +36,19 @@ class filter_tango_scans_run_settings_t
 		 */
 		std::string tangofile;
 
+		/**
+		 * The timstamp synchronization xml file
+		 */
+		std::string timefile;
+
 		/*------------*/
 		/* parameters */
 		/*------------*/
+
+		/**
+		 * The name of the tango sensor to filter.
+		 */
+		std::string sensor_name;
 
 		/**
 		 * Specifies the start index of the exported scanoramas

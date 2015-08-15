@@ -1,6 +1,7 @@
 #include "filter_tango_scans_settings.h"
 #include <io/data/tango/tango_io.h>
 #include <io/data/fss/fss_io.h>
+#include <timestamp/sync_xml.h>
 #include <geometry/system_path.h>
 #include <util/progress_bar.h>
 #include <util/error_codes.h>
@@ -130,6 +131,8 @@ int main(int argc, char** argv)
 int export_fss(const filter_tango_scans_run_settings_t& args,
 				tango_reader_t& infile)
 {
+	SyncXml syncfile;
+	FitParams timesync;
 	fss::writer_t outfile;
 	fss::frame_t  outframe;
 	tango_frame_t inframe;
@@ -152,8 +155,25 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 			? infile.num_frames() : args.end_idx);	
 	n = i_end - i_start;
 
+	/* get the time synchronization for this sensor */
+	if(!(syncfile.read(args.timefile)))
+	{
+		/* unable to read file */
+		cerr << "[export_mad]\tUnable to import time sync file: "
+		     << args.timefile << endl << endl;
+		return -1;
+	}
+	if(!(syncfile.isMember(args.sensor_name)))
+	{
+		/* not a valid sensor */
+		cerr << "[export_mad]\tCould not find timesync for sensor: "
+		     << args.sensor_name << endl << endl;
+		return -2;
+	}
+	timesync = syncfile.get(args.sensor_name);
+
 	/* attempt to open the output file for writing */
-	outfile.init("tango_depth", /* unique name of sensor on system */
+	outfile.init(args.sensor_name, /* unique name of sensor on system */
 		"Google_Tango", /* type of sensor */
 		n,  /* number of scan frames */
 		-1, /* variable number of points per frame */
@@ -183,7 +203,7 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 		}
 
 		/* copy info to fss frame */
-		outframe.timestamp = inframe.timestamp;
+		outframe.timestamp = timesync.convert(inframe.timestamp);
 		outframe.points.resize(inframe.points.size());
 		for(j = 0; j < inframe.points.size(); j++)
 		{
@@ -258,6 +278,8 @@ int export_fss(const filter_tango_scans_run_settings_t& args,
 int export_mad(const filter_tango_scans_run_settings_t& args,
 				tango_reader_t& infile)
 {
+	SyncXml syncfile;
+	FitParams timesync;
 	tango_frame_t frame;
 	system_path_t path;
 	pose_t p;
@@ -278,6 +300,23 @@ int export_mad(const filter_tango_scans_run_settings_t& args,
 			|| args.end_idx >= (int)infile.num_frames()
 			? infile.num_frames() : args.end_idx);
 	path.resize(i_end - i_start);
+	
+	/* get the time synchronization for this sensor */
+	if(!(syncfile.read(args.timefile)))
+	{
+		/* unable to read file */
+		cerr << "[export_mad]\tUnable to import time sync file: "
+		     << args.timefile << endl << endl;
+		return -1;
+	}
+	if(!(syncfile.isMember(args.sensor_name)))
+	{
+		/* not a valid sensor */
+		cerr << "[export_mad]\tCould not find timesync for sensor: "
+		     << args.sensor_name << endl << endl;
+		return -2;
+	}
+	timesync = syncfile.get(args.sensor_name);
 
 	/* populate the frames */
 	for(i = i_start; i < i_end; i++)
@@ -296,7 +335,7 @@ int export_mad(const filter_tango_scans_run_settings_t& args,
 		}
 	
 		/* populate a pose based on this information */
-		p.timestamp = frame.timestamp;
+		p.timestamp = timesync.convert(frame.timestamp);
 		p.T(0)  = frame.position[0];
 		p.T(1)  = frame.position[1];
 		p.T(2)  = frame.position[2];

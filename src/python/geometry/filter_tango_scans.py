@@ -53,6 +53,7 @@ def run(dataset_dir):
     
     # determine the expected location of necessary files from
     # within the dataset
+    timefile  = dataset_filepaths.get_timesync_xml(dataset_dir)
     conffile  = dataset_filepaths.get_hardware_config_xml(dataset_dir)
 
     # read the xml configuration file
@@ -73,7 +74,7 @@ def run(dataset_dir):
 	#
 	# This code can also optionally export a .mad file, but we don't
 	# need that here.
-        args = [FILTER_EXE, datfile, fssfile]
+        args = [FILTER_EXE, datfile, timefile, fssfile, '-n', tango]
 
         # run the filter_tango_scans code
         ret = subprocess.call(args, executable=FILTER_EXE, \
