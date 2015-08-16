@@ -78,7 +78,7 @@ int cameraProp::assign_props(std::map<std::string,std::string>& property_map) {
 	// Extract the string name
 	it = property_map.find("virtualSerialNum");
 	if(it == property_map.end()) {
-		ret_code = 1;
+		this->virtualSerialNumber = ""; /* optional */
 	}
 	else {
 		this->virtualSerialNumber = it->second;

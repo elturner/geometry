@@ -633,8 +633,13 @@ int system_path_t::compute_transform_for(transform_t& p, double t,
 	/* check if valid sensor */
 	it = this->transform_map.find(s);
 	if(it == this->transform_map.end())
+	{
+		cerr << "[system_path_t::compute_transform_for]\t"
+		     << "Could not find sensor named \""
+		     << s << "\"" << endl;
 		return -1; /* not a valid sensor name */
-	
+	}
+
 	/* save the sensor's transform */
 	p = *(it->second); /* sensor -> system */
 
