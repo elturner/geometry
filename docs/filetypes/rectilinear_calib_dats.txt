@@ -1,0 +1,38 @@
+Rectilinear Calibration Binary Format Specification v1.0
+------------
+
+Developed by Nicholas Corso
+
+------------
+Purpose:
+------------
+
+The calibration parameters for rectilinear lenses are 
+given in the following binary format.  
+
+All binary values are stored in little-endian ordering.
+
+------------
+Format:
+------------
+
+<magic_number> 		-	This string should always be 'KCALIB\0'.
+				It serves to declare this file
+				as a rectilienar calibration binary file.
+
+<camera_name>		-	This null-terminated character string 
+				gives the name of the camera.
+
+<K_00>			-	The nine elements of the 3x3 K matrix 
+<K_01>				stored in ROW-major ordering.  These are
+<K_02>				stored as 8 byte doubles.
+<K_10>
+...
+<K_22>
+
+<kc_0>			- 	The 5 elements of the tangential distortion
+<kc_1>				vector.  These are stored as 8 byte doubles.
+...
+<kc_4>
+
+
