@@ -63,7 +63,12 @@ int rectilinear_camera_t::init(const std::string& calibfile,
 
 	/* attempt to read the calibration file */
 	if(!calibration.read(calibfile))
+	{
+		/* bad file */
+		cerr << "[rectilinear_camera_t::init]\tUnable to read "
+		     << "calibration file: " << calibfile << endl;
 		return -1;
+	}
 
 	/* store image directory location with a trailing slash */
 	this->image_directory = imgdir;

@@ -173,7 +173,11 @@ int pointcloud_writer_t::add_camera(const std::string& metafile,
 	ret = this->cameras.back()->init(
 		calibfile, metafile, imgdir, this->path);
 	if(ret)
+	{
+		cerr << "[pointcloud_writer_t::add_camera]\tUnable to "
+		     << "initialize camera.  Error: " << ret << endl;
 		return PROPEGATE_ERROR(-2, ret);
+	}
 
 	/* add to this structure.  Set the image caching to correspond
 	 * with how many images will be searched for each point.  This

@@ -43,7 +43,12 @@ bool rcam_model::read(const std::string& filename)
 	/* check to make sure the magic number matches */
 	for(size_t i = 0; i < 7; i++)
 		if(mnumbuf[i] != rcam_model::magic_number[i])
+		{
+			cerr << "[rcam_model::read]\tNot a valid KCALIB file"
+			     << ".  The start is: \"" << string(mnumbuf)
+			     << "\"" << endl;
 			return false;
+		}
 
 	/* read the camera name */
 	getline(inStream, _camera_name, '\0');
