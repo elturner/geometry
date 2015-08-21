@@ -66,7 +66,13 @@ class find_doors_settings_t
 		 * 	foo/bar_1.doors
 		 */
 		std::string outfile_prefix;
-	
+
+		/**
+		 * If non-empty, will write a pointcloud representation of
+		 * the detected doors to this .xyz file.
+		 */
+		std::string outfile_xyz;
+
 		/*-----------------------*/
 		/* processing parameters */
 		/*-----------------------*/

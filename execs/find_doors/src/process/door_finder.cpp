@@ -125,7 +125,8 @@ int door_finder_t::analyze(octree_t& tree,
 }
 		
 int door_finder_t::writedoors(const std::string& file_prefix,
-					int level_index) const
+				int level_index,
+				const std::string& outfile_xyz) const
 {
 	ofstream outfile;
 	stringstream ss;
@@ -181,6 +182,31 @@ int door_finder_t::writedoors(const std::string& file_prefix,
 	/* clean up */
 	outfile.close();
 	toc(clk, "Writing doors file");
+
+	/* check if we should write to the pointcloud file */
+	if(!(outfile_xyz.empty()))
+	{
+		tic(clk);
+
+		/* open the file to append to end */
+		outfile.open(outfile_xyz, ios::out | ios::app | ios::ate);
+		if(!(outfile.is_open()))
+		{
+			cerr << "[door_finder_t::writedoors]\tUnable to open "
+			     << "xyz file for writing: " << outfile_xyz << endl;
+			return -2;
+		}	
+
+		/* write the doors to this file */
+		for(i = 0; i < n; i++)
+			this->doors[i].writexyz(outfile);
+
+		/* clean up */
+		outfile.close();
+		toc(clk, "Writing to pointcloud file");
+	}
+
+	/* success */
 	return 0;
 }
 		

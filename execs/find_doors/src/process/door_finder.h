@@ -117,11 +117,14 @@ class door_finder_t
 		 * @param file_prefix   The beginning of the file path to
 		 *                      write
 		 * @param level_index   The level index of these floors
+		 * @param outfile_xyz   If path non-empty, will append the
+		 *                      found doors to this xyz file.
 		 *
 		 * @return     Returns zero on success, non-zero on failure
 		 */
 		int writedoors(const std::string& file_prefix,
-					int level_index) const;
+				int level_index,
+				const std::string& outfile_xyz="") const;
 
 	/* helper functions */
 	private:

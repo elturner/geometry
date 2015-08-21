@@ -96,7 +96,8 @@ int main(int argc, char** argv)
 
 		/* export data */
 		ret = door_finder.writedoors(args.outfile_prefix,
-						hia.get_level());
+						hia.get_level(),
+						args.outfile_xyz);
 		if(ret)
 		{
 			cerr << "[main]\tUnable to export output file, "

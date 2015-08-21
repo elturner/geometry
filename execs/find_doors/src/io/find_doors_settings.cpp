@@ -28,6 +28,7 @@ using namespace std;
 
 #define SETTINGS_FILE      "-s"
 #define OUTFILE_FLAG       "-o"
+#define OUTFILE_XYZ_FLAG   "--xyz"
 
 /* the file formats to check for */
 
@@ -53,6 +54,7 @@ find_doors_settings_t::find_doors_settings_t()
 	this->pathfile        = "";
 	this->hiafiles.clear();
 	this->outfile_prefix  = "";
+	this->outfile_xyz     = "";
 	this->door_min_width  = 0.8128; /* in meters, or about 32 inches */
 	this->door_max_width  = 1.2192; /* in meters, or about 48 inches */
 	this->door_min_height = 2.0;    /* in meters, or about one Nick */
@@ -88,6 +90,11 @@ int find_doors_settings_t::parse(int argc, char** argv)
 			"bar_\", then the output files for levels #0 and "
 			"#1 will be:\n\n\tfoo/bar_0.doors"
 			"\n\tfoo/bar_1.doors", false, 1);
+	args.add(OUTFILE_XYZ_FLAG, "If specified, will export the geometry "
+			"of the detected doors to a XYZ pointcloud file as "
+			"specified.  This is useful for visualizing the "
+			"detected door locations on top of the colored "
+			"pointcloud.", true, 1);
 	args.add_required_file_type(OCTFILE_EXT, 1, "The octree file "
 			"representing the model geometry.  This must "
 			"already be merged with the floor plan data "
@@ -167,6 +174,12 @@ int find_doors_settings_t::parse(int argc, char** argv)
 		     << "given, only the first will be used: "
 		     << path_files[0] << endl;
 	this->pathfile = path_files[0];
+
+	/* get the optional output xyz file */
+	if(args.tag_seen(OUTFILE_XYZ_FLAG))
+		this->outfile_xyz = args.get_val(OUTFILE_XYZ_FLAG);
+	else
+		this->outfile_xyz = "";
 
 	/* check to see if the xml settings file is provided.  If so,
 	 * then read its contents */
