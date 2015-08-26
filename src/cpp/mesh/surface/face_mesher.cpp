@@ -51,6 +51,7 @@ int face_mesher_t::add(const octree_t& tree,
 		return PROPEGATE_ERROR(-1, ret);
 
 	/* success */
+	this->mesh.set_color(true);
 	return 0;
 }
 
