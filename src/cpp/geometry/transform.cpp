@@ -59,8 +59,8 @@ void transform_t::invert()
 		
 void transform_t::preapp(const transform_t& t)
 {
-	this->R = (this->R * t.R);
 	this->T = (this->R * t.T) + this->T;
+	this->R = (this->R * t.R);
 }
 		
 void transform_t::cat(const transform_t& t)
