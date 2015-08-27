@@ -11,6 +11,8 @@
 # DXF R12 drawings (.dxf).  These .dxf files can be
 # imported into AutoCAD.
 #
+# NOTE: OUTPUT MODELS ARE IN UNITS OF FEET
+#
 # This script uses the third-party library 'dxfwrite'.
 # This library must be installed for this script to
 # function.  See links here:
@@ -23,6 +25,9 @@
 import sys
 import fp_io
 from dxfwrite import DXFEngine as dxf
+		
+# The following constants are used	
+METERS2FEET = 3.28084
 
 ##
 # This function converts a .fp file to a .dxf file
@@ -117,8 +122,10 @@ def room_to_polylines(fp, room_id):
 		# prepare the next polyline
 		pl = dxf.polyline()
 
-		# make the array of vertices
-		verts = [ fp.verts[vi] for vi in boundary_list[bi] ]
+		# make the array of vertices and CONVERT UNITS TO FEET
+		verts = [ \
+			(fp.verts[vi][0]*METERS2FEET,fp.verts[vi][1]*METERS2FEET) \
+				for vi in boundary_list[bi] ]
 		pl.add_vertices(verts)
 		pl.close()
 
