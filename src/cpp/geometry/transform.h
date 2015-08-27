@@ -70,6 +70,31 @@ class transform_t
 		        const std::vector<double>& rToCommon);
 
 		/**
+		 * Inverts this transform in-place
+		 *
+		 * Will replace the contents of this transform with their
+		 * inverse.
+		 */
+		void invert();
+
+		/**
+		 * Pre-applies the specified transform to this one
+		 *
+		 * Will pre-apply the specified transform to this one,
+		 * and store the result in-place.  Applying the resulting
+		 * transform is equivalent to applying the argument, and then
+		 * the original transform.
+		 *
+		 * Consider the following example:
+		 *
+		 * B2C.preapp(A2B)
+		 * A2C = B2C
+		 *
+		 * @param t   The transform to pre-apply to this one.
+		 */
+		void preapp(const transform_t& t);
+
+		/**
 		 * Concatenates two transforms
 		 *
 		 * Will concatenate the specified transform to this one,
@@ -113,7 +138,7 @@ class transform_t
 		 * the input matrix, the inverse of this transform will
 		 * be applied in-place to these points.
 		 *
-		 * @param pts    The points to trnasform in-place
+		 * @param pts    The points to transform in-place
 		 */
 		void apply_inverse(Eigen::MatrixXd& pts) const;
 
