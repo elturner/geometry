@@ -101,6 +101,6 @@
 
 	     A value of '1' indicates that interpolation is active.
 	     A value of '0' indicates that interpolation is disabled. -->
-	<procarve_interpolate>0</procarve_interpolate>
+	<procarve_interpolate>1</procarve_interpolate>
 
 </settings>
