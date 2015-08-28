@@ -54,7 +54,7 @@ int transform_t::set(const vector<double>& tToCommon,
 void transform_t::invert()
 {
 	this->R = this->R.inverse();
-	this->T = (-1) * this->T;
+	this->T = this->R * ((-1) * this->T);
 }
 		
 void transform_t::preapp(const transform_t& t)
