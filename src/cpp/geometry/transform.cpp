@@ -53,7 +53,7 @@ int transform_t::set(const vector<double>& tToCommon,
 		
 void transform_t::invert()
 {
-	this->R = this->R.inverse();
+	this->R.transposeInPlace();
 	this->T = this->R * ((-1) * this->T);
 }
 		
