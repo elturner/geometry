@@ -23,11 +23,13 @@ SCRIPT_LOCATION = os.path.dirname(__file__)
 PYTHON_SRC_DIR = os.path.abspath(os.path.join(SCRIPT_LOCATION, \
                                  '..', 'src','python'))
 PYTHON_CONFIG_DIR   = os.path.join(PYTHON_SRC_DIR, 'config')
+PYTHON_FILES_DIR    = os.path.join(PYTHON_SRC_DIR, 'files')
 sys.path.append(PYTHON_SRC_DIR)
 sys.path.append(PYTHON_CONFIG_DIR)
+sys.path.append(PYTHON_FILES_DIR)
 import backpackconfig
 from pint import UnitRegistry
-
+import dataset_filepaths
 
 #
 # 	CONSTANTS
@@ -41,6 +43,7 @@ CONFIGFILE_PATH = os.path.join('config','backpack_config.xml')
 CAMERA_TYPE = 'cameras'
 FLIR_TYPE = 'flirs'
 URG_TYPE = 'lasers'
+TOF_TYPE = 'tof_cameras'
 
 # XPATH Paths
 URG_DAT_XPATH = 'configFile/urg_datafile'
@@ -51,6 +54,7 @@ DALSA_MASKFILE_XPATH = 'configFile/dalsa_fisheye_mask_file'
 FLIR_CALIB_XPATH = 'configFile/flir_rectilinear_calibration_file'
 FLIR_METADATA_XPATH = 'configFile/flir_metadata_outfile'
 FLIR_OUTPUTDIR_XPATH = 'configFile/flir_output_directory'
+TOF_DAT_XPATH = 'configFile/tof_datafile'
 
 # Locations of executables
 POINTCLOUD_EXE = os.path.abspath(os.path.join(SCRIPT_LOCATION, "..", \
@@ -84,6 +88,11 @@ def main() :
 		args.dataset_directory[0])
 	args.scanner_list = collect_scanners(args.scanner_list, conf)
 
+	# if there are any time-of-flight (or any depth) cameras present
+	# then we should include them in the geometry
+	tof_list          = collect_tof(conf)
+	all_scanners = args.scanner_list + tof_list
+
 	# Resolve the camera names that will be used in the colorizing the point 
 	# cloud
 	args.camera_list = collect_cameras(args.color_by, args.camera_list, conf)
@@ -100,7 +109,7 @@ def main() :
 	args.units = handle_units(args.units[0])
 
 	# Lastly run the executable for each scanner
-	for scanner in args.scanner_list :
+	for scanner in all_scanners :
 
 		print ""
 		print "##### Generating Pointcloud for " + scanner + ". Colored by " \
@@ -122,15 +131,32 @@ def main() :
 		cargs.append('-p')
 		cargs.append(args.path_file[0])
 
-		# Tack on the laser scanner info
-		scannerDataFile = conf.find_sensor_prop(scanner, \
-			URG_DAT_XPATH, \
-			URG_TYPE)
-		scannerDataFile = os.path.join(args.dataset_directory[0], \
-			scannerDataFile)
-		cargs.append('-l')
-		cargs.append(scanner)
-		cargs.append(scannerDataFile)
+		# give the geometry scanner info
+		if scanner in args.scanner_list:
+
+			# Tack on the laser scanner info
+			scannerDataFile = conf.find_sensor_prop(scanner, \
+				URG_DAT_XPATH, \
+				URG_TYPE)
+			scannerDataFile = os.path.join(args.dataset_directory[0], \
+				scannerDataFile)
+			cargs.append('-l')
+			cargs.append(scanner)
+			cargs.append(scannerDataFile)
+
+		elif scanner in tof_list:
+
+			# this is a tof sensor, which should have
+			# a .fss file
+			tofDatFile = conf.find_sensor_prop(scanner, \
+				TOF_DAT_XPATH, \
+				TOF_TYPE)
+			tofFssFile = os.path.join( \
+				args.dataset_directory[0], \
+				dataset_filepaths.get_fss_file( \
+				tofDatFile))
+			cargs.append('--fss')
+			cargs.append(tofFssFile)
 
 		# Handle tacking on the colorization flag
 		if args.color_by == 'cameras' :
@@ -370,12 +396,18 @@ def collect_scanners(scanner_list, conf) :
 
 	# Check if there are any laser scanners
 	if len(lasers_to_use) == 0 :
-		print "No given or whitelisted scanners were active in the dataset. " \
-			"Aborting."
-		exit(1)
+		print "No given or whitelisted lasers were active in the dataset. "
 	
 	# Return the list of scanners
 	return lasers_to_use
+
+def collect_tof(conf) :
+
+	# collect all active tof cameras
+	tofSensors = conf.find_sensors_by_type(TOF_TYPE)
+
+	# use all of them
+	return tofSensors
 
 #
 #	Function that checks if the input arguments exist. 
