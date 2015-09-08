@@ -369,7 +369,7 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 		/* store metadata */
 		metaoutfile.add(
 			scanolist_io::scanometa_t(i, times[i], 
-						ss_prefix.str()));
+				ss_prefix.str()));
 	}
 
 	/* if specified, write the metadata to output file */

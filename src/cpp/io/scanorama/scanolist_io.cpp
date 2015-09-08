@@ -174,3 +174,16 @@ int scanometa_t::parse(std::istream& is)
 	/* success */
 	return 0;
 }
+			
+void scanometa_t::truncate_filepath()
+{
+	size_t seppos;
+
+	/* get the position of the last separator character */
+	seppos = this->filepath.find_last_of("\\/");
+	if(seppos == string::npos)
+		return;
+
+	/* truncate the path */
+	this->filepath = this->filepath.substr(seppos+1);
+}

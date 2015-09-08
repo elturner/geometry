@@ -25,146 +25,8 @@
 namespace scanolist_io
 {
 	/* the following classes are defined in this namespace */
-	class scanolist_t;
 	class scanometa_t;
-
-	/**
-	 * The scanolist_t class is used to read and write .scanolist
-	 * files.
-	 *
-	 * It contains some header information and a list of metadata
-	 * about each scanorama pose.
-	 */
-	class scanolist_t
-	{
-		/* parameters */
-		private:
-
-			/**
-			 * The following is the list of cameras
-			 * that were used to color these
-			 * scanoramas.
-			 */
-			std::vector<std::string> camera_names;
-
-			/**
-			 * The following are the dimensions of the
-			 * exported scanoramas, (num_rows x num_cols).
-			 *
-			 * Each pixel is represented by a 3D point
-			 * and a color within a scanorama.
-			 *
-			 * The scanoramas are stored in column-major
-			 * order.
-			 */
-			size_t num_rows;
-			size_t num_cols;
-
-			/**
-			 * The following is the list of scanorama poses
-			 * generated for this dataset.
-			 */
-			std::vector<scanometa_t> scano_poses;
-
-		/* functions */
-		public:
-
-			/*--------------*/
-			/* constructors */
-			/*--------------*/
-
-			/**
-			 * Constructs empty scanolist
-			 */
-			scanolist_t() : 
-				camera_names(), 
-				num_rows(0),
-				num_cols(0),
-				scano_poses()
-			{};
-
-
-			/*----------------*/
-			/* initialization */
-			/*----------------*/
-
-			/**
-			 * Clears all info in this object
-			 */
-			inline void clear()
-			{
-				this->camera_names.clear();
-				this->num_rows = 0;
-				this->num_cols = 0;
-				this->scano_poses.clear();
-			};
-
-			/**
-			 * Sets the dimensions of each scanorama
-			 *
-			 * @param nrows   The number of rows in each
-			 *                scanorama
-			 * @param ncols   The number of columns in each
-			 *                scanorama
-			 */
-			inline void set_dims(size_t nrows, size_t ncols)
-			{
-				this->num_rows = nrows;
-				this->num_cols = ncols;
-			};
-
-			/**
-			 * Adds a camera name
-			 *
-			 * The camera names indicate which cameras
-			 * were used to color the scanoramas
-			 * in this list.
-			 *
-			 * @param name   The name of the camera to
-			 *               add.
-			 */
-			inline void add_camera(const std::string& name)
-			{ this->camera_names.push_back(name); };
-
-			/**
-			 * Adds metadata about the next scanorama pose
-			 *
-			 * Will add this metadata to the end of the
-			 * list of poses.
-			 *
-			 * @param p   The pose information to add
-			 */
-			inline void add(const scanometa_t& p)
-			{ this->scano_poses.push_back(p); };
-
-			/*-----*/
-			/* i/o */
-			/*-----*/
-
-			/**
-			 * Writes this data to the specified .scanolist
-			 * file.
-			 *
-			 * @param filename   The .scanolist file to write to
-			 *
-			 * @return    Returns zero on success, non-zero
-			 *            on failure.
-			 */
-			int write(const std::string& filename) const;
-
-			/**
-			 * Reads data from specified scanolist file.
-			 *
-			 * All data stored previously will be destroyed
-			 * and replaced by data from given file.
-			 *
-			 * @param filename  The .scanolist file to read
-			 *
-			 * @return    Returns zero on success, non-zero
-			 *            on failure.
-			 */
-			int read(const std::string& filename);
-	};
+	class scanolist_t;
 	
 	/**
 	 * The scanometa_t class stores metadata for a single
@@ -279,7 +141,164 @@ namespace scanolist_io
 				/* return the result */
 				return *(this);
 			};
+
+			/*------------------*/
+			/* helper functions */
+			/*------------------*/
+
+			/**
+			 * Strips the directory information from this->filepath
+			 *
+			 * Will modify this->filepath to show only the filename,
+			 * not the directory information.  This is important so
+			 * that the metdata file can be useful across different
+			 * machines, and doesn't contain the absolute path to 
+			 * some guy's account on a specific computer.
+			 */
+			void truncate_filepath();
 	};
+
+	/**
+	 * The scanolist_t class is used to read and write .scanolist
+	 * files.
+	 *
+	 * It contains some header information and a list of metadata
+	 * about each scanorama pose.
+	 */
+	class scanolist_t
+	{
+		/* parameters */
+		private:
+
+			/**
+			 * The following is the list of cameras
+			 * that were used to color these
+			 * scanoramas.
+			 */
+			std::vector<std::string> camera_names;
+
+			/**
+			 * The following are the dimensions of the
+			 * exported scanoramas, (num_rows x num_cols).
+			 *
+			 * Each pixel is represented by a 3D point
+			 * and a color within a scanorama.
+			 *
+			 * The scanoramas are stored in column-major
+			 * order.
+			 */
+			size_t num_rows;
+			size_t num_cols;
+
+			/**
+			 * The following is the list of scanorama poses
+			 * generated for this dataset.
+			 */
+			std::vector<scanometa_t> scano_poses;
+
+		/* functions */
+		public:
+
+			/*--------------*/
+			/* constructors */
+			/*--------------*/
+
+			/**
+			 * Constructs empty scanolist
+			 */
+			scanolist_t() : 
+				camera_names(), 
+				num_rows(0),
+				num_cols(0),
+				scano_poses()
+			{};
+
+
+			/*----------------*/
+			/* initialization */
+			/*----------------*/
+
+			/**
+			 * Clears all info in this object
+			 */
+			inline void clear()
+			{
+				this->camera_names.clear();
+				this->num_rows = 0;
+				this->num_cols = 0;
+				this->scano_poses.clear();
+			};
+
+			/**
+			 * Sets the dimensions of each scanorama
+			 *
+			 * @param nrows   The number of rows in each
+			 *                scanorama
+			 * @param ncols   The number of columns in each
+			 *                scanorama
+			 */
+			inline void set_dims(size_t nrows, size_t ncols)
+			{
+				this->num_rows = nrows;
+				this->num_cols = ncols;
+			};
+
+			/**
+			 * Adds a camera name
+			 *
+			 * The camera names indicate which cameras
+			 * were used to color the scanoramas
+			 * in this list.
+			 *
+			 * @param name   The name of the camera to
+			 *               add.
+			 */
+			inline void add_camera(const std::string& name)
+			{ this->camera_names.push_back(name); };
+
+			/**
+			 * Adds metadata about the next scanorama pose
+			 *
+			 * Will add this metadata to the end of the
+			 * list of poses.
+			 *
+			 * @param p   The pose information to add
+			 */
+			inline void add(const scanometa_t& p)
+			{ 
+				this->scano_poses.push_back(p); 
+				this->scano_poses.back().truncate_filepath();
+			};
+
+			/*-----*/
+			/* i/o */
+			/*-----*/
+
+			/**
+			 * Writes this data to the specified .scanolist
+			 * file.
+			 *
+			 * @param filename   The .scanolist file to write to
+			 *
+			 * @return    Returns zero on success, non-zero
+			 *            on failure.
+			 */
+			int write(const std::string& filename) const;
+
+			/**
+			 * Reads data from specified scanolist file.
+			 *
+			 * All data stored previously will be destroyed
+			 * and replaced by data from given file.
+			 *
+			 * @param filename  The .scanolist file to read
+			 *
+			 * @return    Returns zero on success, non-zero
+			 *            on failure.
+			 */
+			int read(const std::string& filename);
+	};
+	
 }
 
 #endif
