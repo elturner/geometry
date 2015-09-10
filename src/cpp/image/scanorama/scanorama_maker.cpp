@@ -387,6 +387,28 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 				return PROPEGATE_ERROR(-6, ret);
 			}
 		}
+		
+		/* write to depth-map png if specified */
+		if((out_format & NORMAL_PNG_FORMAT) != 0)
+		{
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << "_depth.png";
+			ret = scan.writepng_depth(ss_full.str());
+			if(ret)
+			{
+				/* unable to write */
+				progbar.clear();
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "ERROR " << ret
+				     << ": Unable to export "
+				     << "scanorama #" << i
+				     << " to a depth-map PNG image."
+				     << endl;
+				return PROPEGATE_ERROR(-6, ret);
+			}
+		}
 
 		/* store metadata */
 		metaoutfile.add(

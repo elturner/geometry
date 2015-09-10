@@ -284,6 +284,22 @@ class scanorama_t
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int writepng_normal(const std::string& filename) const;
+
+		/**
+		 * Export the depth-map to a png image
+		 *
+		 * Exports the contents of this scanorama's depth fields to
+		 * the specified png image file.
+		 *
+		 * A depth map is encoded as a 16-bit grayscale png file. 
+		 * The distance of each pixel from the camera is that 16-bit 
+		 * number from [0, 2^16 - 1] in centimeters.
+		 *
+		 * @param filename   The file to write to as a png depth map image
+		 *
+		 * @return   Return zero on success, non-zero on failure.
+		 */
+		int writepng_depth(const std::string& filename) const;
 };
 
 #endif

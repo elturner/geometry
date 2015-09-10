@@ -214,6 +214,12 @@ class generate_scanorama_run_settings_t
 		 */
 		bool export_normal_png;
 
+		/**
+		 * If true, will export dpeth maps to .png image files
+		 * for each scanorama position.
+		 */
+		bool export_depth_png;
+
 		/*--------------*/
 		/* output files */
 		/*--------------*/

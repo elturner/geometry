@@ -761,13 +761,13 @@ int scanorama_t::writepng(const std::string& filename) const
 		
 int scanorama_t::writepng_normal(const std::string& filename) const
 {	
-	vector<unsigned char> image; /* RGBA pixel values */
+	vector<unsigned char> image; /* RGB pixel values */
 	size_t i, j, r, c, n;
 	unsigned int error;
 
 	/* create list of pixels to encode as a png */
 	n = this->points.size();
-	image.resize(4*n);
+	image.resize(3*n);
 	for(i = 0; i < n; i++)
 	{
 		/* get the row,col index of this point */
@@ -780,19 +780,75 @@ int scanorama_t::writepng_normal(const std::string& filename) const
 		j = r * this->num_cols + c; /* row-major, for image */
 
 		/* encode the four color components of each point */
-		image[4*j    ] = (unsigned char) ((this->points[i].nz + 1) * 127.5);
-		image[4*j + 1] = (unsigned char) ((this->points[i].ny + 1) * 127.5);
-		image[4*j + 2] = (unsigned char) ((this->points[i].nx + 1) * 127.5);
-		image[4*j + 3] = 255; /* alpha value */
+		image[3*j    ] = (unsigned char) ((this->points[i].nz + 1) * 127.5);
+		image[3*j + 1] = (unsigned char) ((this->points[i].ny + 1) * 127.5);
+		image[3*j + 2] = (unsigned char) ((this->points[i].nx + 1) * 127.5);
 	}
 
 	/* encode as a png */
 	error = lodepng::encode(filename.c_str(), image,
-					this->num_cols, this->num_rows);
+				this->num_cols, this->num_rows,
+				LodePNGColorType::LCT_RGB, 8);
 	if(error)
 	{
 		cerr << "[scanorama_t::writepng_normal]\tError " << error
 		     << ": Unable to export normal to .png file: \""
+		     << filename << "\"" << endl
+		     << lodepng_error_text(error) << endl;
+		return -1;
+	}
+
+	/* success */
+	return 0;
+}
+
+int scanorama_t::writepng_depth(const std::string& filename) const
+{	
+	vector<unsigned char> image; /* 16-bit depth values per pixel */
+	double x2, y2, z2;
+	union
+	{
+		unsigned short s;
+		unsigned char bytes[2];
+	} depth;
+	size_t i, j, r, c, n;
+	unsigned int error;
+
+	/* create list of pixels to encode as a png */
+	n = this->points.size();
+	image.resize(2*n);
+	for(i = 0; i < n; i++)
+	{
+		/* get the row,col index of this point */
+		c = i / this->num_rows; /* column-major */
+		r = i % this->num_rows; /* column-major */
+
+		/* since the points are stored in column-major order,
+		 * but the image wants them in row-major order, save
+		 * the colors appropriately */
+		j = r * this->num_cols + c; /* row-major, for image */
+
+		/* compute the depth at this pixel */
+		x2 = this->points[i].x * this->points[i].x;
+		y2 = this->points[i].y * this->points[i].y;
+		z2 = this->points[i].z * this->points[i].z;
+
+		/* depth is stored in centimeters */
+		depth.s = (unsigned short) (100 * sqrt(x2 + y2 + z2));
+
+		/* encode as 16-bit scalar of each point */
+		image[2*j    ] = depth.bytes[1]; /* flipped le -> be */
+		image[2*j + 1] = depth.bytes[0]; /* flipped le -> be */
+	}
+
+	/* encode as a png */
+	error = lodepng::encode(filename.c_str(), image,
+				this->num_cols, this->num_rows,
+				LodePNGColorType::LCT_GREY, 16);
+	if(error)
+	{
+		cerr << "[scanorama_t::writepng_normal]\tError " << error
+		     << ": Unable to export depth to .png file: \""
 		     << filename << "\"" << endl
 		     << lodepng_error_text(error) << endl;
 		return -1;

@@ -48,6 +48,7 @@ using namespace std;
 #define XML_EXPORT_E57         "scanorama_export_e57"
 #define XML_EXPORT_PNG         "scanorama_export_png"
 #define XML_EXPORT_NORMAL_PNG  "scanorama_export_normal_png"
+#define XML_EXPORT_DEPTH_PNG   "scanorama_export_depth_png"
 
 /*--------------------------*/
 /* function implementations */
@@ -78,6 +79,7 @@ generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 	this->export_e57        = false;
 	this->export_png        = false;
 	this->export_normal_png = false;
+	this->export_depth_png  = false;
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -247,6 +249,9 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 	if(settings.is_prop(XML_EXPORT_NORMAL_PNG))
 		this->export_normal_png 
 				= (settings.getAsUint(XML_EXPORT_NORMAL_PNG)!=0);
+	if(settings.is_prop(XML_EXPORT_DEPTH_PNG))
+		this->export_depth_png
+				= (settings.getAsUint(XML_EXPORT_DEPTH_PNG)!=0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");

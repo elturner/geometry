@@ -103,6 +103,8 @@ int main(int argc, char** argv)
 		out_format |= scanorama_maker_t::PNG_FORMAT;
 	if(args.export_normal_png)
 		out_format |= scanorama_maker_t::NORMAL_PNG_FORMAT;
+	if(args.export_depth_png)
+		out_format |= scanorama_maker_t::DEPTH_PNG_FORMAT;
 
 	/* export the scans */
 	ret = maker.generate_along_path(args.scano_outfile, out_format, 
