@@ -66,5 +66,6 @@
 	<scanorama_export_ptg>1</scanorama_export_ptg>
 	<scanorama_export_e57>0</scanorama_export_e57>
 	<scanorama_export_png>1</scanorama_export_png>
+	<scanorama_export_normal_png>1</scanorama_export_normal_png>
 
 </settings>

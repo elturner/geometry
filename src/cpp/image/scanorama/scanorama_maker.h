@@ -45,10 +45,11 @@ class scanorama_maker_t
 		 * files per pose.
 		 */
 		typedef unsigned int scano_format_t;
-		static const scano_format_t PTX_FORMAT = 0x1;
-		static const scano_format_t E57_FORMAT = 0x2;
-		static const scano_format_t PNG_FORMAT = 0x4;
-		static const scano_format_t PTG_FORMAT = 0x8;
+		static const scano_format_t PTX_FORMAT        = 0x1;
+		static const scano_format_t E57_FORMAT        = 0x2;
+		static const scano_format_t PNG_FORMAT        = 0x4;
+		static const scano_format_t PTG_FORMAT        = 0x8;
+		static const scano_format_t NORMAL_PNG_FORMAT = 0x10;
 
 	/* parameters */
 	private:

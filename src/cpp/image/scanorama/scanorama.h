@@ -268,6 +268,22 @@ class scanorama_t
 		 * @return   Returns zero on success, non-zero on failure.
 		 */
 		int writepng(const std::string& filename) const;
+
+		/**
+		 * Export the normal-map to a PNG image
+		 *
+		 * Exports the contents of this scanorama's normal fields to
+		 * the specified png image file.
+		 *
+		 * A normal map is encoded as a 24-bit png file. 
+		 * Each pixel's B, G, R values from [0, 255] map to 
+		 * its normal's X, Y, Z from [-1, 1].
+		 *
+		 * @param filename   The file to write to as a png normal map image
+		 *
+		 * @return   Returns zero on success, non-zero on failure.
+		 */
+		int writepng_normal(const std::string& filename) const;
 };
 
 #endif

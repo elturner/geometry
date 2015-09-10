@@ -365,7 +365,29 @@ int scanorama_maker_t::generate_all(const std::string& prefix_out,
 				return PROPEGATE_ERROR(-5, ret);
 			}
 		}
-		
+	
+		/* write to normal-map png if specified */
+		if((out_format & NORMAL_PNG_FORMAT) != 0)
+		{
+			ss_full.clear();
+			ss_full.str("");
+			ss_full << ss_prefix.str() << "_normal.png";
+			ret = scan.writepng_normal(ss_full.str());
+			if(ret)
+			{
+				/* unable to write */
+				progbar.clear();
+				cerr << "[scanorama_maker_t::"
+				     << "generate_all]\t"
+				     << "ERROR " << ret
+				     << ": Unable to export "
+				     << "scanorama #" << i
+				     << " to a normal-map PNG image."
+				     << endl;
+				return PROPEGATE_ERROR(-6, ret);
+			}
+		}
+
 		/* store metadata */
 		metaoutfile.add(
 			scanolist_io::scanometa_t(i, times[i], 

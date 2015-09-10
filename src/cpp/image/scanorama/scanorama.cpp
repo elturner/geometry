@@ -73,9 +73,12 @@ void scanorama_t::init_sphere(double t, const Eigen::Vector3d& cen,
 
 			/* store in appropriate point */
 			i = ri*this->num_cols + ci;
-			this->points[i].x = x;
-			this->points[i].y = y;
-			this->points[i].z = z;
+			this->points[i].x  = x;
+			this->points[i].y  = y;
+			this->points[i].z  = z;
+			this->points[i].nx = x / radius;
+			this->points[i].ny = y / radius;
+			this->points[i].nz = z / radius;
 
 			/* estimate the uncertainty width of
 			 * this point, based on half the average
@@ -93,7 +96,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 				size_t r, size_t c, double bw)
 {
 	progress_bar_t progbar;
-	double radius, theta, phi, dt, dp, w, x, y, z, unitwidth;
+	double radius, theta, phi, dt, dp, w, x, y, z, nx, ny, nz, unitwidth;
 	float origin[3]; /* origin of raytracing */
 	float d[3]; /* raytracing direction */
 	float inter[3]; /* intersection point */
@@ -151,6 +154,7 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 				x = origin[0];
 				y = origin[1];
 				z = origin[2];
+				nx = ny = nz = 0;
 			}
 			else
 			{
@@ -160,14 +164,24 @@ int scanorama_t::init_geometry(const OctTree<float>& octree,
 				x = inter[0] - origin[0];
 				y = inter[1] - origin[1];
 				z = inter[2] - origin[2];
+				
+				/* get the triangle object that was hit */
+				const Triangle3<float>& tri = octree.triangle(
+								triangleID);
+				nx = tri.normal(0);
+				ny = tri.normal(1);
+				nz = tri.normal(2);
 			}
 
 			/* store in appropriate point */
 			i = ci*this->num_rows + ri; /* column major */
-			this->points[i].x = x;
-			this->points[i].y = y;
-			this->points[i].z = z;
-			
+			this->points[i].x  = x;
+			this->points[i].y  = y;
+			this->points[i].z  = z;
+			this->points[i].nx = nx;
+			this->points[i].ny = ny;
+			this->points[i].nz = nz;
+
 			/* estimate the uncertainty width of
 			 * this point, based on half the average
 			 * of the angular difference between points */
@@ -736,6 +750,49 @@ int scanorama_t::writepng(const std::string& filename) const
 	{
 		cerr << "[scanorama_t::writepng[\tError " << error
 		     << ": Unable to export to .png file: \""
+		     << filename << "\"" << endl
+		     << lodepng_error_text(error) << endl;
+		return -1;
+	}
+
+	/* success */
+	return 0;
+}
+		
+int scanorama_t::writepng_normal(const std::string& filename) const
+{	
+	vector<unsigned char> image; /* RGBA pixel values */
+	size_t i, j, r, c, n;
+	unsigned int error;
+
+	/* create list of pixels to encode as a png */
+	n = this->points.size();
+	image.resize(4*n);
+	for(i = 0; i < n; i++)
+	{
+		/* get the row,col index of this point */
+		c = i / this->num_rows; /* column-major */
+		r = i % this->num_rows; /* column-major */
+
+		/* since the points are stored in column-major order,
+		 * but the image wants them in row-major order, save
+		 * the colors appropriately */
+		j = r * this->num_cols + c; /* row-major, for image */
+
+		/* encode the four color components of each point */
+		image[4*j    ] = (unsigned char) ((this->points[i].nz + 1) * 127.5);
+		image[4*j + 1] = (unsigned char) ((this->points[i].ny + 1) * 127.5);
+		image[4*j + 2] = (unsigned char) ((this->points[i].nx + 1) * 127.5);
+		image[4*j + 3] = 255; /* alpha value */
+	}
+
+	/* encode as a png */
+	error = lodepng::encode(filename.c_str(), image,
+					this->num_cols, this->num_rows);
+	if(error)
+	{
+		cerr << "[scanorama_t::writepng_normal]\tError " << error
+		     << ": Unable to export normal to .png file: \""
 		     << filename << "\"" << endl
 		     << lodepng_error_text(error) << endl;
 		return -1;

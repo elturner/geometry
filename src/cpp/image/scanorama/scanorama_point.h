@@ -33,6 +33,13 @@ class scanorama_point_t
 		double z;
 
 		/**
+		 * The normal vector of this point
+		 */
+		double nx;
+		double ny;
+		double nz;
+
+		/**
 		 * The width of this point
 		 *
 		 * Effectively half the distance to the next point

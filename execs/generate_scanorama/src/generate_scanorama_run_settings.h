@@ -208,6 +208,12 @@ class generate_scanorama_run_settings_t
 		 */
 		bool export_png;
 
+		/**
+		 * If true, will export normal maps to .png image files
+		 * for each scanorama position.
+		 */
+		bool export_normal_png;
+
 		/*--------------*/
 		/* output files */
 		/*--------------*/

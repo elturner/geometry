@@ -47,6 +47,7 @@ using namespace std;
 #define XML_EXPORT_PTG         "scanorama_export_ptg"
 #define XML_EXPORT_E57         "scanorama_export_e57"
 #define XML_EXPORT_PNG         "scanorama_export_png"
+#define XML_EXPORT_NORMAL_PNG  "scanorama_export_normal_png"
 
 /*--------------------------*/
 /* function implementations */
@@ -55,27 +56,28 @@ using namespace std;
 generate_scanorama_run_settings_t::generate_scanorama_run_settings_t()
 {
 	/* initialize fields to default values */
-	this->xml_config       = "";
-	this->pathfile         = "";
-	this->modelfile        = "";
+	this->xml_config        = "";
+	this->pathfile          = "";
+	this->modelfile         = "";
 	this->fisheye_cam_metafiles.clear();
 	this->fisheye_cam_calibfiles.clear();
 	this->fisheye_cam_imgdirs.clear();
 	this->rectilinear_cam_metafiles.clear();
 	this->rectilinear_cam_calibfiles.clear();
 	this->rectilinear_cam_imgdirs.clear();
-	this->num_rows         = 1000;
-	this->num_cols         = 2000;
-	this->min_spacing_dist = 2.0;
-	this->max_spacing_dist = 3.0;
-	this->scano_outfile    = "";
-	this->meta_outfile     = "";
-	this->begin_idx        = 0;
-	this->end_idx          = -1;
-	this->export_ptx       = true;
-	this->export_ptg       = false;
-	this->export_e57       = false;
-	this->export_png       = false;
+	this->num_rows          = 1000;
+	this->num_cols          = 2000;
+	this->min_spacing_dist  = 2.0;
+	this->max_spacing_dist  = 3.0;
+	this->scano_outfile     = "";
+	this->meta_outfile      = "";
+	this->begin_idx         = 0;
+	this->end_idx           = -1;
+	this->export_ptx        = true;
+	this->export_ptg        = false;
+	this->export_e57        = false;
+	this->export_png        = false;
+	this->export_normal_png = false;
 }
 
 int generate_scanorama_run_settings_t::parse(int argc, char** argv)
@@ -242,6 +244,9 @@ int generate_scanorama_run_settings_t::parse(int argc, char** argv)
 		this->export_e57 = (settings.getAsUint(XML_EXPORT_E57)!=0);
 	if(settings.is_prop(XML_EXPORT_PNG))
 		this->export_png = (settings.getAsUint(XML_EXPORT_PNG)!=0);
+	if(settings.is_prop(XML_EXPORT_NORMAL_PNG))
+		this->export_normal_png 
+				= (settings.getAsUint(XML_EXPORT_NORMAL_PNG)!=0);
 
 	/* we successfully populated this structure, so return */
 	toc(clk, "Importing settings");
