@@ -96,8 +96,8 @@ bool LASWriter::open(const std::string& output_file_name)
 */
 void LASWriter::close()
 {
-	_outStream.close();
 	_writer.reset();
+	_outStream.close();
 }
 
 /*
