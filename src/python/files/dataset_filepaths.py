@@ -102,7 +102,8 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 			urg_outname += '.fss'
 
 			# add to our list
-			fssfiles.append(os.path.join(dataset_dir, urg_outname))
+			fssfiles.append(os.path.abspath(os.path.join( \
+					dataset_dir, urg_outname)))
 		
                 # check for tof scanners as well
 		elif sensor_types[si] == 'tof_camera':
@@ -126,7 +127,8 @@ def get_all_fss_files(dataset_dir, whitelist=None):
 			tof_outname += '.fss'
 
 			# add to our list
-			fssfiles.append(os.path.join(dataset_dir, tof_outname))
+			fssfiles.append(os.path.abspath(os.path.join( \
+					dataset_dir, tof_outname)))
 
 	# return the final list of fss files
 	return fssfiles
