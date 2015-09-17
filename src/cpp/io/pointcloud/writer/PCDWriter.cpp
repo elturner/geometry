@@ -12,6 +12,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 /* namespaces */
 using namespace std;
@@ -24,6 +25,15 @@ using namespace std;
 */
 bool PCDWriter::write_header()
 {
+
+	// Get the correct buffered version of the number of points
+	stringstream ss; ss << _numPointsWritten;
+	string numPointsString = ss.str();
+
+	// Buffer this 30 characters
+	while(numPointsString.size() < 30)
+		numPointsString += " ";
+
 	/* check if the stream is open */
 	if(!_outStream.is_open())
 		return false;
@@ -40,17 +50,19 @@ bool PCDWriter::write_header()
 	/* the width holds a redundant copy of the number of points. we dont */
 	/* know this til the end of the writers lifetime so set it to the current */
 	/* count as this function is used at both creation and destruction */
-	_outStream << "WIDTH " << _numPointsWritten << '\n'
+	_outStream << "WIDTH " << numPointsString << '\n'
 			   << "HEIGHT 1" << '\n';
 
 	/* set the viewpoint to the default value */
 	_outStream << "VIEWPOINT 0 0 0 1 0 0 0" << '\n';
 
 	/* set another redundant copy of the number of points */
-	_outStream << "POINTS " << _numPointsWritten << '\n';
+	_outStream << "POINTS " << numPointsString << '\n';
 
 	/* we only support ASCII PCD */
-	_outStream << "DATA ascii" << endl;
+	_outStream << "DATA ascii" << '\n';
+
+	_outStream.flush();
 
 	/* return success */
 	return true;
